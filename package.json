@@ -1,0 +1,27 @@
+{
+    "name": "vscode-java-pack",
+    "displayName": "Java Extension Pack",
+    "description": "Popular VS Code extensions for Java development.",
+    "version": "0.1.0",
+    "publisher": "vscjava",
+    "preview": true,
+    "engines": {
+        "vscode": "^1.15.0"
+    },
+    "icon": "logo.png",
+    "galleryBanner": {
+        "color": "#333333",
+        "theme": "dark"
+    },
+    "keywords": [
+        "java",
+        "debugger"
+    ],
+    "categories": [
+        "Extension Packs"
+    ],
+    "extensionDependencies": [
+        "redhat.vscode-java",
+        "vscjava.vscode-java-debug"
+    ]
+}
