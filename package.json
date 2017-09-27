@@ -21,7 +21,7 @@
         "Extension Packs"
     ],
     "extensionDependencies": [
-        "redhat.vscode-java",
+        "redhat.java",
         "vscjava.vscode-java-debug"
     ]
 }
