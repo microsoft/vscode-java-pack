@@ -1,6 +1,6 @@
 # Java Extension Pack
 
-These are some of extensions to make Java development easier and fun. 
+These are some of the extensions to make Java development easier and fun. 
 
 # Extensions Included
 
