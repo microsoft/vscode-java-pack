@@ -2,7 +2,7 @@
     "name": "vscode-java-pack",
     "displayName": "Java Extension Pack",
     "description": "Popular VS Code extensions for Java development.",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "publisher": "vscjava",
     "preview": true,
     "engines": {

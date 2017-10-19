@@ -1,3 +1,7 @@
-0.1.0
+# Change Log
 
-initial release
+## 0.2.0
+- Update the links for open source
+
+## 0.1.0
+- Initial release
