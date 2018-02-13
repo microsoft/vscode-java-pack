@@ -1,37 +1,37 @@
 {
-    "name": "vscode-java-pack",
-    "displayName": "Java Extension Pack",
-    "description": "Popular VS Code extensions for Java development.",
-    "version": "0.2.0",
-    "publisher": "vscjava",
-    "preview": true,
-    "engines": {
-        "vscode": "^1.15.0"
-    },
-    "icon": "logo.png",
-    "galleryBanner": {
-        "color": "#333333",
-        "theme": "dark"
-    },
-    "keywords": [
-        "java",
-        "debugger"
-    ],
-    "categories": [
-        "Extension Packs"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Microsoft/vscode-java-pack"
-    },
-    "homepage": "https://github.com/Microsoft/vscode-java-pack",
-    "bugs": {
-        "url": "https://github.com/Microsoft/vscode-java-pack"
-    },
-    "extensionDependencies": [
-        "redhat.java",
-        "vscjava.vscode-java-debug",
-        "vscjava.vscode-java-test",
-        "vscjava.vscode-maven"
-    ]
+  "name": "vscode-java-pack",
+  "displayName": "Java Extension Pack",
+  "description": "Popular VS Code extensions for Java development.",
+  "version": "0.3.0",
+  "publisher": "vscjava",
+  "preview": true,
+  "engines": {
+    "vscode": "^1.15.0"
+  },
+  "icon": "logo.png",
+  "galleryBanner": {
+    "color": "#333333",
+    "theme": "dark"
+  },
+  "keywords": [
+    "java",
+    "debugger"
+  ],
+  "categories": [
+    "Extension Packs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Microsoft/vscode-java-pack"
+  },
+  "homepage": "https://github.com/Microsoft/vscode-java-pack",
+  "bugs": {
+    "url": "https://github.com/Microsoft/vscode-java-pack"
+  },
+  "extensionDependencies": [
+    "redhat.java",
+    "vscjava.vscode-java-debug",
+    "vscjava.vscode-java-test",
+    "vscjava.vscode-maven"
+  ]
 }
