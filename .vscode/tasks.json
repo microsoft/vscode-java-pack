@@ -15,6 +15,29 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "npm",
+            "script": "watch-assets",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never",
+            },
+            "group": "build",
+            "problemMatcher": {
+                "pattern":[
+                    {
+                        "regexp": "^([^\\\\s].*)\\\\((\\\\d+,\\\\d+)\\\\):\\\\s*(.*)$",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "beginsPattern": "^Hash:.*",
+                    "endsPattern": "^Built at:.*"
+                }
+            }
         }
     ]
 }

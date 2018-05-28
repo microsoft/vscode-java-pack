@@ -2,11 +2,12 @@
   "name": "vscode-java-pack",
   "displayName": "Java Extension Pack",
   "description": "Popular VS Code extensions for Java development.",
+  "license": "MIT",
   "version": "0.3.0",
   "publisher": "vscjava",
   "preview": true,
   "engines": {
-    "vscode": "^1.15.0"
+    "vscode": "^1.23.0"
   },
   "icon": "logo.png",
   "galleryBanner": {
@@ -28,18 +29,37 @@
   "bugs": {
     "url": "https://github.com/Microsoft/vscode-java-pack"
   },
+  "main": "./out/extension",
+  "activationEvents": [
+    "onCommand:java.welcome"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "java.welcome",
+        "title": "Java: Welcome"
+      }
+    ]
+  },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run compile&npm run build-assets",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "build-assets": "webpack --config webpack.config.js",
+    "watch-assets": "webpack --config webpack.config.js --watch",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "typescript": "^2.6.1",
-    "vscode": "^1.1.6",
+    "@types/node": "^7.0.43",
+    "html-webpack-inline-source-plugin": "0.0.10",
+    "html-webpack-plugin": "^3.2.0",
+    "ts-loader": "^4.3.0",
     "tslint": "^5.8.0",
-    "@types/node": "^7.0.43"
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.17",
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.4"
   },
   "extensionDependencies": [
     "redhat.java",
