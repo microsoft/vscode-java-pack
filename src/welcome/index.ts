@@ -15,6 +15,6 @@ export default () => {
 
   readFile(require.resolve('./assets/index.html'), (err, data) => {
     welcomeView.webview.html = data.toString();
-  }) ;
+  });
 
 };
