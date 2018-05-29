@@ -1,6 +1,6 @@
-var HtmlWebpackPlugin = require("html-webpack-plugin");
-var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
-var path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
+const path = require('path');
 
 module.exports = function (env, argv) {
   env = env || {};
@@ -15,11 +15,11 @@ module.exports = function (env, argv) {
         use: 'ts-loader'
       }]
     },
-    mode: "development",
+    mode: 'development',
     output: {
       filename: '[name]/assets/index.js',
       path: path.resolve(__dirname, 'out'),
-      publicPath: "/"
+      publicPath: '/'
     },
     plugins: [
       new HtmlWebpackPlugin({
