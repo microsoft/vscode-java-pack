@@ -13,8 +13,8 @@ export default () => {
     }
   );
 
-  readFile(require.resolve('./assets/index.html'), (err, te) => {
-    welcomeView.webview.html = te.toString();
+  readFile(require.resolve('./assets/index.html'), (err, data) => {
+    welcomeView.webview.html = data.toString();
   }) ;
 
 };
