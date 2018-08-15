@@ -41,7 +41,7 @@
     "tslint": "^5.8.0",
     "@types/node": "^7.0.43"
   },
-  "extensionDependencies": [
+  "extensionPack": [
     "redhat.java",
     "vscjava.vscode-java-debug",
     "vscjava.vscode-java-test",
