@@ -6,7 +6,7 @@
   "publisher": "vscjava",
   "preview": true,
   "engines": {
-    "vscode": "^1.15.0"
+    "vscode": "^1.26.0"
   },
   "icon": "logo.png",
   "galleryBanner": {
