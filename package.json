@@ -9,13 +9,12 @@
     "vscode": "^1.26.0"
   },
   "icon": "logo.png",
-  "galleryBanner": {
-    "color": "#333333",
-    "theme": "dark"
-  },
   "keywords": [
     "java",
-    "debugger"
+    "debugger",
+    "junit",
+    "maven",
+    "spring"
   ],
   "categories": [
     "Extension Packs"
