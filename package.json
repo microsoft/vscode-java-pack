@@ -2,6 +2,7 @@
   "name": "vscode-java-pack",
   "displayName": "Java Extension Pack",
   "description": "Popular VS Code extensions for Java development.",
+  "license": "MIT",
   "version": "0.3.0",
   "publisher": "vscjava",
   "preview": true,
@@ -27,18 +28,36 @@
   "bugs": {
     "url": "https://github.com/Microsoft/vscode-java-pack"
   },
+  "main": "./out/extension",
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run compile&npm run build-assets",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "build-assets": "webpack --config webpack.config.js",
+    "watch-assets": "webpack --config webpack.config.js --watch",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "typescript": "^2.6.1",
-    "vscode": "^1.1.6",
+    "@types/jquery": "^3.3.6",
+    "@types/node": "^8.0.0",
+    "autoprefixer": "^8.5.1",
+    "bootstrap": "^4.1.1",
+    "css-loader": "^0.28.11",
+    "html-webpack-inline-source-plugin": "0.0.10",
+    "html-webpack-plugin": "^3.2.0",
+    "jquery": "^3.3.1",
+    "node-sass": "^4.9.0",
+    "popper.js": "^1.14.3",
+    "postcss-loader": "^2.1.5",
+    "sass-loader": "^7.0.1",
+    "style-loader": "^0.21.0",
+    "ts-loader": "^4.3.0",
     "tslint": "^5.8.0",
-    "@types/node": "^7.0.43"
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.17",
+    "webpack": "^4.8.3",
+    "webpack-cli": "^2.1.4"
   },
   "extensionPack": [
     "redhat.java",
