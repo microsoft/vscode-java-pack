@@ -24,10 +24,11 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
 }
 
 function initializeTelemetry(context: vscode.ExtensionContext) {
-  const packageInfo = require(context.asAbsolutePath('./package.json'));
+  const ext = vscode.extensions.getExtension('vscjava.vscode-java-pack');
+  const packageInfo = ext ? ext.packageJSON : undefined;
   if (packageInfo) {
     if (packageInfo.aiKey) {
-      initialize(packageInfo.name, packageInfo.version, packageInfo.aiKey, true);
+      initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey);
     }
   }
 }
