@@ -9,6 +9,7 @@
   "engines": {
     "vscode": "^1.26.0"
   },
+  "aiKey": "b4a8a622-6ac7-4cf8-83aa-f325e1890795",
   "icon": "logo.png",
   "keywords": [
     "java",
@@ -29,6 +30,21 @@
     "url": "https://github.com/Microsoft/vscode-java-pack"
   },
   "main": "./out/extension",
+  "activationEvents": [
+    "onLanguage:java",
+    "workspaceContains:pom.xml",
+    "workspaceContains:build.gradle",
+    "workspaceContains:mnvw",
+    "onCommand:java.overview"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "java.overview",
+        "title": "Java: Overview"
+      }
+    ]
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile&npm run build-assets",
     "compile": "tsc -p ./",
@@ -64,5 +80,9 @@
     "vscjava.vscode-java-debug",
     "vscjava.vscode-java-test",
     "vscjava.vscode-maven"
-  ]
+  ],
+  "dependencies": {
+    "openurl": "^1.1.1",
+    "vscode-extension-telemetry-wrapper": "^0.3.0"
+  }
 }
