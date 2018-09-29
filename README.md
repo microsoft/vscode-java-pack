@@ -25,7 +25,7 @@ You can do more with VS Code. Here are some more recommendations that could help
 
 ### Spring
 
-Spring Tools 4 (ST4) is also available in Visual Studio Code. It understands Spring so you can navigate Spring code at the level of beans, routes, and etc. It can also show live information of the running Spring Boot applications. Check out [the ST4 website](https://spring.io/tools) to see a complete list of its features.
+Spring Tools 4 (ST4) is also available in Visual Studio Code. It understands Spring so you can navigate Spring code at the level of beans, routes, etc. It can also show live information of the running Spring Boot applications. Check out [the ST4 website](https://spring.io/tools) to see a complete list of its features.
 
 To use ST4, install [📦 Spring Boot Extension Pack](https://marketplace.visualstudio.com/items?itemName=Pivotal.vscode-boot-dev-pack). Please also check out the [User Guide](https://github.com/spring-projects/sts4/wiki) to make the most of it.
 
