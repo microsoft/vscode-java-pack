@@ -1,7 +1,7 @@
 {
   "name": "vscode-java-pack",
   "displayName": "Java Extension Pack",
-  "description": "Popular VS Code extensions for Java development.",
+  "description": "Popular extensions for Java development and more.",
   "license": "MIT",
   "version": "0.3.0",
   "publisher": "vscjava",
