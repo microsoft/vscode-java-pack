@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { initialize, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
+import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 
 import { instrumentCommand } from './command';
 import { overviewCmdHandler, createMavenProjectCmdHanlder, createSpringBootProjectCmdHandler, showExtensionCmdHandler, showOverviewPageOnActivation, openUrlCmdHandler } from './overview';
@@ -33,5 +33,6 @@ function initializeTelemetry(context: vscode.ExtensionContext) {
   }
 }
 
-export function deactivate() {
+export async function deactivate() {
+  await disposeTelemetryWrapper();
 }
