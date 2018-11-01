@@ -6,8 +6,16 @@ import * as path from 'path';
 const openurl: any = require('openurl');
 
 const readFile = util.promisify(fsReadFile);
+
+import { instrumentOperation } from "vscode-extension-telemetry-wrapper";
+
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
+
+const toggleOverviewVisibilityOperation = instrumentOperation("toggleOverviewVisibility", (operationId: string, context: vscode.ExtensionContext, visibility: boolean) => {
+  // TODO: record the actual visiblity value
+  context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, visibility);
+});
 
 export async function overviewCmdHandler(context: vscode.ExtensionContext) {
   if (overviewView) {
@@ -47,7 +55,7 @@ export async function overviewCmdHandler(context: vscode.ExtensionContext) {
 
   overviewView.webview.onDidReceiveMessage((e) => {
     if (e.command === 'setOverviewVisibility') {
-      context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, e.visibility);
+      toggleOverviewVisibilityOperation(context, e.visibility);
     }
   });
 }
