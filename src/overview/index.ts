@@ -8,8 +8,9 @@ const openurl: any = require('openurl');
 const readFile = util.promisify(fsReadFile);
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
+const KEY_OVERVIEW_LAST_SHOW_TIME = "overviewLastShowTime";
 
-export async function overviewCmdHandler(context: vscode.ExtensionContext) {
+export async function overviewCmdHandler(context: vscode.ExtensionContext, operationId: string, showInBackground: boolean = false) {
   if (overviewView) {
     overviewView.reveal();
     return;
@@ -18,13 +19,18 @@ export async function overviewCmdHandler(context: vscode.ExtensionContext) {
   overviewView = vscode.window.createWebviewPanel(
     'java.overview',
     'Java Overview',
-    vscode.ViewColumn.One,
+    {
+      viewColumn: vscode.ViewColumn.One,
+      preserveFocus: showInBackground
+    },
     {
       enableScripts: true,
       enableCommandUris: true,
       retainContextWhenHidden: true
     }
   );
+
+  context.globalState.update(KEY_OVERVIEW_LAST_SHOW_TIME, Date.now().toString());
 
   overviewView.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'logo.lowres.png'));
   let buffer = await readFile(require.resolve('./assets/index.html'));
@@ -85,7 +91,9 @@ export async function showOverviewPageOnActivation(context: vscode.ExtensionCont
   }
 
   if (showWhenUsingJava) {
-    vscode.commands.executeCommand('java.overview');
+    let overviewLastShowTime = context.globalState.get(KEY_OVERVIEW_LAST_SHOW_TIME);
+    let showInBackground = overviewLastShowTime !== undefined;
+    vscode.commands.executeCommand('java.overview', showInBackground);
   }
 }
 
