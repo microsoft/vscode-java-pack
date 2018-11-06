@@ -80,11 +80,13 @@ export async function createSpringBootProjectCmdHandler(context: vscode.Extensio
 }
 
 export async function showExtensionCmdHandler(context: vscode.ExtensionContext, operationId: string, extensionName: string) {
-  openurl.open(vscode.Uri.parse(`vscode:extension/${extensionName}`).toString());
+  openurl(vscode.Uri.parse(`vscode:extension/${extensionName}`).toString());
+  // TODO: uncommment the below line after vscode address https://github.com/Microsoft/vscode/issues/62629
+  //vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode:extension/${extensionName}`));
 }
 
 export async function openUrlCmdHandler(context: vscode.ExtensionContext, operationId: string, url: string) {
-  openurl.open(url);
+  vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
 }
 
 export async function showOverviewPageOnActivation(context: vscode.ExtensionContext) {
