@@ -13,6 +13,11 @@ let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
 const KEY_OVERVIEW_LAST_SHOW_TIME = "overviewLastShowTime";
 
+const toggleOverviewVisibilityOperation = instrumentOperation("toggleOverviewVisibility", (operationId: string, context: vscode.ExtensionContext, visibility: boolean) => {
+  // TODO: record the actual visiblity value
+  context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, visibility);
+});
+
 export async function overviewCmdHandler(context: vscode.ExtensionContext, operationId: string, showInBackground: boolean = false) {
   if (overviewView) {
     overviewView.reveal();
