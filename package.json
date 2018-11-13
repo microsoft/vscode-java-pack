@@ -83,6 +83,6 @@
   ],
   "dependencies": {
     "openurl": "^1.1.1",
-    "vscode-extension-telemetry-wrapper": "^0.3.3"
+    "vscode-extension-telemetry-wrapper": "0.3.5"
   }
 }
