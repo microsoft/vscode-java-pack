@@ -19,7 +19,7 @@ By installing Java Extension Pack, the following extensions are installed:
     - Project Scaffolding
     - Custom Goals
 - [📦 Java Dependencies](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
-    - Dependency viewer
+    - Dependency Viewer
     - Create New Java Project
 
 
