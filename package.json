@@ -73,7 +73,7 @@
     "typescript": "^2.6.1",
     "vscode": "^1.1.17",
     "webpack": "^4.20.2",
-    "webpack-cli": "^2.1.4"
+    "webpack-cli": "^3.1.1"
   },
   "extensionPack": [
     "redhat.java",
