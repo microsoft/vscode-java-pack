@@ -7,14 +7,17 @@ const openurl: any = require('openurl');
 
 const readFile = util.promisify(fsReadFile);
 
-import { instrumentOperation } from "vscode-extension-telemetry-wrapper";
+import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
 const KEY_OVERVIEW_LAST_SHOW_TIME = "overviewLastShowTime";
 
 const toggleOverviewVisibilityOperation = instrumentOperation("toggleOverviewVisibility", (operationId: string, context: vscode.ExtensionContext, visibility: boolean) => {
-  // TODO: record the actual visiblity value
+  sendInfo(operationId, {
+    visibility: visibility.toString()
+  }, {});
+
   context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, visibility);
 });
 
