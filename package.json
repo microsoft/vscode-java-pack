@@ -3,7 +3,7 @@
   "displayName": "Java Extension Pack",
   "description": "Popular extensions for Java development and more.",
   "license": "MIT",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "vscjava",
   "preview": true,
   "engines": {
@@ -73,13 +73,14 @@
     "typescript": "^2.6.1",
     "vscode": "^1.1.17",
     "webpack": "^4.20.2",
-    "webpack-cli": "^2.1.4"
+    "webpack-cli": "^3.1.2"
   },
   "extensionPack": [
     "redhat.java",
     "vscjava.vscode-java-debug",
     "vscjava.vscode-java-test",
-    "vscjava.vscode-maven"
+    "vscjava.vscode-maven",
+    "vscjava.vscode-java-dependency"
   ],
   "dependencies": {
     "openurl": "^1.1.1",
