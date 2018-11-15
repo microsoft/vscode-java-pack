@@ -1,8 +1,5 @@
 # Change Log
 
-## 0.5.0
-- Added Java Dependencies to the pack
-
 ## 0.4.0
 - Added Overview page to help users get started
 - Use extensionPack instead of extensionDependencies
