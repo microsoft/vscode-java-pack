@@ -3,6 +3,7 @@ import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } f
 
 import { instrumentCommand } from './command';
 import { overviewCmdHandler, createMavenProjectCmdHanlder, createSpringBootProjectCmdHandler, showExtensionCmdHandler, showOverviewPageOnActivation, openUrlCmdHandler } from './overview';
+import { initialize as initRecommendations } from "./recommendation";
 
 export async function activate(context: vscode.ExtensionContext) {
   initializeTelemetry(context);
@@ -19,6 +20,8 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   context.subscriptions.push(vscode.commands.registerCommand('java.helper.showExtension', instrumentCommand(context, 'java.helper.showExtension', showExtensionCmdHandler)));
 
   context.subscriptions.push(vscode.commands.registerCommand('java.helper.openUrl', instrumentCommand(context, 'java.helper.openUrl', openUrlCmdHandler)));
+
+  initRecommendations(context);
 
   await showOverviewPageOnActivation(context);
 }
