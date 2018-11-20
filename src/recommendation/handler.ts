@@ -9,12 +9,12 @@ const KEY_RECOMMENDATION_TIMESTAMP_MAP = "recommendationTimeStampMap";
 let handler: (...args: any[]) => any;
 
 export function initialize(context: vscode.ExtensionContext) {
-  handler = instrumentCommand(context, "recommendExtension", (context: vscode.ExtensionContext, operationId: string, extName: string, message: string) => {
+  handler = instrumentCommand(context, "recommendExtension", async (context: vscode.ExtensionContext, operationId: string, extName: string, message: string) => {
     sendInfo(operationId, {
       extName: extName
     }, {});
 
-    recommendExtension(extName, message);
+    return recommendExtension(extName, message);
   });
 }
 

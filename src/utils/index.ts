@@ -1,5 +1,15 @@
 import * as vscode from "vscode";
 
+let extensionContext: vscode.ExtensionContext;
+
+export function initialize(context: vscode.ExtensionContext) {
+  extensionContext = context;
+}
+
+export function getExtensionContext() {
+  return extensionContext;
+}
+
 export function isExtensionInstalled( extName: string) {
   return !!vscode.extensions.getExtension(extName);
 }
@@ -10,15 +20,4 @@ export async function recommendExtension(extName: string, message: string): Prom
   if (answer === action) {
     await vscode.commands.executeCommand('java.helper.showExtension', extName);
   }
-}
-
-
-export async function validateAndRecommendExtension(extName: string, message: string): Promise<boolean> {
-  if (isExtensionInstalled(extName)) {
-    return true;
-  }
-
-  await recommendExtension(extName, message);
-
-  return false;
 }
