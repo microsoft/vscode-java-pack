@@ -79,7 +79,8 @@
     "redhat.java",
     "vscjava.vscode-java-debug",
     "vscjava.vscode-java-test",
-    "vscjava.vscode-maven"
+    "vscjava.vscode-maven",
+    "vscjava.vscode-java-dependency"
   ],
   "dependencies": {
     "openurl": "^1.1.1",
