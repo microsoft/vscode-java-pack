@@ -8,6 +8,7 @@ const openurl: any = require('openurl');
 const readFile = util.promisify(fsReadFile);
 
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { validateAndRecommendExtension } from '../utils';
 
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
@@ -108,19 +109,4 @@ export async function showOverviewPageOnActivation(context: vscode.ExtensionCont
     let showInBackground = overviewLastShowTime !== undefined;
     vscode.commands.executeCommand('java.overview', showInBackground);
   }
-}
-
-async function validateAndRecommendExtension(extName: string, message: string): Promise<boolean> {
-  const ext = vscode.extensions.getExtension(extName);
-  if (ext) {
-    return true;
-  }
-
-  const action = "Details";
-  const answer = await vscode.window.showInformationMessage(message, action);
-  if (answer === action) {
-    await vscode.commands.executeCommand('java.helper.showExtension', extName);
-  }
-
-  return false;
 }
