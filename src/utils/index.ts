@@ -21,3 +21,5 @@ export async function recommendExtension(extName: string, message: string): Prom
     await vscode.commands.executeCommand('java.helper.showExtension', extName);
   }
 }
+
+export * from "./command";

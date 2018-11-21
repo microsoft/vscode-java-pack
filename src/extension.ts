@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } from 'vscode-extension-telemetry-wrapper';
 
-import { instrumentCommand } from './command';
-import { overviewCmdHandler, createMavenProjectCmdHanlder, createSpringBootProjectCmdHandler, showExtensionCmdHandler, showOverviewPageOnActivation, openUrlCmdHandler } from './overview';
 import { initialize as initUtils } from "./utils";
+import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
+import { showOverviewPageOnActivation } from './overview';
 
 export async function activate(context: vscode.ExtensionContext) {
   initializeTelemetry(context);
@@ -12,17 +12,8 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 async function initializeExtension(operationId: string, context: vscode.ExtensionContext) {
-  context.subscriptions.push(vscode.commands.registerCommand('java.overview', instrumentCommand(context, 'java.overview', overviewCmdHandler)));
-
-  context.subscriptions.push(vscode.commands.registerCommand('java.helper.createMavenProject', instrumentCommand(context, 'java.helper.createMavenProject', createMavenProjectCmdHanlder)));
-
-  context.subscriptions.push(vscode.commands.registerCommand('java.helper.createSpringBootProject', instrumentCommand(context, 'java.helper.createSpringBootProject', createSpringBootProjectCmdHandler)));
-
-  context.subscriptions.push(vscode.commands.registerCommand('java.helper.showExtension', instrumentCommand(context, 'java.helper.showExtension', showExtensionCmdHandler)));
-
-  context.subscriptions.push(vscode.commands.registerCommand('java.helper.openUrl', instrumentCommand(context, 'java.helper.openUrl', openUrlCmdHandler)));
-
   initUtils(context);
+  initCommands(context);
   initRecommendations(context);
 
   await showOverviewPageOnActivation(context);
