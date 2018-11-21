@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
-import { instrumentCommand } from "../command";
+import { instrumentCommand } from "../utils";
 import { isExtensionInstalled, recommendExtension } from "../utils";
 
 const KEY_RECOMMENDATION_TIMESTAMP_MAP = "recommendationTimeStampMap";
@@ -34,4 +34,3 @@ export function extensionRecommendationHandler(context: vscode.ExtensionContext,
 
   context.globalState.update(KEY_RECOMMENDATION_TIMESTAMP_MAP, timeStampMap);
 }
-
