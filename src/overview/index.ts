@@ -8,7 +8,7 @@ const openurl: any = require('openurl');
 const readFile = util.promisify(fsReadFile);
 
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
-import { validateAndRecommendExtension } from '../utils';
+import { validateAndRecommendExtension } from '../recommendation';
 
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
@@ -89,7 +89,7 @@ export async function createSpringBootProjectCmdHandler(context: vscode.Extensio
 }
 
 export async function showExtensionCmdHandler(context: vscode.ExtensionContext, operationId: string, extensionName: string) {
-  openurl(vscode.Uri.parse(`vscode:extension/${extensionName}`).toString());
+  openurl.open(vscode.Uri.parse(`vscode:extension/${extensionName}`).toString());
   // TODO: uncommment the below line after vscode address https://github.com/Microsoft/vscode/issues/62629
   //vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode:extension/${extensionName}`));
 }
