@@ -4,6 +4,7 @@ import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } f
 import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
+import { initialize as initMisc } from "./misc";
 import { showOverviewPageOnActivation } from './overview';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -15,6 +16,7 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   initUtils(context);
   initCommands(context);
   initRecommendations(context);
+  initMisc(context);
 
   await showOverviewPageOnActivation(context);
 }
