@@ -18,13 +18,13 @@ export function initialize(context: vscode.ExtensionContext) {
   });
 }
 
-export function extensionRecommendationHandler(context: vscode.ExtensionContext, extName: string, message: string) {
+export function extensionRecommendationHandler(context: vscode.ExtensionContext, extName: string, message: string, isForce: boolean = false) {
   if (isExtensionInstalled(extName)) {
     return;
   }
 
   const timeStampMap: { [key: string]: string; } = context.globalState.get(KEY_RECOMMENDATION_TIMESTAMP_MAP, {});
-  if (timeStampMap && timeStampMap[extName] !== undefined) {
+  if (!isForce && timeStampMap && timeStampMap[extName] !== undefined) {
     return;
   }
 
