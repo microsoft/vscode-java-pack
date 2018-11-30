@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-const openurl: any = require("openurl");
 
 import { validateAndRecommendExtension } from "../recommendation";
 
@@ -22,9 +21,7 @@ export async function createSpringBootProjectCmdHandler(context: vscode.Extensio
 }
 
 export async function showExtensionCmdHandler(context: vscode.ExtensionContext, operationId: string, extensionName: string) {
-  openurl.open(vscode.Uri.parse(`vscode:extension/${extensionName}`).toString());
-  // TODO: uncommment the below line after vscode address https://github.com/Microsoft/vscode/issues/62629
-  //vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode:extension/${extensionName}`));
+  vscode.commands.executeCommand('extension.open', extensionName);
 }
 
 export async function openUrlCmdHandler(context: vscode.ExtensionContext, operationId: string, url: string) {
