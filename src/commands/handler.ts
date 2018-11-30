@@ -4,7 +4,7 @@ import { validateAndRecommendExtension } from "../recommendation";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 
 export async function createMavenProjectCmdHanlder(context: vscode.ExtensionContext) {
-  if (!await validateAndRecommendExtension('vscjava.vscode-maven', 'Maven extension is recommended to help create Java projects and work with custom goals.')) {
+  if (!await validateAndRecommendExtension('vscjava.vscode-maven', 'Maven extension is recommended to help create Java projects and work with custom goals.', false)) {
     return;
   }
 
@@ -14,7 +14,7 @@ export async function createMavenProjectCmdHanlder(context: vscode.ExtensionCont
 // TODO: add entry to create standalone Java file
 
 export async function createSpringBootProjectCmdHandler(context: vscode.ExtensionContext) {
-  if (!await validateAndRecommendExtension('vscjava.vscode-spring-initializr', 'Spring Initializr extension is recommended to help create Spring Boot projects and manage dependencies.')) {
+  if (!await validateAndRecommendExtension('vscjava.vscode-spring-initializr', 'Spring Initializr extension is recommended to help create Spring Boot projects and manage dependencies.', false)) {
     return;
   }
 

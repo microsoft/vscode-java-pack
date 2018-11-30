@@ -8,12 +8,12 @@ export function initialize (context: vscode.ExtensionContext) {
   initXml(context);
 }
 
-export async function validateAndRecommendExtension(extName: string, message: string) {
+export async function validateAndRecommendExtension(extName: string, message: string, isOptional: boolean = true) {
   if (isExtensionInstalled(extName)) {
     return true;
   }
 
-  await extensionRecommendationHandler(getExtensionContext(), extName, message);
+  await extensionRecommendationHandler(getExtensionContext(), extName, message, isOptional);
 
   return false;
 }
