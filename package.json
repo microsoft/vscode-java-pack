@@ -7,7 +7,7 @@
   "publisher": "vscjava",
   "preview": true,
   "engines": {
-    "vscode": "^1.26.0"
+    "vscode": "^1.28.0"
   },
   "aiKey": "b4a8a622-6ac7-4cf8-83aa-f325e1890795",
   "icon": "logo.png",
@@ -56,7 +56,7 @@
   },
   "devDependencies": {
     "@types/jquery": "^3.3.18",
-    "@types/node": "^8.10.36",
+    "@types/node": "^8.10.38",
     "autoprefixer": "^8.5.1",
     "bootstrap": "^4.1.1",
     "css-loader": "^0.28.11",
@@ -64,15 +64,15 @@
     "html-webpack-plugin": "^3.2.0",
     "jquery": "^3.3.1",
     "node-sass": "^4.9.4",
-    "popper.js": "^1.14.3",
+    "popper.js": "^1.14.6",
     "postcss-loader": "^2.1.5",
     "sass-loader": "^7.0.1",
     "style-loader": "^0.21.0",
     "ts-loader": "^4.3.0",
     "tslint": "^5.8.0",
     "typescript": "^2.6.1",
-    "vscode": "^1.1.17",
-    "webpack": "^4.20.2",
+    "vscode": "^1.1.22",
+    "webpack": "^4.26.1",
     "webpack-cli": "^3.1.1"
   },
   "extensionPack": [
@@ -83,7 +83,6 @@
     "vscjava.vscode-java-dependency"
   ],
   "dependencies": {
-    "openurl": "^1.1.1",
-    "vscode-extension-telemetry-wrapper": "0.3.5"
+    "vscode-extension-telemetry-wrapper": "^0.3.6"
   }
 }
