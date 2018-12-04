@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { validateAndRecommendExtension } from "../recommendation";
-import { sendInfo, sendError } from "vscode-extension-telemetry-wrapper";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getReleaseNotesEntries, findLatestReleaseNotes } from "../utils";
 
 export async function createMavenProjectCmdHanlder(context: vscode.ExtensionContext) {
