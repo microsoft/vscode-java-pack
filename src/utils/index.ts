@@ -22,4 +22,13 @@ export async function recommendExtension(extName: string, message: string): Prom
   }
 }
 
+export function timeToString(time: Date) {
+  return time.toString();
+}
+
+export function stringToTime(str: string) {
+  return Date.parse(str);
+}
+
 export * from "./command";
+export * from "./release-notes";

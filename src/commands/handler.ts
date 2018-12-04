@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 
 import { validateAndRecommendExtension } from "../recommendation";
-import { sendInfo } from "vscode-extension-telemetry-wrapper";
+import { sendInfo, sendError } from "vscode-extension-telemetry-wrapper";
+import { getReleaseNotesEntries, findLatestReleaseNotes } from "../utils";
 
 export async function createMavenProjectCmdHanlder(context: vscode.ExtensionContext) {
   if (!await validateAndRecommendExtension('vscjava.vscode-maven', 'Maven extension is recommended to help create Java projects and work with custom goals.', true)) {
@@ -29,4 +30,18 @@ export async function showExtensionCmdHandler(context: vscode.ExtensionContext, 
 export async function openUrlCmdHandler(context: vscode.ExtensionContext, operationId: string, url: string) {
   sendInfo(operationId, { url: url });
   vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url));
+}
+
+export async function showReleaseNotes(context: vscode.ExtensionContext, operationId: string, version: string) {
+  let path = context.asAbsolutePath(`release-notes/v${version}.md`);
+  vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.file(path), null, {
+    sideBySide: false,
+    locked: true
+  });
+}
+
+export async function showLatestReleaseNotesHandler(context: vscode.ExtensionContext, operationId: string) {
+  const entries = await getReleaseNotesEntries(context);
+  const latest = findLatestReleaseNotes(entries);
+  await showReleaseNotes(context, operationId, latest.version);
 }

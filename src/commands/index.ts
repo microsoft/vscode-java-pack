@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { instrumentCommand } from '../utils';
-import { createMavenProjectCmdHanlder, createSpringBootProjectCmdHandler, showExtensionCmdHandler, openUrlCmdHandler } from "./handler";
+import { createMavenProjectCmdHanlder, createSpringBootProjectCmdHandler, showExtensionCmdHandler, openUrlCmdHandler, showLatestReleaseNotesHandler } from "./handler";
 import { overviewCmdHandler } from "../overview";
 
 export function initialize(context: vscode.ExtensionContext) {
@@ -10,4 +10,5 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('java.helper.createSpringBootProject', instrumentCommand(context, 'java.helper.createSpringBootProject', createSpringBootProjectCmdHandler)));
   context.subscriptions.push(vscode.commands.registerCommand('java.helper.showExtension', instrumentCommand(context, 'java.helper.showExtension', showExtensionCmdHandler)));
   context.subscriptions.push(vscode.commands.registerCommand('java.helper.openUrl', instrumentCommand(context, 'java.helper.openUrl', openUrlCmdHandler)));
+  context.subscriptions.push(vscode.commands.registerCommand('java.showLatestReleaseNotes', instrumentCommand(context, 'java.showLatestReleaseNotes', showLatestReleaseNotesHandler)));
 }
