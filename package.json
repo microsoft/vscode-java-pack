@@ -35,13 +35,18 @@
     "workspaceContains:pom.xml",
     "workspaceContains:build.gradle",
     "workspaceContains:mnvw",
-    "onCommand:java.overview"
+    "onCommand:java.overview",
+    "onCommand:java.showLatestReleaseNotes"
   ],
   "contributes": {
     "commands": [
       {
         "command": "java.overview",
         "title": "Java: Overview"
+      },
+      {
+        "command": "java.showLatestReleaseNotes",
+        "title": "Java: Show Release Notes"
       }
     ]
   },
@@ -57,6 +62,7 @@
   "devDependencies": {
     "@types/jquery": "^3.3.18",
     "@types/node": "^8.10.38",
+    "@types/semver": "^5.5.0",
     "autoprefixer": "^8.5.1",
     "bootstrap": "^4.1.1",
     "css-loader": "^0.28.11",
@@ -83,6 +89,7 @@
     "vscjava.vscode-java-dependency"
   ],
   "dependencies": {
+    "semver": "^5.6.0",
     "vscode-extension-telemetry-wrapper": "^0.3.6"
   }
 }
