@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import * as vscode from "vscode";
 import { initialize as initHandler, extensionRecommendationHandler } from "./handler";
 import { initialize as initXml } from "./xml";
