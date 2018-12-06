@@ -60,7 +60,7 @@
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "@types/jquery": "^3.3.18",
+    "@types/jquery": "^3.3.23",
     "@types/node": "^8.10.38",
     "@types/semver": "^5.5.0",
     "autoprefixer": "^8.5.1",
@@ -77,8 +77,8 @@
     "ts-loader": "^4.3.0",
     "tslint": "^5.8.0",
     "typescript": "^2.6.1",
-    "vscode": "^1.1.22",
-    "webpack": "^4.26.1",
+    "vscode": "^1.1.25",
+    "webpack": "^4.27.1",
     "webpack-cli": "^3.1.1"
   },
   "extensionPack": [
