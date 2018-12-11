@@ -60,7 +60,7 @@
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "@types/jquery": "^3.3.23",
+    "@types/jquery": "^3.3.24",
     "@types/node": "^8.10.38",
     "@types/semver": "^5.5.0",
     "autoprefixer": "^8.5.1",
@@ -69,7 +69,7 @@
     "html-webpack-inline-source-plugin": "0.0.10",
     "html-webpack-plugin": "^3.2.0",
     "jquery": "^3.3.1",
-    "node-sass": "^4.9.4",
+    "node-sass": "^4.11.0",
     "popper.js": "^1.14.6",
     "postcss-loader": "^2.1.5",
     "sass-loader": "^7.0.1",
@@ -77,7 +77,7 @@
     "ts-loader": "^4.3.0",
     "tslint": "^5.8.0",
     "typescript": "^2.6.1",
-    "vscode": "^1.1.25",
+    "vscode": "^1.1.26",
     "webpack": "^4.27.1",
     "webpack-cli": "^3.1.1"
   },
@@ -90,6 +90,6 @@
   ],
   "dependencies": {
     "semver": "^5.6.0",
-    "vscode-extension-telemetry-wrapper": "^0.3.6"
+    "vscode-extension-telemetry-wrapper": "^0.3.8"
   }
 }
