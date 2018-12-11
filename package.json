@@ -51,11 +51,10 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile&npm run build-assets",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "build-assets": "webpack --config webpack.config.js",
-    "watch-assets": "webpack --config webpack.config.js --watch",
+    "vscode:prepublish": "npm run build",
+    "compile": "webpack --config webpack.config.js",
+    "watch": "webpack --config webpack.config.js --watch --info-verbosity verbose",
+    "build": "webpack --config webpack.config.js --mode=\"production\"",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },

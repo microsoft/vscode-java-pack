@@ -46,7 +46,7 @@ export async function overviewCmdHandler(context: vscode.ExtensionContext, opera
   context.globalState.update(KEY_OVERVIEW_LAST_SHOW_TIME, Date.now().toString());
 
   overviewView.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'logo.lowres.png'));
-  let buffer = await readFile(require.resolve('./assets/index.html'));
+  let buffer = await readFile(path.join(context.extensionPath, './out/assets/overview/index.html'));
   overviewView.webview.html = buffer.toString();
 
   overviewView.onDidDispose(() => {
