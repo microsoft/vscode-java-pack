@@ -4,19 +4,24 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "watch",
-            "group": "build",
-            "isBackground": true,
-            "presentation": {
-                "reveal": "never",
-            },
-            "problemMatcher": [],
-            "dependsOn": ["npm: watch", "npm: watch-assets"]
-        },
-        {
             "type": "npm",
             "script": "watch",
-            "problemMatcher": "$tsc-watch",
+            "problemMatcher": {
+                "owner": "typescript",
+                "pattern":[
+                    {
+                        "regexp": "\\[tsl\\] ERROR",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Compilation \\w+ starting…",
+                    "endsPattern": "Compilation\\s+finished"
+                }
+            },
             "isBackground": true,
             "presentation": {
                 "reveal": "never"
@@ -24,30 +29,6 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
-        },
-        {
-            "type": "npm",
-            "script": "watch-assets",
-            "isBackground": true,
-            "presentation": {
-                "reveal": "never",
-            },
-            "group": "build",
-            "problemMatcher": {
-                "pattern": [
-                    {
-                        "regexp": "^([^\\\\s].*)\\\\((\\\\d+,\\\\d+)\\\\):\\\\s*(.*)$",
-                        "file": 1,
-                        "location": 2,
-                        "message": 3
-                    }
-                ],
-                "background": {
-                    "beginsPattern": "^Webpack is watching the files.*",
-                    "activeOnStart": true,
-                    "endsPattern": "^Built at.*"
-                }
             }
         }
     ]

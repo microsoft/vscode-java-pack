@@ -1,4 +1,15 @@
 release-notes/**/*.gif
 release-notes/**/*.png
 release-notes/**/*.jpg
-
+node_modules
+src
+.vscode
+.github
+.gitignore
+package-lock.json
+tsconfig.json
+tslint.json
+webpack.config.ext.js
+webpack.config.js
+out/**/*.map
+out/assets/**/*.js
