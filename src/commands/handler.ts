@@ -22,7 +22,7 @@ export async function createSpringBootProjectCmdHandler(context: vscode.Extensio
     return;
   }
 
-  await vscode.commands.executeCommand('spring.initializr.maven-project');
+  await vscode.commands.executeCommand('spring.initializr.createProject');
 }
 
 export async function showExtensionCmdHandler(context: vscode.ExtensionContext, operationId: string, extensionName: string) {
