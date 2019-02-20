@@ -85,7 +85,8 @@
     "vscjava.vscode-java-debug",
     "vscjava.vscode-java-test",
     "vscjava.vscode-maven",
-    "vscjava.vscode-java-dependency"
+    "vscjava.vscode-java-dependency",
+    "VisualStudioExptTeam.vscodeintellicode"
   ],
   "dependencies": {
     "semver": "^5.6.0",

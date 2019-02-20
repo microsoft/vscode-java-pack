@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.6.0
+- Added [Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode) to Java Extension Pack
+
 ## 0.4.0
 - Added Overview page to help users get started
 - Use extensionPack instead of extensionDependencies
