@@ -34,6 +34,9 @@ export async function getReleaseNotesEntries(context: vscode.ExtensionContext): 
           fileName: fileName,
           version: semver
         });
+
+        // global regular expression object is STATEFUL!!!
+        regex.lastIndex = 0;
       });
 
       resolve(entries);
