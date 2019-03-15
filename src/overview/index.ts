@@ -10,6 +10,7 @@ import * as path from 'path';
 const readFile = util.promisify(fsReadFile);
 
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { getExtensionContext } from "../utils";
 
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
@@ -45,30 +46,40 @@ export async function overviewCmdHandler(context: vscode.ExtensionContext, opera
 
   context.globalState.update(KEY_OVERVIEW_LAST_SHOW_TIME, Date.now().toString());
 
-  overviewView.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'logo.lowres.png'));
-  let buffer = await readFile(path.join(context.extensionPath, './out/assets/overview/index.html'));
-  overviewView.webview.html = buffer.toString();
+  await initializeOverviewView(context, overviewView, onDidDisposeWebviewPanel);
+}
 
-  overviewView.onDidDispose(() => {
-    overviewView = undefined;
-  });
+function onDidDisposeWebviewPanel() {
+  overviewView = undefined;
+}
+
+async function initializeOverviewView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
+  webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'logo.lowres.png'));
+  webviewPanel.webview.html = await loadHtmlContent(context);
+
+  webviewPanel.onDidDispose(onDisposeCallback);
 
   const installedExtensions = vscode.extensions.all.map(ext => ext.id.toLowerCase());
-  overviewView.webview.postMessage({
+  webviewPanel.webview.postMessage({
     command: 'hideInstalledExtensions',
     installedExtensions: installedExtensions
   });
 
-  overviewView.webview.postMessage({
+  webviewPanel.webview.postMessage({
     command: 'setOverviewVisibility',
     visibility: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA)
   });
 
-  overviewView.webview.onDidReceiveMessage((e) => {
+  webviewPanel.webview.onDidReceiveMessage((e) => {
     if (e.command === 'setOverviewVisibility') {
       toggleOverviewVisibilityOperation(context, e.visibility);
     }
   });
+}
+
+async function loadHtmlContent(context: vscode.ExtensionContext) {
+  let buffer = await readFile(path.join(context.extensionPath, './out/assets/overview/index.html'));
+  return buffer.toString();
 }
 
 export async function showOverviewPageOnActivation(context: vscode.ExtensionContext) {
@@ -81,5 +92,18 @@ export async function showOverviewPageOnActivation(context: vscode.ExtensionCont
     let overviewLastShowTime = context.globalState.get(KEY_OVERVIEW_LAST_SHOW_TIME);
     let showInBackground = overviewLastShowTime !== undefined;
     vscode.commands.executeCommand('java.overview', showInBackground);
+  }
+}
+
+export class OverviewViewSerializer implements vscode.WebviewPanelSerializer {
+  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+    if (overviewView) {
+      overviewView.reveal();
+      webviewPanel.dispose();
+      return;
+    }
+
+    overviewView = webviewPanel;
+    initializeOverviewView(getExtensionContext(), webviewPanel, onDidDisposeWebviewPanel);
   }
 }
