@@ -21,7 +21,7 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   initRecommendations(context);
   initMisc(context);
 
-  vscode.window.registerWebviewPanelSerializer('java.overview', new OverviewViewSerializer());
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer('java.overview', new OverviewViewSerializer()));
 
   await showOverviewPageOnActivation(context);
   await showReleaseNotesOnStart(context);
