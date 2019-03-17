@@ -36,7 +36,8 @@
     "workspaceContains:build.gradle",
     "workspaceContains:mnvw",
     "onCommand:java.overview",
-    "onCommand:java.showLatestReleaseNotes"
+    "onCommand:java.showLatestReleaseNotes",
+    "onWebviewPanel:java.overview"
   ],
   "contributes": {
     "commands": [

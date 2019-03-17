@@ -8,7 +8,7 @@ import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart } from "./misc";
-import { showOverviewPageOnActivation } from './overview';
+import { showOverviewPageOnActivation, OverviewViewSerializer } from './overview';
 
 export async function activate(context: vscode.ExtensionContext) {
   initializeTelemetry(context);
@@ -20,6 +20,8 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   initCommands(context);
   initRecommendations(context);
   initMisc(context);
+
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer('java.overview', new OverviewViewSerializer()));
 
   await showOverviewPageOnActivation(context);
   await showReleaseNotesOnStart(context);
