@@ -57,7 +57,7 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
   webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'logo.lowres.png'));
   webviewPanel.webview.html = await loadHtmlContent(context);
 
-  webviewPanel.onDidDispose(onDisposeCallback);
+  context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
 
   const installedExtensions = vscode.extensions.all.map(ext => ext.id.toLowerCase());
   webviewPanel.webview.postMessage({
@@ -70,11 +70,11 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
     visibility: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA)
   });
 
-  webviewPanel.webview.onDidReceiveMessage((e) => {
+  context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage((e) => {
     if (e.command === 'setOverviewVisibility') {
       toggleOverviewVisibilityOperation(context, e.visibility);
     }
-  });
+  }));
 }
 
 async function loadHtmlContent(context: vscode.ExtensionContext) {
