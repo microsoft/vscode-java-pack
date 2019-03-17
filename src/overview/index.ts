@@ -78,7 +78,7 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
 }
 
 async function loadHtmlContent(context: vscode.ExtensionContext) {
-  let buffer = await readFile(path.join(context.extensionPath, './out/assets/overview/index.html'));
+  let buffer = await readFile(context.asAbsolutePath('./out/assets/overview/index.html'));
   return buffer.toString();
 }
 
