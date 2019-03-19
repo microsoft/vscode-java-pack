@@ -10,7 +10,6 @@ import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart } from "./misc";
 import { showOverviewPageOnActivation, OverviewViewSerializer } from './overview';
 import { validateJavaRuntime } from "./java-runtime";
-import { valid } from 'semver';
 
 export async function activate(context: vscode.ExtensionContext) {
   initializeTelemetry(context);
