@@ -10,6 +10,8 @@ window.addEventListener('message', event => {
     hideEmptySections();
   } else if (event.data.command === 'setOverviewVisibility') {
     $('#showWhenUsingJava').prop('checked', event.data.visibility);
+  } else if (event.data.command === 'showJavaRuntimePanel') {
+    $('#javaRuntimePanel').removeClass('d-none');
   }
 });
 

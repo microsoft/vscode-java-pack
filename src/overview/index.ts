@@ -11,6 +11,7 @@ const readFile = util.promisify(fsReadFile);
 
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getExtensionContext } from "../utils";
+import { validateJavaRuntime } from '../java-runtime';
 
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
@@ -75,6 +76,12 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
       toggleOverviewVisibilityOperation(context, e.visibility);
     }
   }));
+
+  if (!await validateJavaRuntime()) {
+    webviewPanel.webview.postMessage({
+      command: 'showJavaRuntimePanel'
+    });
+  }
 }
 
 async function loadHtmlContent(context: vscode.ExtensionContext) {
