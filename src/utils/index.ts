@@ -21,7 +21,7 @@ export async function recommendExtension(extName: string, message: string): Prom
   const action = "Details";
   const answer = await vscode.window.showInformationMessage(message, action);
   if (answer === action) {
-    await vscode.commands.executeCommand('java.helper.showExtension', extName);
+    await vscode.commands.executeCommand("java.helper.showExtension", extName);
   }
 }
 

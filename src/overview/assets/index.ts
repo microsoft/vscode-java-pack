@@ -2,23 +2,23 @@
 // Licensed under the MIT license.
 
 import * as $ from "jquery";
-import './index.scss';
+import "./index.scss";
 
-window.addEventListener('message', event => {
-  if (event.data.command === 'hideInstalledExtensions') {
+window.addEventListener("message", event => {
+  if (event.data.command === "hideInstalledExtensions") {
     hideInstalledExtensions(event.data.installedExtensions);
     hideEmptySections();
-  } else if (event.data.command === 'setOverviewVisibility') {
-    $('#showWhenUsingJava').prop('checked', event.data.visibility);
-  } else if (event.data.command === 'showJavaRuntimePanel') {
-    $('#javaRuntimePanel').removeClass('d-none');
+  } else if (event.data.command === "setOverviewVisibility") {
+    $("#showWhenUsingJava").prop("checked", event.data.visibility);
+  } else if (event.data.command === "showJavaRuntimePanel") {
+    $("#javaRuntimePanel").removeClass("d-none");
   }
 });
 
 function hideInstalledExtensions(extensions: any) {
-  $('div[ext]').each((index, elem) => {
+  $("div[ext]").each((index, elem) => {
     const anchor = $(elem);
-    const ext = (anchor.attr('ext') || '').toLowerCase();
+    const ext = (anchor.attr("ext") || "").toLowerCase();
     if (extensions.indexOf(ext) !== -1) {
       anchor.hide();
     }
@@ -26,8 +26,8 @@ function hideInstalledExtensions(extensions: any) {
 }
 
 function hideEmptySections() {
-  $('div h3').parent().each((i, div) => {
-    if (!$(div).children('h3 ~ div').is(':visible')) {
+  $("div h3").parent().each((i, div) => {
+    if (!$(div).children("h3 ~ div").is(":visible")) {
       $(div).hide();
     }
   });
@@ -36,9 +36,9 @@ function hideEmptySections() {
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi();
 
-$('#showWhenUsingJava').change(function () {
+$("#showWhenUsingJava").change(function () {
   vscode.postMessage({
-    command: 'setOverviewVisibility',
-    visibility: $(this).is(':checked')
+    command: "setOverviewVisibility",
+    visibility: $(this).is(":checked")
   });
 });

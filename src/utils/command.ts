@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as vscode from 'vscode';
-import { instrumentOperation } from 'vscode-extension-telemetry-wrapper';
+import * as vscode from "vscode";
+import { instrumentOperation } from "vscode-extension-telemetry-wrapper";
 
 export type CommandHandler = (context: vscode.ExtensionContext, operationId: string, ...args: any[]) => any;
 

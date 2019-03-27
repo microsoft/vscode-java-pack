@@ -13,7 +13,7 @@ function showInfoButton() {
 }
 
 type ReleaseNotesPresentationHistoryEntry = { version: string, timeStamp: string };
-const RELEASE_NOTE_PRESENTATION_HISTORY = 'releaseNotesPresentationHistory';
+const RELEASE_NOTE_PRESENTATION_HISTORY = "releaseNotesPresentationHistory";
 
 export async function showReleaseNotesOnStart(context: vscode.ExtensionContext) {
   const entries = await getReleaseNotesEntries(context);
@@ -24,7 +24,7 @@ export async function showReleaseNotesOnStart(context: vscode.ExtensionContext) 
     return;
   }
 
-  await vscode.commands.executeCommand('java.showLatestReleaseNotes');
+  await vscode.commands.executeCommand("java.showLatestReleaseNotes");
 
   history.push({
     version: latest.version,
