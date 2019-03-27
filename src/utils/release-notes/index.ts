@@ -9,7 +9,7 @@ import { sendError } from "vscode-extension-telemetry-wrapper";
 type ReleaseNotesEntry = { fileName: string, version: string };
 
 export async function getReleaseNotesEntries(context: vscode.ExtensionContext): Promise<ReleaseNotesEntry[]> {
-  const dir = context.asAbsolutePath('release-notes');
+  const dir = context.asAbsolutePath("release-notes");
   const regex = /v((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))\.md/g;
 
   return new Promise<ReleaseNotesEntry[]>((resolve, reject) => {
