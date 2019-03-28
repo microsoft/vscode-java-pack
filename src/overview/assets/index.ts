@@ -12,8 +12,20 @@ window.addEventListener('message', event => {
     $('#showWhenUsingJava').prop('checked', event.data.visibility);
   } else if (event.data.command === 'showJavaRuntimePanel') {
     $('#javaRuntimePanel').removeClass('d-none');
+    applyJdkInfo(event.data.jdkInfo);
   }
 });
+
+function applyJdkInfo(jdkInfo: any) {
+  let binary = jdkInfo.binaries[0];
+  let downloadLink = binary.installer_link || binary.binary_link;
+  $("#jdkOs").text(binary.os);
+  $("#jdkArch").text(binary.architecture);
+  $("#jdkReleaseName").text(jdkInfo.release_name);
+
+  let encodedLink = `command:java.helper.openUrl?${encodeURIComponent(JSON.stringify(downloadLink))}`;
+  $("#jdkDownloadLink").attr("href", encodedLink);
+}
 
 function hideInstalledExtensions(extensions: any) {
   $('div[ext]').each((index, elem) => {
@@ -41,4 +53,9 @@ $('#showWhenUsingJava').change(function () {
     command: 'setOverviewVisibility',
     visibility: $(this).is(':checked')
   });
+});
+
+$("#showJdkProviderList").click(() => {
+  console.log("clicked");
+  $("#jdkProviderList").toggleClass("d-none");
 });

@@ -11,7 +11,7 @@ const readFile = util.promisify(fsReadFile);
 
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getExtensionContext } from "../utils";
-import { validateJavaRuntime } from '../java-runtime';
+import { validateJavaRuntime, suggestOpenJdk } from '../java-runtime';
 
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = 'showWhenUsingJava';
@@ -78,8 +78,11 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
   }));
 
   if (!await validateJavaRuntime()) {
+    let jdkInfo = await suggestOpenJdk();
+
     webviewPanel.webview.postMessage({
-      command: 'showJavaRuntimePanel'
+      command: 'showJavaRuntimePanel',
+      jdkInfo: jdkInfo
     });
   }
 }

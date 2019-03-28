@@ -17,9 +17,67 @@
       <div class="col">
         <div class="alert alert-secondary" role="alert">
           <h4 class="alert-heading">Java Development Kit Required</h4>
-          <p>Java Developerment Kit (JDK) 8 or later is required for developing Java applications. Here are some popular JDK distributions. Please follow one of the links to download and install.</p>
-          <ul>
-            <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fadoptopenjdk.net%2F%22" title="AdoptOpenJDK">AdoptOpenJDK</a></li>
+          <p>Java Developerment Kit (JDK) 8 or later is required for developing Java applications. You can download and install the prebuilt OpenJDK by <a href="command:java.helper.openUrl?%22https%3A%2F%2Fadoptopenjdk.net%2F%22" title="AdoptOpenJDK">AdoptOpenJDK</a>:</p>
+          <form>
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="inputEmail4">JDK Version:</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="jdkVersion" id="openjdk8Radio" value="openjdk8" checked>
+                  <label class="form-check-label" for="openjdk8Radio">
+                    OpenJDK 8 (LTS)
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="jdkVersion" id="openjdk9Radio" value="openjdk9">
+                  <label class="form-check-label" for="openjdk9Radio">
+                    OpenJDK 9 (LTS)
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="jdkVersion" id="openjdk11Radio" value="openjdk11">
+                  <label class="form-check-label" for="openjdk11Radio">
+                    OpenJDK 11 (LTS)
+                  </label>
+                </div>
+              </div>
+              <div class="form-group col-md-6">
+                <label for="inputEmail4">JVM:</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="jvmImpl" id="hotspotRadio" value="hotspot" checked>
+                  <label class="form-check-label" for="hotspotRadio">
+                    Hotspot
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="jvmImpl" id="openj9Radio" value="openj9">
+                  <label class="form-check-label" for="openj9Radio">
+                    OpenJ9
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <a class="btn btn-primary" id="jdkDownloadLink" href="command:java.helper.openUrl" role="button" title="Download JDK">
+                  <span class="text-capitalize">
+                    Download OpenJDK 8 for
+                    <span id="jdkOs">windows</span>
+                    <span id="jdkArch">x64</span>
+                  </span>
+                  <br>
+                  <sub id="jdkReleaseName">release</sub>
+                  <sub id="jdkDownloadSize">121MB</sub>
+                </a>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-12">
+                <a id="showJdkProviderList" href="#" role="button" title="More JDK choices">Other choices...</a>
+              </div>
+            </div>
+          </form>
+          <ul id="jdkProviderList" class="d-none list-unstyled">
             <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.azul.com%2Fdownloads%2Fazure-only%2Fzulu%2F%22" title="Recommended for Microsoft Azure Cloud and Azure Stack applications">Azul Zulu Enterprise for Azure</a></li>
             <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.oracle.com%2Ftechnetwork%2Fjava%2Fjavase%2Fdownloads%2Findex.html%22" title="Java SE Downloads by Oracle">Java SE Downloads by Oracle</a></li>
             <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fopenjdk.java.net%2Finstall%2F%22" title="OpenJDK">OpenJDK</a></li>
