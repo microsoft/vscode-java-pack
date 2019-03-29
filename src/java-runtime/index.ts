@@ -4,7 +4,7 @@
 import * as vscode from "vscode";
 import * as cp from "child_process";
 import * as path from "path";
-import * as expandTilde from "expand-tilde";
+import expandTilde = require("expand-tilde");
 import * as pathExists from "path-exists";
 import * as request from "request-promise-native";
 import findJavaHome = require("find-java-home");

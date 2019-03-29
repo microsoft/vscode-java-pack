@@ -71,21 +71,29 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
     visibility: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA)
   });
 
-  context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage((e) => {
+  context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     if (e.command === 'setOverviewVisibility') {
       toggleOverviewVisibilityOperation(context, e.visibility);
+    } else if (e.command === "requestJdkInfo") {
+      let jdkInfo = await suggestOpenJdk(e.jdkVersion, e.jvmImpl);
+      applyJdkInfo(jdkInfo);
     }
   }));
 
   if (!await validateJavaRuntime()) {
     let jdkInfo = await suggestOpenJdk();
+    applyJdkInfo(jdkInfo);
+  }
 
+  function applyJdkInfo(jdkInfo: any) {
     webviewPanel.webview.postMessage({
       command: 'showJavaRuntimePanel',
       jdkInfo: jdkInfo
     });
   }
 }
+
+
 
 async function loadHtmlContent(context: vscode.ExtensionContext) {
   let buffer = await readFile(context.asAbsolutePath('./out/assets/overview/index.html'));

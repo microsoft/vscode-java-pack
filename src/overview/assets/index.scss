@@ -19,4 +19,14 @@ $font-size-base: .8rem !default;
 
 $text-muted: var(--vscode-editorCodeLens-foreground) !default;
 
+$nav-tabs-link-active-color: var(--vscode-sideBarTitle-foreground);
+$nav-tabs-link-active-bg: var(--vscode-sideBar-background);
+$nav-tabs-link-active-border-color: var(--vscode-sideBarTitle-foreground) var(--vscode-sideBarTitle-foreground) var(--vscode-sideBar-background) var(--vscode-sideBarTitle-foreground);
+$nav-tabs-link-hover-border-color: var(--vscode-sideBarTitle-foreground);
+$nav-tabs-border-color:  var(--vscode-sideBarTitle-foreground);
+
+$card-bg: var(--vscode-sideBar-background);
+$card-color: var(--vscode-sideBarTitle-foreground);
+$card-border-color: var(--vscode-sideBar-border);
+
 @import "~bootstrap/scss/bootstrap";

@@ -3,6 +3,8 @@
 
 import * as $ from "jquery";
 import './index.scss';
+import "bootstrap/js/src/tab";
+import bytes = require("bytes");
 
 window.addEventListener('message', event => {
   if (event.data.command === 'hideInstalledExtensions') {
@@ -22,9 +24,13 @@ function applyJdkInfo(jdkInfo: any) {
   $("#jdkOs").text(binary.os);
   $("#jdkArch").text(binary.architecture);
   $("#jdkReleaseName").text(jdkInfo.release_name);
+  $("#jdkDownloadSize").text(bytes(binary.binary_size, {unitSeparator: ' '}));
 
   let encodedLink = `command:java.helper.openUrl?${encodeURIComponent(JSON.stringify(downloadLink))}`;
   $("#jdkDownloadLink").attr("href", encodedLink);
+
+  $("#jdkSpinner").addClass("d-none");
+  $("#jdkDownloadLink").removeClass("d-none");
 }
 
 function hideInstalledExtensions(extensions: any) {
@@ -55,7 +61,16 @@ $('#showWhenUsingJava').change(function () {
   });
 });
 
-$("#showJdkProviderList").click(() => {
-  console.log("clicked");
-  $("#jdkProviderList").toggleClass("d-none");
+function requestJdkInfo(jdkVersion: string, jvmImpl: string) {
+  vscode.postMessage({
+    command: "requestJdkInfo",
+    jdkVersion: jdkVersion,
+    jvmImpl: jvmImpl
+  });
+}
+
+$("input[type=radio]").change(() => {
+  $("#jdkSpinner").removeClass("d-none");
+  $("#jdkDownloadLink").addClass("d-none");
+  requestJdkInfo($("input[name=jdkVersion]:checked").val().toString(), $("input[name=jvmImpl]:checked").val().toString());
 });
