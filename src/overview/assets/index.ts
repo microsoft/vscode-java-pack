@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as $ from "jquery";
-import './index.scss';
+import $ = require("jquery");
+import "./index.scss";
 import "bootstrap/js/src/tab";
 import bytes = require("bytes");
 
@@ -10,11 +10,11 @@ window.addEventListener("message", event => {
   if (event.data.command === "hideInstalledExtensions") {
     hideInstalledExtensions(event.data.installedExtensions);
     hideEmptySections();
-  } else if (event.data.command === 'setOverviewVisibility') {
-    $('#showWhenUsingJava').prop('checked', event.data.visibility);
-  } else if (event.data.command === 'showJavaRuntimePanel') {
-    $('#javaRuntimePanel').removeClass('d-none');
-  } else if (event.data.command === 'applyJdkInfo') {
+  } else if (event.data.command === "setOverviewVisibility") {
+    $("#showWhenUsingJava").prop("checked", event.data.visibility);
+  } else if (event.data.command === "showJavaRuntimePanel") {
+    $("#javaRuntimePanel").removeClass("d-none");
+  } else if (event.data.command === "applyJdkInfo") {
     applyJdkInfo(event.data.jdkInfo);
   }
 });
@@ -25,7 +25,7 @@ function applyJdkInfo(jdkInfo: any) {
   $("#jdkOs").text(binary.os);
   $("#jdkArch").text(binary.architecture);
   $("#jdkReleaseName").text(jdkInfo.release_name);
-  $("#jdkDownloadSize").text(bytes(binary.binary_size, {unitSeparator: ' '}));
+  $("#jdkDownloadSize").text(bytes(binary.binary_size, {unitSeparator: " "}));
 
   let encodedLink = `command:java.helper.openUrl?${encodeURIComponent(JSON.stringify(downloadLink))}`;
   $("#jdkDownloadLink").attr("href", encodedLink);

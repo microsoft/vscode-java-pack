@@ -8,6 +8,7 @@ import expandTilde = require("expand-tilde");
 import * as pathExists from "path-exists";
 import * as request from "request-promise-native";
 import findJavaHome = require("find-java-home");
+import architecture = require("arch");
 
 const isWindows = process.platform.indexOf("win") === 0;
 const JAVAC_FILENAME = path.join("bin", "javac" + (isWindows ? ".exe" : "")) ;
@@ -89,7 +90,10 @@ export async function suggestOpenJdk(jdkVersion: string = "openjdk8", impl: stri
     os = "linux";
   }
 
-  let arch = process.arch;
+  let arch = architecture();
+  if (arch === "x86") {
+    arch = "x32";
+  }
 
   return await request.get({
     uri: `https://api.adoptopenjdk.net/v2/info/releases/${jdkVersion}?openjdk_impl=${impl}&arch=${arch}&os=${os}&type=jdk&release=latest`,
