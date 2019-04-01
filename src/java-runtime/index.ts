@@ -4,9 +4,11 @@
 import * as vscode from "vscode";
 import * as cp from "child_process";
 import * as path from "path";
-import * as expandTilde from "expand-tilde";
+import expandTilde = require("expand-tilde");
 import * as pathExists from "path-exists";
+import * as request from "request-promise-native";
 import findJavaHome = require("find-java-home");
+import architecture = require("arch");
 
 const isWindows = process.platform.indexOf("win") === 0;
 const JAVAC_FILENAME = path.join("bin", "javac" + (isWindows ? ".exe" : "")) ;
@@ -37,7 +39,7 @@ async function getJavaVersion(javaHome: string | undefined): Promise<number> {
 }
 
 async function findPossibleJdkInstallations(): Promise<{[location : string] : string | undefined}> {
-  return new Promise((resolve, reject) => {
+  return new Promise<{[location : string] : string | undefined}>((resolve, reject) => {
     const javaHomeEntries: {[location : string] : string | undefined} = {
       "java.home": vscode.workspace.getConfiguration().get("java.home", undefined),
       "JDK_HOME": process.env["JDK_HOME"],
@@ -76,4 +78,25 @@ export async function validateJavaRuntime() {
   }
 
   return false;
+}
+
+export async function suggestOpenJdk(jdkVersion: string = "openjdk8", impl: string = "hotspot") {
+  let os: string = process.platform;
+  if (os === "win32") {
+    os = "windows";
+  } else if (os === "darwin") {
+    os = "mac";
+  } else {
+    os = "linux";
+  }
+
+  let arch = architecture();
+  if (arch === "x86") {
+    arch = "x32";
+  }
+
+  return await request.get({
+    uri: `https://api.adoptopenjdk.net/v2/info/releases/${jdkVersion}?openjdk_impl=${impl}&arch=${arch}&os=${os}&type=jdk&release=latest`,
+    json: true
+  });
 }
