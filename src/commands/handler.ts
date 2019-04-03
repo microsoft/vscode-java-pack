@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import { validateAndRecommendExtension } from "../recommendation";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getReleaseNotesEntries, findLatestReleaseNotes } from "../utils";
+import { gt, eq } from "semver";
 
 export async function createMavenProjectCmdHanlder(context: vscode.ExtensionContext) {
   if (!await validateAndRecommendExtension("vscjava.vscode-maven", "Maven extension is recommended to help create Java projects and work with custom goals.", true)) {
@@ -43,8 +44,37 @@ export async function showReleaseNotes(context: vscode.ExtensionContext, operati
   });
 }
 
-export async function showLatestReleaseNotesHandler(context: vscode.ExtensionContext, operationId: string) {
+export async function showReleaseNotesHandler(context: vscode.ExtensionContext, operationId: string, version: string | undefined) {
   const entries = await getReleaseNotesEntries(context);
   const latest = findLatestReleaseNotes(entries);
-  await showReleaseNotes(context, operationId, latest.version);
+
+  if (version === "latest") {
+    version = latest.version;
+  }
+
+  if (version === undefined) {
+    const versions = entries.map((entry) => entry.version).sort((a, b) => {
+      if (gt(a, b)) {
+        return -1;
+      } else if (eq(a, b)) {
+        return 0;
+      }
+
+      return 1;
+    });
+
+    version = await vscode.window.showQuickPick(versions, {
+      ignoreFocusOut: true
+    });
+
+    if (!version) {
+      return;
+    }
+  }
+
+  sendInfo(operationId, {
+    version: version
+  });
+
+  return await showReleaseNotes(context, operationId, version);
 }
