@@ -36,7 +36,7 @@
     "workspaceContains:build.gradle",
     "workspaceContains:mnvw",
     "onCommand:java.overview",
-    "onCommand:java.showLatestReleaseNotes",
+    "onCommand:java.showReleaseNotes",
     "onWebviewPanel:java.overview"
   ],
   "contributes": {
@@ -46,7 +46,7 @@
         "title": "Java: Overview"
       },
       {
-        "command": "java.showLatestReleaseNotes",
+        "command": "java.showReleaseNotes",
         "title": "Java: Show Release Notes"
       }
     ]

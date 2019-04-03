@@ -24,7 +24,7 @@ export async function showReleaseNotesOnStart(context: vscode.ExtensionContext) 
     return;
   }
 
-  await vscode.commands.executeCommand("java.showLatestReleaseNotes");
+  await vscode.commands.executeCommand("java.showReleaseNotes", "latest");
 
   history.push({
     version: latest.version,
