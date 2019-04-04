@@ -104,6 +104,6 @@
   ],
   "dependencies": {
     "semver": "^5.6.0",
-    "vscode-extension-telemetry-wrapper": "^0.3.8"
+    "vscode-extension-telemetry-wrapper": "^0.4.0"
   }
 }
