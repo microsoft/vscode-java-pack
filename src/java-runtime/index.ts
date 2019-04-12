@@ -80,7 +80,7 @@ export async function validateJavaRuntime() {
   return false;
 }
 
-export async function suggestOpenJdk(jdkVersion: string = "openjdk8", impl: string = "hotspot") {
+export async function suggestOpenJdk(jdkVersion: string = "openjdk11", impl: string = "hotspot") {
   let os: string = process.platform;
   if (os === "win32") {
     os = "windows";

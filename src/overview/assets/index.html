@@ -22,10 +22,10 @@
             </p>
             <ul class="nav nav-tabs mb-3" id="jdkSourceTab" role="tablist">
               <li class="nav-item">
-                <a class="nav-link active" id="adoptOpenJdkTab" data-toggle="tab" href="#adoptOpenJdkPanel" role="tab" aria-controls="adoptOpenJdkPanel" aria-selected="true">AdoptOpenJDK</a>
+                <a class="nav-link active" id="adoptOpenJdkTab" data-toggle="tab" href="#adoptOpenJdkPanel" role="tab" aria-controls="adoptOpenJdkPanel" aria-selected="true" title="Reliable source of OpenJDK binaries for all platforms">AdoptOpenJDK</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" id="otherJdkTab" data-toggle="tab" href="#otherJdkPanel" role="tab" aria-controls="otherJdkPanel" aria-selected="false">Others</a>
+                <a class="nav-link" id="otherJdkTab" data-toggle="tab" href="#otherJdkPanel" role="tab" aria-controls="otherJdkPanel" aria-selected="false" title="Other choices">Others</a>
               </li>
             </ul>
             <div class="tab-content" id="myTabContent">
@@ -42,32 +42,32 @@
                   </div>
                   <div class="form-row">
                     <div class="form-group col-sm-6">
-                      <label for="inputEmail4">JDK Version:</label>
+                      <label>JDK Version:</label>
                       <div class="form-check">
-                        <input class="form-check-input" type="radio" name="jdkVersion" id="openjdk8Radio" value="openjdk8" checked>
+                        <input class="form-check-input" type="radio" name="jdkVersion" id="openjdk8Radio" value="openjdk8">
                         <label class="form-check-label" for="openjdk8Radio">
-                          OpenJDK 8 (LTS)
+                          OpenJDK 8
                         </label>
                       </div>
                       <div class="form-check">
-                        <input class="form-check-input" type="radio" name="jdkVersion" id="openjdk11Radio" value="openjdk11">
+                        <input class="form-check-input" type="radio" name="jdkVersion" id="openjdk11Radio" value="openjdk11" checked>
                         <label class="form-check-label" for="openjdk11Radio">
-                          OpenJDK 11 (LTS)
+                          OpenJDK 11
                         </label>
                       </div>
                       <div class="form-check">
                         <input class="form-check-input" type="radio" name="jdkVersion" id="openjdk12Radio" value="openjdk12">
                         <label class="form-check-label" for="openjdk12Radio">
-                          OpenJDK 12 (Latest)
+                          OpenJDK 12 (Technical Preview)
                         </label>
                       </div>
                     </div>
                     <div class="form-group col-sm-6">
-                      <label for="inputEmail4">JVM:</label>
+                      <label>JVM:</label>
                       <div class="form-check">
                         <input class="form-check-input" type="radio" name="jvmImpl" id="hotspotRadio" value="hotspot" checked>
                         <label class="form-check-label" for="hotspotRadio">
-                          Hotspot
+                          Hotspot (Recommended)
                         </label>
                       </div>
                       <div class="form-check">
@@ -94,9 +94,9 @@
               </div>
               <div class="tab-pane fade" id="otherJdkPanel" role="tabpanel" aria-labelledby="otherJdkTab">
                 <ul id="jdkProviderList" class="list-unstyled">
-                  <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.azul.com%2Fdownloads%2Fazure-only%2Fzulu%2F%22" title="Recommended for Microsoft Azure Cloud and Azure Stack applications">Azul Zulu Enterprise for Azure</a></li>
-                  <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.oracle.com%2Ftechnetwork%2Fjava%2Fjavase%2Fdownloads%2Findex.html%22" title="Java SE Downloads by Oracle">Java SE Downloads by Oracle</a></li>
-                  <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fopenjdk.java.net%2Finstall%2F%22" title="OpenJDK">OpenJDK</a></li>
+                  <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.azul.com%2Fdownloads%2Fazure-only%2Fzulu%2F%22" title="Recommended for Microsoft Azure Cloud and Azure Stack applications">Azul Zulu Enterprise OpenJDK for Microsoft Azure</a></li>
+                  <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fdevelopers.redhat.com%2Fproducts%2Fopenjdk%2Fdownload%22" title="OpenJDK by Red Hat">Red Hat OpenJDK</a></li>
+                  <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.oracle.com%2Ftechnetwork%2Fjava%2Fjavase%2Fdownloads%2Findex.html%22" title="OpenJDK by Oracle">Oracle OpenJDK</a></li>
                 </ul>
               </div>
             </div>
