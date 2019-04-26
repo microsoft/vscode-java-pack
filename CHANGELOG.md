@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.7.0
+- Added *JDK Acquisition Guide* to the overview page [#119](https://github.com/Microsoft/vscode-java-pack/pull/119)
+
 ## 0.6.0
 - Added [Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode) to Java Extension Pack
 
