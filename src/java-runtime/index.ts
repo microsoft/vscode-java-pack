@@ -14,6 +14,30 @@ const isWindows = process.platform.indexOf("win") === 0;
 const JAVAC_FILENAME = path.join("bin", "javac" + (isWindows ? ".exe" : "")) ;
 const JAVA_FILENAME = path.join("bin", "java" + (isWindows ? ".exe" : ""));
 
+// Taken from https://github.com/Microsoft/vscode-java-debug/blob/7abda575111e9ce2221ad9420330e7764ccee729/src/launchCommand.ts
+
+function parseMajorVersion(content: string): number {
+  let regexp = /version "(.*)"/g;
+  let match = regexp.exec(content);
+  if (!match) {
+      return 0;
+  }
+  let version = match[1];
+  // Ignore '1.' prefix for legacy Java versions
+  if (version.startsWith("1.")) {
+      version = version.substring(2);
+  }
+
+  // look into the interesting bits now
+  regexp = /\d+/g;
+  match = regexp.exec(version);
+  let javaVersion = 0;
+  if (match) {
+      javaVersion = parseInt(match[0], 10);
+  }
+  return javaVersion;
+}
+
 async function getJavaVersion(javaHome: string | undefined): Promise<number> {
   if (!javaHome) {
     return Promise.resolve(0);
@@ -21,19 +45,7 @@ async function getJavaVersion(javaHome: string | undefined): Promise<number> {
 
   return new Promise<number>((resolve, reject) => {
     cp.execFile(path.resolve(javaHome, JAVA_FILENAME),["-version"], {}, (err, stdout, stderr) => {
-      const regex = /version "(\d+)\.(\d+).*"/g;
-      const match = regex.exec(stderr);
-      if (!match) {
-        resolve(0);
-        return;
-      }
-
-      let major = parseInt(match[1]), minor = parseInt(match[2]);
-      if (major === 1) {
-        resolve(minor);
-      }
-
-      resolve(major);
+      resolve(parseMajorVersion(stderr));
     });
   });
 }
