@@ -95,12 +95,14 @@
     "webpack-cli": "^3.3.1"
   },
   "extensionPack": [
-    "redhat.java",
     "vscjava.vscode-java-debug",
     "vscjava.vscode-java-test",
     "vscjava.vscode-maven",
     "vscjava.vscode-java-dependency",
     "VisualStudioExptTeam.vscodeintellicode"
+  ],
+  "extensionDependencies": [
+    "redhat.java"
   ],
   "dependencies": {
     "semver": "^5.7.0",
