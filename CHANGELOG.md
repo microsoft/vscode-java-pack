@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.7.1
+- Fixed [#143](https://github.com/Microsoft/vscode-java-pack/issues/143) with [#144](https://github.com/Microsoft/vscode-java-pack/pull/144) - Correctly recognize vernsion 11 and 12 runtimes
+
 ## 0.7.0
 - Added *JDK Acquisition Guide* to the overview page [#119](https://github.com/Microsoft/vscode-java-pack/pull/119)
 
