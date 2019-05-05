@@ -9,13 +9,12 @@ label: bug
 Please fill in the *entire* template below. Screenshots and logs will be very helpful.
 -->
 
-**VS Code Version:**
+**Envinroment:**
 
-**Extension Version:**
-
-**JDK Type & Version:**
-
-**OS Type & Version:** <!-- Windows, Mac, Linux-->
+- VS Code Version:
+- Extension Version:
+- JDK Type & Version:
+- OS Type & Version: <!-- Windows, Mac, Linux-->
 
 **Step to Reproduce:**
 
