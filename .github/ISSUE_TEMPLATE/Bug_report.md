@@ -9,7 +9,7 @@ label: bug
 Please fill in the *entire* template below. Screenshots and logs will be very helpful.
 -->
 
-**Envinroment:**
+**Environment:**
 
 - VS Code Version:
 - Extension Version:
