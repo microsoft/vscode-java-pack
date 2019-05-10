@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import $ = require("jquery");
-import "./index.scss";
+import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";
 import bytes = require("bytes");
 
