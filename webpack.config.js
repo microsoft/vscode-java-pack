@@ -9,7 +9,8 @@ module.exports = function (env, argv) {
     name: 'assets',
     mode: 'none',
     entry: {
-      overview: './src/overview/assets/index.ts'
+      overview: './src/overview/assets/index.ts',
+      'java-runtime': './src/java-runtime/assets/index.ts'
     },
     module: {
       rules: [{
@@ -43,7 +44,14 @@ module.exports = function (env, argv) {
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/overview/index.html'),
         template: 'src/overview/assets/index.html',
-        inlineSource: '.(js|css)$'
+        inlineSource: '.(js|css)$',
+        chunks: ['overview']
+      }),
+      new HtmlWebpackPlugin({
+        filename: path.resolve(__dirname, 'out/assets/java-runtime/index.html'),
+        template: 'src/java-runtime/assets/index.html',
+        inlineSource: '.(js|css)$',
+        chunks: ['java-runtime']
       }),
       new HtmlWebpackInlineSourcePlugin(),
     ],
