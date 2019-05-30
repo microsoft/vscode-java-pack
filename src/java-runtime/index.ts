@@ -9,6 +9,51 @@ import * as pathExists from "path-exists";
 import * as request from "request-promise-native";
 import findJavaHome = require("find-java-home");
 import architecture = require("arch");
+import { loadTextFromFile, getExtensionContext } from "../utils";
+
+let javaRuntimeView: vscode.WebviewPanel | undefined;
+
+export async function javaRuntimeCmdHandler(context: vscode.ExtensionContext, operationId: string) {
+  if (javaRuntimeView) {
+    javaRuntimeView.reveal();
+    return;
+  }
+
+  javaRuntimeView = vscode.window.createWebviewPanel("java.runtime", "Java Runtime", {
+    viewColumn: vscode.ViewColumn.One,
+  }, {
+    enableScripts: true,
+    enableCommandUris: true,
+    retainContextWhenHidden: true
+  });
+
+  await initializeJavaRuntimeView(context, javaRuntimeView, onDidDisposeWebviewPanel);
+}
+
+function onDidDisposeWebviewPanel() {
+  javaRuntimeView = undefined;
+}
+
+async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
+  webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
+  const resourceUri = context.asAbsolutePath("./out/assets/java-runtime/index.html");
+  webviewPanel.webview.html = await loadTextFromFile(resourceUri);
+
+  context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
+}
+
+export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer {
+  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+    if (javaRuntimeView) {
+      javaRuntimeView.reveal();
+      webviewPanel.dispose();
+      return;
+    }
+
+    javaRuntimeView = webviewPanel;
+    initializeJavaRuntimeView(getExtensionContext(), webviewPanel, onDidDisposeWebviewPanel);
+  }
+}
 
 const isWindows = process.platform.indexOf("win") === 0;
 const JAVAC_FILENAME = path.join("bin", "javac" + (isWindows ? ".exe" : "")) ;

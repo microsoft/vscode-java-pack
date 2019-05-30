@@ -37,7 +37,9 @@
     "workspaceContains:mnvw",
     "onCommand:java.overview",
     "onCommand:java.showReleaseNotes",
-    "onWebviewPanel:java.overview"
+    "onWebviewPanel:java.overview",
+    "onCommand:java.runtime",
+    "onWebviewPanel:java.runtime"
   ],
   "contributes": {
     "commands": [
@@ -48,6 +50,10 @@
       {
         "command": "java.showReleaseNotes",
         "title": "Java: Show Release Notes"
+      },
+      {
+        "command": "java.runtime",
+        "title": "Java: Runtime"
       }
     ]
   },

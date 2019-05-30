@@ -2,6 +2,10 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
+import { readFile as fsReadFile } from "fs";
+import * as util from "util";
+
+const readFile = util.promisify(fsReadFile);
 
 let extensionContext: vscode.ExtensionContext;
 
@@ -31,6 +35,11 @@ export function timeToString(time: Date) {
 
 export function stringToTime(str: string) {
   return Date.parse(str);
+}
+
+export async function loadTextFromFile(resourceUri: string) {
+  let buffer = await readFile(resourceUri);
+  return buffer.toString();
 }
 
 export * from "./command";

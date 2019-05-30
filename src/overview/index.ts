@@ -3,15 +3,12 @@
 
 import * as vscode from "vscode";
 
-import { readFile as fsReadFile } from "fs";
-import * as util from "util";
 import * as path from "path";
-
-const readFile = util.promisify(fsReadFile);
 
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getExtensionContext } from "../utils";
 import { validateJavaRuntime, suggestOpenJdk } from "../java-runtime";
+import { loadTextFromFile } from "../utils";
 
 let overviewView: vscode.WebviewPanel | undefined;
 const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
@@ -56,7 +53,8 @@ function onDidDisposeWebviewPanel() {
 
 async function initializeOverviewView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
   webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
-  webviewPanel.webview.html = await loadHtmlContent(context);
+  const resourceUri = context.asAbsolutePath("./out/assets/overview/index.html");
+  webviewPanel.webview.html = await loadTextFromFile(resourceUri);
 
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
 
@@ -96,11 +94,6 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
       jdkInfo: jdkInfo
     });
   }
-}
-
-async function loadHtmlContent(context: vscode.ExtensionContext) {
-  let buffer = await readFile(context.asAbsolutePath("./out/assets/overview/index.html"));
-  return buffer.toString();
 }
 
 export async function showOverviewPageOnActivation(context: vscode.ExtensionContext) {
