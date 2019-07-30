@@ -15,7 +15,7 @@ By installing Java Extension Pack, the following extensions are installed:
     - Debugging
 - [📦 Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test)
     - Run & Debug JUnit/TestNG Test Cases
-- [📦 Maven Project Explorer](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-maven)
+- [📦 Maven for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-maven)
     - Project Scaffolding
     - Custom Goals
 - [📦 Java Dependency Viewer](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
