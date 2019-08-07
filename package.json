@@ -78,7 +78,7 @@
     "autoprefixer": "^8.5.1",
     "bootstrap": "^4.3.1",
     "bytes": "^3.1.0",
-    "css-loader": "^0.28.11",
+    "css-loader": "^3.2.0",
     "expand-tilde": "^2.0.2",
     "find-java-home": "^1.0.0",
     "html-webpack-inline-source-plugin": "0.0.10",
