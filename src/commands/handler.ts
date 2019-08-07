@@ -31,6 +31,15 @@ export async function showExtensionCmdHandler(context: vscode.ExtensionContext, 
   vscode.commands.executeCommand("extension.open", extensionName);
 }
 
+export async function installExtensionCmdHandler(context: vscode.ExtensionContext, operationId: string, extensionName: string, displayName: string) {
+  sendInfo(operationId, { extName: extensionName });
+  return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `Installing ${displayName||extensionName}...`}, progress => {
+    return vscode.commands.executeCommand("workbench.extensions.installExtension", extensionName);
+  }).then(() => {
+    vscode.window.showInformationMessage(`Successfully installed ${displayName||extensionName}.`);
+  });
+}
+
 export async function openUrlCmdHandler(context: vscode.ExtensionContext, operationId: string, url: string) {
   sendInfo(operationId, { url: url });
   vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(url));

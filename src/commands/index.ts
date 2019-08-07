@@ -4,7 +4,7 @@
 import * as vscode from "vscode";
 
 import { instrumentCommand } from "../utils";
-import { createMavenProjectCmdHanlder, createSpringBootProjectCmdHandler, showExtensionCmdHandler, openUrlCmdHandler, showReleaseNotesHandler } from "./handler";
+import { createMavenProjectCmdHanlder, createSpringBootProjectCmdHandler, showExtensionCmdHandler, openUrlCmdHandler, showReleaseNotesHandler, installExtensionCmdHandler } from "./handler";
 import { overviewCmdHandler } from "../overview";
 import { javaRuntimeCmdHandler } from "../java-runtime";
 
@@ -16,4 +16,5 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.helper.openUrl", instrumentCommand(context, "java.helper.openUrl", openUrlCmdHandler)));
   context.subscriptions.push(vscode.commands.registerCommand("java.showReleaseNotes", instrumentCommand(context, "java.showReleaseNotes", showReleaseNotesHandler)));
   context.subscriptions.push(vscode.commands.registerCommand("java.runtime", instrumentCommand(context, "java.runtime", javaRuntimeCmdHandler)));
+  context.subscriptions.push(vscode.commands.registerCommand("java.helper.installExtension", instrumentCommand(context, "java.helper.installExtension", installExtensionCmdHandler)));
 }
