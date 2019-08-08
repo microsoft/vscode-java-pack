@@ -58,10 +58,18 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
 
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
 
-  const installedExtensions = vscode.extensions.all.map(ext => ext.id.toLowerCase());
-  webviewPanel.webview.postMessage({
-    command: "hideInstalledExtensions",
-    installedExtensions: installedExtensions
+  function syncExtensionVisibility() {
+    const installedExtensions = vscode.extensions.all.map(ext => ext.id.toLowerCase());
+    webviewPanel.webview.postMessage({
+      command: "syncExtensionVisibility",
+      installedExtensions: installedExtensions
+    });
+  }
+
+  syncExtensionVisibility();
+
+  vscode.extensions.onDidChange(e => {
+    syncExtensionVisibility();
   });
 
   webviewPanel.webview.postMessage({
@@ -75,6 +83,8 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
     } else if (e.command === "requestJdkInfo") {
       let jdkInfo = await suggestOpenJdk(e.jdkVersion, e.jvmImpl);
       applyJdkInfo(jdkInfo);
+    } else if (e.command === "installExtension") {
+      await vscode.commands.executeCommand("java.helper.installExtension", e.extName, e.displayName);
     }
   }));
 
@@ -86,7 +96,6 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
     let jdkInfo = await suggestOpenJdk();
     applyJdkInfo(jdkInfo);
   }
-
 
   function applyJdkInfo(jdkInfo: any) {
     webviewPanel.webview.postMessage({

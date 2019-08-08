@@ -7,9 +7,9 @@ import "bootstrap/js/src/tab";
 import bytes = require("bytes");
 
 window.addEventListener("message", event => {
-  if (event.data.command === "hideInstalledExtensions") {
-    hideInstalledExtensions(event.data.installedExtensions);
-    hideEmptySections();
+  if (event.data.command === "syncExtensionVisibility") {
+    syncExtensionVisibility(event.data.installedExtensions);
+    syncSectionVisibility();
   } else if (event.data.command === "setOverviewVisibility") {
     $("#showWhenUsingJava").prop("checked", event.data.visibility);
   } else if (event.data.command === "showJavaRuntimePanel") {
@@ -34,20 +34,24 @@ function applyJdkInfo(jdkInfo: any) {
   $("#jdkDownloadLink").removeClass("d-none");
 }
 
-function hideInstalledExtensions(extensions: any) {
+function syncExtensionVisibility(extensions: any) {
   $("div[ext]").each((index, elem) => {
     const anchor = $(elem);
     const ext = (anchor.attr("ext") || "").toLowerCase();
     if (extensions.indexOf(ext) !== -1) {
       anchor.hide();
+    } else {
+      anchor.show();
     }
   });
 }
 
-function hideEmptySections() {
+function syncSectionVisibility() {
   $("div h3").parent().each((i, div) => {
     if (!$(div).children("h3 ~ div").is(":visible")) {
       $(div).hide();
+    } else {
+      $(div).show();
     }
   });
 }
@@ -69,6 +73,18 @@ function requestJdkInfo(jdkVersion: string, jvmImpl: string) {
     jvmImpl: jvmImpl
   });
 }
+
+function installExtension(extName: string, displayName: string) {
+  vscode.postMessage({
+    command: "installExtension",
+    extName: extName,
+    displayName: displayName
+  });
+}
+
+$("div[ext]").click(function () {
+  installExtension($(this).attr("ext"), $(this).attr("displayName"));
+});
 
 $("input[type=radio]").change(() => {
   $("#jdkSpinner").removeClass("d-none");

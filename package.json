@@ -7,7 +7,7 @@
   "publisher": "vscjava",
   "preview": true,
   "engines": {
-    "vscode": "^1.28.0"
+    "vscode": "^1.32.0"
   },
   "aiKey": "b4a8a622-6ac7-4cf8-83aa-f325e1890795",
   "icon": "logo.png",
