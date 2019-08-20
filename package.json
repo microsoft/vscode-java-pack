@@ -53,7 +53,7 @@
       },
       {
         "command": "java.runtime",
-        "title": "Java: Runtime"
+        "title": "Java: Configure Java Runtime"
       }
     ]
   },

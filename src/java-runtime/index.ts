@@ -19,7 +19,7 @@ export async function javaRuntimeCmdHandler(context: vscode.ExtensionContext, op
     return;
   }
 
-  javaRuntimeView = vscode.window.createWebviewPanel("java.runtime", "Java Runtime", {
+  javaRuntimeView = vscode.window.createWebviewPanel("java.runtime", "Configure Java Runtime", {
     viewColumn: vscode.ViewColumn.One,
   }, {
     enableScripts: true,
@@ -40,6 +40,22 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
   webviewPanel.webview.html = await loadTextFromFile(resourceUri);
 
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
+  context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
+    if (e.command === "requestJdkInfo") {
+      let jdkInfo = await suggestOpenJdk(e.jdkVersion, e.jvmImpl);
+      applyJdkInfo(jdkInfo);
+    }
+  }));
+
+  function applyJdkInfo(jdkInfo: any) {
+    webviewPanel.webview.postMessage({
+      command: "applyJdkInfo",
+      jdkInfo: jdkInfo
+    });
+  }
+
+  let jdkInfo = await suggestOpenJdk();
+  applyJdkInfo(jdkInfo);
 }
 
 export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer {
