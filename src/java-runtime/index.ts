@@ -11,7 +11,7 @@ import findJavaHome = require("find-java-home");
 import architecture = require("arch");
 import { loadTextFromFile, getExtensionContext } from "../utils";
 import { JavaRuntimeEntry, JavaRuntimeEntryTypes } from "./types";
-import _ = require("lodash");
+import * as _ from "lodash";
 
 const MIN_JDK_VERSION: number = 8;
 

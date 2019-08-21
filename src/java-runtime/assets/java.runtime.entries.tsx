@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import * as React from "react";
 import { JavaRuntimeEntry } from "../types";
 
@@ -7,10 +10,10 @@ export const JavaRuntimeEntryPanel = (props: JavaRuntimeEntry[]) => {
     <tr>
       <th scope="row">{index + 1}</th>
       <td>
-        {!entry.path && <em>Empty</em>}
+        {!entry.path && <em>*Empty*</em>}
         {entry.path}
         {index === current && <span className="badge badge-pill badge-primary">Current</span>}
-        {entry.path && !entry.isValid && <span className="badge badge-pill badge-secondary">Invalid</span>}
+        {entry.path && !entry.isValid && <span className="badge badge-pill badge-secondary" title={entry.hint}>Invalid</span>}
       </td>
       <td>
         {entry.name}
