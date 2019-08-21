@@ -10,6 +10,10 @@ import * as request from "request-promise-native";
 import findJavaHome = require("find-java-home");
 import architecture = require("arch");
 import { loadTextFromFile, getExtensionContext } from "../utils";
+import { JavaRuntimeEntry, JavaRuntimeEntryTypes } from "./types";
+import _ = require("lodash");
+
+const MIN_JDK_VERSION: number = 8;
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 
@@ -54,8 +58,18 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
     });
   }
 
+  function showJavaRuntimeEntries(entries: JavaRuntimeEntry[]) {
+    webviewPanel.webview.postMessage({
+      command: "showJavaRuntimeEntries",
+      entries: entries
+    });
+  }
+
   let jdkInfo = await suggestOpenJdk();
   applyJdkInfo(jdkInfo);
+
+  let entries = await findJavaRuntimeEntries();
+  showJavaRuntimeEntries(entries);
 }
 
 export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer {
@@ -111,26 +125,38 @@ async function getJavaVersion(javaHome: string | undefined): Promise<number> {
   });
 }
 
-async function findPossibleJdkInstallations(): Promise<{[location : string] : string | undefined}> {
-  return new Promise<{[location : string] : string | undefined}>((resolve, reject) => {
-    const javaHomeEntries: {[location : string] : string | undefined} = {
-      "java.home": vscode.workspace.getConfiguration().get("java.home", undefined),
-      "JDK_HOME": process.env["JDK_HOME"],
-      "JAVA_HOME": process.env["JAVA_HOME"],
-      "java.other": undefined
-    };
+async function findPossibleJdkInstallations(): Promise<JavaRuntimeEntry[]> {
+  return new Promise<JavaRuntimeEntry[]>(resolve => {
+    const entries: JavaRuntimeEntry[] = [{
+      name: "java.home",
+      path: vscode.workspace.getConfiguration().get("java.home", undefined),
+      type: JavaRuntimeEntryTypes.UserSetting,
+      actionUri: "command:workbench.action.openSettings?%22java.home%22"
+    }, {
+      name: "JDK_HOME",
+      path: process.env["JDK_HOME"],
+      type: JavaRuntimeEntryTypes.EnvironmentVariable
+    }, {
+      name: "JAVA_HOME",
+      path: process.env["JAVA_HOME"],
+      type: JavaRuntimeEntryTypes.EnvironmentVariable
+    }];
 
-    findJavaHome({allowJre: false}, (err, home) => {
+    findJavaHome((err, home: string) => {
       if (!err) {
-        javaHomeEntries.other = home;
+        entries.push({
+          name: "Other",
+          path: home,
+          type: JavaRuntimeEntryTypes.Other
+        });
       }
 
-      resolve(javaHomeEntries);
+      resolve(entries);
     });
   });
 }
 
-async function validateJdkInstallation(javaHome: string | undefined) {
+async function checkJdkInstallation(javaHome: string | undefined) {
   if (!javaHome) {
     return false;
   }
@@ -140,17 +166,29 @@ async function validateJdkInstallation(javaHome: string | undefined) {
 }
 
 export async function validateJavaRuntime() {
-  const jdkEntries = await findPossibleJdkInstallations();
-  for (const key in jdkEntries) {
-    if (jdkEntries.hasOwnProperty(key)) {
-      const entry = jdkEntries[key];
-      if (await validateJdkInstallation(entry) && await getJavaVersion(entry) >= 8) {
-        return true;
-      }
-    }
-  }
+  const entries = await findJavaRuntimeEntries();
+  return _.some(entries, entry => entry.isValid);
+}
 
-  return false;
+export async function findJavaRuntimeEntries(): Promise<JavaRuntimeEntry[]> {
+  const entries = await findPossibleJdkInstallations();
+  return Promise.all(_.map(entries, async entry => {
+    if (!await checkJdkInstallation(entry.path)) {
+      entry.isValid = false;
+      entry.hint = "This path does not point to a JDK.";
+      return entry;
+    }
+
+    const version = await getJavaVersion(entry.path);
+    if (version < MIN_JDK_VERSION) {
+      entry.isValid = false;
+      entry.hint = `JDK 8+ is required while the path points to ${version}`;
+      return entry;
+    }
+
+    entry.isValid = true;
+    return entry;
+  }));
 }
 
 export async function suggestOpenJdk(jdkVersion: string = "openjdk11", impl: string = "hotspot") {

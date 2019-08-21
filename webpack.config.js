@@ -14,7 +14,8 @@ module.exports = function (env, argv) {
     },
     module: {
       rules: [{
-        test: /\.ts$/,
+        test: /\.ts(x?)$/,
+        exclude: /node_modules/,
         use: 'ts-loader'
       }, {
         test: /\.(scss)$/,
@@ -55,7 +56,10 @@ module.exports = function (env, argv) {
       }),
       new HtmlWebpackInlineSourcePlugin(),
     ],
-    devtool: 'source-map'
+    devtool: 'source-map',
+    resolve: {
+      extensions: ['.js', '.ts', '.tsx']
+    }
   }, {
     name: 'extension',
     target: 'node',

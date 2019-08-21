@@ -5,14 +5,21 @@ import $ = require("jquery");
 import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";
 import bytes = require("bytes");
+import { JavaRuntimeEntryPanel } from "./java.runtime.entries";
+import * as ReactDOM from "react-dom";
+import { JavaRuntimeEntry } from "../types";
 
 window.addEventListener("message", event => {
-  if (event.data.command === "showJavaRuntimePanel") {
-    $("#javaRuntimePanel").removeClass("d-none");
-  } else if (event.data.command === "applyJdkInfo") {
+  if (event.data.command === "applyJdkInfo") {
     applyJdkInfo(event.data.jdkInfo);
+  } else if (event.data.command === "showJavaRuntimeEntries") {
+    showJavaRuntimeEntries(event.data.entries);
   }
 });
+
+function showJavaRuntimeEntries(entries: JavaRuntimeEntry[]) {
+  ReactDOM.render(JavaRuntimeEntryPanel(entries), document.getElementById("javaRuntimeEntryPanel"));
+}
 
 function applyJdkInfo(jdkInfo: any) {
   let binary = jdkInfo.binaries[0];
