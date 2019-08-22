@@ -5,15 +5,23 @@ import * as React from "react";
 import { JavaRuntimeEntry } from "../types";
 
 export const JavaRuntimeEntryPanel = (props: JavaRuntimeEntry[]) => {
-  const current = props.findIndex(entry => entry.isValid || false);
+  const currentIndex = props.findIndex(entry => !!entry.path);
+  let errorIndex = -1;
+  if (currentIndex !== -1 && !props[currentIndex].isValid) {
+    errorIndex = currentIndex;
+  }
+
   const entries = props.map((entry, index) =>
-    <tr>
+    <tr key={index}>
       <th scope="row">{index + 1}</th>
       <td>
-        {!entry.path && <em>*Empty*</em>}
+        {!entry.path && <em>{"<Empty>"}</em>}
         {entry.path}
-        {index === current && <span className="badge badge-pill badge-primary">Current</span>}
-        {entry.path && !entry.isValid && <span className="badge badge-pill badge-secondary" title={entry.hint}>Invalid</span>}
+        &nbsp;
+        {index === currentIndex && errorIndex === -1 && <span className="badge badge-pill badge-primary">Current</span>}
+        {entry.path && !entry.isValid && errorIndex === -1 && <span className="badge badge-pill badge-secondary" title={entry.hint}>Invalid</span>}
+        {entry.path && errorIndex === index && <span className="badge badge-pill badge-danger" title={entry.hint}>Error</span>}
+        {!!entry.path && !!entry.hint && <div><em className={errorIndex === index ? "text-danger" : "text-warning"}>{entry.hint}</em></div>}
       </td>
       <td>
         {entry.name}
