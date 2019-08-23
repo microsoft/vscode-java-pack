@@ -7,7 +7,6 @@ import * as path from "path";
 
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getExtensionContext } from "../utils";
-import { validateJavaRuntime, suggestOpenJdk } from "../java-runtime";
 import { loadTextFromFile } from "../utils";
 
 let overviewView: vscode.WebviewPanel | undefined;
@@ -80,29 +79,10 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     if (e.command === "setOverviewVisibility") {
       toggleOverviewVisibilityOperation(context, e.visibility);
-    } else if (e.command === "requestJdkInfo") {
-      let jdkInfo = await suggestOpenJdk(e.jdkVersion, e.jvmImpl);
-      applyJdkInfo(jdkInfo);
     } else if (e.command === "installExtension") {
       await vscode.commands.executeCommand("java.helper.installExtension", e.extName, e.displayName);
     }
   }));
-
-  if (!await validateJavaRuntime()) {
-    webviewPanel.webview.postMessage({
-      command: "showJavaRuntimePanel",
-    });
-
-    let jdkInfo = await suggestOpenJdk();
-    applyJdkInfo(jdkInfo);
-  }
-
-  function applyJdkInfo(jdkInfo: any) {
-    webviewPanel.webview.postMessage({
-      command: "applyJdkInfo",
-      jdkInfo: jdkInfo
-    });
-  }
 }
 
 export async function showOverviewPageOnActivation(context: vscode.ExtensionContext) {

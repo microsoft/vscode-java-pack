@@ -167,6 +167,12 @@ async function checkJdkInstallation(javaHome: string | undefined) {
 
 export async function validateJavaRuntime() {
   const entries = await findJavaRuntimeEntries();
+  // Java LS uses the first non-empty path to locate the JDK
+  const currentPathIndex = entries.findIndex(entry => !_.isEmpty(entry.path));
+  if (currentPathIndex !== -1) {
+    return entries[currentPathIndex].isValid;
+  }
+
   return _.some(entries, entry => entry.isValid);
 }
 
@@ -175,14 +181,18 @@ export async function findJavaRuntimeEntries(): Promise<JavaRuntimeEntry[]> {
   return Promise.all(_.map(entries, async entry => {
     if (!await checkJdkInstallation(entry.path)) {
       entry.isValid = false;
-      entry.hint = "This path does not point to a JDK.";
+      entry.hint = "This path is not pointing to a JDK.";
+      const pathObject = path.parse(entry.path||"");
+      if (pathObject.name && pathObject.name.toLowerCase() === "bin") {
+        entry.hint += " Try remove the \"bin\" from the path.";
+      }
       return entry;
     }
 
     const version = await getJavaVersion(entry.path);
     if (version < MIN_JDK_VERSION) {
       entry.isValid = false;
-      entry.hint = `JDK 8+ is required while the path points to ${version}`;
+      entry.hint = `JDK 8+ is required while the path is pointing to version ${version}`;
       return entry;
     }
 

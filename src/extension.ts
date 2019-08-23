@@ -29,7 +29,7 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   await showReleaseNotesOnStart(context);
 
   if (!await validateJavaRuntime()) {
-    vscode.commands.executeCommand("java.overview");
+    vscode.commands.executeCommand("java.runtime");
   }
 }
 
