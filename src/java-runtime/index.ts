@@ -183,8 +183,8 @@ export async function findJavaRuntimeEntries(): Promise<JavaRuntimeEntry[]> {
       entry.isValid = false;
       entry.hint = "This path is not pointing to a JDK.";
       const pathObject = path.parse(entry.path||"");
-      if (pathObject.name && pathObject.name === "bin") {
-        entry.hint += " \"bin\" should be removed from the path.";
+      if (pathObject.name && pathObject.name.toLowerCase() === "bin") {
+        entry.hint += " Try remove the \"bin\" from the path.";
       }
       return entry;
     }
