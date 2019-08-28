@@ -15,3 +15,11 @@ export enum JavaRuntimeEntryTypes {
   EnvironmentVariable = "Environment Variable",
   Other = "Other"
 }
+
+export interface JdkData {
+  os: string;
+  arch: string;
+  name: string;
+  size: string;
+  downloadLink: string;
+}
