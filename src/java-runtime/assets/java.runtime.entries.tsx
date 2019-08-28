@@ -18,10 +18,9 @@ export const JavaRuntimeEntryPanel = (props: JavaRuntimeEntry[]) => {
         {!entry.path && <em>{"<Empty>"}</em>}
         {entry.path}
         &nbsp;
-        {index === currentIndex && errorIndex === -1 && <span className="badge badge-pill badge-primary">Current</span>}
-        {entry.path && !entry.isValid && errorIndex === -1 && <span className="badge badge-pill badge-secondary" title={entry.hint}>Invalid</span>}
-        {entry.path && errorIndex === index && <span className="badge badge-pill badge-danger" title={entry.hint}>Error</span>}
-        {!!entry.path && !!entry.hint && <div><em className={errorIndex === index ? "text-danger" : "text-warning"}>{entry.hint}</em></div>}
+        {index === currentIndex && <span className="badge badge-pill badge-primary">Current</span>}
+        {entry.path && !entry.isValid && <span className="badge badge-pill badge-secondary" title={entry.hint}>Invalid</span>}
+        {entry.path && entry.hint && <div><em className={errorIndex === index ? "text-danger" : "text-warning"}>{entry.hint}</em></div>}
       </td>
       <td>
         {entry.name}
@@ -34,18 +33,21 @@ export const JavaRuntimeEntryPanel = (props: JavaRuntimeEntry[]) => {
   );
 
   return (
-    <table className="table table-borderless table-hover table-sm">
-      <thead>
-        <tr>
-          <th scope="col">Order</th>
-          <th scope="col">Path</th>
-          <th scope="col">Source</th>
-          <th scope="col">Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        {entries}
-      </tbody>
-    </table>
+    <div className="table-responsive">
+      <table className="table table-borderless table-hover table-sm mb-0">
+        <caption className="pb-0">If you change any of the entries above, you need to <a href="command:workbench.action.reloadWindow">reload</a> VS Code to make them effective.</caption>
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Path</th>
+            <th scope="col">Source</th>
+            <th scope="col">Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries}
+        </tbody>
+      </table>
+    </div>
   );
 };
