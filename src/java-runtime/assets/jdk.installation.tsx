@@ -60,9 +60,7 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
       }
     }
 
-    console.log(JSON.stringify(newState));
     this.props.onRequestJdk(newState.jdkVersion, newState.jvmImpl);
-
     this.setState(newState);
   }
 
@@ -160,5 +158,3 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
     </div>);
   }
 }
-
-
