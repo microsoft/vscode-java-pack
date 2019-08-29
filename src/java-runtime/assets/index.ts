@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import $ = require("jquery");
 import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";
 import bytes = require("bytes");
-import { JavaRuntimeEntryPanel } from "./java.runtime.entries";
 import * as ReactDOM from "react-dom";
-import { JavaRuntimeEntry } from "../types";
+import { JavaRuntimeEntry, JdkData } from "../types";
+import { JdkAcquisitionPanel, JdkAcquisitionPanelProps } from "./jdk.acquisition";
+import * as React from "react";
 
 window.addEventListener("message", event => {
   if (event.data.command === "applyJdkInfo") {
@@ -17,24 +17,42 @@ window.addEventListener("message", event => {
   }
 });
 
+let jdkEntries: JavaRuntimeEntry[];
+
 function showJavaRuntimeEntries(entries: JavaRuntimeEntry[]) {
-  ReactDOM.render(JavaRuntimeEntryPanel(entries), document.getElementById("javaRuntimeEntryPanel"));
+  jdkEntries = entries;
+  render();
 }
+
+let jdkData: JdkData;
 
 function applyJdkInfo(jdkInfo: any) {
   let binary = jdkInfo.binaries[0];
   let downloadLink = binary.installer_link || binary.binary_link;
-  $("#jdkOs").text(binary.os);
-  $("#jdkArch").text(binary.architecture);
-  $("#jdkReleaseName").text(jdkInfo.release_name);
-  $("#jdkDownloadSize").text(bytes(binary.binary_size, {unitSeparator: " "}));
-
   let encodedLink = `command:java.helper.openUrl?${encodeURIComponent(JSON.stringify(downloadLink))}`;
-  $("#jdkDownloadLink").attr("href", encodedLink);
 
-  $("#jdkSpinner").addClass("d-none");
-  $("#jdkDownloadLink").removeClass("d-none");
+  jdkData = {
+    name: jdkInfo.release_name,
+    os: binary.os,
+    arch: binary.architecture,
+    size: bytes(binary.binary_size, {unitSeparator: " "}),
+    downloadLink: encodedLink
+  };
+
+  render();
 }
+
+function render() {
+  const props: JdkAcquisitionPanelProps = {
+    jdkEntries: jdkEntries,
+    jdkData: jdkData,
+    onRequestJdk: requestJdkInfo
+  };
+
+  ReactDOM.render(React.createElement(JdkAcquisitionPanel, props), document.getElementById("jdkAcquisitionPanel"));
+}
+
+render();
 
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi();
@@ -46,9 +64,3 @@ function requestJdkInfo(jdkVersion: string, jvmImpl: string) {
     jvmImpl: jvmImpl
   });
 }
-
-$("input[type=radio]").change(() => {
-  $("#jdkSpinner").removeClass("d-none");
-  $("#jdkDownloadLink").addClass("d-none");
-  requestJdkInfo($("input[name=jdkVersion]:checked").val() + "", $("input[name=jvmImpl]:checked").val() + "");
-});

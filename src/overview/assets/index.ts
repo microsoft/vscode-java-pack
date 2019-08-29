@@ -55,5 +55,5 @@ function installExtension(extName: string, displayName: string) {
 }
 
 $("div[ext]").click(function () {
-  installExtension($(this).attr("ext"), $(this).attr("displayName"));
+  installExtension($(this).attr("ext") || "", $(this).attr("displayName") || "");
 });
