@@ -17,6 +17,10 @@ $list-group-item-padding-x: 1rem !default;
 $list-group-border-radius:          0 !default;
 
 $font-size-base: .8rem !default;
+
+$code-font-size: $font-size-base;
+$kbd-bg: var(--vscode-button-background) !default;
+$kbd-color: var(--vscode-button-foreground) !default;
 $pre-color: var(--vscode-textPreformat-foreground) !default;
 
 $text-muted: var(--vscode-editorCodeLens-foreground) !default;

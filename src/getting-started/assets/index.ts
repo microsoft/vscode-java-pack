@@ -8,3 +8,11 @@ import * as $ from "jquery";
 $("#navigationPanel a").click(e => {
   $($(e.target).attr("href")).tab('show');
 });
+
+let os = "win";
+if (navigator.platform.toLowerCase().indexOf("mac") === 0) {
+  os = "mac";
+}
+
+const osToHide = os === "win" ? "mac" : "win";
+$(`kbd[data-os=${osToHide}]`).hide();
