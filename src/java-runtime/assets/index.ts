@@ -58,6 +58,7 @@ declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi();
 
 function requestJdkInfo(jdkVersion: string, jvmImpl: string) {
+  console.log(`request ${jdkVersion} ${jvmImpl}`);
   vscode.postMessage({
     command: "requestJdkInfo",
     jdkVersion: jdkVersion,

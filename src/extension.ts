@@ -10,6 +10,7 @@ import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart } from "./misc";
 import { showOverviewPageOnActivation, OverviewViewSerializer } from "./overview";
 import { validateJavaRuntime, JavaRuntimeViewSerializer } from "./java-runtime";
+import { JavaGettingStartedViewSerializer } from "./getting-started";
 
 export async function activate(context: vscode.ExtensionContext) {
   initializeTelemetry(context);
@@ -24,6 +25,7 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
 
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
 
   await showOverviewPageOnActivation(context);
   await showReleaseNotesOnStart(context);
