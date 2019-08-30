@@ -6,7 +6,7 @@ import "bootstrap/js/src/tab";
 import * as $ from "jquery";
 
 $("#navigationPanel a").click(e => {
-  $($(e.target).attr("href")).tab('show');
+  ($($(e.target).attr("href")||"") as any).tab("show");
 });
 
 let os = "win";
