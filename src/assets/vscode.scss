@@ -5,10 +5,11 @@ $link-hover-color: $link-color;
 $link-hover-decoration: none !default;
 
 $list-group-bg: var(--vscode-notifications-background) !default;
-$list-group-active-bg: $list-group-bg;
+$list-group-active-color: var(--vscode-notifications-foreground) !default;
+$list-group-active-bg: var(--vscode-notifications-border) !default;
 $list-group-hover-bg: $list-group-bg;
 $list-group-action-active-bg: $list-group-bg;
-$list-group-border-color: var(--vscode-notifications-border) !default;
+$list-group-border-color: var(--vscode-notifications-background) !default;
 $list-group-action-color: var(--vscode-notifications-foreground) !default;
 $list-group-item-padding-y: .75rem !default;
 $list-group-item-padding-x: 1rem !default;
@@ -16,6 +17,7 @@ $list-group-item-padding-x: 1rem !default;
 $list-group-border-radius:          0 !default;
 
 $font-size-base: .8rem !default;
+$pre-color: var(--vscode-textPreformat-foreground) !default;
 
 $text-muted: var(--vscode-editorCodeLens-foreground) !default;
 

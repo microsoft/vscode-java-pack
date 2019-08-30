@@ -10,7 +10,8 @@ module.exports = function (env, argv) {
     mode: 'none',
     entry: {
       overview: './src/overview/assets/index.ts',
-      'java-runtime': './src/java-runtime/assets/index.ts'
+      'java-runtime': './src/java-runtime/assets/index.ts',
+      'getting-started': './src/getting-started/assets/index.ts'
     },
     module: {
       rules: [{
@@ -53,6 +54,12 @@ module.exports = function (env, argv) {
         template: 'src/java-runtime/assets/index.html',
         inlineSource: '.(js|css)$',
         chunks: ['java-runtime']
+      }),
+      new HtmlWebpackPlugin({
+        filename: path.resolve(__dirname, 'out/assets/getting-started/index.html'),
+        template: 'src/getting-started/assets/index.html',
+        inlineSource: '.(js|css)$',
+        chunks: ['getting-started']
       }),
       new HtmlWebpackInlineSourcePlugin(),
     ],

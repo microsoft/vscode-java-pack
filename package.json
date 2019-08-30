@@ -39,7 +39,9 @@
     "onCommand:java.showReleaseNotes",
     "onWebviewPanel:java.overview",
     "onCommand:java.runtime",
-    "onWebviewPanel:java.runtime"
+    "onWebviewPanel:java.runtime",
+    "onCommand:java.gettingStarted",
+    "onWebviewPanel:java.gettingStarted"
   ],
   "contributes": {
     "commands": [
@@ -54,6 +56,10 @@
       {
         "command": "java.runtime",
         "title": "Java: Configure Java Runtime"
+      },
+      {
+        "command": "java.gettingStarted",
+        "title": "Java: Getting Started"
       }
     ]
   },

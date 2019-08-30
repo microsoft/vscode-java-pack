@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline'">
+  <title>Java Getting Started</title>
+</head>
+
+<body>
+  <div class="container mt-5 mb-5">
+    <div class="row mb-3">
+      <div class="col">
+        <h1 class="font-weight-light">Java Getting Started</h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <div class="row">
+              <div class="col d-block d-md-none">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                  <li class="nav-item">
+                    <a class="nav-link active" id="quick-start-tab" data-toggle="tab" href="#quick-start-panel" role="tab" aria-controls="quick-start-panel" aria-selected="true" title="">Quick Start</a>
+                  </li>
+                  <li class="nav-item d-none">
+                    <a class="nav-link" id="files-folders-tab" data-toggle="tab" href="#files-folders-panel" role="tab" aria-controls="files-folders-panel" aria-selected="false" title="">Files & Folders</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" id="code-editing-tab" data-toggle="tab" href="#code-editing-panel" role="tab" aria-controls="code-editing-panel" aria-selected="false" title="">Code Editing</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link d-none" id="compile-build-tab" data-toggle="tab" href="#compile-build-panel" role="tab" aria-controls="compile-build-panel" aria-selected="false" title="">Compile & Build</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" id="debugging-tab" data-toggle="tab" href="#debugging-panel" role="tab" aria-controls="debugging-panel" aria-selected="false" title="">Debugging</a>
+                  </li>
+                  <li class="nav-item d-none">
+                    <a class="nav-link" id="projects-dependencies-tab" data-toggle="tab" href="#projects-dependencies-panel" role="tab" aria-controls="projects-dependencies-panel" aria-selected="false" title="">Projects</a>
+                  </li>
+                  <li class="nav-item d-none">
+                    <a class="nav-link" id="customize-tab" data-toggle="tab" href="#customize-panel" role="tab" aria-controls="customize-panel" aria-selected="false" title="">Customize</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" id="faq-tab" data-toggle="tab" href="#faq-panel" role="tab" aria-controls="faq-panel" aria-selected="false" title="">FAQ</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <div class="tab-content">
+                  <div class="tab-pane fade show active" id="quick-start-panel" role="tabpanel" aria-labelledby="quick-start-tab">
+                    <p>Welcome to Visual Studio Code!<br/>
+                      In this 1-minute tutorial, we'll show you how to create a quick-start Java program in VS Code.
+                    </p>
+                    <h3 class="font-weight-light">Setup the Workspace</h3>
+                    <p>
+                      To setup the workspace, simply open a folder by:
+                      <dl class="row">
+                        <dt class="col-sm-3">Windows</dt>
+                        <dd class="col-sm-9">File > <a href="command:workbench.action.files.openFileFolder">Open Folder...</a></dd>
+                        <dt class="col-sm-3">Mac</dt>
+                        <dd class="col-sm-9">File > <a href="command:workbench.action.files.openFileFolder">Open...</a></dd>
+                      </dl>
+                    </p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">No Import Needed</h5>
+                      <p class="mb-0">
+                        VS Code Java works directly with <strong>folders</strong> that have source code. If the folder you open has project/build configuration files like <code>pom.xml</code> or <code>build.gradle</code>, they will be picked up automatically and the folder will be treated as a project.
+                      </p>
+                    </blockquote>
+                    <h3 class="font-weight-light">Create a Class</h3>
+                    <p>
+                      A program needs an entry and a Java program needs a class to host its entry. To create a class for our quick-start program, <a href="command:explorer.newFile">create a file</a> and set its name to <code>QuickStart.java</code>.<br/>
+                      Now you can put the code in the new file:
+                    </p>
+                    <blockquote class="card-body">
+<pre class="mb-0"><code>class QuickStart {
+    public static void main(String[] args) {
+        System.out.println("Hello, World.");
+    }
+}</code></pre>
+                    </blockquote>
+                    <h3 class="font-weight-light">Run the program</h3>
+                    <p>
+                      To run the program, press <a href="command:workbench.action.debug.start"><kbd>F5</kbd></a>. By default, the program is launched in the <a href="command:workbench.action.terminal.toggleTerminal">Intergrated Terminal</a>. You should already see the output there.
+                    </p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">How to Debug?</h5>
+                      <p class="mb-0">
+                        When you press <a href="command:workbench.action.debug.start"><kbd>F5</kbd></a>, you are already debugging. Try set some breakpoint by clicking on the line numbers before each code line and run the program again. You'll see the execution paused at the breakpoint.<br/>
+                        While debugging, switch to the <a href="command:workbench.view.debug">Debug View</a> to see the variables and call stacks.
+                      </p>
+                    </blockquote>
+                    <h3 class="font-weight-light">Congratulations!</h3>
+                    <p>
+                      Now the quick-start program is running and you are free to build more.<br/>
+                      What you saw is just a tiny part of VS Code Java. You can do much more with it. Feel free to explore:
+                    </p>
+                    <dl class="row mb-0" id="navigationPanel">
+                      <dt class="col-sm-3"><a href="#code-editing-tab">Code Editing</a></dt>
+                      <dd class="col-sm-9">Learn more about Refactoring, Code Completion, and Linting</dd>
+                      <dt class="col-sm-3"><a href="#debugging-tab">Debugging</a></dt>
+                      <dd class="col-sm-9">Learn more about Breakpoints, Variables, Threads, and Call Stacks</dd>
+                      <dt class="col-sm-3"><a href="#faq-tab">FAQ</a></dt>
+                      <dd class="col-sm-9">Frequently asked questions</dd>
+                    </dl>
+                  </div>
+                  <div class="tab-pane fade" id="files-folders-panel" role="tabpanel" aria-labelledby="files-folders-tab">
+                    <p>How to deal with files and folders</p>
+                  </div>
+                  <div class="tab-pane fade" id="code-editing-panel" role="tabpanel" aria-labelledby="code-editing-tab">
+                    <p>Explore code editing features</p>
+                  </div>
+                  <div class="tab-pane fade" id="compile-build-panel" role="tabpanel" aria-labelledby="compile-build-tab">
+                    <p>Understand the compile and build mechanism of the language server</p>
+                  </div>
+                  <div class="tab-pane fade" id="debugging-panel" role="tabpanel" aria-labelledby="debugging-tab">
+                    <p>How to use the debugger</p>
+                  </div>
+                  <div class="tab-pane fade" id="projects-dependencies-panel" role="tabpanel" aria-labelledby="projects-dependencies-tab">
+                    <p>How to deal with projects and dependencies</p>
+                  </div>
+                  <div class="tab-pane fade" id="customize-panel" role="tabpanel" aria-labelledby="customize-tab">
+                    <p>How to customize vs code</p>
+                  </div>
+                  <div class="tab-pane fade" id="faq-panel" role="tabpanel" aria-labelledby="faq-tab">
+                    <p>Frequently asked questions</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-3 d-none d-md-block">
+                <div class="list-group list-group-flush" role="tablist">
+                  <a class="list-group-item list-group-action active" id="quick-start-tab" data-toggle="list" href="#quick-start-panel" role="tab" aria-controls="quick-start-panel" aria-selected="true" title="">Quick Start</a>
+                  <a class="list-group-item list-group-action d-none" id="files-folders-tab" data-toggle="list" href="#files-folders-panel" role="tab" aria-controls="files-folders-panel" aria-selected="false" title="">Files & Folders</a>
+                  <a class="list-group-item list-group-action" id="code-editing-tab" data-toggle="list" href="#code-editing-panel" role="tab" aria-controls="code-editing-panel" aria-selected="false" title="">Code Editing</a>
+                  <a class="list-group-item list-group-action d-none" id="compile-build-tab" data-toggle="list" href="#compile-build-panel" role="tab" aria-controls="compile-build-panel" aria-selected="false" title="">Compile & Build</a>
+                  <a class="list-group-item list-group-action" id="debugging-tab" data-toggle="list" href="#debugging-panel" role="tab" aria-controls="debugging-panel" aria-selected="false" title="">Debugging</a>
+                  <a class="list-group-item list-group-action d-none" id="projects-dependencies-tab" data-toggle="list" href="#projects-dependencies-panel" role="tab" aria-controls="projects-dependencies-panel" aria-selected="false" title="">Projects</a>
+                  <a class="list-group-item list-group-action d-none" id="customize-tab" data-toggle="list" href="#customize-panel" role="tab" aria-controls="customize-panel" aria-selected="false" title="">Customize</a>
+                  <a class="list-group-item list-group-action" id="faq-tab" data-toggle="list" href="#faq-panel" role="tab" aria-controls="faq-panel" aria-selected="false" title="">FAQ</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
