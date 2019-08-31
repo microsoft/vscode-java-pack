@@ -87,7 +87,7 @@
                     </blockquote>
                     <h3 class="font-weight-light">Run the program</h3>
                     <p>
-                      To run the program, press <a href="command:workbench.action.debug.start"><kbd>F5</kbd></a>. By default, the program is launched in the <a href="command:workbench.action.terminal.toggleTerminal">Intergrated Terminal</a>. You should already see the output there.
+                      To run the program, press <a href="command:workbench.action.debug.start"><kbd>F5</kbd></a>. By default, the program is launched in the <a href="command:workbench.action.terminal.toggleTerminal">Integrated Terminal</a>. You should already see the output there.
                     </p>
                     <blockquote class="card-body">
                       <h5 class="font-weight-light">How to Debug?</h5>
@@ -214,7 +214,93 @@
 
                   <!-- Debugging -->
                   <div class="tab-pane fade" id="debugging-panel" role="tabpanel" aria-labelledby="debugging-tab">
-                    <p>How to use the debugger</p>
+                    <p>
+                      One of the key features of Visual Studio Code is its great debugging support. VS Code's built-in debugger helps accelerate your edit, compile and debug loop.
+                    </p>
+                    <h3 class="font-weight-light">Start Debugging</h3>
+                    <p>
+                      There are multiple ways to start debugging a Java program. By pressing <a href="command:workbench.action.debug.start"><kbd>F5</kbd></a>, the current program will be launched. You can also start by clicking the <strong>"Debug"</strong> codelens on top of the <code>main</code> function. This is super handy when you have multiple main entries. You can also launch a program <strong>without</strong> debugging by pressing <a href="command:workbench.action.debug.run"><kbd data-os="win">Ctrl + F5</kbd><kbd data-os="mac">⌃ F5</kbd></a>.
+                    </p>
+                    <p>
+                      By default, VS Code Java launches the program using <a href="command:workbench.action.terminal.toggleTerminal">Integrated Terminal</a>. As you enter the debug mode, you should also see the <a href="command:workbench.view.debug">Debug View</a>. This view shows all the runtime info of your program.
+                    </p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">Debug Configurations</h5>
+                      <p class="mb-0">
+                        VS Code Java automatically generates debug configurations. In VS Code, those configurations are called <a href="https://code.visualstudio.com/docs/editor/debugging#_launch-configurations">Launch Configurations</a> and they are persisted in <code data-os="win">.vscode\launch.json</code><code data-os="mac">.vscode/launch.json</code>. To work with more sophisticated debug scenarios, please explore the <a href="https://code.visualstudio.com/docs/editor/debugging#_launchjson-attributes">Launch Options</a> that are supported by VS Code.
+                      </p>
+                    </blockquote>
+                    <h3 class="font-weight-light">Breakpoints</h3>
+                    <p>
+                      Breakpoints can be toggled by clicking on the editor margin or using <kbd>F9</kbd> on the current line. Finer breakpoint control (enable/disable/reapply) can be done in the Debug View's BREAKPOINTS section.
+                    </p>
+                    <p>
+                      You can also set <strong>Conditional Breakpoints</strong> based on expressions, hit counts, or a combination of both.
+                    </p>
+                    <dl class="row">
+                      <dt class="col-sm-3">Expression condition</dt>
+                      <dd class="col-sm-9">The breakpoint will be hit whenever the expression evaluates to <code>true</code></dd>
+                      <dt class="col-sm-3">Hit count</dt>
+                      <dd class="col-sm-9">The 'hit count' controls how many times a breakpoint needs to be hit before it will 'break' execution</dd>
+                    </dl>
+                    <p>
+                      You can add a condition and/or hit count when creating the breakpoint (with the <a href="command:editor.debug.action.conditionalBreakpoint">Add Conditional Breakpoint</a> action) or when modifying an existing one (with the Edit Breakpoint action). In both cases, an inline text box with a drop-down menu opens where you can enter expressions.
+                    </p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">Logpoints</h5>
+                      <p>
+                        A Logpoint is a variant of a breakpoint that does not "break" into the debugger but instead logs a message to the console. Logpoints are especially useful for injecting logging while debugging production servers that cannot be paused or stopped.
+                      </p>
+                      <p class="mb-0">
+                        A Logpoint is represented by a ♦️ shaped icon. Log messages are plain text but can include expressions to be evaluated within curly braces ('{}').
+                      </p>
+                    </blockquote>
+                    <h3 class="font-weight-light">Debug Actions</h3>
+                    <p>
+                      Once a debug session starts, the Debug toolbar will appear on the top of the editor. You can control the execution flow using the actions below.
+                    </p>
+                    <dl class="row">
+                      <dt class="col-sm-3">Continue/Pause</dt>
+                      <dd class="col-sm-9"><kbd>F5</kbd></dd>
+                      <dt class="col-sm-3">Step Over</dt>
+                      <dd class="col-sm-9"><kbd>F10</kbd></dd>
+                      <dt class="col-sm-3">Step Into</dt>
+                      <dd class="col-sm-9"><kbd>F11</kbd></dd>
+                      <dt class="col-sm-3">Step Out</dt>
+                      <dd class="col-sm-9"><kbd data-os="win">Shift + F11</kbd><kbd data-os="mac">⇧ F11</kbd></dd>
+                      <dt class="col-sm-3">Restart</dt>
+                      <dd class="col-sm-9"><kbd data-os="win">Ctrl + Shift + F5</kbd><kbd data-os="mac">⇧ ⌘ F5</kbd></dd>
+                      <dt class="col-sm-3">Stop</dt>
+                      <dd class="col-sm-9"><kbd data-os="win">Shift + F5</kbd><kbd data-os="mac">⇧ F5</kbd></dd>
+                    </dl>
+                    <h3 class="font-weight-light">Inspect Variables</h3>
+                    <p>
+                      Variables can be inspected in the <strong>VARIABLES</strong> section of the Debug view or by hovering over their source in the editor. Variable values and expression evaluation are relative to the selected stack frame in the <strong>CALL STACK</strong> section.
+                    </p>
+                    <p>
+                      Variable values can be modified with the <strong>Set Value</strong> action from the variable's context menu. Or you can <strong>double-click</strong> the value and enter a new one. Variables and expressions can also be evaluated and watched in the Debug view's <strong>WATCH</strong> section.
+                    </p>
+                    <h3 class="font-weight-light">Hot Code Replace ⚡</h3>
+                    <p>
+                      Yes, you can apply code changes without restarting the running program. Click on the <a href="command:java.debug.hotCodeReplace">⚡</a> icon in the <strong>debug toolbar</strong> to apply code changes. When you see failures, don't worry. It is safe to continue running the program, but you may notice discrepancies between the source code and the program.
+                    </p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">Limitations</h5>
+                      <p>
+                        Hot Code Replace (HCR) sounds magical but it does have limitations. In short, you can only change the code inside an existing function. Here are some scenarios that HCR will <span class="text-danger">NOT</span> work:
+                      </p>
+                      <ul class="mb-0">
+                        <li>Adding a new member function</li>
+                        <li>Changing the signature of an existing function</li>
+                        <li>Changing the value of static members (but you can do so using the VARIABLES panel when the program is paused)</li>
+                        <li>Referencing new classes/packages</li>
+                      </ul>
+                    </blockquote>
+                    <h3 class="font-weight-light">Next Step</h3>
+                    <dl class="row mb-0" id="navigationPanel">
+                      <dt class="col-sm-3"><a href="#faq-tab">FAQ</a></dt>
+                      <dd class="col-sm-9">Frequently asked questions</dd>
+                    </dl>
                   </div>
 
                   <!-- Projects & Dependencies -->
