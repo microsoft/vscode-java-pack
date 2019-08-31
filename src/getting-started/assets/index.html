@@ -19,7 +19,7 @@
         <div class="card">
           <div class="card-body">
             <div class="row">
-              <div class="col d-block d-md-none">
+              <div class="col d-block">
                 <ul class="nav nav-tabs mb-3" role="tablist">
                   <li class="nav-item">
                     <a class="nav-link active" id="quick-start-tab" data-toggle="tab" href="#quick-start-panel" role="tab" aria-controls="quick-start-panel" aria-selected="true" title="">Quick Start</a>
@@ -51,6 +51,8 @@
             <div class="row">
               <div class="col">
                 <div class="tab-content">
+
+                  <!-- Quick Start -->
                   <div class="tab-pane fade show active" id="quick-start-panel" role="tabpanel" aria-labelledby="quick-start-tab">
                     <p>Welcome to Visual Studio Code!<br/>
                       In this 1-minute tutorial, we'll show you how to create a quick-start Java program in VS Code.
@@ -101,37 +103,137 @@
                     </p>
                     <dl class="row mb-0" id="navigationPanel">
                       <dt class="col-sm-3"><a href="#code-editing-tab">Code Editing</a></dt>
-                      <dd class="col-sm-9">Learn more about Refactoring, Code Completion, and Linting</dd>
+                      <dd class="col-sm-9">Learn more about Code Navigation, Refactoring, and Code Completion</dd>
                       <dt class="col-sm-3"><a href="#debugging-tab">Debugging</a></dt>
                       <dd class="col-sm-9">Learn more about Breakpoints, Variables, Threads, and Call Stacks</dd>
                       <dt class="col-sm-3"><a href="#faq-tab">FAQ</a></dt>
                       <dd class="col-sm-9">Frequently asked questions</dd>
                     </dl>
                   </div>
+
+                  <!-- Files & Folders -->
                   <div class="tab-pane fade" id="files-folders-panel" role="tabpanel" aria-labelledby="files-folders-tab">
                     <p>How to deal with files and folders</p>
                   </div>
+
+                  <!-- Code Editing -->
                   <div class="tab-pane fade" id="code-editing-panel" role="tabpanel" aria-labelledby="code-editing-tab">
-                    <p>Explore code editing features</p>
+                    <p>
+                      VS Code Java is backed by a full Java language server and it understands Java code. Because of that, you get features like Code Navigation, IntelliSense, Refactoring, etc. This is important when your projects get bigger and more complex. Now let's further look at the code editing experience.
+                    </p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">Basic Editing User Guide</h5>
+                      <p class="mb-0">
+                        To make the most of VS Code, we strongly recommend reading the <a href="https://code.visualstudio.com/docs/editor/codebasics">Basic Editing</a> user guide. You'll get to know cool tricks about multi-select, formatting, indentation, folding, and much more.
+                      </p>
+                    </blockquote>
+                    <h3 class="font-weight-light">Code Navigation</h3>
+                    <p>
+                      Code Navigation makes it easy to understand existing codebase. Here to mention a few features that can help you navigate your code repositories.
+                      <dl class="row">
+                        <dt class="col-sm-3">Go to Definition</dt>
+                        <dd class="col-sm-9"><kbd>F12</kbd><br/>You can also hover on the symbol to preview its declaration and javadoc. To jump to the definition, hold the <kbd data-os="win">Ctrl</kbd><kbd data-os="mac">⌘</kbd> key, and click on the symbol.</dd>
+                        <dt class="col-sm-3">Go to Implementation</dt>
+                        <dd class="col-sm-9"><kbd data-os="win">Ctrl + F12</kbd><kbd data-os="mac">⌘ F12</kbd><br/>
+                          For an interface, this shows all the implementors of that interface and for abstract methods, this shows all concrete implementations of that method.</dd>
+                        <dt class="col-sm-3">Go to Type Definition</dt>
+                        <dd class="col-sm-9">This one allows you to go to the definition of the type of the symbol. For example, you have a class member <code>someString</code>, "Go to Definition" will take you to the definition of <code>someString</code> while "Go to <strong>Type</strong> Definition" will take you to the definition of <code>String</code>.</dd>
+                        <dt class="col-sm-3">Find All References</dt>
+                        <dd class="col-sm-9"><kbd data-os="win">Shift + Alt + F12</kbd><kbd data-os="mac">⌥ ⇧ F12</kbd><br/>
+                          This allows you to quickly analyze the impact of your edit or the popularity of your specific method or property throughout your repository.
+                        </dd>
+                      </dl>
+                    </p>
+                    <p>
+                      The commands above will possibly take you to another file. But you can choose to stay using the peeking features below:
+                      <dl class="row">
+                        <dt class="col-sm-3">Peek Definition</dt>
+                        <dd class="col-sm-9"><kbd data-os="win">Alt + F12</kbd><kbd data-os="mac">⌥ F12</kbd></dd>
+                        <dt class="col-sm-3">Peek References</dt>
+                        <dd class="col-sm-9"><kbd data-os="win">Shift + F12</kbd><kbd data-os="mac">⇧ F12</kbd></dd>
+                      </dl>
+                    </p>
+                    <p>
+                      Last but not least, you can jump between the matching brackets back and forth:
+                      <dl class="row">
+                        <dt class="col-sm-3">Go to Bracket</dt>
+                        <dd class="col-sm-9"><kbd data-os="win">Ctrl + Shift + \</kbd><kbd data-os="mac">⇧ ⌘ \</kbd></dd>
+                      </dl>
+                    </p>
+                    <h3 class="font-weight-light">IntelliSense</h3>
+                    <p>
+                      IntelliSense is a general term for a variety of code editing features including: code completion, parameter info, quick info, and member lists. IntelliSense features are sometimes called by other names such as "code completion", "content assist", and "code hinting."
+                    </p>
+                    <p>
+                      IntelliSense works as you type. For example, when you try to invoke some member of an object, a list of all the members is popped up for you to choose from. If you continue typing characters, the list of members (variables, methods, etc.) is filtered to only include members containing your typed characters. Pressing <kbd>Tab</kbd> or <kbd>Enter</kbd> will insert the selected member.
+                    </p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">Trigger IntelliSense Manually</h5>
+                      <p class="mb-0">
+                        In most cases, IntelliSense is triggered automatically. You can also press <kbd data-os="win">Ctrl + Space</kbd><kbd data-os="mac">⌃ Space</kbd> to do it manually. For example, when you're trying to invoke a member function and want to see the parameter info, this will do the magic.
+                      </p>
+                    </blockquote>
+                    <h3 class="font-weight-light">Refactoring</h3>
+                    <p>
+                      VS Code Java provides essential refactoring features and makes it productive to modify larger codebase. The most frequently used one is <strong>Rename</strong>. It's so popular that a dedicated hot key <kbd>F2</kbd> is assigned to it. When you rename a symbol, all its references are also renamed.
+                    </p>
+                    <p>
+                      There are more refactoring features like <strong>Extract</strong>, <strong>Inline</strong>, etc. The availability changes corresponding to the current cursor position. All available features are packed in to the <strong>Refactor</strong> context menu. And you can also pop the list by pressing <kbd data-os="win">Ctrl + Shift + R</kbd><kbd data-os="mac">⌃ ⇧ R</kbd>
+                    </p>
+                    <p>
+                      You may also notice the lightbulb near the cursor. It indicates that some <strong>Code Actions</strong> are available. In VS Code, Code Actions can provide both refactorings and Quick Fixes for detected issues. To show the full list of available actions, click the lightbulb or press <kbd data-os="win">Ctrl + .</kbd><kbd data-os="mac">⌘ .</kbd>.
+                    </p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">More Code Actions</h5>
+                      <p>
+                        There are other code actions that are not limited to the cursor position. They are grouped into the <strong>Source Action</strong> context menu. Here's a list of them.
+                      </p>
+                      <ul class="mb-0">
+                        <li>Organize Imports</li>
+                        <li>Override/Implement Methods</li>
+                        <li>Generate Getter and Setter</li>
+                        <li>Generate hashCode() and equals()</li>
+                        <li>Generate toString()</li>
+                        <li>Generate Constructors</li>
+                        <li>Generate Delegate Methods</li>
+                      </ul>
+                    </blockquote>
+                    <h3 class="font-weight-light">Next Steps</h3>
+                    <dl class="row mb-0" id="navigationPanel">
+                      <dt class="col-sm-3"><a href="#debugging-tab">Debugging</a></dt>
+                      <dd class="col-sm-9">Learn more about Breakpoints, Variables, Threads, and Call Stacks</dd>
+                      <dt class="col-sm-3"><a href="#faq-tab">FAQ</a></dt>
+                      <dd class="col-sm-9">Frequently asked questions</dd>
+                    </dl>
                   </div>
+
+                  <!-- Compile & Build -->
                   <div class="tab-pane fade" id="compile-build-panel" role="tabpanel" aria-labelledby="compile-build-tab">
                     <p>Understand the compile and build mechanism of the language server</p>
                   </div>
+
+                  <!-- Debugging -->
                   <div class="tab-pane fade" id="debugging-panel" role="tabpanel" aria-labelledby="debugging-tab">
                     <p>How to use the debugger</p>
                   </div>
+
+                  <!-- Projects & Dependencies -->
                   <div class="tab-pane fade" id="projects-dependencies-panel" role="tabpanel" aria-labelledby="projects-dependencies-tab">
                     <p>How to deal with projects and dependencies</p>
                   </div>
+
+                  <!-- Customize -->
                   <div class="tab-pane fade" id="customize-panel" role="tabpanel" aria-labelledby="customize-tab">
                     <p>How to customize vs code</p>
                   </div>
+
+                  <!-- FAQ -->
                   <div class="tab-pane fade" id="faq-panel" role="tabpanel" aria-labelledby="faq-tab">
                     <p>Frequently asked questions</p>
                   </div>
                 </div>
               </div>
-              <div class="col-3 d-none d-md-block">
+              <div class="col-3 d-none">
                 <div class="list-group list-group-flush" role="tablist">
                   <a class="list-group-item list-group-action active" id="quick-start-tab" data-toggle="list" href="#quick-start-panel" role="tab" aria-controls="quick-start-panel" aria-selected="true" title="">Quick Start</a>
                   <a class="list-group-item list-group-action d-none" id="files-folders-tab" data-toggle="list" href="#files-folders-panel" role="tab" aria-controls="files-folders-panel" aria-selected="false" title="">Files & Folders</a>
