@@ -15,4 +15,4 @@ if (navigator.platform.toLowerCase().indexOf("mac") === 0) {
 }
 
 const osToHide = os === "win" ? "mac" : "win";
-$(`kbd[data-os=${osToHide}]`).hide();
+$(`[data-os=${osToHide}]`).hide();

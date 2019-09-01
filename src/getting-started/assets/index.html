@@ -59,23 +59,17 @@
                     </p>
                     <h3 class="font-weight-light">Setup the Workspace</h3>
                     <p>
-                      To setup the workspace, simply open a folder by:
-                      <dl class="row">
-                        <dt class="col-sm-3">Windows</dt>
-                        <dd class="col-sm-9">File > <a href="command:workbench.action.files.openFileFolder">Open Folder...</a></dd>
-                        <dt class="col-sm-3">Mac</dt>
-                        <dd class="col-sm-9">File > <a href="command:workbench.action.files.openFileFolder">Open...</a></dd>
-                      </dl>
+                      VS Code Java works directly with <strong>folders</strong> that have source code. To setup the workspace, simply open a folder using File > <a href="command:workbench.action.files.openFileFolder" data-os="win">Open Folder...</a><a href="command:workbench.action.files.openFileFolder" data-os="mac">Open...</a>
                     </p>
                     <blockquote class="card-body">
                       <h5 class="font-weight-light">No Import Needed</h5>
                       <p class="mb-0">
-                        VS Code Java works directly with <strong>folders</strong> that have source code. If the folder you open has project/build configuration files like <code>pom.xml</code> or <code>build.gradle</code>, they will be picked up automatically and the folder will be treated as a project.
+                         If the folder you open has project/build configuration files like <code>pom.xml</code> or <code>build.gradle</code>, they will be picked up automatically and the folder will be treated as a project.
                       </p>
                     </blockquote>
                     <h3 class="font-weight-light">Create a Class</h3>
                     <p>
-                      A program needs an entry and a Java program needs a class to host its entry. To create a class for our quick-start program, <a href="command:explorer.newFile">create a file</a> and set its name to <code>QuickStart.java</code>.<br/>
+                      A program needs an entry and a Java program needs a class to host its entry. To create a class for our quick-start program, <a href="command:explorer.newFile">Create a File</a> and set its name to <code>QuickStart.java</code>.<br/>
                       Now you can put the code in the new file:
                     </p>
                     <blockquote class="card-body">
@@ -229,7 +223,53 @@
 
                   <!-- FAQ -->
                   <div class="tab-pane fade" id="faq-panel" role="tabpanel" aria-labelledby="faq-tab">
-                    <p>Frequently asked questions</p>
+                    <blockquote class="card-body">
+                      <h5 class="font-weight-light">Feedback Channels</h5>
+                      <p>
+                        VS Code Java is new, and we are here to help.
+                      </p>
+                      <dl class="row mb-0">
+                        <dt class="col-sm-3"><a href="https://gitter.im/redhat-developer/vscode-java">Ask Questions</a></dt>
+                        <dd class="col-sm-9"><a href="https://gitter.im/redhat-developer/vscode-java">vscode-java</a> Gitter channel is recommended to ask for help</dd>
+                        <dt class="col-sm-3"><a href="https://github.com/microsoft/vscode-java-pack/issues">Open Issues</a></dt>
+                        <dd class="col-sm-9"><a href="https://github.com/microsoft/vscode-java-pack/issues">vscode-java-pack</a> GitHub repo is recommended for openning bugs</dd>
+                        <dt class="col-sm-3"><a href="https://twitter.com/search?q=vscodejava">Other Feedback</a></dt>
+                        <dd class="col-sm-9"><a href="https://twitter.com/VSCodeJava">@VSCodeJava</a> is the handle to mention on twitter</dd>
+                      </dl>
+                    </blockquote>
+                    <h3 class="font-weight-light">Why do I see the JDK errors?</h3>
+                    <p>
+                      <strong><code>JDK 8+</code> is required</strong> to run VS Code Java! You see this error because we failed to find one on your machine. The <a href="command:java.runtime">JDK Acquisition Guide</a> can help you understand how JDK path is searched and provides download links if you need to install one.
+                    </p>
+                    <h3 class="font-weight-light">Why do I see tons of problems and red squiggles?</h3>
+                    <p>
+                      The problems are from VS Code Java when it tries to compile and build your codebase. If you experience this on your first use, it's possibly because of <strong>missing dependencies</strong>. To fix it, you probably want to start from fixing the project configuration files, e.g. <code>pom.xml</code> and <code>build.gradle</code>. After you make changes to those files, try <a href="command:java.projectConfiguration.update">Update Project Configuration</a> and <a href="command:java.workspace.compile">Force Compilation</a>.
+                    </p>
+                    <p>
+                      It can also happen after you work with one project for a while. Try <a href="command:java.clean.workspace">Clean Workspace</a> to get rid of any intermidiate output from the language server.
+                    </p>
+                    <p>
+                      If the problem persists, follow the <a href="https://github.com/redhat-developer/vscode-java/wiki/Troubleshooting">Troubleshooting Guide</a>. For advanced users, the <a href="command:java.open.clientLog">Client Logs</a> and <a href="command:java.open.serverLog">Server Logs</a> will definitely help you understand what is going on.
+                    </p>
+                    <h3 class="font-weight-light">Why can't I see any IntelliSense suggestions?</h3>
+                    <p>
+                      VS Code Java needs to compile your code before it can provide suggestions. When it's working, you should see a spinning 🔄 on the right end of the status bar. And it will show 👍 when it's done. And you should be able to use all the features.
+                    </p>
+                    <p>
+                      It could take longer for the language server to load a project which references lots of dependencies. Those dependencies need to be resolved and downloaded from the internet. So the network connection plays a critical role in the process.
+                    </p>
+                    <h3 class="font-weight-light">Why do I see a little ⭐ in some of the IntelliSense suggestions?</h3>
+                    <p>
+                      This is because <a href="https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode">Visual Studio IntelliCode</a> is working. IntelliCode ranks the suggestions using the model trained from the source code of popular open source projects. The items with the stars are the ones that fit the current context the most.
+                    </p>
+                    <h3 class="font-weight-light">Can I use Lombok?</h3>
+                    <p>
+                      Yes. You'll need to install the <a href="https://marketplace.visualstudio.com/items?itemName=GabrielBB.vscode-lombok">Lombok</a> extension, which enables VS Code to process Lombok annotations. To learn more about alternatives and details, visit <a href="https://github.com/redhat-developer/vscode-java/wiki/Lombok-support">this page</a>.
+                    </p>
+                    <h3 class="font-weight-light">Can I develop Android apps using VS Code Java?</h3>
+                    <p class="mb-0">
+                      Sorry, it's not supported now.
+                    </p>
                   </div>
                 </div>
               </div>
