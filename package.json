@@ -61,7 +61,25 @@
         "command": "java.gettingStarted",
         "title": "Java: Getting Started"
       }
-    ]
+    ],
+    "configuration":{
+      "title": "Java Pack Configuration",
+      "properties": {
+        "java.help.firstView": {
+          "type": [
+            "string"
+          ],
+          "enum": [
+            "auto",
+            "overview",
+            "gettingStarted"
+          ],
+          "default": "auto",
+          "description": "Sets the default view which is presented during the first use.",
+          "scope": "window"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
