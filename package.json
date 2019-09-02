@@ -63,7 +63,7 @@
       }
     ],
     "configuration":{
-      "title": "Java Pack Configuration",
+      "title": "Java Extension Pack",
       "properties": {
         "java.help.firstView": {
           "type": [
@@ -73,6 +73,11 @@
             "auto",
             "overview",
             "gettingStarted"
+          ],
+          "enumDescriptions": [
+            "Automatically pick the first experience view",
+            "Present the Java Overview page",
+            "Present the Java Getting Started page"
           ],
           "default": "auto",
           "description": "Sets the default view which is presented during the first use.",

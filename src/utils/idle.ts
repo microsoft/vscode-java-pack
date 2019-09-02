@@ -11,12 +11,9 @@ const INTERVAL = 1000;
 const IDLE_THRESHOLD = 5000;
 
 export function initialize(context: vscode.ExtensionContext) {
-  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(vscodeEventHandler));
-  context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(vscodeEventHandler));
-  context.subscriptions.push(vscode.window.onDidChangeTextEditorViewColumn(vscodeEventHandler));
+  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(vscodeEventHandler)); // switching editor
+  context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(vscodeEventHandler)); // change cursor position
   context.subscriptions.push(vscode.window.onDidChangeTextEditorVisibleRanges(vscodeEventHandler)); // scrolling
-  context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(vscodeEventHandler)); // switching editor view
-  context.subscriptions.push(vscode.window.onDidChangeWindowState(vscodeEventHandler)); // activate/deactivate vscode
 
   setInterval(timerEventHandler, INTERVAL);
 }
