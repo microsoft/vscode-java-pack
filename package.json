@@ -3,7 +3,7 @@
   "displayName": "Java Extension Pack",
   "description": "Popular extensions for Java development and more.",
   "license": "MIT",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "publisher": "vscjava",
   "preview": true,
   "engines": {
@@ -62,7 +62,7 @@
         "title": "Java: Getting Started"
       }
     ],
-    "configuration":{
+    "configuration": {
       "title": "Java Extension Pack",
       "properties": {
         "java.help.firstView": {
