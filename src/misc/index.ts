@@ -4,9 +4,23 @@
 import * as vscode from "vscode";
 import { getReleaseNotesEntries, findLatestReleaseNotes, timeToString } from "../utils";
 
+export enum HelpViewType {
+  Auto = "auto",
+  Overview = "overview",
+  GettingStarted = "gettingStarted",
+}
+
 function showInfoButton() {
+  const config = vscode.workspace.getConfiguration("java.help");
+  const firstView = config.get("firstView");
+
   let infoButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-  infoButton.command = "java.overview";
+  if (firstView === HelpViewType.GettingStarted) {
+    infoButton.command = "java.gettingStarted";
+  } else {
+    infoButton.command = "java.overview";
+  }
+
   infoButton.text = "$(info)";
   infoButton.tooltip = "Learn more about Java features";
   infoButton.show();

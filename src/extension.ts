@@ -7,17 +7,11 @@ import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } f
 import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
-import { initialize as initMisc, showReleaseNotesOnStart } from "./misc";
+import { initialize as initMisc, showReleaseNotesOnStart, HelpViewType } from "./misc";
 import { showOverviewPageOnActivation } from "./overview";
 import { validateJavaRuntime } from "./java-runtime";
 // import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { scheduleAction } from "./utils/scheduler";
-
-enum ViewType {
-  Auto = "auto",
-  Overview = "overview",
-  GettingStarted = "gettingStarted",
-}
 
 export async function activate(context: vscode.ExtensionContext) {
   initializeTelemetry(context);
@@ -53,7 +47,7 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
 async function presentFirstView(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration("java.help");
   const firstView = config.get("firstView");
-  if (firstView === ViewType.GettingStarted) {
+  if (firstView === HelpViewType.GettingStarted) {
     await showGettingStartedView(context);
   } else {
     await showOverviewPageOnActivation(context);
