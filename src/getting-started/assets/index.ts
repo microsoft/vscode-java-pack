@@ -16,3 +16,13 @@ if (navigator.platform.toLowerCase().indexOf("mac") === 0) {
 
 const osToHide = os === "win" ? "mac" : "win";
 $(`[data-os=${osToHide}]`).hide();
+
+declare function acquireVsCodeApi(): any;
+const vscode = acquireVsCodeApi();
+
+$("a[data-toggle='tab']").on("shown.bs.tab", e => {
+  vscode.postMessage({
+    command: "tabActivated",
+    tabId: e.target.id
+  });
+});
