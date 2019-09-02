@@ -4,6 +4,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { loadTextFromFile, getExtensionContext } from "../utils";
+import { sendInfo, instrumentOperation } from "vscode-extension-telemetry-wrapper";
 
 let javaGettingStartedView: vscode.WebviewPanel | undefined;
 
@@ -21,19 +22,28 @@ export async function javaGettingStartedCmdHandler(context: vscode.ExtensionCont
     retainContextWhenHidden: true
   });
 
-  await initializeJavaGettingStartedView(context, javaGettingStartedView, onDidDisposeWebviewPanel);
+  await initializeJavaGettingStartedView(context, javaGettingStartedView, onDidDisposeWebviewPanel, operationId);
 }
 
 function onDidDisposeWebviewPanel() {
   javaGettingStartedView = undefined;
 }
 
-async function initializeJavaGettingStartedView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
+async function initializeJavaGettingStartedView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void, operationId: string) {
   webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
   const resourceUri = context.asAbsolutePath("./out/assets/getting-started/index.html");
   webviewPanel.webview.html = await loadTextFromFile(resourceUri);
 
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
+  context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
+    if (e.command === "tabActivated") {
+      let tabId = e.tabId;
+      sendInfo(operationId, {
+        infoType: "tabActivated",
+        tabId: tabId
+      });
+    }
+  }));
 }
 
 export class JavaGettingStartedViewSerializer implements vscode.WebviewPanelSerializer {
@@ -45,6 +55,8 @@ export class JavaGettingStartedViewSerializer implements vscode.WebviewPanelSeri
     }
 
     javaGettingStartedView = webviewPanel;
-    initializeJavaGettingStartedView(getExtensionContext(), webviewPanel, onDidDisposeWebviewPanel);
+    instrumentOperation("restoreGettingStartedView", operationId => {
+      initializeJavaGettingStartedView(getExtensionContext(), webviewPanel, onDidDisposeWebviewPanel, operationId);
+    })();
   }
 }
