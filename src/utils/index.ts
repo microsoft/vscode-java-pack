@@ -4,6 +4,8 @@
 import * as vscode from "vscode";
 import { readFile as fsReadFile } from "fs";
 import * as util from "util";
+import { initialize as initializeIdle } from "./idle";
+import { initialize as initializeScheduler } from "./scheduler";
 
 const readFile = util.promisify(fsReadFile);
 
@@ -11,6 +13,8 @@ let extensionContext: vscode.ExtensionContext;
 
 export function initialize(context: vscode.ExtensionContext) {
   extensionContext = context;
+  initializeIdle(context);
+  initializeScheduler(context);
 }
 
 export function getExtensionContext() {

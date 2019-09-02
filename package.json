@@ -61,7 +61,30 @@
         "command": "java.gettingStarted",
         "title": "Java: Getting Started"
       }
-    ]
+    ],
+    "configuration":{
+      "title": "Java Extension Pack",
+      "properties": {
+        "java.help.firstView": {
+          "type": [
+            "string"
+          ],
+          "enum": [
+            "auto",
+            "overview",
+            "gettingStarted"
+          ],
+          "enumDescriptions": [
+            "Automatically pick the first experience view",
+            "Present the Java Overview page",
+            "Present the Java Getting Started page"
+          ],
+          "default": "auto",
+          "description": "Sets the default view which is presented during the first use.",
+          "scope": "window"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build",

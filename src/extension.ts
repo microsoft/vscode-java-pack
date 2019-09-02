@@ -8,9 +8,16 @@ import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart } from "./misc";
-import { showOverviewPageOnActivation, OverviewViewSerializer } from "./overview";
+import { OverviewViewSerializer, showOverviewPageOnActivation } from "./overview";
 import { validateJavaRuntime, JavaRuntimeViewSerializer } from "./java-runtime";
 import { JavaGettingStartedViewSerializer } from "./getting-started";
+import { scheduleAction } from "./utils/scheduler";
+
+enum ViewType {
+  Auto = "auto",
+  Overview = "overview",
+  GettingStarted = "gettingStarted",
+}
 
 export async function activate(context: vscode.ExtensionContext) {
   initializeTelemetry(context);
@@ -27,12 +34,38 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
 
-  await showOverviewPageOnActivation(context);
-  await showReleaseNotesOnStart(context);
+  scheduleAction("showFirstView", true).then(() => {
+    presentFirstView(context);
+  });
+
+  scheduleAction("showReleaseNotes").then(() => {
+    showReleaseNotesOnStart(context);
+  });
 
   if (!await validateJavaRuntime()) {
-    vscode.commands.executeCommand("java.runtime");
+    scheduleAction("showJdkState", true, true).then(() => {
+      vscode.commands.executeCommand("java.runtime");
+    });
   }
+}
+
+async function presentFirstView(context: vscode.ExtensionContext) {
+  const config = vscode.workspace.getConfiguration("java.help");
+  const firstView = config.get("firstView");
+  if (firstView === ViewType.GettingStarted) {
+    await showGettingStartedView(context);
+  } else {
+    await showOverviewPageOnActivation(context);
+  }
+}
+
+async function showGettingStartedView(context: vscode.ExtensionContext, isForce: boolean = false) {
+  if (!!context.globalState.get("isGettingStartedPresented")) {
+    return;
+  }
+
+  await vscode.commands.executeCommand("java.gettingStarted");
+  context.globalState.update("isGettingStartedPresented", true);
 }
 
 function initializeTelemetry(context: vscode.ExtensionContext) {
