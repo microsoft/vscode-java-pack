@@ -8,9 +8,9 @@ import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart } from "./misc";
-import { OverviewViewSerializer, showOverviewPageOnActivation } from "./overview";
-import { validateJavaRuntime, JavaRuntimeViewSerializer } from "./java-runtime";
-import { JavaGettingStartedViewSerializer } from "./getting-started";
+import { showOverviewPageOnActivation } from "./overview";
+import { validateJavaRuntime } from "./java-runtime";
+// import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { scheduleAction } from "./utils/scheduler";
 
 enum ViewType {
@@ -30,9 +30,10 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   initRecommendations(context);
   initMisc(context);
 
-  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
-  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
-  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
+  // disable webview serializer because of https://github.com/microsoft/vscode/issues/80185
+  // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
+  // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
+  // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
 
   scheduleAction("showFirstView", true).then(() => {
     presentFirstView(context);
