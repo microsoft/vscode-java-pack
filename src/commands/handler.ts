@@ -26,6 +26,15 @@ export async function createSpringBootProjectCmdHandler(context: vscode.Extensio
   await vscode.commands.executeCommand("spring.initializr.createProject");
 }
 
+export async function createQuarkusProjectCmdHandler(context: vscode.ExtensionContext) {
+  if (!await validateAndRecommendExtension("redhat.vscode-quarkus", "Quarkus Tools for Visual Studio Code is recommended to help create Quarkus projects and for an all-in-one Quarkus application development experience.", true)) {
+    return;
+  }
+
+  await vscode.commands.executeCommand("quarkusTools.createProject");
+}
+
+
 export async function showExtensionCmdHandler(context: vscode.ExtensionContext, operationId: string, extensionName: string) {
   sendInfo(operationId, { extName: extensionName });
   vscode.commands.executeCommand("extension.open", extensionName);

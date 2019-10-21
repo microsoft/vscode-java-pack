@@ -34,6 +34,13 @@ Spring Tools 4 (ST4) is also available in Visual Studio Code. It understands Spr
 
 To use ST4, install [📦 Spring Boot Extension Pack](https://marketplace.visualstudio.com/items?itemName=Pivotal.vscode-boot-dev-pack). Please also check out the [User Guide](https://github.com/spring-projects/sts4/wiki) to make the most of it.
 
+### Quarkus
+
+[📦 Quarkus Tools for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus) is a feature-packed extension tailored for Quarkus application
+development within Visual Studio Code. You can quickly get started by using the extension's 
+project generation and project debugging feature. The extension also provides amazing
+language features (completion, hover, validation etc.) for your project's application.properties file.
+
 ### Containers and Microservices
 
 You can use [📦 Docker](https://marketplace.visualstudio.com/items?itemName=PeterJausovec.vscode-docker) extension to build docker images and work with image registries.
