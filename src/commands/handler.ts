@@ -8,7 +8,7 @@ import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getReleaseNotesEntries, findLatestReleaseNotes } from "../utils";
 import { gt, eq } from "semver";
 
-export async function createMavenProjectCmdHanlder(context: vscode.ExtensionContext) {
+export async function createMavenProjectCmdHandler(context: vscode.ExtensionContext) {
   if (!await validateAndRecommendExtension("vscjava.vscode-maven", "Maven extension is recommended to help create Java projects and work with custom goals.", true)) {
     return;
   }
