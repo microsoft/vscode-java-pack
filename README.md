@@ -34,6 +34,11 @@ Spring Tools 4 (ST4) is also available in Visual Studio Code. It understands Spr
 
 To use ST4, install [📦 Spring Boot Extension Pack](https://marketplace.visualstudio.com/items?itemName=Pivotal.vscode-boot-dev-pack). Please also check out the [User Guide](https://github.com/spring-projects/sts4/wiki) to make the most of it.
 
+### Eclipse MicroProfile
+
+[📦 MicroProfile Starter for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=MicroProfile-Community.mp-starter-vscode-ext) provides support for generating a starter MicroProfile Maven project using the Eclipse MicroProfile Starter project by the MicroProfile community.  You can quickly generate a project by choosing a MicroProfile version, a server runtime, and specifications such as CDI, Config, Health Check, Metrics, and more.
+
+
 ### Quarkus
 
 [📦 Quarkus Tools for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus) is a feature-packed extension tailored for Quarkus application

@@ -26,6 +26,14 @@ export async function createSpringBootProjectCmdHandler(context: vscode.Extensio
   await vscode.commands.executeCommand("spring.initializr.createProject");
 }
 
+export async function createMicroProfileStarterProjectCmdHandler(context: vscode.ExtensionContext) {
+  if (!await validateAndRecommendExtension("microProfile-community.mp-starter-vscode-ext", "MicroProfile Starter for Visual Studio Code is recommended to generate starter projects for Eclipse MicroProfile.", true)) {
+    return;
+  }
+
+  await vscode.commands.executeCommand("extension.microProfileStarter");
+}
+
 export async function createQuarkusProjectCmdHandler(context: vscode.ExtensionContext) {
   if (!await validateAndRecommendExtension("redhat.vscode-quarkus", "Quarkus Tools for Visual Studio Code is recommended to help create Quarkus projects and for an all-in-one Quarkus application development experience.", true)) {
     return;
