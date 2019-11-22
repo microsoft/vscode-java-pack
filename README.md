@@ -34,6 +34,10 @@ Spring Tools 4 (ST4) is also available in Visual Studio Code. It understands Spr
 
 To use ST4, install [📦 Spring Boot Extension Pack](https://marketplace.visualstudio.com/items?itemName=Pivotal.vscode-boot-dev-pack). Please also check out the [User Guide](https://github.com/spring-projects/sts4/wiki) to make the most of it.
 
+### Open Liberty
+
+You can use [📦 Open Liberty Tools for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=Open-Liberty.liberty-dev-vscode-ext) to develop your cloud-native Java applications on Open Liberty. This extension provides tools for you to develop and manage your Open Liberty projects in VS Code. It has an explorer view for you to run Liberty in development mode and manage the available projects in your workspace.
+
 ### Quarkus
 
 [📦 Quarkus Tools for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus) is a feature-packed extension tailored for Quarkus application
