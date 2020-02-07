@@ -34,6 +34,14 @@ export async function createQuarkusProjectCmdHandler(context: vscode.ExtensionCo
   await vscode.commands.executeCommand("quarkusTools.createProject");
 }
 
+export async function createMicroProfileStarterProjectCmdHandler(context: vscode.ExtensionContext) {
+  if (!await validateAndRecommendExtension("microProfile-community.mp-starter-vscode-ext", "MicroProfile Starter for Visual Studio Code is recommended to generate starter projects for Eclipse MicroProfile.", true)) {
+    return;
+  }
+
+  await vscode.commands.executeCommand("extension.microProfileStarter");
+}
+
 
 export async function showExtensionCmdHandler(context: vscode.ExtensionContext, operationId: string, extensionName: string) {
   sendInfo(operationId, { extName: extensionName });
