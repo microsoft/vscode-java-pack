@@ -147,6 +147,7 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
             <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.azul.com%2Fdownloads%2Fazure-only%2Fzulu%2F%22" title="Recommended for Microsoft Azure Cloud and Azure Stack applications">Azul Zulu Enterprise build of OpenJDK for Azure</a></li>
             <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fdevelopers.redhat.com%2Fproducts%2Fopenjdk%2Fdownload%22" title="Red Hat build of OpenJDK">Red Hat build of OpenJDK</a></li>
             <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fsapmachine.io%2F%22" title="SapMachine - An OpenJDK release maintained and supported by SAP">SapMachine - An OpenJDK release maintained and supported by SAP</a></li>
+            <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Faws.amazon.com%2Fcorretto%2F%22" title="Amazon Corretto - An OpenJDK distribution maintained and supported by Amazon">Amazon Corretto - An OpenJDK distribution maintained and supported by Amazon</a></li>
             <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fjdk.java.net%2F%22" title="OpenJDK by Oracle">Oracle OpenJDK</a></li>
           </ul>
         </div>
