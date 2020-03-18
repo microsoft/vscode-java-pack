@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.9.0
+- Added SonarLint to the recommendation list
+
 ## 0.8.1
 - [#250] Added Quarkus recommendation
 - [#251] Fixed typos

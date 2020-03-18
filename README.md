@@ -41,7 +41,7 @@ The [📦 MicroProfile Extension Pack](https://marketplace.visualstudio.com/item
 ### Quarkus
 
 [📦 Quarkus Tools for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus) is a feature-packed extension tailored for Quarkus application
-development within Visual Studio Code. You can quickly get started by using the extension's 
+development within Visual Studio Code. You can quickly get started by using the extension's
 project generation and project debugging feature. The extension also provides amazing
 language features (completion, hover, validation etc.) for your project's application.properties file.
 
@@ -54,6 +54,9 @@ You can use [📦 Docker](https://marketplace.visualstudio.com/items?itemName=Pe
 ### Tomcat and Jetty
 
 Both [📦 Tomcat](https://marketplace.visualstudio.com/items?itemName=adashen.vscode-tomcat) and [📦 Jetty](https://marketplace.visualstudio.com/items?itemName=SummerSun.vscode-jetty) extension are available. They provide dedicated views to help work with your favorite web servers.
+
+### Linting
+You can use [📦 SonarLint](https://marketplace.visualstudio.com/items?itemName=SonarSource.sonarlint-vscode) or [📦 CheckStyle](https://marketplace.visualstudio.com/items?itemName=shengchen.vscode-checkstyle) to detect and fix errors while editing.
 
 ## Questions & Issues
 
