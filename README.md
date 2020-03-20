@@ -56,7 +56,9 @@ You can use [📦 Docker](https://marketplace.visualstudio.com/items?itemName=Pe
 Both [📦 Tomcat](https://marketplace.visualstudio.com/items?itemName=adashen.vscode-tomcat) and [📦 Jetty](https://marketplace.visualstudio.com/items?itemName=SummerSun.vscode-jetty) extension are available. They provide dedicated views to help work with your favorite web servers.
 
 ### Linting
-You can use [📦 SonarLint](https://marketplace.visualstudio.com/items?itemName=SonarSource.sonarlint-vscode) or [📦 CheckStyle](https://marketplace.visualstudio.com/items?itemName=shengchen.vscode-checkstyle) to detect and fix errors while editing.
+The [📦 SonarLint](https://marketplace.visualstudio.com/items?itemName=SonarSource.sonarlint-vscode) extension lets you detect bugs and vulnerabilities as you write code in VS Code. The extension will simply run in the background and highlight code that poses a quality or security concern.
+
+At the same time, [📦 CheckStyle](https://marketplace.visualstudio.com/items?itemName=shengchen.vscode-checkstyle) is also available.
 
 ## Questions & Issues
 
