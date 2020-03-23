@@ -104,7 +104,7 @@
     "@types/request": "^2.48.4",
     "@types/request-promise-native": "^1.0.17",
     "@types/semver": "^5.5.0",
-    "@types/vscode": "^1.43.0",
+    "@types/vscode": "1.32.0",
     "arch": "^2.1.1",
     "autoprefixer": "^8.5.1",
     "bootstrap": "^4.4.1",
