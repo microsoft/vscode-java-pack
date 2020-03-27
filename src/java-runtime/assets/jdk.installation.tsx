@@ -102,9 +102,9 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
                   </label>
                 </div>
                 <div className="form-check">
-                  <input className="form-check-input" type="radio" name="jdkVersion" id="openjdk12Radio" value="openjdk12" />
-                  <label className="form-check-label" htmlFor="openjdk12Radio">
-                    OpenJDK 12 (Technical Preview)
+                  <input className="form-check-input" type="radio" name="jdkVersion" id="openjdk14Radio" value="openjdk14" />
+                  <label className="form-check-label" htmlFor="openjdk14Radio">
+                    OpenJDK 14 (Latest)
                   </label>
                 </div>
               </div>
