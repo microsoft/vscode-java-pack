@@ -8,7 +8,7 @@ import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getReleaseNotesEntries, findLatestReleaseNotes } from "../utils";
 import { gt, eq } from "semver";
 
-export async function createMavenProjectCmdHanlder(context: vscode.ExtensionContext) {
+export async function createMavenProjectCmdHandler(context: vscode.ExtensionContext) {
   if (!await validateAndRecommendExtension("vscjava.vscode-maven", "Maven extension is recommended to help create Java projects and work with custom goals.", true)) {
     return;
   }
@@ -25,6 +25,23 @@ export async function createSpringBootProjectCmdHandler(context: vscode.Extensio
 
   await vscode.commands.executeCommand("spring.initializr.createProject");
 }
+
+export async function createQuarkusProjectCmdHandler(context: vscode.ExtensionContext) {
+  if (!await validateAndRecommendExtension("redhat.vscode-quarkus", "Quarkus Tools for Visual Studio Code is recommended to help create Quarkus projects and for an all-in-one Quarkus application development experience.", true)) {
+    return;
+  }
+
+  await vscode.commands.executeCommand("quarkusTools.createProject");
+}
+
+export async function createMicroProfileStarterProjectCmdHandler(context: vscode.ExtensionContext) {
+  if (!await validateAndRecommendExtension("microProfile-community.mp-starter-vscode-ext", "MicroProfile Starter for Visual Studio Code is recommended to generate starter projects for Eclipse MicroProfile.", true)) {
+    return;
+  }
+
+  await vscode.commands.executeCommand("extension.microProfileStarter");
+}
+
 
 export async function showExtensionCmdHandler(context: vscode.ExtensionContext, operationId: string, extensionName: string) {
   sendInfo(operationId, { extName: extensionName });

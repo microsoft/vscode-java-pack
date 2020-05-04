@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.9.0
+- Added SonarLint to the recommendation list
+
+## 0.8.1
+- [#250] Added Quarkus recommendation
+- [#251] Fixed typos
+- [#258] Added SapMachine as JDK option
+
 ## 0.8.0
 - Added Getting Started view [#183](https://github.com/Microsoft/vscode-java-pack/issues/183) [#184](https://github.com/Microsoft/vscode-java-pack/issues/184) [#185](https://github.com/Microsoft/vscode-java-pack/issues/185) [#186](https://github.com/Microsoft/vscode-java-pack/issues/186) [#189](https://github.com/Microsoft/vscode-java-pack/issues/189) [#190](https://github.com/Microsoft/vscode-java-pack/issues/190) [#191](https://github.com/Microsoft/vscode-java-pack/issues/191) [#192](https://github.com/Microsoft/vscode-java-pack/issues/192) [#193](https://github.com/Microsoft/vscode-java-pack/issues/193)
 - Changed to presenting JDK Acquisition Guide using dedicated view [#172](https://github.com/Microsoft/vscode-java-pack/issues/172) [#173](https://github.com/Microsoft/vscode-java-pack/issues/173) [#175](https://github.com/Microsoft/vscode-java-pack/issues/175) [#176](https://github.com/Microsoft/vscode-java-pack/issues/176) [#179](https://github.com/Microsoft/vscode-java-pack/issues/179)
