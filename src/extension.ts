@@ -68,7 +68,7 @@ function initializeTelemetry(context: vscode.ExtensionContext) {
   const packageInfo = ext ? ext.packageJSON : undefined;
   if (packageInfo) {
     if (packageInfo.aiKey) {
-      initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey);
+      initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey, { firstParty: true });
     }
   }
 }
