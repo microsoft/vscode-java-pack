@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.9.1
+- Updated dependencies to fix vulnerability and telemetry issues
+
 ## 0.9.0
 - Added SonarLint to the recommendation list
 
