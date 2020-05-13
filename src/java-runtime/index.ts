@@ -65,11 +65,13 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
     });
   }
 
-  let jdkInfo = await suggestOpenJdk();
-  applyJdkInfo(jdkInfo);
+  suggestOpenJdk().then(jdkInfo => {
+    applyJdkInfo(jdkInfo);
+  });
 
-  let entries = await findJavaRuntimeEntries();
-  showJavaRuntimeEntries(entries);
+  findJavaRuntimeEntries().then(entries => {
+    showJavaRuntimeEntries(entries);
+  });
 }
 
 export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer {
