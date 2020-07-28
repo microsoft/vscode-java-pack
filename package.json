@@ -41,7 +41,9 @@
     "onCommand:java.runtime",
     "onWebviewPanel:java.runtime",
     "onCommand:java.gettingStarted",
-    "onWebviewPanel:java.gettingStarted"
+    "onWebviewPanel:java.gettingStarted",
+    "onCommand:java.extGuide",
+    "onWebviewPanel:java.extGuide"
   ],
   "contributes": {
     "commands": [
@@ -60,6 +62,10 @@
       {
         "command": "java.gettingStarted",
         "title": "Java: Getting Started"
+      },
+      {
+        "command": "java.extGuide",
+        "title": "Java: Extension Guide"
       }
     ],
     "configuration": {
