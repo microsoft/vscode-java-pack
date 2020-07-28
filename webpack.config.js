@@ -11,7 +11,8 @@ module.exports = function (env, argv) {
     entry: {
       overview: './src/overview/assets/index.ts',
       'java-runtime': './src/java-runtime/assets/index.ts',
-      'getting-started': './src/getting-started/assets/index.ts'
+      'getting-started': './src/getting-started/assets/index.ts',
+      'ext-guide': './src/ext-guide/assets/index.ts'
     },
     module: {
       rules: [{
@@ -60,6 +61,12 @@ module.exports = function (env, argv) {
         template: 'src/getting-started/assets/index.html',
         inlineSource: '.(js|css)$',
         chunks: ['getting-started']
+      }),
+      new HtmlWebpackPlugin({
+        filename: path.resolve(__dirname, 'out/assets/ext-guide/index.html'),
+        template: 'src/ext-guide/assets/index.html',
+        inlineSource: '.(js|css)$',
+        chunks: ['ext-guide']
       }),
       new HtmlWebpackInlineSourcePlugin(),
     ],
