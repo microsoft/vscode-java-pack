@@ -86,3 +86,24 @@ function syncExtensionStatus(extensions: string[]) {
     $(elem).prop("checked", isInstalled);
   });
 }
+
+function getSelectedExtension(isAll: boolean = false) {
+  const $selected = isAll ? $("input:visible:enabled") : $("input:checked:visible:enabled");
+  const selectedExtensions: string[] = [];
+  $selected.each((i, elem) => { selectedExtensions.push(<string>$(elem).val()); });
+  return selectedExtensions;
+}
+
+$("#btn-install-selected").click(() => installExtensions(getSelectedExtension()));
+$("#btn-install-all").click(() => installExtensions(getSelectedExtension(true)));
+
+function installExtensions(extNames: string[]) {
+  if (extNames.length <= 0) {
+    return;
+  }
+
+  vscode.postMessage({
+    command: "installExtensions",
+    extNames: extNames
+  });
+}
