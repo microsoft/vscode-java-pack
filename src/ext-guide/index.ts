@@ -42,6 +42,11 @@ async function initializeJavaExtGuideView(context: vscode.ExtensionContext, webv
         infoType: "tabActivated",
         tabId: tabId
       });
+    } else if (e.command === "installExtensions") {
+      const extNames = <string[]>e.extNames;
+      await extNames.map(extName => {
+        return vscode.commands.executeCommand("java.helper.installExtension", extName, extName);
+      });
     }
   }));
 
