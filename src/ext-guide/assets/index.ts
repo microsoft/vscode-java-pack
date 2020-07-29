@@ -47,7 +47,7 @@ $("tr").hover(e => {
   bsShow($nextDesc);
 
   const $learnMore = $("#btn-learn-more");
-  $learnMore.attr("href", `https://marketplace.visualstudio.com/items?itemName=${ext}`);
+  $learnMore.attr("href", `command:java.helper.showExtension?%22${ext}%22`);
   bsShow($learnMore);
 });
 
