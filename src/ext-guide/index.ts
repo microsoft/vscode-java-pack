@@ -44,6 +44,20 @@ async function initializeJavaExtGuideView(context: vscode.ExtensionContext, webv
       });
     }
   }));
+
+  vscode.extensions.onDidChange(e => {
+    syncExtensionStatus();
+  });
+
+  function syncExtensionStatus() {
+    const installedExtensions = vscode.extensions.all.map(ext => ext.id.toLowerCase());
+    webviewPanel.webview.postMessage({
+      command: "syncExtensionStatus",
+      installedExtensions: installedExtensions
+    });
+  }
+
+  syncExtensionStatus();
 }
 
 export class JavaExtGuideViewSerializer implements vscode.WebviewPanelSerializer {

@@ -72,3 +72,17 @@ function bsHide($elem: JQuery<HTMLElement>) {
 function bsShow($elem: JQuery<HTMLElement>) {
   $elem.removeClass("d-none");
 }
+
+window.addEventListener("message", event => {
+  if (event.data.command === "syncExtensionStatus") {
+    syncExtensionStatus(event.data.installedExtensions);
+  }
+});
+
+function syncExtensionStatus(extensions: string[]) {
+  $("input[type='checkbox']").each((i, elem) => {
+    const isInstalled = extensions.includes(<string>$(elem).val());
+    $(elem).prop("disabled", isInstalled);
+    $(elem).prop("checked", isInstalled);
+  });
+}
