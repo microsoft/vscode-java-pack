@@ -8,6 +8,7 @@ import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart, HelpViewType } from "./misc";
+import { initialize as initExp, getExpService } from "./exp";
 import { showOverviewPageOnActivation } from "./overview";
 import { validateJavaRuntime } from "./java-runtime";
 // import { JavaGettingStartedViewSerializer } from "./getting-started";
@@ -23,6 +24,7 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   initCommands(context);
   initRecommendations(context);
   initMisc(context);
+  initExp(context);
 
   // disable webview serializer because of https://github.com/microsoft/vscode/issues/80185
   // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
@@ -45,6 +47,12 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
+  const presentExtensionGuideByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentExtensionGuideByDefault") || false;
+  if (presentExtensionGuideByDefault) {
+    showExtensionGuide(context);
+    return;
+  }
+
   const config = vscode.workspace.getConfiguration("java.help");
   const firstView = config.get("firstView");
   if (firstView === HelpViewType.GettingStarted) {
@@ -52,6 +60,15 @@ async function presentFirstView(context: vscode.ExtensionContext) {
   } else {
     await showOverviewPageOnActivation(context);
   }
+}
+
+async function showExtensionGuide(context: vscode.ExtensionContext) {
+  if (!!context.globalState.get("isExtensionGuidePresented")) {
+    return;
+  }
+
+  await vscode.commands.executeCommand("java.extGuide");
+  context.globalState.update("isExtensionGuidePresented", true);
 }
 
 async function showGettingStartedView(context: vscode.ExtensionContext, isForce: boolean = false) {

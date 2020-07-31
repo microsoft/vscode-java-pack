@@ -48,3 +48,4 @@ export async function loadTextFromFile(resourceUri: string) {
 
 export * from "./command";
 export * from "./release-notes";
+export * from "./extension";
