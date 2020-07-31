@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import * as vscode from "vscode";
 import { IExperimentationService, IExperimentationTelemetry, getExperimentationService, TargetPopulation } from "vscode-tas-client";
 import { addContextProperty, sendInfo } from "vscode-extension-telemetry-wrapper";
