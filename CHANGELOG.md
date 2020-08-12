@@ -1,7 +1,7 @@
 # Change Log
 
 ## 0.10.0
-- Added Extension Guide to Help Discover Java Extensions
+- Added extension guide to help discover Java extensions
 
 ## 0.9.1
 - Updated dependencies to fix vulnerability and telemetry issues
