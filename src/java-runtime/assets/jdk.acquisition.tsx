@@ -19,7 +19,7 @@ export const JdkAcquisitionPanel = (props: JdkAcquisitionPanelProps) => {
         <div className="col">
           <h3 className="font-weight-light">Configure</h3>
           <p>
-            Java Development Kit (JDK) 8 or later is required for developing Java applications. The path to the JDK is searched in the following order:
+            Java Development Kit (JDK) 11 or later is required for developing Java applications. The path to the JDK is searched in the following order:
           </p>
           <div className="card">
             <div className="card-body">
@@ -44,4 +44,3 @@ export const JdkAcquisitionPanel = (props: JdkAcquisitionPanelProps) => {
     </div>
   );
 };
-
