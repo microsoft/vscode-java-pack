@@ -13,7 +13,7 @@ import { loadTextFromFile, getExtensionContext } from "../utils";
 import { JavaRuntimeEntry, JavaRuntimeEntryTypes } from "./types";
 import * as _ from "lodash";
 
-const MIN_JDK_VERSION: number = 8;
+const MIN_JDK_VERSION: number = 11;
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 
@@ -194,7 +194,7 @@ export async function findJavaRuntimeEntries(): Promise<JavaRuntimeEntry[]> {
     const version = await getJavaVersion(entry.path);
     if (version < MIN_JDK_VERSION) {
       entry.isValid = false;
-      entry.hint = `JDK 8+ is required while the path is pointing to version ${version}`;
+      entry.hint = `JDK 11+ is required while the path is pointing to version ${version}`;
       return entry;
     }
 
