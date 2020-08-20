@@ -78,15 +78,23 @@
           "enum": [
             "auto",
             "overview",
-            "gettingStarted"
+            "gettingStarted",
+            "none"
           ],
           "enumDescriptions": [
             "Automatically pick the first experience view",
             "Present the Java Overview page",
-            "Present the Java Getting Started page"
+            "Present the Java Getting Started page",
+            "Do not show any view"
           ],
           "default": "auto",
           "description": "Sets the default view which is presented during the first use.",
+          "scope": "window"
+        },
+        "java.help.showReleaseNotes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Java Extension Pack release notes on startup.",
           "scope": "window"
         }
       }

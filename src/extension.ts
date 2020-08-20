@@ -31,13 +31,19 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
   // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
 
-  scheduleAction("showFirstView", true).then(() => {
-    presentFirstView(context);
-  });
+  const config = vscode.workspace.getConfiguration("java.help");
 
-  scheduleAction("showReleaseNotes").then(() => {
-    showReleaseNotesOnStart(context);
-  });
+  if (config.get("firstView") !== HelpViewType.None) {
+    scheduleAction("showFirstView", true).then(() => {
+      presentFirstView(context);
+    });
+  }
+
+  if (config.get("showReleaseNotes")) {
+    scheduleAction("showReleaseNotes").then(() => {
+      showReleaseNotesOnStart(context);
+    });
+  }
 
   if (!await validateJavaRuntime()) {
     scheduleAction("showJdkState", true, true).then(() => {
@@ -55,11 +61,15 @@ async function presentFirstView(context: vscode.ExtensionContext) {
 
   const config = vscode.workspace.getConfiguration("java.help");
   const firstView = config.get("firstView");
-  if (firstView === HelpViewType.GettingStarted) {
-    await showGettingStartedView(context);
-  } else {
-    await showOverviewPageOnActivation(context);
-  }
+  switch (firstView) {
+    case HelpViewType.None:
+      break;
+    case HelpViewType.GettingStarted:  
+      await showGettingStartedView(context);
+      break;
+    default:
+      await showOverviewPageOnActivation(context);
+    }
 }
 
 async function showExtensionGuide(context: vscode.ExtensionContext) {
