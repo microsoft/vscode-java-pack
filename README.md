@@ -18,8 +18,8 @@ By installing Java Extension Pack, the following extensions are installed:
 - [📦 Maven for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-maven)
     - Project Scaffolding
     - Custom Goals
-- [📦 Java Dependency Viewer](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
-    - View Java projects, referenced libraries, resource files, packages, classes, and class members
+- [📦 Project Manager for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
+    - Manage Java projects, referenced libraries, resource files, packages, classes, and class members
 - [📦 Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode)
     - AI-assisted development
     - Completion list ranked by AI
