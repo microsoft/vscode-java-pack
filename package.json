@@ -102,10 +102,10 @@
     "@types/bytes": "^3.1.0",
     "@types/expand-tilde": "^2.0.0",
     "@types/jquery": "^3.5.1",
-    "@types/lodash": "^4.14.159",
-    "@types/node": "^8.10.62",
+    "@types/lodash": "^4.14.161",
+    "@types/node": "^8.10.63",
     "@types/path-exists": "^3.0.0",
-    "@types/react": "^16.9.46",
+    "@types/react": "^16.9.49",
     "@types/react-dom": "^16.9.8",
     "@types/request": "^2.48.5",
     "@types/request-promise-native": "^1.0.17",
@@ -149,6 +149,6 @@
   ],
   "dependencies": {
     "semver": "^5.7.1",
-    "vscode-extension-telemetry-wrapper": "^0.8.0"
+    "vscode-extension-telemetry-wrapper": "^0.9.0"
   }
 }
