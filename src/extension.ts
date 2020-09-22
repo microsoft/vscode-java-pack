@@ -9,6 +9,7 @@ import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart, HelpViewType } from "./misc";
 import { initialize as initExp, getExpService } from "./exp";
+import { initialize as initSurvey } from "./survey"
 import { showOverviewPageOnActivation } from "./overview";
 import { validateJavaRuntime } from "./java-runtime";
 // import { JavaGettingStartedViewSerializer } from "./getting-started";
@@ -25,6 +26,7 @@ async function initializeExtension(operationId: string, context: vscode.Extensio
   initRecommendations(context);
   initMisc(context);
   initExp(context);
+  initSurvey(context);
 
   // disable webview serializer because of https://github.com/microsoft/vscode/issues/80185
   // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
