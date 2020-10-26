@@ -26,3 +26,13 @@ $("a[data-toggle='tab']").on("shown.bs.tab", e => {
     tabId: e.target.id
   });
 });
+
+// Handle the message inside the webview
+window.addEventListener('message', event => {
+  const message = event.data;
+  switch (message.command) {
+      case 'tabActivated':
+        ($(message.tabId) as any).tab("show");
+        break;
+  }
+});

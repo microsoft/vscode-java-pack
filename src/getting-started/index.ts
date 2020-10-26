@@ -8,8 +8,9 @@ import { sendInfo, instrumentOperation } from "vscode-extension-telemetry-wrappe
 
 let javaGettingStartedView: vscode.WebviewPanel | undefined;
 
-export async function javaGettingStartedCmdHandler(context: vscode.ExtensionContext, operationId: string) {
+export async function javaGettingStartedCmdHandler(context: vscode.ExtensionContext, operationId: string, tabId?: string) {
   if (javaGettingStartedView) {
+    setActiveTab(javaGettingStartedView, operationId, tabId);
     javaGettingStartedView.reveal();
     return;
   }
@@ -22,7 +23,21 @@ export async function javaGettingStartedCmdHandler(context: vscode.ExtensionCont
     retainContextWhenHidden: true
   });
 
+  setActiveTab(javaGettingStartedView, operationId, tabId);
   await initializeJavaGettingStartedView(context, javaGettingStartedView, onDidDisposeWebviewPanel, operationId);
+}
+
+function setActiveTab(webviewPanel: vscode.WebviewPanel, operationId: string, tabId?: string) {
+  if (tabId) {
+    sendInfo(operationId, {
+      infoType: "tabActivated",
+      tabId: tabId
+    });
+    webviewPanel.webview.postMessage({
+      command: "tabActivated",
+      tabId,
+    });
+  }
 }
 
 function onDidDisposeWebviewPanel() {
@@ -33,7 +48,6 @@ async function initializeJavaGettingStartedView(context: vscode.ExtensionContext
   webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
   const resourceUri = context.asAbsolutePath("./out/assets/getting-started/index.html");
   webviewPanel.webview.html = await loadTextFromFile(resourceUri);
-
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     if (e.command === "tabActivated") {
