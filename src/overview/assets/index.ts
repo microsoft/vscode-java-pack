@@ -54,6 +54,6 @@ function installExtension(extName: string, displayName: string) {
   });
 }
 
-$("div[ext]").click(function () {
-  installExtension($(this).attr("ext") || "", $(this).attr("displayName") || "");
+$("div[ext] > a").click(function () {
+  installExtension($(this.parentElement).attr("ext") || "", $(this.parentElement).attr("displayName") || "");
 });
