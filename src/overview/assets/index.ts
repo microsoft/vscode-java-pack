@@ -57,3 +57,9 @@ function installExtension(extName: string, displayName: string) {
 $("div[ext] > a").click(function () {
   installExtension($(this.parentElement).attr("ext") || "", $(this.parentElement).attr("displayName") || "");
 });
+
+$("#gettingStartedBtn").click(function () {
+  vscode.postMessage({
+    command: "java.gettingStarted"
+  });
+});

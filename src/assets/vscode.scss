@@ -7,7 +7,7 @@ $link-hover-decoration: none !default;
 $list-group-bg: var(--vscode-notifications-background) !default;
 $list-group-active-color: var(--vscode-notifications-foreground) !default;
 $list-group-active-bg: var(--vscode-notifications-border) !default;
-$list-group-hover-bg: $list-group-bg;
+$list-group-hover-bg: var(--vscode-list-hoverBackground) !default;
 $list-group-action-active-bg: $list-group-bg;
 $list-group-border-color: var(--vscode-notifications-background) !default;
 $list-group-action-color: var(--vscode-notifications-foreground) !default;
