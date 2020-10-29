@@ -7,7 +7,7 @@
 </head>
 
 <body>
-  <div class="container mt-5 mb-5">
+  <div class="container mb-5">
     <div class="row mb-3">
       <div class="col">
         <h1>Java Overview</h1>
@@ -152,17 +152,32 @@
           <div class="col">
             <h3 class="font-weight-light">Learn</h3>
             <div class="list-group">
-              <button id="gettingStartedBtn" class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2" title="Open Java Getting Started View">
+              <button command="java.gettingStarted" class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2 p-2" title="Open Java Getting Started View">
                   <p class="mb-1">Java Getting Started</p>
-                  <small>Learn 1 min <a href="command:java.gettingStarted?%22%23quick-start-tab%22">Quick Start</a> tutorial, common shortcuts for <a href="command:java.gettingStarted?%22%23code-editing-tab%22">Code Editing</a> and <a href="command:java.gettingStarted?%22%23debugging-tab%22">Debugging</a>, and <a href="command:java.gettingStarted?%22%23faq-tab%22">FAQ</a>.</small>
+                  <small>Learn 1 min <a href="javascript:void(0)" title="Quick Start" command="java.gettingStarted" args='"#quick-start-tab"'>Quick Start</a> tutorial, common shortcuts for <a href="javascript:void(0)" title="Code Editing" command="java.gettingStarted" args='"#code-editing-tab"'>Code Editing</a> and <a href="javascript:void(0)" title="Debugging" command="java.gettingStarted" args='"#debugging-tab"'>Debugging</a>, and <a href="javascript:void(0)" title="FAQ" command="java.gettingStarted" args='"#faq-tab"'>FAQ</a>.</small>
               </button>
-              <a href="command:java.helper.openUrl?%22https%3A%2F%2Fcode.visualstudio.com%2Fdocs%2Fjava%2Fjava-debugging%22" class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2" title="Open Java Debugging Tutorial">
-                <p class="mb-1">Debugging Tutorial</p>
-                <small>Learn how to debug Java apps in VS Code.</small>
+              <button command="java.helper.openUrl" args='"https://code.visualstudio.com/docs/java/java-tutorial"' class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2 p-2" title="Open Java Tutorials">
+                <p class="mb-1">Java Tutorials</p>
+                <small>Learn how to <a href="javascript:void(0)" title="Open Java Debugging Tutorial" command="java.helper.openUrl" args='"https://code.visualstudio.com/docs/java/java-debugging"'>debug Java apps</a> and <a href="javascript:void(0)" title="Open Java Testing Tutorial" command="java.helper.openUrl" args='"https://code.visualstudio.com/docs/java/java-testing"'>run JUnit tests</a> in VS Code.</small>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col">
+            <h3 class="font-weight-light">Configuration</h3>
+            <div class="list-group">
+              <a href="javascript:void(0)" command="java.runtime" class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2 p-2" title="Open Java Runtime Guide">
+                <p class="mb-1">Configure Java Runtime</p>
+                <small>Setup JDKs for projects and VS Code Java.</small>
               </a>
-              <a href="command:java.helper.openUrl?%22https%3A%2F%2Fcode.visualstudio.com%2Fdocs%2Fjava%2Fjava-testing%22" class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2" title="Open Java Testing Tutorial">
-                <p class="mb-1">Run JUnit Tests</p>
-                <small>Learn how to work with JUnit test cases in VS Code.</small>
+              <a href="javascript:void(0)" command="java.extGuide" class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2 p-2" title="Open Extension Guide">
+                <p class="mb-1">Extension Guide</p>
+                <small>Recommended extensions for Java development.</small>
+              </a>
+              <a href="javascript:void(0)" command="workbench.action.openSettings" args='"java."' class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2 p-2" title="Open Java Settings">
+                <p class="mb-1">Java Settings</p>
+                <small>Show the Java settings.</small>
               </a>
             </div>
           </div>

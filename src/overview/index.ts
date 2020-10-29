@@ -81,8 +81,17 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
       toggleOverviewVisibilityOperation(context, e.visibility);
     } else if (e.command === "installExtension") {
       await vscode.commands.executeCommand("java.helper.installExtension", e.extName, e.displayName);
-    } else if (e.command === "java.gettingStarted") {
-      await vscode.commands.executeCommand("java.gettingStarted");
+    } else if (e.command) {
+      const info: any = {
+        referrer: e.referrer,
+        command: e.command
+      };
+      if (e.command === "java.helper.openUrl") {
+        info.url = e.args && e.args.length ? e.args[0] : "";
+      }
+      sendInfo("", info);
+
+      await vscode.commands.executeCommand(e.command, ...e.args);
     }
   }));
 }
