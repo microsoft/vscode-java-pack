@@ -48,9 +48,8 @@ $("#showWhenUsingJava").change(function () {
 
 function installExtension(extName: string, displayName: string) {
   vscode.postMessage({
-    command: "installExtension",
-    extName: extName,
-    displayName: displayName
+    command: "java.helper.installExtension",
+    args: [ extName, displayName ],
   });
 }
 
@@ -85,8 +84,7 @@ function execCommand(command: string, jsonArgs: string) {
     }
     vscode.postMessage({
       command,
-      args,
-      referrer: "overview"
+      args
     });
   }
 }

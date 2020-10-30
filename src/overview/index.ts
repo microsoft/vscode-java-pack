@@ -79,17 +79,12 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     if (e.command === "setOverviewVisibility") {
       toggleOverviewVisibilityOperation(context, e.visibility);
-    } else if (e.command === "installExtension") {
-      await vscode.commands.executeCommand("java.helper.installExtension", e.extName, e.displayName);
     } else if (e.command) {
-      const info: any = {
-        referrer: e.referrer,
-        command: e.command
-      };
-      if (e.command === "java.helper.openUrl") {
-        info.url = e.args && e.args.length ? e.args[0] : "";
-      }
-      sendInfo("", info);
+      sendInfo("", {
+        referrer: "overview",
+        command: e.command,
+        arg: e.args && e.args.length ? e.args[0] : ""
+      });
 
       await vscode.commands.executeCommand(e.command, ...e.args);
     }
