@@ -48,9 +48,8 @@ $("#showWhenUsingJava").change(function () {
 
 function installExtension(extName: string, displayName: string) {
   vscode.postMessage({
-    command: "installExtension",
-    extName: extName,
-    displayName: displayName
+    command: "java.helper.installExtension",
+    args: [ extName, displayName ],
   });
 }
 
@@ -58,8 +57,34 @@ $("div[ext] > a").click(function () {
   installExtension($(this.parentElement).attr("ext") || "", $(this.parentElement).attr("displayName") || "");
 });
 
-$("#gettingStartedBtn").click(function () {
-  vscode.postMessage({
-    command: "java.gettingStarted"
-  });
+$("a[command]").click(function (event) {
+  event.stopPropagation();
+
+  const command = $(this).attr("command") || "";
+  const args = $(this).attr("args") || null;
+  execCommand(command, args);
 });
+
+$("button[command]").click(function () {
+  const command = $(this).attr("command") || "";
+  const args = $(this).attr("args") || null;
+  execCommand(command, args);
+});
+
+function execCommand(command: string, jsonArgs: string) {
+  if (command) {
+    let args = [];
+    if (jsonArgs) {
+      const data = JSON.parse(jsonArgs);
+      if (Array.isArray(data)) {
+        args = data;
+      } else {
+        args.push(data);
+      }
+    }
+    vscode.postMessage({
+      command,
+      args
+    });
+  }
+}

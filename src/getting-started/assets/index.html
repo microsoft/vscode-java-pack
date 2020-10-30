@@ -325,7 +325,26 @@
                     </blockquote>
                     <h3 class="font-weight-light">Why do I see the JDK errors?</h3>
                     <p>
-                      <strong><code>JDK 8+</code> is required</strong> to run VS Code Java! You see this error because we failed to find one on your machine. The <a href="command:java.runtime">JDK Acquisition Guide</a> can help you understand how JDK path is searched and provides download links if you need to install one.
+                      <strong><code>JDK 11+</code> is required</strong> to run VS Code Java! You see this error because we failed to find one on your machine. The <a href="command:java.runtime">Configure Java Runtime</a> guide can help you understand how JDK path is searched and provides download links if you need to install one.
+                    </p>
+                    <h3 class="font-weight-light">Can I run my Java 8 project with JDK 1.8?</h3>
+                    <p>
+                      Yes. JDK 11 requirement is just for running VS Code Java extension itself, you can still configure a different runtime <a href="command:java.helper.openUrl?%22https%3A%2F%2Fcode.visualstudio.com%2Fdocs%2Fjava%2Fjava-project%23_jdk-for-projects%22">JDK for your project</a> via user setting <a href="command:workbench.action.openSettings?%22java.configuration.runtimes%22">"java.configuration.runtimes"</a>. The extension will pick a mapping JDK to compile/run your project according to the compiler version specified by the project build file.
+                      <pre>
+"java.configuration.runtimes": [
+  {
+    "name": "JavaSE-1.8",
+    "path": "/usr/local/jdk1.8.0_201"
+  },
+  {
+    "name": "JavaSE-11",
+    "path": "/usr/local/jdk-11.0.3",
+    "sources" : "/usr/local/jdk-11.0.3/lib/src.zip",
+    "javadoc" : "https://docs.oracle.com/en/java/javase/11/docs/api",
+    "default":  true
+  }
+]
+                      </pre>
                     </p>
                     <h3 class="font-weight-light">Why do I see tons of problems and red squiggles?</h3>
                     <p>
@@ -353,8 +372,12 @@
                       Yes. You'll need to install the <a href="https://marketplace.visualstudio.com/items?itemName=GabrielBB.vscode-lombok">Lombok</a> extension, which enables VS Code to process Lombok annotations. To learn more about alternatives and details, visit <a href="https://github.com/redhat-developer/vscode-java/wiki/Lombok-support">this page</a>.
                     </p>
                     <h3 class="font-weight-light">Can I develop Android apps using VS Code Java?</h3>
-                    <p class="mb-0">
+                    <p>
                       Sorry, it's not supported now.
+                    </p>
+                    <h3 class="font-weight-light">How to troubleshoot the problems?</h3>
+                    <p class="mb-0">
+                      You could click <b>F1</b> -> <b>Java: Open all log files</b> to get the logs. Also learn more at <a href="https://github.com/redhat-developer/vscode-java/wiki/Troubleshooting">Troubleshooting Guide</a>.
                     </p>
                   </div>
                 </div>
