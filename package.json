@@ -111,6 +111,7 @@
     "@types/request-promise-native": "^1.0.17",
     "@types/semver": "^5.5.0",
     "@types/vscode": "1.32.0",
+    "@types/winreg": "^1.2.30",
     "arch": "^2.1.2",
     "autoprefixer": "^8.5.1",
     "bootstrap": "^4.5.2",
@@ -148,7 +149,11 @@
     "VisualStudioExptTeam.vscodeintellicode"
   ],
   "dependencies": {
+    "@types/fs-extra": "^9.0.1",
+    "expand-home-dir": "0.0.3",
+    "fs-extra": "^9.0.1",
     "semver": "^5.7.1",
-    "vscode-extension-telemetry-wrapper": "^0.9.0"
+    "vscode-extension-telemetry-wrapper": "^0.9.0",
+    "winreg-utf8": "^0.1.1"
   }
 }
