@@ -12,17 +12,13 @@ export interface InstalledJDKPanelProps {
 export const InstalledJDKPanel = (props: InstalledJDKPanelProps) => {
   return (
     <div className="col">
-      <div className="row mb-3">
+      <div className="row">
         <div className="col">
           <h3 className="font-weight-light">Detected JDKs</h3>
           <p>
             JDKs installed on this machine are listed below:
           </p>
-          <div className="card">
-            <div className="card-body">
-              <JDKTablePanel jdkEntries={props.jdkEntries} />
-            </div>
-          </div>
+          <JDKTablePanel jdkEntries={props.jdkEntries} />
         </div>
       </div>
     </div>

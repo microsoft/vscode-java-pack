@@ -61,9 +61,9 @@ export class ConfigureLSPanel extends React.Component<ConfigureLSPanelProps, Con
             {javaHomeError !== undefined && (<div className="text-danger">{javaHomeError}</div>)}
           </div>
         </div>
-        <p>
+        <span>
           Note: to run your projects with a different Java version, you can configure <a className="navigation" href="#configure-runtime-tab">Project JDKs</a>.
-      </p>
+        </span>
       </div>
     );
   }

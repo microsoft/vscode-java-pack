@@ -29,7 +29,7 @@ export const ProjectRuntimePanel = (props: {
 
   return (
     <div className="col">
-      <div className="row mb-3">
+      <div className="row">
         <div className="col-6">
           <h3 className="font-weight-light">Maven/Gradle Projects</h3>
           <p>Java version is managed by build tools. Java versions detected in your projects are listed below, you can select corresponding JDK for each version.</p>
