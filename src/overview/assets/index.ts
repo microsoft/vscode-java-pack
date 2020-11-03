@@ -54,24 +54,26 @@ function installExtension(extName: string, displayName: string) {
 }
 
 $("div[ext] > a").click(function () {
-  installExtension($(this.parentElement).attr("ext") || "", $(this.parentElement).attr("displayName") || "");
+  if (this.parentElement) {
+    installExtension($(this.parentElement).attr("ext") || "", $(this.parentElement).attr("displayName") || "");
+  }
 });
 
 $("a[command]").click(function (event) {
   event.stopPropagation();
 
   const command = $(this).attr("command") || "";
-  const args = $(this).attr("args") || null;
+  const args = $(this).attr("args") || undefined;
   execCommand(command, args);
 });
 
 $("button[command]").click(function () {
   const command = $(this).attr("command") || "";
-  const args = $(this).attr("args") || null;
+  const args = $(this).attr("args") || undefined;
   execCommand(command, args);
 });
 
-function execCommand(command: string, jsonArgs: string) {
+function execCommand(command: string, jsonArgs: string | undefined) {
   if (command) {
     let args = [];
     if (jsonArgs) {

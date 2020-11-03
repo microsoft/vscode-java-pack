@@ -44,9 +44,9 @@ async function initializeJavaExtGuideView(context: vscode.ExtensionContext, webv
       });
     } else if (e.command === "installExtensions") {
       const extNames = <string[]>e.extNames;
-      await extNames.map(extName => {
+      await Promise.all(extNames.map(async extName => {
         return vscode.commands.executeCommand("java.helper.installExtension", extName, extName);
-      });
+      }));
     }
   }));
 
