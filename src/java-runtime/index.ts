@@ -125,6 +125,18 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
   findJavaRuntimeEntries().then(data => {
     showJavaRuntimeEntries(data);
   });
+
+  // refresh webview with latest source levels when classpath (project info) changes
+  const javaExt = vscode.extensions.getExtension("redhat.java");
+  if (javaExt && javaExt.isActive && javaExt.exports.onDidClasspathUpdate) {
+    const onDidClasspathUpdate: vscode.Event<vscode.Uri> = javaExt.exports.onDidClasspathUpdate;
+    const listener = onDidClasspathUpdate((_e: vscode.Uri) => {
+      findJavaRuntimeEntries().then(data => {
+        showJavaRuntimeEntries(data);
+      });
+    });
+    context.subscriptions.push(webviewPanel.onDidDispose(() => listener.dispose()));
+  }
 }
 
 export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer {
