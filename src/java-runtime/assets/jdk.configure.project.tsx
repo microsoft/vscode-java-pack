@@ -12,9 +12,14 @@ export const ProjectRuntimePanel = (props: {
   let sourceLevelRuntimePanels;
   let invisibleProjectsRuntimePanel;
   if (projectRuntimes && jdkEntries) {
-    const sourceLevelEntries = _.uniqBy(projectRuntimes.map(p => ({ sourceLevel: p.sourceLevel, runtimePath: p.runtimePath })), "sourceLevel");
-    const invisibleProject = projectRuntimes.find(p => p.rootPath.endsWith("jdt.ls-java-project") || p.rootPath.endsWith("jdt.ls-java-project/"));
-    const defaultJDK = invisibleProject ? invisibleProject.runtimePath : undefined;
+    const sourceLevelEntries = _.uniqBy(
+      projectRuntimes
+        .filter(p => !isDefaultProject(p.rootPath))
+        .map(p => ({ sourceLevel: p.sourceLevel, runtimePath: p.runtimePath })),
+      "sourceLevel"
+    );
+    const defaultProject = projectRuntimes.find(p => isDefaultProject(p.rootPath));
+    const defaultJDK = defaultProject ? defaultProject.runtimePath : undefined;
 
     sourceLevelRuntimePanels = sourceLevelEntries.map(entry => (<ManagedProjectRuntimePanel entry={entry} jdks={jdkEntries} key={entry.sourceLevel} />));
     invisibleProjectsRuntimePanel = (<InvisibleProjectsRuntimePanel jdks={jdkEntries} defaultJDK={defaultJDK} />);
@@ -67,3 +72,7 @@ export const ProjectRuntimePanel = (props: {
     </div>
   );
 };
+
+function isDefaultProject(rootPath: string) {
+  return rootPath.endsWith("jdt.ls-java-project") || rootPath.endsWith("jdt.ls-java-project/");
+}
