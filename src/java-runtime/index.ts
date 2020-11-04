@@ -246,10 +246,11 @@ async function getProjectRuntimes(): Promise<ProjectRuntimeEntry[]> {
   return ret;
 }
 
-async function getProjectType(rootPath: string): Promise<ProjectType> {
-  if (rootPath.endsWith("jdt.ls-java-project") || rootPath.endsWith("jdt.ls-java-project/")) {
+async function getProjectType(rootPathUri: string): Promise<ProjectType> {
+  if (rootPathUri.endsWith("jdt.ls-java-project") || rootPathUri.endsWith("jdt.ls-java-project/")) {
     return "default";
   }
+  const rootPath = vscode.Uri.parse(rootPathUri).fsPath;
   const dotProjectFile = path.join(rootPath, ".project");
   if (!await pathExists(dotProjectFile)) {
     return "no-build-tools";
