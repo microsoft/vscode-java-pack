@@ -112,7 +112,7 @@ async function fromWindowsRegistry(): Promise<string[]> {
         "\\SOFTWARE\\JavaSoft\\Java Development Kit"
     ];
 
-    const promisifyFindPossibleRegKey = (keyPath: string, regArch: string): Promise<Winreg.Registry[]>  => {
+    const promisifyFindPossibleRegKey = (keyPath: string, regArch: string): Promise<Winreg.Registry[]> => {
         return new Promise<Winreg.Registry[]>((resolve) => {
             const winreg: Winreg.Registry = new WinReg({
                 hive: WinReg.HKLM,
@@ -255,37 +255,72 @@ async function findLinkedFile(file: string): Promise<string> {
 
 
 export async function getJavaVersion(javaHome: string): Promise<number | undefined> {
-    return new Promise((resolve, reject) => {
-        const javaBinary = path.join(javaHome, "bin", JAVA_FILENAME);
-        cp.execFile(javaBinary, ["-version"], {}, (error, stdout, stderr) => {
-            if (error) {
-                return resolve(undefined);
-            }
-
-            const javaVersion = parseMajorVersion(stderr); // `java -version` outputs stderr channel
-            resolve(javaVersion);
-        });
-    });
+    let javaVersion = await checkVersionInReleaseFile(javaHome);
+    if (!javaVersion) {
+        javaVersion = await checkVersionByCLI(javaHome);
+    }
+    return javaVersion;
 }
 
-function parseMajorVersion(content: string): number {
-    let regexp = /version "(.*)"/g;
-    let match = regexp.exec(content);
-    if (!match) {
+export function parseMajorVersion(version: string): number {
+    if (!version) {
         return 0;
     }
-    let version = match[1];
-    // Ignore "1." prefix for legacy Java versions
+    // Ignore '1.' prefix for legacy Java versions
     if (version.startsWith("1.")) {
         version = version.substring(2);
     }
-
     // look into the interesting bits now
-    regexp = /\d+/g;
-    match = regexp.exec(version);
+    const regexp = /\d+/g;
+    const match = regexp.exec(version);
     let javaVersion = 0;
     if (match) {
-        javaVersion = parseInt(match[0], 10);
+        javaVersion = parseInt(match[0]);
     }
     return javaVersion;
+}
+
+/**
+ * Get version by checking file JAVA_HOME/release
+ */
+async function checkVersionInReleaseFile(javaHome: string): Promise<number> {
+    if (!javaHome) {
+        return 0;
+    }
+    const releaseFile = path.join(javaHome, "release");
+    if (!await fse.pathExists(releaseFile)) {
+        return 0;
+    }
+
+    try {
+        const content = await fse.readFile(releaseFile);
+        const regexp = /^JAVA_VERSION="(.*)"/gm;
+        const match = regexp.exec(content.toString());
+        if (!match) {
+            return 0;
+        }
+        const majorVersion = parseMajorVersion(match[1]);
+        return majorVersion;
+    } catch (error) {
+        // ignore
+    }
+    return 0;
+}
+
+/**
+ * Get version by parsing `JAVA_HOME/bin/java -version`
+ */
+function checkVersionByCLI(javaHome: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+        const javaBin = path.join(javaHome, "bin", JAVA_FILENAME);
+        cp.execFile(javaBin, ["-version"], {}, (error, stdout, stderr) => {
+            const regexp = /version "(.*)"/g;
+            const match = regexp.exec(stderr);
+            if (!match) {
+                return resolve(0);
+            }
+            const javaVersion = parseMajorVersion(match[1]);
+            resolve(javaVersion);
+        });
+    });
 }
