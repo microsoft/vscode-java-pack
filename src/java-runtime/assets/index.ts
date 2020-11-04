@@ -25,14 +25,17 @@ window.addEventListener("message", event => {
 let jdkEntries: JavaRuntimeEntry[] | undefined;
 let projectRuntimes: ProjectRuntimeEntry[] | undefined;
 let javaHomeError: any;
+let javaDotHome: string | undefined;
 function showJavaRuntimeEntries(args: {
   javaRuntimes?: JavaRuntimeEntry[];
   projectRuntimes?: ProjectRuntimeEntry[];
-  javaHomeError?: string
+  javaHomeError?: string;
+  javaDotHome?: string;
 }) {
   jdkEntries = args.javaRuntimes;
   projectRuntimes = args.projectRuntimes;
   javaHomeError = args.javaHomeError;
+  javaDotHome = args.javaDotHome;
   render();
 }
 
@@ -60,7 +63,8 @@ function render() {
     projectRuntimes: projectRuntimes,
     jdkData: jdkData,
     onRequestJdk: requestJdkInfo,
-    javaHomeError
+    javaHomeError,
+    javaDotHome
   };
 
   if (javaHomeError) {
