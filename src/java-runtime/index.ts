@@ -84,15 +84,21 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
           delete r.default;
         }
 
-        const targetRuntime = runtimes.find(r => r.path === runtimePath);
+        let targetRuntime = runtimes.find(r => r.path === runtimePath);
         if (targetRuntime) {
           targetRuntime.default = true;
         } else {
-          runtimes.push({
-            name: sourceLevel,
-            path: runtimePath,
-            default: true
-          });
+          targetRuntime = runtimes.find(r => r.name === sourceLevel);
+          if (targetRuntime) {
+            targetRuntime.path = runtimePath;
+            targetRuntime.default = true;
+          } else {
+            runtimes.push({
+              name: sourceLevel,
+              path: runtimePath,
+              default: true
+            });
+          }
         }
         await vscode.workspace.getConfiguration("java").update("configuration.runtimes", runtimes, vscode.ConfigurationTarget.Global);
         findJavaRuntimeEntries().then(data => {
