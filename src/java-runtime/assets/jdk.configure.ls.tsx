@@ -58,7 +58,7 @@ export class ConfigureLSPanel extends React.Component<ConfigureLSPanelProps, Con
               </select>
               {this.state.isDirty && (<div><a className="btn btn-primary" href="command:workbench.action.reloadWindow" role="button" title="Reload Visual Studio Code">Reload Window</a></div>)}
             </div>
-            {javaHomeError !== undefined && (<div className="text-danger">{javaHomeError}</div>)}
+            {javaHomeError !== undefined && (<p className="text-danger">{javaHomeError}</p>)}
           </div>
         </div>
         <span>

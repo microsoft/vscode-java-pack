@@ -21,4 +21,7 @@ export interface ProjectRuntimeEntry {
   rootPath: string;
   runtimePath: string;
   sourceLevel: string;
+  projectType: ProjectType;
 }
+
+export type ProjectType = "default" | "no-build-tools" | "managed";

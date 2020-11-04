@@ -9,8 +9,9 @@ import { getExtensionContext, loadTextFromFile } from "../utils";
 import { findJavaHomes, getJavaVersion, JavaRuntime } from "./utils/findJavaRuntime";
 import architecture = require("arch");
 import { checkJavaRuntime } from "./utils/upstreamApi";
-import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
+import { JavaRuntimeEntry, ProjectRuntimeEntry, ProjectType } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
+import { pathExists } from "fs-extra";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
@@ -223,11 +224,13 @@ async function getProjectRuntimes(): Promise<ProjectRuntimeEntry[]> {
     for (const projectRoot of projects) {
       try {
         const settings: any = await javaExt.exports.getProjectSettings(projectRoot, [SOURCE_LEVEL_KEY, VM_INSTALL_PATH]);
+        const projectType: ProjectType = await getProjectType(projectRoot);
         ret.push({
           name: projectRoot,
           rootPath: projectRoot,
           runtimePath: settings[VM_INSTALL_PATH],
-          sourceLevel: settings[SOURCE_LEVEL_KEY]
+          sourceLevel: settings[SOURCE_LEVEL_KEY],
+          projectType: projectType
         });
       } catch (error) {
         // ignore
@@ -235,6 +238,17 @@ async function getProjectRuntimes(): Promise<ProjectRuntimeEntry[]> {
     }
   }
   return ret;
+}
+
+async function getProjectType(rootPath: string): Promise<ProjectType> {
+  if (rootPath.endsWith("jdt.ls-java-project") || rootPath.endsWith("jdt.ls-java-project/")) {
+    return "default";
+  }
+  const dotProjectFile = path.join(rootPath, ".project");
+  if (!await pathExists(dotProjectFile)) {
+    return "no-build-tools";
+  }
+  return "managed";
 }
 
 export async function suggestOpenJdk(jdkVersion: string = "openjdk11", impl: string = "hotspot") {

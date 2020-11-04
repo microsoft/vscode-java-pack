@@ -14,14 +14,15 @@ export const ProjectRuntimePanel = (props: {
   if (projectRuntimes && jdkEntries) {
     const sourceLevelEntries = _.uniqBy(
       projectRuntimes
-        .filter(p => !isDefaultProject(p.rootPath))
+        .filter(p => p.projectType === "managed")
         .map(p => ({ sourceLevel: p.sourceLevel, runtimePath: p.runtimePath })),
       "sourceLevel"
     );
-    const defaultProject = projectRuntimes.find(p => isDefaultProject(p.rootPath));
+    const defaultProject = projectRuntimes.find(p => p.projectType === "default");
     const defaultJDK = defaultProject ? defaultProject.runtimePath : undefined;
 
-    sourceLevelRuntimePanels = sourceLevelEntries.map(entry => (<ManagedProjectRuntimePanel entry={entry} jdks={jdkEntries} key={entry.sourceLevel} />));
+    sourceLevelRuntimePanels = _.isEmpty(sourceLevelEntries) ? (<p className="text-warning">No Maven/Gradle projects recognized.</p>)
+    :sourceLevelEntries.map(entry => (<ManagedProjectRuntimePanel entry={entry} jdks={jdkEntries} key={entry.sourceLevel} />));
     invisibleProjectsRuntimePanel = (<InvisibleProjectsRuntimePanel jdks={jdkEntries} defaultJDK={defaultJDK} />);
   } else {
     // loading
@@ -73,6 +74,3 @@ export const ProjectRuntimePanel = (props: {
   );
 };
 
-function isDefaultProject(rootPath: string) {
-  return rootPath.endsWith("jdt.ls-java-project") || rootPath.endsWith("jdt.ls-java-project/");
-}
