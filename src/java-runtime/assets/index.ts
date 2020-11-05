@@ -1,18 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";
-import bytes = require("bytes");
-import * as ReactDOM from "react-dom";
-import { JavaRuntimeEntry, JdkData, ProjectRuntimeEntry } from "../types";
-import { InstalledJDKPanel } from "./jdk.configure.installed";
-import * as React from "react";
-import { ProjectRuntimePanel } from "./jdk.configure.project";
-import { JdkInstallationPanel } from "./jdk.installation";
-import { ConfigureLSPanel } from "./jdk.configure.ls";
-import { requestJdkInfo } from "./vscode.api";
 import * as $ from "jquery";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
+import "../../assets/vscode.scss";
+import { JavaRuntimeEntry, JdkData, ProjectRuntimeEntry } from "../types";
+import { JdkConfigurationPanel } from "./jdk.configure";
+import { JdkInstallationPanel } from "./jdk.installation";
+import { requestJdkInfo } from "./vscode.api";
+import bytes = require("bytes");
 
 window.addEventListener("message", event => {
   if (event.data.command === "applyJdkInfo") {
@@ -67,13 +65,7 @@ function render() {
     javaDotHome
   };
 
-  if (javaHomeError) {
-    ($("#configure-ls-tab") as any).tab("show");
-  }
-
-  ReactDOM.render(React.createElement(ConfigureLSPanel, props), document.getElementById("configureLsPanel"));
-  ReactDOM.render(React.createElement(InstalledJDKPanel, props), document.getElementById("jdkAcquisitionPanel"));
-  ReactDOM.render(React.createElement(ProjectRuntimePanel, props), document.getElementById("projectRuntimePanel"));
+  ReactDOM.render(React.createElement(JdkConfigurationPanel, props), document.getElementById("jdkConfigurationPanel"));
   ReactDOM.render(React.createElement(JdkInstallationPanel, props), document.getElementById("jdkInstallationPanel"));
 
   $("a.navigation").click(e => {
