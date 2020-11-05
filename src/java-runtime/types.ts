@@ -24,4 +24,10 @@ export interface ProjectRuntimeEntry {
   projectType: ProjectType;
 }
 
-export type ProjectType = "default" | "no-build-tools" | "managed";
+export enum ProjectType {
+  Default = "Default project",
+  NoBuildTools = "No build tools",
+  Maven = "Maven",
+  Gradle = "Gradle",
+  Others = "Others",
+}

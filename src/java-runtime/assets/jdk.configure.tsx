@@ -24,7 +24,7 @@ export class JdkConfigurationPanel extends React.Component<JdkConfigurationPanel
       );
     }
 
-    const projectRuntimePanel = React.createElement(ProjectRuntimePanel, this.props);
+    const projectRuntimePanel = React.createElement(ProjectRuntimePanel, { jdkEntries, projectRuntimes });
     const configureLsPanel = React.createElement(ConfigureLSPanel, this.props);
     const installedJdkPanel = React.createElement(InstalledJDKPanel, this.props);
 

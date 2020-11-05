@@ -232,7 +232,7 @@ async function getProjectRuntimes(): Promise<ProjectRuntimeEntry[]> {
         const settings: any = await javaExt.exports.getProjectSettings(projectRoot, [SOURCE_LEVEL_KEY, VM_INSTALL_PATH]);
         const projectType: ProjectType = await getProjectType(projectRoot);
         ret.push({
-          name: projectRoot,
+          name: path.basename(projectRoot),
           rootPath: projectRoot,
           runtimePath: settings[VM_INSTALL_PATH],
           sourceLevel: settings[SOURCE_LEVEL_KEY],
@@ -248,14 +248,22 @@ async function getProjectRuntimes(): Promise<ProjectRuntimeEntry[]> {
 
 async function getProjectType(rootPathUri: string): Promise<ProjectType> {
   if (rootPathUri.endsWith("jdt.ls-java-project") || rootPathUri.endsWith("jdt.ls-java-project/")) {
-    return "default";
+    return ProjectType.Default;
   }
   const rootPath = vscode.Uri.parse(rootPathUri).fsPath;
   const dotProjectFile = path.join(rootPath, ".project");
-  if (!await pathExists(dotProjectFile)) {
-    return "no-build-tools";
+  if (!await pathExists(dotProjectFile)) { // for invisible projects, .project file is located in workspace storage.
+    return ProjectType.NoBuildTools;
   }
-  return "managed";
+  const pomDotXmlFile = path.join(rootPath, "pom.xml");
+  if (await pathExists(pomDotXmlFile)) {
+    return ProjectType.Maven;
+  }
+  const buildDotGradleFile = path.join(rootPath, "build.gradle");
+  if (await pathExists(buildDotGradleFile)) {
+    return ProjectType.Gradle;
+  }
+  return ProjectType.Others;
 }
 
 export async function suggestOpenJdk(jdkVersion: string = "openjdk11", impl: string = "hotspot") {
