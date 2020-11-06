@@ -62,3 +62,5 @@ out/
 .DS_Store
 
 .vscode-test
+
+*.vsix
