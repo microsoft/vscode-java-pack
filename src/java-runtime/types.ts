@@ -31,3 +31,9 @@ export enum ProjectType {
   Gradle = "Gradle",
   Others = "Others",
 }
+
+export enum NatureId {
+  Maven = "org.eclipse.m2e.core.maven2Nature",
+  Gradle = "org.eclipse.buildship.core.gradleprojectnature",
+  Java = "org.eclipse.jdt.core.javanature",
+}

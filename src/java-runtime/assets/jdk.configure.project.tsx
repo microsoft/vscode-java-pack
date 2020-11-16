@@ -17,12 +17,13 @@ export const ProjectRuntimePanel = (props: {
       .map(p => ({ sourceLevel: p.sourceLevel, runtimePath: p.runtimePath })),
     "sourceLevel"
   );
-  const defaultProject = projectRuntimes.find(p => p.projectType === ProjectType.Default);
-  const defaultJDK = defaultProject ? defaultProject.runtimePath : undefined;
+  const unmanagedProject = projectRuntimes.find(p => p.projectType === ProjectType.NoBuildTools);
+  const defaultJDK = unmanagedProject ? unmanagedProject.runtimePath : undefined;
 
-  const sourceLevelRuntimePanels = _.isEmpty(sourceLevelEntries) ? (<p className="text-warning">No Maven/Gradle projects recognized.</p>)
+  const sourceLevelRuntimePanels = _.isEmpty(sourceLevelEntries) ? (<p className="text-warning">No Maven/Gradle project recognized.</p>)
     : sourceLevelEntries.map(entry => (<ManagedProjectRuntimePanel entry={entry} jdks={jdkEntries} key={entry.sourceLevel} />));
-  const invisibleProjectsRuntimePanel = (<InvisibleProjectsRuntimePanel jdks={jdkEntries} defaultJDK={defaultJDK} />);
+  const invisibleProjectsRuntimePanel = unmanagedProject ? (defaultJDK && <InvisibleProjectsRuntimePanel jdks={jdkEntries} defaultJDK={unmanagedProject.runtimePath} />)
+    : (<p className="text-warning">No folder recognized.</p>);
 
   const projectEntries = projectRuntimes
     .filter(p => p.projectType !== ProjectType.Default)

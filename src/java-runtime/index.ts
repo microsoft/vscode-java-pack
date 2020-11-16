@@ -9,7 +9,7 @@ import { getExtensionContext, loadTextFromFile } from "../utils";
 import { findJavaHomes, getJavaVersion, JavaRuntime } from "./utils/findJavaRuntime";
 import architecture = require("arch");
 import { checkJavaRuntime } from "./utils/upstreamApi";
-import { JavaRuntimeEntry, ProjectRuntimeEntry, ProjectType } from "./types";
+import { JavaRuntimeEntry, NatureId, ProjectRuntimeEntry, ProjectType } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { pathExists } from "fs-extra";
 
@@ -104,7 +104,7 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         break;
       }
       case "openBuildScript": {
-        const {scriptFile, rootUri} = e;
+        const { scriptFile, rootUri } = e;
         const rootPath = vscode.Uri.parse(rootUri).fsPath;
         const fullPath = path.join(rootPath, scriptFile);
         vscode.commands.executeCommand("vscode.open", vscode.Uri.file(fullPath));
@@ -209,7 +209,11 @@ export async function findJavaRuntimeEntries(): Promise<{
     javaHomeError = error.message;
   }
 
-  const projectRuntimes = await getProjectRuntimes();
+  let projectRuntimes = await getProjectRuntimesFromPM();
+  if (_.isEmpty(projectRuntimes)) {
+    projectRuntimes = await getProjectRuntimesFromLS();
+  }
+
   return {
     javaRuntimes,
     projectRuntimes,
@@ -218,36 +222,90 @@ export async function findJavaRuntimeEntries(): Promise<{
   };
 }
 
-async function getProjectRuntimes(): Promise<ProjectRuntimeEntry[]> {
+async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeEntry[]> {
+  const ret: ProjectRuntimeEntry[] = [];
+  const projectManagerExt = vscode.extensions.getExtension("vscjava.vscode-java-dependency");
+  if (vscode.workspace.workspaceFolders && projectManagerExt && projectManagerExt.isActive) {
+    let projects: any[] = [];
+    for (const wf of vscode.workspace.workspaceFolders) {
+      try {
+        projects = await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.list", wf.uri.toString()) || [];
+      } catch (error) {
+        console.error(error);
+      }
+
+      for (const project of projects) {
+        const runtimeSpec = await getRuntimeSpec(project.uri);
+        const projectType: ProjectType = projecTypeFromNature(project.metaData.NatureId);
+        ret.push({
+          name: project.displayName || project.name,
+          rootPath: project.uri,
+          projectType,
+          ...runtimeSpec
+        });
+      }
+    }
+  }
+  return ret;
+}
+
+function projecTypeFromNature(natureIds: string[]) {
+  if (natureIds.includes(NatureId.Maven)) {
+    return ProjectType.Maven;
+  } else if (natureIds.includes(NatureId.Gradle)) {
+    return ProjectType.Gradle;
+  } else if (natureIds.includes(NatureId.Java)) {
+    return ProjectType.NoBuildTools;
+  }
+  return ProjectType.Others;
+}
+
+
+async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
   const ret: ProjectRuntimeEntry[] = [];
   const javaExt = vscode.extensions.getExtension("redhat.java");
   if (javaExt && javaExt.isActive) {
     let projects: string[] = [];
     try {
-       projects = await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.getAll") || [];
+      projects = await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.getAll") || [];
     } catch (error) {
       // LS not ready
     }
 
-    const SOURCE_LEVEL_KEY = "org.eclipse.jdt.core.compiler.source";
-    const VM_INSTALL_PATH = "org.eclipse.jdt.ls.core.vm.location";
     for (const projectRoot of projects) {
-      try {
-        const settings: any = await javaExt.exports.getProjectSettings(projectRoot, [SOURCE_LEVEL_KEY, VM_INSTALL_PATH]);
-        const projectType: ProjectType = await getProjectType(projectRoot);
-        ret.push({
-          name: path.basename(projectRoot),
-          rootPath: projectRoot,
-          runtimePath: settings[VM_INSTALL_PATH],
-          sourceLevel: settings[SOURCE_LEVEL_KEY],
-          projectType: projectType
-        });
-      } catch (error) {
-        // ignore
-      }
+      const runtimeSpec = await getRuntimeSpec(projectRoot);
+      const projectType: ProjectType = await getProjectType(projectRoot);
+      ret.push({
+        name: path.basename(projectRoot),
+        rootPath: projectRoot,
+        projectType: projectType,
+        ...runtimeSpec
+      });
     }
   }
   return ret;
+}
+
+async function getRuntimeSpec(projectRootUri: string) {
+  let runtimePath;
+  let sourceLevel;
+  const javaExt = vscode.extensions.getExtension("redhat.java");
+  if (javaExt && javaExt.isActive) {
+    const SOURCE_LEVEL_KEY = "org.eclipse.jdt.core.compiler.source";
+    const VM_INSTALL_PATH = "org.eclipse.jdt.ls.core.vm.location";
+    try {
+      const settings: any = await javaExt.exports.getProjectSettings(projectRootUri, [SOURCE_LEVEL_KEY, VM_INSTALL_PATH]);
+      runtimePath = settings[VM_INSTALL_PATH];
+      sourceLevel = settings[SOURCE_LEVEL_KEY];
+    } catch (error) {
+      console.warn(error);
+    }
+  }
+
+  return {
+    runtimePath,
+    sourceLevel
+  };
 }
 
 async function getProjectType(rootPathUri: string): Promise<ProjectType> {
