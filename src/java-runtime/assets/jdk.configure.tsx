@@ -40,7 +40,7 @@ export class JdkConfigurationPanel extends React.Component<JdkConfigurationPanel
               </li>
               <li className="nav-item">
                 <a className={javaHomeError ? "nav-link active" : "nav-link"} id="configure-ls-tab" data-toggle="tab" href="#configure-ls-panel" role="tab"
-                  aria-controls="configure-ls-panel" aria-selected="false" title="">Setup Language Server</a>
+                  aria-controls="configure-ls-panel" aria-selected="false" title="">Java Tooling Runtime</a>
               </li>
               <li className="nav-item">
                 <a className="nav-link" id="installed-jdks-tab" data-toggle="tab" href="#installed-jdks-panel"

@@ -255,7 +255,7 @@ function projecTypeFromNature(natureIds: string[]) {
   } else if (natureIds.includes(NatureId.Gradle)) {
     return ProjectType.Gradle;
   } else if (natureIds.includes(NatureId.Java)) {
-    return ProjectType.NoBuildTools;
+    return ProjectType.UnmanagedFolder;
   }
   return ProjectType.Others;
 }
@@ -315,7 +315,7 @@ async function getProjectType(rootPathUri: string): Promise<ProjectType> {
   const rootPath = vscode.Uri.parse(rootPathUri).fsPath;
   const dotProjectFile = path.join(rootPath, ".project");
   if (!await pathExists(dotProjectFile)) { // for invisible projects, .project file is located in workspace storage.
-    return ProjectType.NoBuildTools;
+    return ProjectType.UnmanagedFolder;
   }
   const pomDotXmlFile = path.join(rootPath, "pom.xml");
   if (await pathExists(pomDotXmlFile)) {

@@ -17,7 +17,7 @@ export const ProjectRuntimePanel = (props: {
       .map(p => ({ sourceLevel: p.sourceLevel, runtimePath: p.runtimePath })),
     "sourceLevel"
   );
-  const unmanagedProject = projectRuntimes.find(p => p.projectType === ProjectType.NoBuildTools);
+  const unmanagedProject = projectRuntimes.find(p => p.projectType === ProjectType.UnmanagedFolder);
   const defaultJDK = unmanagedProject ? unmanagedProject.runtimePath : undefined;
 
   const sourceLevelRuntimePanels = _.isEmpty(sourceLevelEntries) ? (<p className="text-warning">No Maven/Gradle project recognized.</p>)
@@ -95,7 +95,7 @@ export const ProjectRuntimePanel = (props: {
           {sourceLevelRuntimePanels}
 
           {/* invisible projects */}
-          <h3 className="font-weight-light">Folders without build tools</h3>
+          <h3 className="font-weight-light">Unmanaged Folders</h3>
           <p>
             For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used.
           </p>

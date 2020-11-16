@@ -26,7 +26,7 @@ export interface ProjectRuntimeEntry {
 
 export enum ProjectType {
   Default = "Default project",
-  NoBuildTools = "No build tools",
+  UnmanagedFolder = "Unmanaged folder",
   Maven = "Maven",
   Gradle = "Gradle",
   Others = "Others",
