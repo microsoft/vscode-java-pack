@@ -31,3 +31,11 @@ export function setDefaultRuntime(runtimePath: string, majorVersion: number) {
     majorVersion
   });
 }
+
+export function openBuildScript(rootUri: string, scriptFile: string) {
+  vscode.postMessage({
+    command: "openBuildScript",
+    rootUri,
+    scriptFile
+  });
+}

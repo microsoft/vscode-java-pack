@@ -101,8 +101,15 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         findJavaRuntimeEntries().then(data => {
           showJavaRuntimeEntries(data);
         });
+        break;
       }
-
+      case "openBuildScript": {
+        const {scriptFile, rootUri} = e;
+        const rootPath = vscode.Uri.parse(rootUri).fsPath;
+        const fullPath = path.join(rootPath, scriptFile);
+        vscode.commands.executeCommand("vscode.open", vscode.Uri.file(fullPath));
+        break;
+      }
       default:
         break;
     }

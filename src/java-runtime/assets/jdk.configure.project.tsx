@@ -1,9 +1,9 @@
 import * as _ from "lodash";
-import * as path from "path";
 import * as React from "react";
 import { JavaRuntimeEntry, ProjectRuntimeEntry, ProjectType } from "../types";
 import { InvisibleProjectsRuntimePanel } from "./project.invisible";
 import { ManagedProjectRuntimePanel } from "./project.managed";
+import { openBuildScript } from "./vscode.api";
 
 export const ProjectRuntimePanel = (props: {
   jdkEntries: JavaRuntimeEntry[];
@@ -28,9 +28,10 @@ export const ProjectRuntimePanel = (props: {
     .filter(p => p.projectType !== ProjectType.Default)
     .map((p, index) => (
       <tr key={index}>
-        <td>{path.basename(p.name)}</td>
+        <td>{p.name}</td>
         <td>{p.sourceLevel}</td>
-        <td>{p.projectType}</td>
+        {(p.projectType === ProjectType.Maven || p.projectType === ProjectType.Gradle) && <td><a href="#" onClick={() => onClickType(p)}>{p.projectType}</a></td>}
+        {(p.projectType !== ProjectType.Maven && p.projectType !== ProjectType.Gradle) && <td>{p.projectType}</td>}
       </tr>
     ));
   const projectRuntimesTable = (
@@ -103,3 +104,17 @@ export const ProjectRuntimePanel = (props: {
     </div>
   );
 };
+
+function onClickType(p: ProjectRuntimeEntry) {
+  let scriptFile;
+  if (p.projectType === ProjectType.Maven) {
+    scriptFile = "pom.xml";
+  } else if (p.projectType === ProjectType.Gradle) {
+    scriptFile = "build.gradle";
+  }
+
+  if (scriptFile) {
+    openBuildScript(p.rootPath, scriptFile);
+  }
+
+}
