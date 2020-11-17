@@ -101,6 +101,8 @@ module.exports = function (env, argv) {
       devtoolModuleFilenameTemplate: "../[resource-path]"
     },
     externals: {
+      'applicationinsights-native-metrics': 'commonjs applicationinsights-native-metrics', // ignored because we don't ship native module
+      'diagnostic-channel-publishers': 'commonjs diagnostic-channel-publishers',
       vscode: 'commonjs vscode'
     },
     devtool: 'source-map'

@@ -35,4 +35,12 @@ $card-bg: var(--vscode-sideBar-background);
 $card-color: var(--vscode-sideBarTitle-foreground);
 $card-border-color: var(--vscode-sideBar-border);
 
+$input-group-addon-bg: var(--vscode-sideBar-background);
+$input-group-addon-color: var(--vscode-sideBarTitle-foreground);
+
+$code-color: var(--vscode-textPreformat-foreground);
+
+$input-color:var(--vscode-sideBarTitle-foreground);
+$input-bg:var(--vscode-sideBar-background);
 @import "~bootstrap/scss/bootstrap";
+

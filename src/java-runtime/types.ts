@@ -3,17 +3,9 @@
 
 export interface JavaRuntimeEntry {
   name: string;
-  path: string | undefined;
+  fspath: string;
   type: string;
-  actionUri?: string;
-  isValid?: boolean;
-  hint?: string;
-}
-
-export enum JavaRuntimeEntryTypes {
-  UserSetting = "User Setting",
-  EnvironmentVariable = "Environment Variable",
-  Other = "Other"
+  majorVersion: number;
 }
 
 export interface JdkData {
@@ -22,4 +14,26 @@ export interface JdkData {
   name: string;
   size: string;
   downloadLink: string;
+}
+
+export interface ProjectRuntimeEntry {
+  name: string;
+  rootPath: string;
+  runtimePath: string;
+  sourceLevel: string;
+  projectType: ProjectType;
+}
+
+export enum ProjectType {
+  Default = "Default project",
+  UnmanagedFolder = "Unmanaged folder",
+  Maven = "Maven",
+  Gradle = "Gradle",
+  Others = "Others",
+}
+
+export enum NatureId {
+  Maven = "org.eclipse.m2e.core.maven2Nature",
+  Gradle = "org.eclipse.buildship.core.gradleprojectnature",
+  Java = "org.eclipse.jdt.core.javanature",
 }
