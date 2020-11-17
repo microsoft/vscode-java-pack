@@ -36,22 +36,19 @@ export const ProjectRuntimePanel = (props: {
       </tr>
     ));
   const projectRuntimesTable = (
-    <div className="card">
-      <div className="card-body table-responsive">
-        <table className="table table-borderless table-hover table-sm mb-0">
-          <thead>
-            <tr>
-              <th scope="col">Project</th>
-              <th scope="col">Java Version</th>
-              <th scope="col">Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            {projectEntries}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <table className="table table-borderless table-hover table-sm mb-0">
+      <caption>To use a different Java version for your projects, please specify it in build scripts.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Project</th>
+          <th scope="col">Java Version</th>
+          <th scope="col">Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {projectEntries}
+      </tbody>
+    </table>
   );
 
   return (
@@ -60,10 +57,6 @@ export const ProjectRuntimePanel = (props: {
         <div className="col-6">
           <h3 className="font-weight-light">Workspace Overview</h3>
           {projectRuntimesTable}
-
-          <p>
-            To use a different Java version for your projects, please specify it in build scripts.
-          </p>
           <details>
             <summary> Click to see how:</summary>
 
