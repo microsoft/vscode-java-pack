@@ -91,7 +91,10 @@ async function fromPathEnv(): Promise<string[]> {
                 try {
                     buffer = cp.execSync(macUtility, { cwd: dir });
                     const absoluteJavaHome = "" + buffer.toString().replace(/\n$/, "");
-                    ret.push(absoluteJavaHome);
+                    const verified = await verifyJavaHome(absoluteJavaHome, JAVAC_FILENAME);
+                    if (verified) {
+                        ret.push(absoluteJavaHome);
+                    }
                 } catch (error) {
                     // do nothing
                 }
@@ -99,7 +102,13 @@ async function fromPathEnv(): Promise<string[]> {
         }
     }
 
-    return ret;
+    if (isMac) {
+        // Exclude /usr, because in macOS Big Sur /usr/bin/javac is no longer symlink.
+        // See https://github.com/redhat-developer/vscode-java/issues/1700#issuecomment-729478810
+        return ret.filter(item => item !== "/usr");
+    } else {
+        return ret;
+    }
 }
 
 async function fromWindowsRegistry(): Promise<string[]> {
