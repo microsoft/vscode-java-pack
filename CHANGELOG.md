@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.11.0
+- Fixed: Clicking the blank place in Overview page would trigger a command. [#491](https://github.com/microsoft/vscode-java-pack/pull/491)
+- Added `Learn` and `Configuration` sections to the `Overview` page. [#490](https://github.com/microsoft/vscode-java-pack/pull/490),[#492](https://github.com/microsoft/vscode-java-pack/pull/492)
+- Re-designed `Configure Java Runtime` page for easy configuration of JDKs. [#493](https://github.com/microsoft/vscode-java-pack/pull/493)
+
 ## 0.10.0
 - Added extension guide to help discover Java extensions
 
