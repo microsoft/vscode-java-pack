@@ -10,6 +10,7 @@ const expandHomeDir = require("expand-home-dir");
 const WinReg = require("winreg-utf8");
 const isWindows: boolean = process.platform.indexOf("win") === 0;
 const isMac: boolean = process.platform.indexOf("darwin") === 0;
+const isLinux: boolean = process.platform.indexOf("linux") === 0;
 const JAVAC_FILENAME = "javac" + (isWindows ? ".exe" : "");
 const JAVA_FILENAME = "java" + (isWindows ? ".exe" : "");
 
@@ -26,8 +27,9 @@ export async function findJavaHomes(): Promise<JavaRuntime[]> {
     const ret: JavaRuntime[] = [];
     const jdkMap = new Map<string, string[]>();
 
-    updateJDKs(jdkMap, await fromJavaHomeEnv(), "env.JAVA_HOME");
-    updateJDKs(jdkMap, await fromPathEnv(), "env.PATH");
+    updateJDKs(jdkMap, await fromEnv("JDK_HOME"), "env.JDK_HOME");
+    updateJDKs(jdkMap, await fromEnv("JAVA_HOME"), "env.JAVA_HOME");
+    updateJDKs(jdkMap, await fromPath(), "env.PATH");
     updateJDKs(jdkMap, await fromWindowsRegistry(), "WindowsRegistry");
     updateJDKs(jdkMap, await fromCommonPlaces(), "DefaultLocation");
 
@@ -59,10 +61,11 @@ function updateJDKs(map: Map<string, string[]>, newJdks: string[], source: strin
     }
 }
 
-async function fromJavaHomeEnv(): Promise<string[]> {
+async function fromEnv(name: string): Promise<string[]> {
     const ret: string[] = [];
-    if (process.env.JAVA_HOME) {
-        const javaHome = await verifyJavaHome(process.env.JAVA_HOME, JAVAC_FILENAME);
+    const proposed = process.env[name];
+    if (proposed) {
+        const javaHome = await verifyJavaHome(proposed, JAVAC_FILENAME);
         if (javaHome) {
             ret.push(javaHome);
         }
@@ -70,7 +73,7 @@ async function fromJavaHomeEnv(): Promise<string[]> {
     return ret;
 }
 
-async function fromPathEnv(): Promise<string[]> {
+async function fromPath(): Promise<string[]> {
     const ret: string[] = [];
 
     const paths = process.env.PATH ? process.env.PATH.split(path.delimiter).filter(Boolean) : [];
@@ -235,24 +238,38 @@ async function fromCommonPlaces(): Promise<string[]> {
         }
     }
 
+    // common place for Linux
+    if (isLinux) {
+        const jvmStore = "/usr/lib/jvm";
+        let jvms: string[] = [];
+        try {
+            jvms = await fse.readdir(jvmStore);
+        } catch (error) {
+            // ignore
+        }
+        for (const jvm of jvms) {
+            const proposed = path.join(jvmStore, jvm);
+            const javaHome = await verifyJavaHome(proposed, JAVAC_FILENAME);
+            if (javaHome) {
+                ret.push(javaHome);
+            }
+        }
+    }
+
     return ret;
 }
 
-
-
-async function verifyJavaHome(raw: string, javaFilename: string): Promise<string | undefined> {
+export async function verifyJavaHome(raw: string, javaFilename: string): Promise<string | undefined> {
     const dir = expandHomeDir(raw);
     const targetJavaFile = await findLinkedFile(path.resolve(dir, "bin", javaFilename));
     const proposed = path.dirname(path.dirname(targetJavaFile));
     if (await fse.pathExists(proposed)
-        && (await fse.lstat(proposed)).isDirectory()
         && await fse.pathExists(path.resolve(proposed, "bin", javaFilename))
     ) {
         return proposed;
     }
     return undefined;
 }
-
 
 // iterate through symbolic links until file is found
 async function findLinkedFile(file: string): Promise<string> {
@@ -262,8 +279,7 @@ async function findLinkedFile(file: string): Promise<string> {
     return await findLinkedFile(await fse.readlink(file));
 }
 
-
-export async function getJavaVersion(javaHome: string): Promise<number | undefined> {
+export async function getJavaVersion(javaHome: string): Promise<number> {
     let javaVersion = await checkVersionInReleaseFile(javaHome);
     if (!javaVersion) {
         javaVersion = await checkVersionByCLI(javaHome);
@@ -319,7 +335,10 @@ async function checkVersionInReleaseFile(javaHome: string): Promise<number> {
 /**
  * Get version by parsing `JAVA_HOME/bin/java -version`
  */
-function checkVersionByCLI(javaHome: string): Promise<number> {
+async function checkVersionByCLI(javaHome: string): Promise<number> {
+    if (!javaHome) {
+        return 0;
+    }
     return new Promise((resolve, reject) => {
         const javaBin = path.join(javaHome, "bin", JAVA_FILENAME);
         cp.execFile(javaBin, ["-version"], {}, (error, stdout, stderr) => {

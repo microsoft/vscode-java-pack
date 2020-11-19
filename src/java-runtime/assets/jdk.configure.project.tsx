@@ -58,7 +58,7 @@ export const ProjectRuntimePanel = (props: {
           <h3 className="font-weight-light">Workspace Overview</h3>
           {projectRuntimesTable}
           <details>
-            <summary> Click to see how:</summary>
+            <summary> Click to see how</summary>
 
             <p>For example, if you want to use Java 8, add below lines</p>
             <p>In <code>pom.xml</code> of a Maven project:</p>

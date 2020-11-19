@@ -6,9 +6,9 @@ import * as path from "path";
 import * as request from "request-promise-native";
 import * as vscode from "vscode";
 import { getExtensionContext, loadTextFromFile } from "../utils";
-import { findJavaHomes, getJavaVersion, JavaRuntime } from "./utils/findJavaRuntime";
+import { findJavaHomes, JavaRuntime } from "./utils/findJavaRuntime";
 import architecture = require("arch");
-import { checkJavaRuntime } from "./utils/upstreamApi";
+import { resolveRequirements } from "./utils/upstreamApi";
 import { JavaRuntimeEntry, NatureId, ProjectRuntimeEntry, ProjectType } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { pathExists } from "fs-extra";
@@ -168,12 +168,9 @@ export async function validateJavaRuntime() {
   // option a) should check Java LS exported API for java_home
   // * option b) use the same way to check java_home as vscode-java
   try {
-    const upstreamJavaHome = await checkJavaRuntime();
-    if (upstreamJavaHome) {
-      const version = await getJavaVersion(upstreamJavaHome);
-      if (version && version >= 11) {
-        return true;
-      }
+    const runtime = await resolveRequirements();
+    if (runtime.java_version >=11 && runtime.java_home) {
+      return true;
     }
   } catch (error) {
   }
@@ -200,8 +197,7 @@ export async function findJavaRuntimeEntries(): Promise<{
   let javaDotHome;
   let javaHomeError;
   try {
-    javaDotHome = await checkJavaRuntime();
-    const javaVersion = await getJavaVersion(javaDotHome);
+    const {java_home: javaDotHome, java_version: javaVersion } = await resolveRequirements();
     if (!javaVersion || javaVersion < 11) {
       javaHomeError = `Java 11 or more recent is required to run the Java extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
     }
