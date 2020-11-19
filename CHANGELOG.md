@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.11.0
+- Updated FAQ in `Getting Started` page. [#492](https://github.com/microsoft/vscode-java-pack/pull/492)
+- Added a Configuration row to the `Overview` page. [#492](https://github.com/microsoft/vscode-java-pack/pull/492)
+- Fixex: Clicking the blank place in Overview page would trigger a command. [#491](https://github.com/microsoft/vscode-java-pack/pull/491)
+- Added a link to `Getting Started` view from `Overview` page. [#490](https://github.com/microsoft/vscode-java-pack/pull/490)
+- Re-designed `Configure Java Runtime` page for easy configuration of JDKs. [#493](https://github.com/microsoft/vscode-java-pack/pull/493)
+
 ## 0.10.0
 - Added extension guide to help discover Java extensions
 
