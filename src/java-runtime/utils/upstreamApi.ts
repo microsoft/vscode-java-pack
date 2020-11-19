@@ -9,28 +9,21 @@ import * as vscode from "vscode";
 import { env } from "vscode";
 
 const expandHomeDir = require("expand-home-dir");
-import findJavaHome = require("find-java-home");
+const REQUIRED_JDK_VERSION = 11;
+import { findJavaHomes, getJavaVersion, JavaRuntime } from "./findJavaRuntime";
 
 
 const isWindows = process.platform.indexOf("win") === 0;
 const JAVAC_FILENAME = "javac" + (isWindows ? ".exe" : "");
 
-export async function checkJavaRuntime(): Promise<string> {
+export async function resolveRequirements(): Promise<any> {
     return new Promise(async (resolve, reject) => {
         let source: string;
+        let javaVersion: number = 0;
         let javaHome = await checkJavaPreferences();
         if (javaHome) {
+            // java.home explictly specified
             source = `java.home variable defined in ${env.appName} settings`;
-        } else {
-            javaHome = process.env["JDK_HOME"];
-            if (javaHome) {
-                source = "JDK_HOME environment variable";
-            } else {
-                javaHome = process.env["JAVA_HOME"];
-                source = "JAVA_HOME environment variable";
-            }
-        }
-        if (javaHome) {
             javaHome = expandHomeDir(javaHome) as string;
             if (!await fse.pathExists(javaHome)) {
                 invalidJavaHome(reject, `The ${source} points to a missing or inaccessible folder (${javaHome})`);
@@ -43,20 +36,39 @@ export async function checkJavaRuntime(): Promise<string> {
                 }
                 invalidJavaHome(reject, msg);
             }
-            return resolve(javaHome);
+            javaVersion = await getJavaVersion(javaHome);
+        } else {
+            // java.home not specified, search valid JDKs from env.JAVA_HOME, env.PATH, Registry(Window), Common directories
+            const javaRuntimes = await findJavaHomes();
+            const validJdks = javaRuntimes.filter(r => r.version >= REQUIRED_JDK_VERSION);
+            if (validJdks.length > 0) {
+                sortJdksBySource(validJdks);
+                javaHome = validJdks[0].home;
+                javaVersion = validJdks[0].version;
+            }
         }
-        // No settings, let's try to detect as last resort.
-        findJavaHome((err, home) => {
-            if (err) {
-                invalidJavaHome(reject, "Java runtime (JDK, not JRE) could not be located");
-            }
-            else {
-                resolve(home);
-            }
-        });
+
+        if (javaVersion < REQUIRED_JDK_VERSION) {
+            invalidJavaHome(reject, `Java ${REQUIRED_JDK_VERSION} or more recent is required to run the Java extension. (Current version: ${javaVersion}, JDK: ${javaHome})`);
+        }
+
+        resolve({ java_home: javaHome, java_version: javaVersion });
     });
 }
 
+function sortJdksBySource(jdks: JavaRuntime[]) {
+    const rankedJdks = jdks as Array<JavaRuntime & { rank: number }>;
+    const sources = ["env.JDK_HOME", "env.JAVA_HOME", "env.PATH"];
+    for (const [index, source] of sources.entries()) {
+        for (const jdk of rankedJdks) {
+            if (jdk.rank === undefined && jdk.sources.includes(source)) {
+                jdk.rank = index;
+            }
+        }
+    }
+    rankedJdks.filter(jdk => jdk.rank === undefined).forEach(jdk => jdk.rank = sources.length);
+    rankedJdks.sort((a, b) => a.rank - b.rank);
+}
 
 function checkJavaPreferences(){
     return vscode.workspace.getConfiguration("java").get<string>("home");
