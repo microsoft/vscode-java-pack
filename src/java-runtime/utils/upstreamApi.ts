@@ -49,7 +49,11 @@ export async function resolveRequirements(): Promise<any> {
         }
 
         if (javaVersion < REQUIRED_JDK_VERSION) {
-            invalidJavaHome(reject, `Java ${REQUIRED_JDK_VERSION} or more recent is required to run the Java extension. (Current version: ${javaVersion}, JDK: ${javaHome})`);
+            let message = `Java ${REQUIRED_JDK_VERSION} or more recent is required to run the Java extension.`;
+            if (javaHome) {
+                message += `(Current JDK: ${javaHome})`;
+            }
+            invalidJavaHome(reject, message);
         }
 
         resolve({ java_home: javaHome, java_version: javaVersion });
