@@ -197,7 +197,9 @@ export async function findJavaRuntimeEntries(): Promise<{
   let javaDotHome;
   let javaHomeError;
   try {
-    const {java_home: javaDotHome, java_version: javaVersion } = await resolveRequirements();
+    const runtime = await resolveRequirements();
+    javaDotHome = runtime.java_home;
+    const javaVersion = runtime.java_version;
     if (!javaVersion || javaVersion < 11) {
       javaHomeError = `Java 11 or more recent is required to run the Java extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
     }
