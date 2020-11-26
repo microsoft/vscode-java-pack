@@ -51,6 +51,6 @@ export async function showReleaseNotesOnStart(context: vscode.ExtensionContext) 
   context.globalState.update(RELEASE_NOTE_PRESENTATION_HISTORY, history);
 }
 
-export function initialize(context: vscode.ExtensionContext) {
+export function initialize(_context: vscode.ExtensionContext) {
   showInfoButton();
 }

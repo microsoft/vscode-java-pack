@@ -16,7 +16,7 @@ import { pathExists } from "fs-extra";
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
 
-export async function javaRuntimeCmdHandler(context: vscode.ExtensionContext, operationId: string) {
+export async function javaRuntimeCmdHandler(context: vscode.ExtensionContext, _operationId: string) {
   if (javaRuntimeView) {
     javaRuntimeView.reveal();
     return;
@@ -151,7 +151,7 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
 }
 
 export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer {
-  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, _state: any) {
     if (javaRuntimeView) {
       javaRuntimeView.reveal();
       webviewPanel.dispose();

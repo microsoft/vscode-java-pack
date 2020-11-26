@@ -24,7 +24,7 @@ export function scheduleAction(name: string, isImmediate: boolean = false, isOne
     return Promise.reject(`Action (${name}) was already scheduled or performed once.`);
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _reject) => {
     if (isImmediate) {
       setImmediate(() => resolve(name));
       return;
@@ -44,5 +44,8 @@ function idleHandler() {
 
   const action = actionQueue.shift();
   pastActions.push(action && action.name || "");
-  action && action.resolve(action && action.name);
+
+  if (action) {
+    action.resolve(action && action.name);
+  }
 }

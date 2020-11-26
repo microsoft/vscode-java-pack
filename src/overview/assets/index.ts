@@ -15,7 +15,7 @@ window.addEventListener("message", event => {
 });
 
 function syncExtensionVisibility(extensions: any) {
-  $("div[ext]").each((index, elem) => {
+  $("div[ext]").each((_index, elem) => {
     const anchor = $(elem);
     const ext = (anchor.attr("ext") || "").toLowerCase();
     if (extensions.indexOf(ext) !== -1) {
@@ -27,7 +27,7 @@ function syncExtensionVisibility(extensions: any) {
 }
 
 function syncSectionVisibility() {
-  $("div h3").parent().each((i, div) => {
+  $("div h3").parent().each((_i, div) => {
     if (!$(div).children("h3 ~ div").is(":visible")) {
       $(div).hide();
     } else {
