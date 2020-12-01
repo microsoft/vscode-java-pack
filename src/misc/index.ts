@@ -30,6 +30,12 @@ type ReleaseNotesPresentationHistoryEntry = { version: string, timeStamp: string
 const RELEASE_NOTE_PRESENTATION_HISTORY = "releaseNotesPresentationHistory";
 
 export async function showReleaseNotesOnStart(context: vscode.ExtensionContext) {
+  const config = vscode.workspace.getConfiguration("java.update");
+  const showReleaseNotes = config.get("showReleaseNotes");
+  if (!showReleaseNotes) {
+    return;
+  }
+
   const entries = await getReleaseNotesEntries(context);
   const latest = findLatestReleaseNotes(entries);
   if(latest.version !== getExtensionVersion()) {

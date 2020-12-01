@@ -88,6 +88,12 @@
           "default": "auto",
           "description": "Sets the default view which is presented during the first use.",
           "scope": "window"
+        },
+        "java.update.showReleaseNotes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Release Notes after an update.",
+          "scope": "window"
         }
       }
     }
