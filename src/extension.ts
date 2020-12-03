@@ -19,7 +19,7 @@ export async function activate(context: vscode.ExtensionContext) {
   await instrumentOperation("activation", initializeExtension)(context);
 }
 
-async function initializeExtension(operationId: string, context: vscode.ExtensionContext) {
+async function initializeExtension(_operationId: string, context: vscode.ExtensionContext) {
   initUtils(context);
   initCommands(context);
   initRecommendations(context);
@@ -71,7 +71,7 @@ async function showExtensionGuide(context: vscode.ExtensionContext) {
   context.globalState.update("isExtensionGuidePresented", true);
 }
 
-async function showGettingStartedView(context: vscode.ExtensionContext, isForce: boolean = false) {
+async function showGettingStartedView(context: vscode.ExtensionContext, _isForce: boolean = false) {
   if (!!context.globalState.get("isGettingStartedPresented")) {
     return;
   }
@@ -80,7 +80,7 @@ async function showGettingStartedView(context: vscode.ExtensionContext, isForce:
   context.globalState.update("isGettingStartedPresented", true);
 }
 
-function initializeTelemetry(context: vscode.ExtensionContext) {
+function initializeTelemetry(_context: vscode.ExtensionContext) {
   const ext = vscode.extensions.getExtension("vscjava.vscode-java-pack");
   const packageInfo = ext ? ext.packageJSON : undefined;
   if (packageInfo) {

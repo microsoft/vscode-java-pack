@@ -80,7 +80,7 @@ window.addEventListener("message", event => {
 });
 
 function syncExtensionStatus(extensions: string[]) {
-  $("input[type='checkbox']").each((i, elem) => {
+  $("input[type='checkbox']").each((_i, elem) => {
     const isInstalled = extensions.includes(<string>$(elem).val());
     $(elem).prop("disabled", isInstalled);
     $(elem).prop("checked", isInstalled);
@@ -90,7 +90,7 @@ function syncExtensionStatus(extensions: string[]) {
 function getSelectedExtension(isAll: boolean = false) {
   const $selected = isAll ? $("input:visible:enabled") : $("input:checked:visible:enabled");
   const selectedExtensions: string[] = [];
-  $selected.each((i, elem) => { selectedExtensions.push(<string>$(elem).val()); });
+  $selected.each((_i, elem) => { selectedExtensions.push(<string>$(elem).val()); });
   return selectedExtensions;
 }
 

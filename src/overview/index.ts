@@ -21,7 +21,7 @@ const toggleOverviewVisibilityOperation = instrumentOperation("toggleOverviewVis
   context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, visibility);
 });
 
-export async function overviewCmdHandler(context: vscode.ExtensionContext, operationId: string, showInBackground: boolean = false) {
+export async function overviewCmdHandler(context: vscode.ExtensionContext, _operationId: string, showInBackground: boolean = false) {
   if (overviewView) {
     overviewView.reveal();
     return;
@@ -67,7 +67,7 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
 
   syncExtensionVisibility();
 
-  vscode.extensions.onDidChange(e => {
+  vscode.extensions.onDidChange(_e => {
     syncExtensionVisibility();
   });
 
@@ -105,7 +105,7 @@ export async function showOverviewPageOnActivation(context: vscode.ExtensionCont
 }
 
 export class OverviewViewSerializer implements vscode.WebviewPanelSerializer {
-  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, _state: any) {
     if (overviewView) {
       overviewView.reveal();
       webviewPanel.dispose();

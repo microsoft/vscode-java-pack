@@ -61,7 +61,7 @@ async function initializeJavaGettingStartedView(context: vscode.ExtensionContext
 }
 
 export class JavaGettingStartedViewSerializer implements vscode.WebviewPanelSerializer {
-  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, _state: any) {
     if (javaGettingStartedView) {
       javaGettingStartedView.reveal();
       webviewPanel.dispose();

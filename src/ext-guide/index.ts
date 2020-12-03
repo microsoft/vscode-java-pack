@@ -50,7 +50,7 @@ async function initializeJavaExtGuideView(context: vscode.ExtensionContext, webv
     }
   }));
 
-  vscode.extensions.onDidChange(e => {
+  vscode.extensions.onDidChange(_e => {
     syncExtensionStatus();
   });
 
@@ -66,7 +66,7 @@ async function initializeJavaExtGuideView(context: vscode.ExtensionContext, webv
 }
 
 export class JavaExtGuideViewSerializer implements vscode.WebviewPanelSerializer {
-  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
+  async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, _state: any) {
     if (javaExtGuideView) {
       javaExtGuideView.reveal();
       webviewPanel.dispose();
