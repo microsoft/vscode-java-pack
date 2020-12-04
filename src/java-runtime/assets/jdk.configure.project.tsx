@@ -20,10 +20,8 @@ export const ProjectRuntimePanel = (props: {
   const unmanagedProject = projectRuntimes.find(p => p.projectType === ProjectType.UnmanagedFolder);
   const defaultJDK = unmanagedProject ? unmanagedProject.runtimePath : undefined;
 
-  const sourceLevelRuntimePanels = _.isEmpty(sourceLevelEntries) ? (<p className="text-warning">No Maven/Gradle project recognized.</p>)
-    : sourceLevelEntries.map(entry => (<ManagedProjectRuntimePanel entry={entry} jdks={jdkEntries} key={entry.sourceLevel} />));
-  const invisibleProjectsRuntimePanel = unmanagedProject ? (defaultJDK && <InvisibleProjectsRuntimePanel jdks={jdkEntries} defaultJDK={unmanagedProject.runtimePath} />)
-    : (<p className="text-warning">No folder recognized.</p>);
+  const sourceLevelRuntimePanels = !_.isEmpty(sourceLevelEntries) && <ManagedProjectRuntimePanel entries={sourceLevelEntries} jdks={jdkEntries} />;
+  const invisibleProjectsRuntimePanel = unmanagedProject && defaultJDK && <InvisibleProjectsRuntimePanel jdks={jdkEntries} defaultJDK={unmanagedProject.runtimePath} />;
 
   const projectEntries = projectRuntimes
     .filter(p => p.projectType !== ProjectType.Default)
@@ -83,15 +81,9 @@ export const ProjectRuntimePanel = (props: {
 
         <div className="col-6">
           {/* Managed Projects */}
-          <h3 className="font-weight-light">Maven/Gradle Projects</h3>
-          <p>For projects managed by build tools, Java version is specified in build scripts. Here you can change the mapping between Java version and JDK used.</p>
           {sourceLevelRuntimePanels}
 
           {/* invisible projects */}
-          <h3 className="font-weight-light">Unmanaged Folders</h3>
-          <p>
-            For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used.
-          </p>
           {invisibleProjectsRuntimePanel}
         </div>
       </div>
