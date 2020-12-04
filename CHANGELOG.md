@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.12.0
+- Added settings to reduce popups. [#473](https://github.com/microsoft/vscode-java-pack/pull/473)
+- Refined `Configure Java Runtime` page to show project/unmanaged folder section on demand. [#517](https://github.com/microsoft/vscode-java-pack/pull/517)
+
 ## 0.11.0
 - Fixed: Clicking the blank place in Overview page would trigger a command. [#491](https://github.com/microsoft/vscode-java-pack/pull/491)
 - Added `Learn` and `Configuration` sections to the `Overview` page. [#490](https://github.com/microsoft/vscode-java-pack/pull/490),[#492](https://github.com/microsoft/vscode-java-pack/pull/492)
