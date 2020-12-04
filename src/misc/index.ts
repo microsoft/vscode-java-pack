@@ -8,6 +8,7 @@ export enum HelpViewType {
   Auto = "auto",
   Overview = "overview",
   GettingStarted = "gettingStarted",
+  None = "none",
 }
 
 function showInfoButton() {
@@ -15,10 +16,14 @@ function showInfoButton() {
   const firstView = config.get("firstView");
 
   let infoButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-  if (firstView === HelpViewType.GettingStarted) {
-    infoButton.command = "java.gettingStarted";
-  } else {
-    infoButton.command = "java.overview";
+  switch (firstView) {
+    case HelpViewType.None:
+      return;
+    case HelpViewType.GettingStarted:
+      infoButton.command = "java.gettingStarted";
+      break;
+    default:
+      infoButton.command = "java.overview";
   }
 
   infoButton.text = "$(info)";
