@@ -7,20 +7,30 @@ import { sourceLevelDisplayName, sourceLevelMajorVersion } from "../utils/misc";
 import { updateRuntimePath } from "./vscode.api";
 
 interface ManagedProjectRuntimePanelProps {
-  entry: {
+  entries: {
     sourceLevel: string;
     runtimePath: string;
-  };
+  }[];
   jdks: JavaRuntimeEntry[];
 }
 
 export class ManagedProjectRuntimePanel extends React.Component<ManagedProjectRuntimePanelProps, {}> {
 
   render = () => {
-    const { sourceLevel, runtimePath } = this.props.entry;
+    return (
+      <div>
+        <h3 className="font-weight-light">Maven/Gradle Projects</h3>
+        <p>For projects managed by build tools, Java version is specified in build scripts. Here you can change the mapping between Java version and JDK used.</p>
+        {this.props.entries.map(this.getRuntimeSelectorComponent)}
+      </div>
+    );
+  }
+
+  getRuntimeSelectorComponent = (entry) => {
+    const { sourceLevel, runtimePath } = entry;
 
     return (
-      <div className="row">
+      <div className="row" key={sourceLevel}>
         <div className="col">
           <div className="row sourcelevel">
             <div className="col">
