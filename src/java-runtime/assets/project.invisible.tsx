@@ -16,7 +16,7 @@ export class InvisibleProjectsRuntimePanel extends React.Component<InvisibleProj
     return (
       <div>
         <h3 className="font-weight-light">Unmanaged Folders</h3>
-        <p>For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used.</p>
+        <p>For folders containing .java files, but <strong>NOT</strong> managed by build tools like Maven/Gradle, a default JDK is used.</p>
         <div className="row">
           <div className="col">
             <div className="row sourcelevel">

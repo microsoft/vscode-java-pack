@@ -26,7 +26,10 @@ export class ManagedProjectRuntimePanel extends React.Component<ManagedProjectRu
     );
   }
 
-  getRuntimeSelectorComponent = (entry) => {
+  getRuntimeSelectorComponent = (entry:  {
+    sourceLevel: string;
+    runtimePath: string;
+  }) => {
     const { sourceLevel, runtimePath } = entry;
 
     return (
