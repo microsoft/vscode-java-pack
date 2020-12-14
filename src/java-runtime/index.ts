@@ -139,7 +139,7 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
 
   // refresh webview with latest source levels when classpath (project info) changes
   const javaExt = vscode.extensions.getExtension("redhat.java");
-  if (javaExt && javaExt.isActive && javaExt.exports.onDidClasspathUpdate) {
+  if (javaExt && javaExt.isActive && javaExt.exports && javaExt.exports.onDidClasspathUpdate) {
     const onDidClasspathUpdate: vscode.Event<vscode.Uri> = javaExt.exports.onDidClasspathUpdate;
     const listener = onDidClasspathUpdate((_e: vscode.Uri) => {
       findJavaRuntimeEntries().then(data => {
