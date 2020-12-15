@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.12.1
+- Fixed error `Cannot read property 'onDidClasspathUpdate' of undefined` on opening `Configure Java Runtime` page. [#521](https://github.com/microsoft/vscode-java-pack/issues/521)
+
 ## 0.12.0
 - Added settings to reduce popups. [#473](https://github.com/microsoft/vscode-java-pack/pull/473)
 - Refined `Configure Java Runtime` page to show project/unmanaged folder section on demand. [#517](https://github.com/microsoft/vscode-java-pack/pull/517)
