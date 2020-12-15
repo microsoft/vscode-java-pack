@@ -57,7 +57,8 @@
       },
       {
         "command": "java.runtime",
-        "title": "Java: Configure Java Runtime"
+        "title": "Configure Java Runtime",
+        "category": "Java"
       },
       {
         "command": "java.gettingStarted",
@@ -98,6 +99,15 @@
           "scope": "window"
         }
       }
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "java.runtime",
+          "group": "overflow_30@10",
+          "when": "view == javaProjectExplorer"
+        }
+      ]
     }
   },
   "scripts": {
