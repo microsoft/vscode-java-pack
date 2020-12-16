@@ -66,6 +66,10 @@
       {
         "command": "java.extGuide",
         "title": "Java: Extension Guide"
+      },
+      {
+        "command": "java.formatterSettingsPage",
+        "title": "Java: Formatter Settings Page"
       }
     ],
     "configuration": {
@@ -145,7 +149,7 @@
     "tslint": "^5.20.1",
     "typescript": "^3.7.5",
     "vscode-tas-client": "^0.1.4",
-    "webpack": "^4.44.1",
+    "webpack": "^4.44.2",
     "webpack-cli": "^3.3.12"
   },
   "extensionPack": [

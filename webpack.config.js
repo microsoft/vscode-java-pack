@@ -12,7 +12,8 @@ module.exports = function (env, argv) {
       overview: './src/overview/assets/index.ts',
       'java-runtime': './src/java-runtime/assets/index.ts',
       'getting-started': './src/getting-started/assets/index.ts',
-      'ext-guide': './src/ext-guide/assets/index.ts'
+      'ext-guide': './src/ext-guide/assets/index.ts',
+      'formatter-settings': './src/formatter-settings/assets/index.ts'
     },
     module: {
       rules: [{
@@ -55,6 +56,12 @@ module.exports = function (env, argv) {
         template: 'src/java-runtime/assets/index.html',
         inlineSource: '.(js|css)$',
         chunks: ['java-runtime']
+      }),
+      new HtmlWebpackPlugin({
+        filename: path.resolve(__dirname, 'out/assets/formatter-settings/index.html'),
+        template: 'src/formatter-settings/assets/index.html',
+        inlineSource: '.(js|css)$',
+        chunks: ['formatter-settings']
       }),
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/getting-started/index.html'),

@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
 import { InstalledJDKPanel } from "./jdk.configure.installed";
