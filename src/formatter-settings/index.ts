@@ -19,6 +19,17 @@ export async function formatterSettingsCmdHandler(context: vscode.ExtensionConte
   const resourceUri = context.asAbsolutePath("./out/assets/formatter-settings/index.html");
   formatterSettingsView.webview.html = await loadTextFromFile(resourceUri);
   context.subscriptions.push(formatterSettingsView.onDidDispose(onDidDisposeWebviewPanel));
+  context.subscriptions.push(formatterSettingsView.webview.onDidReceiveMessage(async (e) => {
+    switch (e.command) {
+      case "format": {
+        const { code } = e;
+        vscode.commands.executeCommand("vscode.open", vscode.Uri.file(code));
+        break;
+      }
+      default:
+        break;
+    }
+  }));
 }
 
 function onDidDisposeWebviewPanel() {

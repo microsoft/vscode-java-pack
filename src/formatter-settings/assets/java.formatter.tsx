@@ -1,11 +1,17 @@
+import "bootstrap/js/src/tab";
+import * as $ from "jquery";
 import * as React from "react";
+import * as ReactDOM from "react-dom";
+import "../../assets/vscode.scss";
 import { JavaFormatterSetting } from ".";
 import { WhitespaceSettingsPanel } from "./java.formatter.whitespace";
 import { CommentSettingsPanel } from "./java.formatter.comment";
+import { NewLineSettingsPanel } from "./java.formatter.newline";
 
 interface JavaFormatterPanelProps {
   whitespaceSettings?: JavaFormatterSetting[];
   commentSettings?: JavaFormatterSetting[];
+  newLineSettings?: JavaFormatterSetting[];
 }
 
 export class JavaFormatterPanel extends React.Component<JavaFormatterPanelProps> {
@@ -14,6 +20,7 @@ export class JavaFormatterPanel extends React.Component<JavaFormatterPanelProps>
 
     const whitespaceSettingsPanel = React.createElement(WhitespaceSettingsPanel, this.props);
     const commentSettingsPanel = React.createElement(CommentSettingsPanel, this.props);
+    const newLineSettingsPanel = React.createElement(NewLineSettingsPanel, this.props);
 
     return (
       <div>
@@ -32,7 +39,11 @@ export class JavaFormatterPanel extends React.Component<JavaFormatterPanelProps>
               </li>
               <li className="nav-item">
                 <a className="nav-link" id="comment-tab" data-toggle="tab" href="#comment-panel"
-                  role="tab" aria-controls="comment-panel" aria-selected="false" title="">comment</a>
+                  role="tab" aria-controls="comment-panel" aria-selected="false" title="">Comment</a>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link" id="newline-tab" data-toggle="tab" href="#newline-panel"
+                  role="tab" aria-controls="newline-panel" aria-selected="false" title="">NewLine</a>
               </li>
             </ul>
           </div>
@@ -50,6 +61,12 @@ export class JavaFormatterPanel extends React.Component<JavaFormatterPanelProps>
                 aria-labelledby="comment-tab">
                 <div className="row" id="commentSettingsPanel">
                   {commentSettingsPanel}
+                </div>
+              </div>
+              <div className="tab-pane fade" id="newline-panel" role="tabpanel"
+                aria-labelledby="newline-tab">
+                <div className="row" id="newLineSettingsPanel">
+                  {newLineSettingsPanel}
                 </div>
               </div>
             </div>

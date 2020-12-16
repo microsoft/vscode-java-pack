@@ -42,5 +42,6 @@ $code-color: var(--vscode-textPreformat-foreground);
 
 $input-color:var(--vscode-sideBarTitle-foreground);
 $input-bg:var(--vscode-sideBar-background);
+$input-disabled-bg:var(--vscode-sideBar-background);
 @import "~bootstrap/scss/bootstrap";
 

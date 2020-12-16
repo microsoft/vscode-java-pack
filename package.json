@@ -141,6 +141,7 @@
     "postcss-loader": "^2.1.5",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-bootstrap": "^1.4.0",
     "request": "^2.88.2",
     "request-promise-native": "^1.0.9",
     "sass-loader": "^7.3.1",
