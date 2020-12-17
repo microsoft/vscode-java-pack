@@ -14,7 +14,7 @@ export interface CommentSettingsProps {
   commentSettings?: JavaFormatterSetting[];
 }
 
-const description = "Off/On tags can be used in any comments to turn the formatter off and on in a source file.\n- At the beginning of each file, the formatter is enabled.\n- Each time the formatter sees an off tag, it disables formatting for that comment and the source after it.\n- Each time the formatter sees an on tag, it enables formatting for the source after that comment.\n";
+const description = "\n\n\n\n";
 
 export const CommentSettingsPanel = (props: CommentSettingsProps) => {
   let test = "\t/**\n\t * Descriptions of parameters and return values\n\
@@ -29,7 +29,7 @@ export const CommentSettingsPanel = (props: CommentSettingsProps) => {
     <div className="col">
       <div className="row">
         <div className="col-6">
-          <h3 className="font-weight-light">Comment</h3>
+          <h2 className="font-weight-light">Comment</h2>
           <div className="input-group mb-3">
             <div className="input-group-prepend">
               <label className="input-group-text" htmlFor="invisible">Javadoc Alignment:</label>
@@ -41,17 +41,21 @@ export const CommentSettingsPanel = (props: CommentSettingsProps) => {
               <option>Don’t align</option>
             </select>
           </div>
-          <details>
-            <summary> About Off/On Tags</summary>
-            <textarea id="noter-text-area" readOnly className="md-textarea form-control-plaintext" rows={8} name="textarea" value={description}/>
-          </details>
           <div className="form-check">
             <input type="checkbox" className="form-check-input" id="offOnTag"></input>
             <label className="form-check-label" htmlFor="offOnTag">Use Off/On Tags</label>
           </div>
+          <details>
+            <summary> About Off/On Tags</summary>
+            <p>Off/On tags can be used in any comments to turn the formatter off and on in a source file.</p>
+            <p>- Off tag: @formatter:off, On tag: @formatter:on.</p>
+            <p>- At the beginning of each file, the formatter is enabled.</p>
+            <p>- Each time the formatter sees an off tag, it disables formatting for that comment and the source after it.</p>
+            <p>- Each time the formatter sees an on tag, it enables formatting for the source after that comment.</p>
+          </details>
         </div>
         <div className="col-6">
-          <h3 className="font-weight-light">Preview</h3>
+          <h2 className="font-weight-light">Preview</h2>
           <Editor name={test} />
         </div>
       </div>

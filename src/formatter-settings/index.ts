@@ -26,6 +26,9 @@ export async function formatterSettingsCmdHandler(context: vscode.ExtensionConte
         vscode.commands.executeCommand("vscode.open", vscode.Uri.file(code));
         break;
       }
+      case "export": {
+        break;
+      }
       default:
         break;
     }

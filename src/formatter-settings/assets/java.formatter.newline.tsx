@@ -20,7 +20,7 @@ export const NewLineSettingsPanel = (props: NewLineSettingsProps) => {
     <div className="col">
       <div className="row">
         <div className="col-6">
-          <h3 className="font-weight-light">New Line</h3>
+          <h2 className="font-weight-light">New Line</h2>
           <div className="input-group mb-3">
             <div className="input-group-prepend">
               <label className="input-group-text" htmlFor="invisible">Brace Policy:</label>
@@ -50,7 +50,7 @@ export const NewLineSettingsPanel = (props: NewLineSettingsProps) => {
           </div>
         </div>
         <div className="col-6">
-          <h3 className="font-weight-light">Preview</h3>
+          <h2 className="font-weight-light">Preview</h2>
           <Editor name={test} />
         </div>
       </div>

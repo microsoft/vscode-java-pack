@@ -43,5 +43,13 @@ $code-color: var(--vscode-textPreformat-foreground);
 $input-color:var(--vscode-sideBarTitle-foreground);
 $input-bg:var(--vscode-sideBar-background);
 $input-disabled-bg:var(--vscode-sideBar-background);
+
+.btn-xl {
+    padding: 10px 20px;
+    font-size: 20px;
+    border-radius: 10px;
+    width:50%;    //Specify your width here
+}
+
 @import "~bootstrap/scss/bootstrap";
 

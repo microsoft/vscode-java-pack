@@ -7,7 +7,9 @@ import { JavaFormatterSetting } from ".";
 import { WhitespaceSettingsPanel } from "./java.formatter.whitespace";
 import { CommentSettingsPanel } from "./java.formatter.comment";
 import { NewLineSettingsPanel } from "./java.formatter.newline";
+import { exportSettings } from "./vscode.api";
 
+import { UnControlled as CodeMirror } from 'react-codemirror2'
 interface JavaFormatterPanelProps {
   whitespaceSettings?: JavaFormatterSetting[];
   commentSettings?: JavaFormatterSetting[];
@@ -15,6 +17,10 @@ interface JavaFormatterPanelProps {
 }
 
 export class JavaFormatterPanel extends React.Component<JavaFormatterPanelProps> {
+
+  exp = () => {
+    exportSettings();
+  }
 
   render = () => {
 
@@ -25,8 +31,18 @@ export class JavaFormatterPanel extends React.Component<JavaFormatterPanelProps>
     return (
       <div>
         <div className="row">
+        <CodeMirror
+  value='<h1>I ♥ react-codemirror2</h1>'
+  options={{
+    mode: 'xml',
+    theme: 'material',
+    lineNumbers: true
+  }}
+  onChange={(editor, data, value) => {
+  }}
+/>
           <div className="col-lg-12">
-            <button id="btnExport" className="btn btn-primary mr-2 float-right" title="Export Settings">Export...</button>
+            <button id="btnExport" className="btn btn-primary mr-2 float-right" title="Export Settings" onClick = {this.exp}>Export</button>
             <button id="btnImport" className="btn btn-primary mr-2 float-right" title="Import Settings from eclipse Java formatter settings profile">Import from Profile...</button>
           </div>
         </div>

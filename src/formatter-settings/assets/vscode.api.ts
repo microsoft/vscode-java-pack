@@ -7,3 +7,9 @@ export function formatCode(code: string) {
     code
   });
 }
+
+export function exportSettings() {
+  vscode.postMessage({
+    command: "export",
+  });
+}
