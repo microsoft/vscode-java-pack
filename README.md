@@ -36,7 +36,7 @@ To use ST4, install [📦 Spring Boot Extension Pack](https://marketplace.visual
 
 ### Eclipse MicroProfile
 
-The [📦 MicroProfile Extension Pack](https://marketplace.visualstudio.com/items?itemName=MicroProfile-Community.vscode-microprofile-pack) is a collection of extensions that can help develop your Java microservices using [Eclipse MicroProfile](https://microprofile.io/). You can quickly generate a MicroProfile project and utilize development tools for runtimes such as [Open Liberty](https://openliberty.io/) and [Quarkus](https://quarkus.io/).
+The [📦 Extension Pack for MicroProfile](https://marketplace.visualstudio.com/items?itemName=MicroProfile-Community.vscode-microprofile-pack) is a collection of extensions that can help develop your Java microservices using [Eclipse MicroProfile](https://microprofile.io/). You can quickly generate a MicroProfile project and utilize development tools for runtimes such as [Open Liberty](https://openliberty.io/) and [Quarkus](https://quarkus.io/).
 
 ### Quarkus
 
