@@ -13,6 +13,7 @@ import { KEY_SHOW_WHEN_USING_JAVA, showOverviewPageOnActivation } from "./overvi
 import { validateJavaRuntime } from "./java-runtime";
 // import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { scheduleAction } from "./utils/scheduler";
+import { showWelcomeWebview, showWelcomePageOnActivation } from "./welcome";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -51,6 +52,8 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
       vscode.commands.executeCommand("java.runtime");
     });
   }
+
+  context.subscriptions.push(vscode.commands.registerCommand("java.welcome", () => showWelcomeWebview(context)));
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
@@ -65,12 +68,15 @@ async function presentFirstView(context: vscode.ExtensionContext) {
   switch (firstView) {
     case HelpViewType.None:
       break;
-    case HelpViewType.GettingStarted:  
+    case HelpViewType.GettingStarted:
       await showGettingStartedView(context);
       break;
-    default:
+    case HelpViewType.Overview:
       await showOverviewPageOnActivation(context);
-    }
+      break;
+    default:
+      await showWelcomePageOnActivation(context);
+  }
 }
 
 async function showExtensionGuide(context: vscode.ExtensionContext) {

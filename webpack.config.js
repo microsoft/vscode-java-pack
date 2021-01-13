@@ -12,7 +12,8 @@ module.exports = function (env, argv) {
       overview: './src/overview/assets/index.ts',
       'java-runtime': './src/java-runtime/assets/index.ts',
       'getting-started': './src/getting-started/assets/index.ts',
-      'ext-guide': './src/ext-guide/assets/index.ts'
+      'ext-guide': './src/ext-guide/assets/index.ts',
+      welcome: './src/welcome/assets/index.ts',
     },
     module: {
       rules: [{
@@ -35,6 +36,12 @@ module.exports = function (env, argv) {
         }, {
           loader: 'sass-loader'
         }]
+      }, {
+        test: /\.(jpg|png|svg|ico|icns)$/,
+        loader: 'url-loader?limit=200000',
+        options: {
+          esModule: false
+        }
       }]
     },
     output: {
@@ -67,6 +74,12 @@ module.exports = function (env, argv) {
         template: 'src/ext-guide/assets/index.html',
         inlineSource: '.(js|css)$',
         chunks: ['ext-guide']
+      }),
+      new HtmlWebpackPlugin({
+        filename: path.resolve(__dirname, 'out/assets/welcome/index.html'),
+        template: 'src/welcome/assets/index.html',
+        inlineSource: '.(js|css)$',
+        chunks: ['welcome']
       }),
       new HtmlWebpackInlineSourcePlugin(),
     ],
