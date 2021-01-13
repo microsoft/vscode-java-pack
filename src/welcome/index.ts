@@ -11,7 +11,10 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext) {
         "java.welcome",
         "Welcome",
         vscode.ViewColumn.Beside,
-        {}
+        {
+            enableScripts: true,
+            enableCommandUris: true
+        }
     );
 
     panel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));

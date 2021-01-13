@@ -3,9 +3,9 @@
 
 import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";
-import * as $ from "jquery";
+const $ = require("jquery");
 
-$("#navigationPanel a").click(e => {
+$("#navigationPanel a").click((e: any) => {
   ($($(e.target).attr("href")||"") as any).tab("show");
 });
 
@@ -20,7 +20,7 @@ $(`[data-os=${osToHide}]`).hide();
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi && acquireVsCodeApi();
 
-$("a[data-toggle='tab']").on("shown.bs.tab", e => {
+$("a[data-toggle='tab']").on("shown.bs.tab", (e: any) => {
   vscode.postMessage({
     command: "tabActivated",
     tabId: e.target.id
@@ -31,7 +31,7 @@ $("a[data-toggle='tab']").on("shown.bs.tab", e => {
   updateSelection();
 });
 
-$("tr").hover(e => {
+$("tr").hover((e: any) => {
   const $chkBox = $(e.target).closest("tr").find("input[type='checkbox']");
   if ($chkBox.length === 0) {
     return;
@@ -65,11 +65,11 @@ function updateSelection() {
 
 $("input[type='checkbox']").change(updateSelection);
 
-function bsHide($elem: JQuery<HTMLElement>) {
+function bsHide($elem: any) {
   $elem.addClass("d-none");
 }
 
-function bsShow($elem: JQuery<HTMLElement>) {
+function bsShow($elem: any) {
   $elem.removeClass("d-none");
 }
 
@@ -80,7 +80,7 @@ window.addEventListener("message", event => {
 });
 
 function syncExtensionStatus(extensions: string[]) {
-  $("input[type='checkbox']").each((_i, elem) => {
+  $("input[type='checkbox']").each((_i: any, elem: any) => {
     const isInstalled = extensions.includes(<string>$(elem).val());
     $(elem).prop("disabled", isInstalled);
     $(elem).prop("checked", isInstalled);
@@ -90,7 +90,7 @@ function syncExtensionStatus(extensions: string[]) {
 function getSelectedExtension(isAll: boolean = false) {
   const $selected = isAll ? $("input:visible:enabled") : $("input:checked:visible:enabled");
   const selectedExtensions: string[] = [];
-  $selected.each((_i, elem) => { selectedExtensions.push(<string>$(elem).val()); });
+  $selected.each((_i: any, elem: any) => { selectedExtensions.push(<string>$(elem).val()); });
   return selectedExtensions;
 }
 

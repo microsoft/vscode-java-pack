@@ -3,9 +3,9 @@
 
 import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";
-import * as $ from "jquery";
+const $ = require("jquery");
 
-$("#navigationPanel a").click(e => {
+$("#navigationPanel a").click((e: any) => {
   ($($(e.target).attr("href")||"") as any).tab("show");
 });
 
@@ -20,7 +20,7 @@ $(`[data-os=${osToHide}]`).hide();
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi();
 
-$("a[data-toggle='tab']").on("shown.bs.tab", e => {
+$("a[data-toggle='tab']").on("shown.bs.tab", (e: any) => {
   vscode.postMessage({
     command: "tabActivated",
     tabId: e.target.id
