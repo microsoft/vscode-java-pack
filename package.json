@@ -48,6 +48,11 @@
   "contributes": {
     "commands": [
       {
+        "command": "java.welcome",
+        "category": "Java",
+        "title": "Welcome"
+      },
+      {
         "command": "java.overview",
         "title": "Java: Overview"
       },

@@ -13,6 +13,7 @@ import { showOverviewPageOnActivation } from "./overview";
 import { validateJavaRuntime } from "./java-runtime";
 // import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { scheduleAction } from "./utils/scheduler";
+import { showWelcomeWebview } from "./welcome";
 
 export async function activate(context: vscode.ExtensionContext) {
   initializeTelemetry(context);
@@ -50,6 +51,8 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
       vscode.commands.executeCommand("java.runtime");
     });
   }
+
+  context.subscriptions.push(vscode.commands.registerCommand("java.welcome", ()=>showWelcomeWebview(context)));
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
