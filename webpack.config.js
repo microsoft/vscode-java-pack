@@ -36,6 +36,12 @@ module.exports = function (env, argv) {
         }, {
           loader: 'sass-loader'
         }]
+      }, {
+        test: /\.(jpg|png|svg|ico|icns)$/,
+        loader: 'url-loader?limit=200000',
+        options: {
+          esModule: false
+        }
       }]
     },
     output: {

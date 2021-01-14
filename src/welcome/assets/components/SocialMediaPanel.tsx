@@ -1,17 +1,23 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import * as React from 'react';
+import { Icon } from '@iconify/react';
+import twitterIcon from '@iconify-icons/codicon/twitter';
+import githubIcon from '@iconify-icons/codicon/github-inverted';
 
 export default class SocialMediaPanel extends React.Component {
     render() {
-        const channels = [
-            { name: "code", link: "https://twitter.com/code" },
-            { name: "microsoft/vscode-java-pack", link: "https://github.com/microsoft/vscode-java-pack/issues" }
-        ];
-        const links = channels.map(channel => {
-            return <a href={channel.link} key={channel.link}>{channel.name}</a>;
-        });
         return (
             <div>
-                {links}
+                <div>
+                    <Icon icon={twitterIcon} className="mr-1"/>
+                    <a href="https://twitter.com/code">code</a>
+                </div>
+                <div>
+                    <Icon icon={githubIcon} className="mr-1"/>
+                    <a href="https://github.com/microsoft/vscode-java-pack/issues">microsoft/vscode-java-pack</a>
+                </div>
             </div>
         );
     }
