@@ -1,7 +1,11 @@
 {
     "compilerOptions": {
-      "baseUrl": ".",
-      "paths": { "*": ["types/*"] },
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "types/*"
+            ]
+        },
         "module": "commonjs",
         "target": "es6",
         "outDir": "out",
@@ -13,14 +17,18 @@
         "sourceMap": true,
         "rootDir": "src",
         /* Strict Type-Checking Option */
-        "strict": true,   /* enable all strict type-checking options */
+        "strict": true, /* enable all strict type-checking options */
         /* Additional Checks */
         "noUnusedLocals": true, /* Report errors on unused locals. */
         "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
         // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-        "noUnusedParameters": true,  /* Report errors on unused parameters. */
+        "noUnusedParameters": true, /* Report errors on unused parameters. */
         "skipLibCheck": true,
-        "jsx": "react"
+        "jsx": "react",
+        /* Enabled for React */
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "noImplicitThis": false /* disabled for jQuery */
     },
     "exclude": [
         "node_modules",

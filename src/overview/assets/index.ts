@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import $ = require("jquery");
+const $ = require("jquery");
 import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";
 
@@ -15,7 +15,7 @@ window.addEventListener("message", event => {
 });
 
 function syncExtensionVisibility(extensions: any) {
-  $("div[ext]").each((_index, elem) => {
+  $("div[ext]").each((_index: any, elem: any) => {
     const anchor = $(elem);
     const ext = (anchor.attr("ext") || "").toLowerCase();
     if (extensions.indexOf(ext) !== -1) {
@@ -27,7 +27,7 @@ function syncExtensionVisibility(extensions: any) {
 }
 
 function syncSectionVisibility() {
-  $("div h3").parent().each((_i, div) => {
+  $("div h3").parent().each((_i: any, div: any) => {
     if (!$(div).children("h3 ~ div").is(":visible")) {
       $(div).hide();
     } else {
@@ -59,7 +59,7 @@ $("div[ext] > a").click(function () {
   }
 });
 
-$("a[command]").click(function (event) {
+$("a[command]").click(function (event: any) {
   event.stopPropagation();
 
   const command = $(this).attr("command") || "";
