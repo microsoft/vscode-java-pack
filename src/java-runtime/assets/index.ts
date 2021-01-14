@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "bootstrap/js/src/tab";
-import * as $ from "jquery";
+const $ = require("jquery");
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import "../../assets/vscode.scss";
@@ -68,7 +68,7 @@ function render() {
   ReactDOM.render(React.createElement(JdkConfigurationPanel, props), document.getElementById("jdkConfigurationPanel"));
   ReactDOM.render(React.createElement(JdkInstallationPanel, props), document.getElementById("jdkInstallationPanel"));
 
-  $("a.navigation").click(e => {
+  $("a.navigation").click((e: any) => {
     ($($(e.target).attr("href") || "") as any).tab("show");
   });
 
