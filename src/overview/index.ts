@@ -10,7 +10,7 @@ import { getExtensionContext } from "../utils";
 import { loadTextFromFile } from "../utils";
 
 let overviewView: vscode.WebviewPanel | undefined;
-const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
+export const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
 const KEY_OVERVIEW_LAST_SHOW_TIME = "overviewLastShowTime";
 
 const toggleOverviewVisibilityOperation = instrumentOperation("toggleOverviewVisibility", (operationId: string, context: vscode.ExtensionContext, visibility: boolean) => {
@@ -94,7 +94,7 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
 export async function showOverviewPageOnActivation(context: vscode.ExtensionContext) {
   let showWhenUsingJava = context.globalState.get(KEY_SHOW_WHEN_USING_JAVA);
   if (showWhenUsingJava === undefined) {
-    showWhenUsingJava = true;
+    showWhenUsingJava = vscode.env.uiKind === vscode.UIKind.Desktop;
   }
 
   if (showWhenUsingJava) {
