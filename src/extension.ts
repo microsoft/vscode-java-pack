@@ -9,12 +9,13 @@ import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart, HelpViewType } from "./misc";
 import { initialize as initExp, getExpService } from "./exp";
-import { showOverviewPageOnActivation } from "./overview";
+import { KEY_SHOW_WHEN_USING_JAVA, showOverviewPageOnActivation } from "./overview";
 import { validateJavaRuntime } from "./java-runtime";
 // import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { scheduleAction } from "./utils/scheduler";
 
 export async function activate(context: vscode.ExtensionContext) {
+  syncState(context);
   initializeTelemetry(context);
   await instrumentOperation("activation", initializeExtension)(context);
 }
@@ -88,6 +89,10 @@ async function showGettingStartedView(context: vscode.ExtensionContext, _isForce
 
   await vscode.commands.executeCommand("java.gettingStarted");
   context.globalState.update("isGettingStartedPresented", true);
+}
+
+function syncState(_context: vscode.ExtensionContext): void {
+  _context.globalState.setKeysForSync([KEY_SHOW_WHEN_USING_JAVA]);
 }
 
 function initializeTelemetry(_context: vscode.ExtensionContext) {
