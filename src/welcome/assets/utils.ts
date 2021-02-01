@@ -9,7 +9,7 @@ export function encodeCommandUri(command: string, args?: string[]) {
   return ret;
 }
 
-export function encodeCommandUriWithTelemetry(identifier: string, command: string, args?: string[]) {
+export function encodeCommandUriWithTelemetry(identifier: string, command: string, args?: any[]) {
   const helperCommand = "java.webview.runCommand";
   const wrappedArgs = {
     webview: WEBVIEW_ID,
@@ -30,5 +30,12 @@ export function setWelcomeVisibility(visibility: boolean) {
   vscode.postMessage({
     command: "setWelcomeVisibility",
     visibility
+  });
+}
+
+export function showWelcomePage(tour?: boolean) {
+  vscode.postMessage({
+    command: "showWelcomePage",
+    firstTimeRun : tour
   });
 }

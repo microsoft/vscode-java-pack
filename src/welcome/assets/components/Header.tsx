@@ -11,7 +11,7 @@ export default class Header extends React.Component {
     const subtitle = <span>Check our {blogsLink} to see what's new</span>;
     return (
       <div className="header mt-4">
-        <img alt="logo" src={logo} ></img>
+        <img alt="logo" src={logo} className="logo"></img>
         <div>
           {title}
           {subtitle}

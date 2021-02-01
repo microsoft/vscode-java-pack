@@ -21,15 +21,15 @@ export default class QuickActionPanel extends React.Component {
         </span>;
         const actions = [
             { name: "Create a New Project", command: "java.project.create", element: newProjectElement },
-            { name: "Open an Existing Project", command: "workbench.action.files.openFolder", os: "win", element: existingProjectElement},
+            { name: "Open an Existing Project", command: "workbench.action.files.openFolder", os: "win", element: existingProjectElement },
             { name: "Open an Existing Project", command: "workbench.action.files.openFolder", os: "linux", element: existingProjectElement },
-            { name: "Open an Existing Project", command: "workbench.action.files.openFileFolder", os: "mac",  element: existingProjectElement },
-            { name: "Take a Tour", command: "#", element: tourElement }
+            { name: "Open an Existing Project", command: "workbench.action.files.openFileFolder", os: "mac", element: existingProjectElement },
+            { name: "Take a Tour", command: "java.welcome", args: [{ firstTimeRun: true }], element: tourElement }
         ];
         const actionItems = actions.filter(action => !action.os || supportedByNavigator(action.os)).map(action => (
             <ListGroup.Item
                 action
-                href={encodeCommandUriWithTelemetry(action.name, action.command)}
+                href={encodeCommandUriWithTelemetry(action.name, action.command, action.args)}
                 key={action.name}
             >{action.element}</ListGroup.Item>
         ));

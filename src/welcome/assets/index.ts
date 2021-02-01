@@ -9,7 +9,7 @@ import "./style.scss";
 
 window.addEventListener("message", event => {
     const {data} = event;
-    if (data.command === "initProps") {
+    if (data.command === "renderWelcomePage") {
         ReactDOM.render(React.createElement(GetStartedPage, data.props), document.getElementById("content"));
     }
   });

@@ -8,6 +8,7 @@ import Header from "./Header";
 import NavigationPanel from "./NavigationPanel";
 import QuickActionPanel from "./QuickActionPanel";
 import SocialMediaPanel from "./SocialMediaPanel";
+import TourPage from "./TourPage";
 
 export class GetStartedPage extends React.Component<{
     showWhenUsingJava: boolean,
@@ -61,6 +62,6 @@ export class GetStartedPage extends React.Component<{
     }
 
     renderTourPage() {
-        return <div>Tour page</div>;
+        return <TourPage></TourPage>;
     }
 }

@@ -43,7 +43,9 @@
     "onCommand:java.gettingStarted",
     "onWebviewPanel:java.gettingStarted",
     "onCommand:java.extGuide",
-    "onWebviewPanel:java.extGuide"
+    "onWebviewPanel:java.extGuide",
+    "onCommand:java.welcome",
+    "onWebviewPanel:java.welcome"
   ],
   "contributes": {
     "commands": [

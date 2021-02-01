@@ -9,9 +9,9 @@ export default class ControllerPanel extends React.Component<{
     showWhenUsingJava?: boolean;
 }> {
   render() {
-    const {showWhenUsingJava} = this.props;
+    let {showWhenUsingJava} = this.props;
     if (showWhenUsingJava === undefined) {
-      return (<div>loading...</div>);
+      showWhenUsingJava = true;
     }
 
     return <Form>
