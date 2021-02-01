@@ -9,9 +9,20 @@ import { instrumentSimpleOperation } from "vscode-extension-telemetry-wrapper";
 const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
 let welcomeView: vscode.WebviewPanel | undefined;
 
-export async function showWelcomeWebview(context: vscode.ExtensionContext) {
+export async function showWelcomeWebview(context: vscode.ExtensionContext, args?: any[]) {
     if (welcomeView) {
-        welcomeView.reveal();
+        const firstTimeRun = args![0]!.firstTimeRun;
+        if (firstTimeRun === undefined) {
+            welcomeView.reveal();
+        } else {
+            welcomeView.webview.postMessage({
+                command: "renderWelcomePage",
+                props: {
+                    showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
+                    firstTimeRun
+                }
+            });
+        }
         return;
     }
 
@@ -35,17 +46,32 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext) {
             case "setWelcomeVisibility":
                 setWelcomeVisibility(context, message.visibility);
                 break;
-
+            case "showWelcomePage":
+                if (welcomeView !== undefined) {
+                    welcomeView.webview.postMessage({
+                        command: "renderWelcomePage",
+                        props: {
+                            showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
+                            firstTimeRun: message.firstTimeRun
+                        }
+                    });
+                }
             default:
                 break;
         }
     })));
 
+    let firstTimeRun;
+    if (args && args[0] && args[0].firstTimeRun !== undefined) {
+        firstTimeRun = args[0].firstTimeRun;
+    } else {
+        firstTimeRun = true;
+    }
     welcomeView.webview.postMessage({
-        command: "initProps",
+        command: "renderWelcomePage",
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
-            firstTimeRun: false
+            firstTimeRun
         }
     });
 }
@@ -65,3 +91,4 @@ export async function showWelcomePageOnActivation(context: vscode.ExtensionConte
 const setWelcomeVisibility = instrumentSimpleOperation("setWelcomeVisibility", (context: vscode.ExtensionContext, visibility: boolean) => {
     context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, visibility);
 });
+

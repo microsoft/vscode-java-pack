@@ -66,22 +66,42 @@ svg.codicon {
   a:hover {
     color: var(--vscode-editor-foreground);
   }
+
+  .page-indicator .dot {
+    height: 10px;
+    width: 10px;
+    background-color: var(--vscode-panelTitle-inactiveForeground);
+    border-radius: 50%;
+    display: inline-block;
+    margin: 5px;
+
+    &.active {
+      background-color: var(--vscode-textLink-activeForeground);
+    }
+  } 
+    
+
+  
 }
 
 
+$logo-size: 50px;
+img.logo {
+  width: $logo-size;
+  height: $logo-size;
+  min-width: $logo-size;
+  max-width: $logo-size;
+}
+
 div.header {
   display: flex;
-  $logo-size: 50px;
-  img {
-    width: $logo-size;
-    height: $logo-size;
-    min-width: $logo-size;
-    max-width: $logo-size;
-    margin-right: 14px;
-  }
 
   h2 {
     margin-bottom: 0px;
+  }
+
+  img.logo {
+    margin-right: 14px;
   }
 }
 
@@ -98,4 +118,11 @@ div.quick-actions {
     }
   }
   
+}
+
+div.page-content {
+  img, div {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
 }

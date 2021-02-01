@@ -53,7 +53,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
     });
   }
 
-  context.subscriptions.push(vscode.commands.registerCommand("java.welcome", () => showWelcomeWebview(context)));
+  context.subscriptions.push(vscode.commands.registerCommand("java.welcome", (args) => showWelcomeWebview(context, args)));
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
