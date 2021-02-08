@@ -3,12 +3,13 @@
 
 import * as vscode from "vscode";
 
-import { instrumentCommand } from "../utils";
+import { instrumentCommand, webviewCmdLinkHandler } from "../utils";
 import { createMavenProjectCmdHandler, createSpringBootProjectCmdHandler, createQuarkusProjectCmdHandler, createMicroProfileStarterProjectCmdHandler, showExtensionCmdHandler, openUrlCmdHandler, showReleaseNotesHandler, installExtensionCmdHandler } from "./handler";
 import { overviewCmdHandler } from "../overview";
 import { javaRuntimeCmdHandler } from "../java-runtime";
 import { javaGettingStartedCmdHandler } from "../getting-started";
 import { javaExtGuideCmdHandler } from "../ext-guide";
+import { instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
 
 export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.overview", instrumentCommand(context, "java.overview", instrumentCommand(context, "java.helper.overview", overviewCmdHandler))));
@@ -23,4 +24,5 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.helper.installExtension", instrumentCommand(context, "java.helper.installExtension", installExtensionCmdHandler)));
   context.subscriptions.push(vscode.commands.registerCommand("java.gettingStarted", instrumentCommand(context, "java.gettingStarted", javaGettingStartedCmdHandler)));
   context.subscriptions.push(vscode.commands.registerCommand("java.extGuide", instrumentCommand(context, "java.extGuide", javaExtGuideCmdHandler)));
+  context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.webview.runCommand", webviewCmdLinkHandler));
 }

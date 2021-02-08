@@ -1,0 +1,129 @@
+@import "../../assets/vscode.scss";
+
+// Custom styles dedicated to this webview:
+$nav-tabs-link-active-color: var(--vscode-panelTitle-activeForeground);
+$nav-tabs-link-active-bg: transparent;
+$nav-tabs-link-active-border-color: transparent;
+$nav-tabs-link-hover-border-color: transparent;
+$nav-tabs-border-color: transparent;
+@import "~bootstrap/scss/bootstrap";
+
+.nav-link,
+.nav-link:hover {
+  color: var(--vscode-panelTitle-inactiveForeground);
+  text-transform: uppercase;
+}
+
+.nav-tabs a:hover div,
+.nav-tabs a.active div {
+  border-color: transparent transparent var(--vscode-panelTitle-activeBorder)
+    transparent;
+}
+
+.nav-tabs a div {
+  border: solid 1px;
+  padding-bottom: 8px;
+  border-color: transparent;
+}
+
+.navigation-tab {
+  padding: 8px 0px 4px 0px;
+  margin-right: 20px;
+}
+
+.navigation-tabcontent {
+  padding: 24px 0px 0px 0px;
+}
+
+.tab-content a {
+  &:hover {
+    color: var(--vscode-panelTitle-activeForeground);
+  }
+  color: var(--vscode-foreground);
+  width: fit-content;
+
+  svg.codicon {
+    margin-right: 0.5em;
+  }
+}
+
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 400px;
+}
+
+svg.codicon {
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.footer {
+  margin-top: auto;
+
+  a,
+  a:hover {
+    color: var(--vscode-editor-foreground);
+  }
+
+  .page-indicator .dot {
+    height: 10px;
+    width: 10px;
+    background-color: var(--vscode-panelTitle-inactiveForeground);
+    border-radius: 50%;
+    display: inline-block;
+    margin: 5px;
+    cursor: pointer;
+  
+    &.active {
+      background-color: var(--vscode-textLink-activeForeground);
+    }
+  } 
+    
+
+  
+}
+
+
+$logo-size: 50px;
+img.logo {
+  width: $logo-size;
+  height: $logo-size;
+  min-width: $logo-size;
+  max-width: $logo-size;
+}
+
+div.header {
+  display: flex;
+
+  h2 {
+    margin-bottom: 0px;
+  }
+
+  img.logo {
+    margin-right: 14px;
+  }
+}
+
+.list-group a {
+  margin-bottom: 12px;
+}
+
+div.quick-actions {
+  a {
+    color: var(--vscode-descriptionForeground);
+  
+    span.highlight {
+      color: var(--vscode-foreground);
+    }
+  }
+  
+}
+
+div.page-content {
+  img, div {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+}

@@ -6,6 +6,7 @@ import { readFile as fsReadFile } from "fs";
 import * as util from "util";
 import { initialize as initializeIdle } from "./idle";
 import { initialize as initializeScheduler } from "./scheduler";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
 
 const readFile = util.promisify(fsReadFile);
 
@@ -21,7 +22,7 @@ export function getExtensionContext() {
   return extensionContext;
 }
 
-export function isExtensionInstalled( extName: string) {
+export function isExtensionInstalled(extName: string) {
   return !!vscode.extensions.getExtension(extName);
 }
 
@@ -49,3 +50,13 @@ export async function loadTextFromFile(resourceUri: string) {
 export * from "./command";
 export * from "./release-notes";
 export * from "./extension";
+
+export async function webviewCmdLinkHandler(obj: { webview: string, identifier: string, command: string, args?: string[] }) {
+  const { webview, identifier, command, args } = obj;
+  sendInfo("", {
+    name: "openWebviewUrl",
+    webview,
+    identifier
+  });
+  await vscode.commands.executeCommand(command, args);
+}
