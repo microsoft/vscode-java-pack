@@ -17,35 +17,48 @@ export default class TourPage extends Component<{
         this.state = {
             step: 0
         };
+
+        this.steps = [
+            this.getStartingPage(),
+            ...this.getContentPages(),
+            this.getEndingPage()
+        ];
+
+        this.timer = undefined;
     }
 
+    private steps: JSX.Element[];
+    // auto navigate to welcome page in last step
+    private timer: number | undefined;
+
     render() {
-        const startPage = this.getStartingPage();
-        const endPage = this.getEndingPage();
-        const contentPages = this.getContentPages();
-        const steps = [
-            startPage,
-            ...contentPages,
-            endPage
-        ]
         const { step } = this.state;
 
-        if (step >= steps.length) {
+        if (this.timer !== undefined) {
+            clearTimeout(this.timer);
+        }
+
+        if (step >= this.steps.length) {
             showWelcomePage(false);
             return <div>Loading...</div>;
+        } else if (step === this.steps.length - 1) {
+            this.timer = setTimeout(() => {
+                showWelcomePage(false);
+            }, 5000);
         }
+
         return (
             <Container fluid className="root">
                 <Row className="mb-4 mt-5">
                     <Col className="text-center page-content">
-                        {steps[step]}
+                        {this.steps[step]}
 
                     </Col>
                 </Row>
                 <Row className="mb-4 footer">
                     <Col>
                         <div className="page-indicator text-center">
-                            {steps.map((_elem, index) =>
+                            {this.steps.map((_elem, index) =>
                                 <span key={index} className={index === step ? "active dot" : "dot"} onClick={() => this.showStep(index)}></span>
                             )}
                         </div>
@@ -120,7 +133,6 @@ export default class TourPage extends Component<{
             <img src={doneIcon} alt="logo" className="logo"></img>
             <h2>You’re good to go!</h2>
             <div>Next, start using Java!</div>
-            {/* TODO: auto navigate to next page, in case users don't click below button */}
             <div><Button onClick={this.nextStep}>What's next?</Button></div>
         </div>;
     }
