@@ -74,7 +74,8 @@ svg.codicon {
     border-radius: 50%;
     display: inline-block;
     margin: 5px;
-
+    cursor: pointer;
+  
     &.active {
       background-color: var(--vscode-textLink-activeForeground);
     }

@@ -46,13 +46,19 @@ export default class TourPage extends Component<{
                     <Col>
                         <div className="page-indicator text-center">
                             {steps.map((_elem, index) =>
-                                <span key={index} className={index === step ? "active dot" : "dot"}></span>
+                                <span key={index} className={index === step ? "active dot" : "dot"} onClick={() => this.showStep(index)}></span>
                             )}
                         </div>
                     </Col>
                 </Row>
             </Container>
         )
+    }
+
+    showStep = (newStep: number) => {
+        this.setState({
+            step: newStep
+        })
     }
 
     nextStep = () => {
@@ -114,7 +120,8 @@ export default class TourPage extends Component<{
             <img src={doneIcon} alt="logo" className="logo"></img>
             <h2>You’re good to go!</h2>
             <div>Next, start using Java!</div>
-            <div><Button onClick={this.nextStep}>What next?</Button></div>
+            {/* TODO: auto navigate to next page, in case users don't click below button */}
+            <div><Button onClick={this.nextStep}>What's next?</Button></div>
         </div>;
     }
 }

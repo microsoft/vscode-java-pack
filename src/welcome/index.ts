@@ -11,7 +11,7 @@ let welcomeView: vscode.WebviewPanel | undefined;
 
 export async function showWelcomeWebview(context: vscode.ExtensionContext, args?: any[]) {
     if (welcomeView) {
-        const firstTimeRun = args![0]!.firstTimeRun;
+        const firstTimeRun = args?.[0]?.firstTimeRun;
         if (firstTimeRun === undefined) {
             welcomeView.reveal();
         } else {
@@ -62,7 +62,7 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, args?
     })));
 
     let firstTimeRun;
-    if (args && args[0] && args[0].firstTimeRun !== undefined) {
+    if (args?.[0]?.firstTimeRun) {
         firstTimeRun = args[0].firstTimeRun;
     } else {
         firstTimeRun = true;
