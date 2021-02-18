@@ -47,7 +47,9 @@
     "onCommand:java.welcome",
     "onWebviewPanel:java.welcome",
     "onCommand:java.classpathConfiguration",
-    "onWebviewPanel:java.classpathConfiguration"
+    "onWebviewPanel:java.classpathConfiguration",
+    "onCommand:java.formatterSettings",
+    "onWebviewPanel:java.formatterSettings"
   ],
   "contributes": {
     "commands": [
@@ -85,6 +87,10 @@
         "command": "java.extGuide",
         "category": "Java",
         "title": "Extension Guide"
+      },
+      {
+        "command": "java.formatterSettings",
+        "title": "Java: Formatter Settings Page"
       }
     ],
     "configuration": {
@@ -99,6 +105,7 @@
             "overview",
             "gettingStarted",
             "welcome",
+            "formatterSettings",
             "none"
           ],
           "enumDescriptions": [
@@ -106,6 +113,7 @@
             "Present the Java Overview page",
             "Present the Java Getting Started page",
             "Present the Java Welcome page",
+            "Present the Java Formatter Settings page",
             "Do not show any view"
           ],
           "default": "auto",
@@ -128,7 +136,19 @@
           "when": "view == javaProjectExplorer"
         }
       ]
-    }
+    },
+    "customEditors": [
+      {
+        "viewType": "java.formatterSettingsEditor",
+        "displayName": "Java Formatter Settings Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.xml"
+          }
+        ],
+        "priority": "option"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
@@ -154,14 +174,20 @@
     "@types/semver": "^5.5.0",
     "@types/vscode": "1.52.0",
     "@types/winreg": "^1.2.30",
+    "@types/xml2js": "^0.4.8",
+    "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
     "arch": "^2.1.2",
     "autoprefixer": "^8.5.1",
     "bootstrap": "^4.5.2",
     "bytes": "^3.1.0",
     "css-loader": "^3.6.0",
+    "eslint": "^7.22.0",
+    "eslint-plugin-react": "^7.23.1",
     "expand-tilde": "^2.0.2",
     "file-loader": "^6.2.0",
     "find-java-home": "^1.1.0",
+    "highlight.js": "10.5.0",
     "html-webpack-inline-source-plugin": "0.0.10",
     "html-webpack-plugin": "^3.2.0",
     "jquery": "^3.5.1",
@@ -180,12 +206,12 @@
     "sass-loader": "^7.3.1",
     "style-loader": "^0.21.0",
     "ts-loader": "^4.3.0",
-    "tslint": "^5.20.1",
     "typescript": "^3.7.5",
     "url-loader": "^4.1.1",
     "vscode-tas-client": "^0.1.22",
     "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12"
+    "webpack-cli": "^3.3.12",
+    "xml2js": "^0.4.23"
   },
   "extensionPack": [
     "redhat.java",
@@ -202,6 +228,7 @@
     "fs-extra": "^9.0.1",
     "semver": "^5.7.1",
     "vscode-extension-telemetry-wrapper": "^0.9.0",
+    "vscode-languageclient": "^7.0.0",
     "winreg-utf8": "^0.1.1"
   }
 }
