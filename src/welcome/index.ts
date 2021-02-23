@@ -7,6 +7,7 @@ import { loadTextFromFile } from "../utils";
 import { instrumentSimpleOperation } from "vscode-extension-telemetry-wrapper";
 
 const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
+const KEY_IS_WELCOME_PAGE_VIEWED = "isWelcomePageViewed";
 let welcomeView: vscode.WebviewPanel | undefined;
 
 export async function showWelcomeWebview(context: vscode.ExtensionContext, args?: any[]) {
@@ -61,12 +62,7 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, args?
         }
     })));
 
-    let firstTimeRun;
-    if (args?.[0]?.firstTimeRun) {
-        firstTimeRun = args[0].firstTimeRun;
-    } else {
-        firstTimeRun = true;
-    }
+    let firstTimeRun = args?.[0]?.firstTimeRun || context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true;
     welcomeView.webview.postMessage({
         command: "renderWelcomePage",
         props: {
@@ -74,6 +70,7 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, args?
             firstTimeRun
         }
     });
+    context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, true);
 }
 
 export async function showWelcomePageOnActivation(context: vscode.ExtensionContext) {
