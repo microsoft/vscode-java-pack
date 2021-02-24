@@ -20,6 +20,14 @@ export function encodeCommandUriWithTelemetry(identifier: string, command: strin
   return `command:${helperCommand}?${encodeURIComponent(JSON.stringify(wrappedArgs))}`;
 }
 
+/**
+ * Check if navigator.platform matches os.
+ * @param os "win", "linux", "mac"
+ */
+export function supportedByNavigator(os: string): boolean {
+  return navigator.platform.toLowerCase().indexOf(os.toLowerCase()) === 0;
+}
+
 export const WEBVIEW_ID: string = "java.welcome";
 
 // RPC calls to VS Code

@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { ListGroup } from "react-bootstrap";
-import { encodeCommandUriWithTelemetry } from "../utils";
+import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../utils";
 
 export default class QuickActionPanel extends React.Component {
     render() {
@@ -42,8 +42,4 @@ export default class QuickActionPanel extends React.Component {
             </div>
         );
     }
-}
-
-function supportedByNavigator(os: string): boolean {
-    return navigator.platform.toLowerCase().indexOf(os.toLowerCase()) === 0;
 }

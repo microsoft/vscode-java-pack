@@ -75,16 +75,12 @@ svg.codicon {
     display: inline-block;
     margin: 5px;
     cursor: pointer;
-  
+
     &.active {
       background-color: var(--vscode-textLink-activeForeground);
     }
-  } 
-    
-
-  
+  }
 }
-
 
 $logo-size: 50px;
 img.logo {
@@ -113,17 +109,22 @@ div.header {
 div.quick-actions {
   a {
     color: var(--vscode-descriptionForeground);
-  
+
     span.highlight {
       color: var(--vscode-foreground);
     }
   }
-  
 }
 
 div.page-content {
-  img, div {
+  img,
+  div {
     margin-top: 20px;
     margin-bottom: 20px;
+  }
+
+  img.screenshot {
+    width: 360px;
+    height: 270px;
   }
 }
