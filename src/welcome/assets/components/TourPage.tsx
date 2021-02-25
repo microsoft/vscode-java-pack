@@ -8,6 +8,8 @@ import { encodeCommandUriWithTelemetry, showWelcomePage, supportedByNavigator } 
 const logoIcon = require("../../../../logo.png");
 const doneIcon = require("../resources/done.svg");
 
+declare function setTimeout(handler: TimerHandler, timeout?: number, ...arguments: any[]): number;
+
 export default class TourPage extends Component<{
 }, {
     step: number
@@ -108,12 +110,12 @@ export default class TourPage extends Component<{
         },
         {
             title: "Running and Debugging",
-            description: <div>Use the <a href={showRunAndDebugViewCommand}>Run and Debug view</a> to start your project.</div>,
+            description: <div>Open <a href={showRunAndDebugViewCommand}>Run and Debug View</a> to start your project.</div>,
             imageUri: require("../resources/debugger.png")
         },
         {
             title: "Testing",
-            description: <div>Use the <a href={showTestExplorerViewCommand}>Testing view</a> to run unit tests.</div>,
+            description: <div>Use <a href={showTestExplorerViewCommand}>Testing View</a> to run unit tests.</div>,
             imageUri: require("../resources/testing.png")
         }];
 
@@ -130,7 +132,7 @@ export default class TourPage extends Component<{
         return <div>
             <img src={logoIcon} alt="logo" className="logo"/>
             <h2>Welcome to use Java Tools</h2>
-            <div>a lightweight and performant code editor that also supports many of the most common Java development techniques.</div>
+            <div>lightweight, performant, powerful.</div>
             <div><Button onClick={this.nextStep}>Get Started</Button></div>
             <div><a href="#" onClick={() => showWelcomePage(false)}>skip</a></div>
         </div>;
