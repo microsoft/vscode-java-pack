@@ -73,18 +73,6 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, args?
     context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, true);
 }
 
-export async function showWelcomePageOnActivation(context: vscode.ExtensionContext) {
-    let showWhenUsingJava = context.globalState.get(KEY_SHOW_WHEN_USING_JAVA);
-    if (showWhenUsingJava === undefined) {
-        showWhenUsingJava = true;
-    }
-
-    if (showWhenUsingJava) {
-        vscode.commands.executeCommand("java.welcome");
-    }
-
-}
-
 const setWelcomeVisibility = instrumentSimpleOperation("setWelcomeVisibility", (context: vscode.ExtensionContext, visibility: boolean) => {
     context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, visibility);
 });
