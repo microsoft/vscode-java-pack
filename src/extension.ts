@@ -13,7 +13,7 @@ import { KEY_SHOW_WHEN_USING_JAVA, showOverviewPageOnActivation } from "./overvi
 import { validateJavaRuntime } from "./java-runtime";
 // import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { scheduleAction } from "./utils/scheduler";
-import { showWelcomeWebview, showWelcomePageOnActivation } from "./welcome";
+import { showWelcomeWebview } from "./welcome";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -36,9 +36,16 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   const config = vscode.workspace.getConfiguration("java.help");
 
   if (config.get("firstView") !== HelpViewType.None) {
-    scheduleAction("showFirstView", true).then(() => {
-      presentFirstView(context);
-    });
+    let showWhenUsingJava = context.globalState.get(KEY_SHOW_WHEN_USING_JAVA);
+    if (showWhenUsingJava === undefined) {
+      showWhenUsingJava = vscode.env.uiKind === vscode.UIKind.Desktop;
+    }
+
+    if (showWhenUsingJava) {
+      scheduleAction("showFirstView", true).then(() => {
+        presentFirstView(context);
+      });
+    }
   }
 
   if (config.get("showReleaseNotes")) {
@@ -53,7 +60,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
     });
   }
 
-  context.subscriptions.push(vscode.commands.registerCommand("java.welcome", (args) => showWelcomeWebview(context, args)));
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
@@ -75,7 +81,7 @@ async function presentFirstView(context: vscode.ExtensionContext) {
       await showOverviewPageOnActivation(context);
       break;
     default:
-      await showWelcomePageOnActivation(context);
+      await showWelcomeWebview(context);
   }
 }
 

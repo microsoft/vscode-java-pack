@@ -92,16 +92,9 @@ async function initializeOverviewView(context: vscode.ExtensionContext, webviewP
 }
 
 export async function showOverviewPageOnActivation(context: vscode.ExtensionContext) {
-  let showWhenUsingJava = context.globalState.get(KEY_SHOW_WHEN_USING_JAVA);
-  if (showWhenUsingJava === undefined) {
-    showWhenUsingJava = vscode.env.uiKind === vscode.UIKind.Desktop;
-  }
-
-  if (showWhenUsingJava) {
     let overviewLastShowTime = context.globalState.get(KEY_OVERVIEW_LAST_SHOW_TIME);
     let showInBackground = overviewLastShowTime !== undefined;
     vscode.commands.executeCommand("java.overview", showInBackground);
-  }
 }
 
 export class OverviewViewSerializer implements vscode.WebviewPanelSerializer {
