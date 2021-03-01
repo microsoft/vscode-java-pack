@@ -12,7 +12,7 @@ import { initialize as initExp, getExpService } from "./exp";
 import { KEY_SHOW_WHEN_USING_JAVA, OverviewViewSerializer, showOverviewPageOnActivation } from "./overview";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { scheduleAction } from "./utils/scheduler";
-import { showWelcomeWebview } from "./welcome";
+import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
 
@@ -34,6 +34,8 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.welcome", new WelcomeViewSerializer()));
+
   const config = vscode.workspace.getConfiguration("java.help");
 
   if (config.get("firstView") !== HelpViewType.None) {
