@@ -9,11 +9,12 @@ import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { initialize as initMisc, showReleaseNotesOnStart, HelpViewType } from "./misc";
 import { initialize as initExp, getExpService } from "./exp";
-import { KEY_SHOW_WHEN_USING_JAVA, showOverviewPageOnActivation } from "./overview";
-import { validateJavaRuntime } from "./java-runtime";
-// import { JavaGettingStartedViewSerializer } from "./getting-started";
+import { KEY_SHOW_WHEN_USING_JAVA, OverviewViewSerializer, showOverviewPageOnActivation } from "./overview";
+import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview } from "./welcome";
+import { JavaGettingStartedViewSerializer } from "./getting-started";
+import { JavaExtGuideViewSerializer } from "./ext-guide";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -28,11 +29,11 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initMisc(context);
   initExp(context);
 
-  // disable webview serializer because of https://github.com/microsoft/vscode/issues/80185
-  // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
-  // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
-  // context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
-
+  // webview serializers to restore pages
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.extGuide", new JavaExtGuideViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
   const config = vscode.workspace.getConfiguration("java.help");
 
   if (config.get("firstView") !== HelpViewType.None) {
