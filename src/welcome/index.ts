@@ -3,7 +3,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { loadTextFromFile } from "../utils";
+import { getExtensionContext, loadTextFromFile } from "../utils";
 import { instrumentSimpleOperation } from "vscode-extension-telemetry-wrapper";
 
 const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
@@ -37,19 +37,27 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, args?
             retainContextWhenHidden: true
         }
     );
+    let firstTimeRun = args?.[0]?.firstTimeRun || context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true;
+    await initializeWelcomeView(context, welcomeView, firstTimeRun, onDidDisposeWebviewPanel);
+}
 
-    welcomeView.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
+function onDidDisposeWebviewPanel() {
+    welcomeView = undefined;
+}
+
+async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, firstTimeRun: boolean, onDisposeCallback: () => void) {
+    webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
     const resourceUri = context.asAbsolutePath("./out/assets/welcome/index.html");
-    welcomeView.webview.html = await loadTextFromFile(resourceUri);
-    context.subscriptions.push(welcomeView.onDidDispose(_e => welcomeView = undefined));
-    context.subscriptions.push(welcomeView.webview.onDidReceiveMessage((message => {
+    webviewPanel.webview.html = await loadTextFromFile(resourceUri);
+    context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
+    context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage((message => {
         switch (message.command) {
             case "setWelcomeVisibility":
                 setWelcomeVisibility(context, message.visibility);
                 break;
             case "showWelcomePage":
-                if (welcomeView !== undefined) {
-                    welcomeView.webview.postMessage({
+                if (webviewPanel !== undefined) {
+                    webviewPanel.webview.postMessage({
                         command: "renderWelcomePage",
                         props: {
                             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
@@ -62,8 +70,7 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, args?
         }
     })));
 
-    let firstTimeRun = args?.[0]?.firstTimeRun || context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true;
-    welcomeView.webview.postMessage({
+    webviewPanel.webview.postMessage({
         command: "renderWelcomePage",
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
@@ -77,3 +84,16 @@ const setWelcomeVisibility = instrumentSimpleOperation("setWelcomeVisibility", (
     context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, visibility);
 });
 
+export class WelcomeViewSerializer implements vscode.WebviewPanelSerializer {
+    async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, _state: any) {
+      if (welcomeView) {
+        welcomeView.reveal();
+        webviewPanel.dispose();
+        return;
+      }
+  
+      welcomeView = webviewPanel;
+      initializeWelcomeView(getExtensionContext(), webviewPanel, false, onDidDisposeWebviewPanel);
+    }
+  }
+  
