@@ -5,7 +5,7 @@ import React, { Component } from "react";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import { encodeCommandUriWithTelemetry, showWelcomePage, supportedByNavigator } from "../utils";
 
-const logoIcon = require("../../../../logo.png");
+const logoIcon = require("../../../../logo.svg");
 const doneIcon = require("../resources/done.svg");
 
 declare function setTimeout(handler: TimerHandler, timeout?: number, ...arguments: any[]): number;

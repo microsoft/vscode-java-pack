@@ -46,7 +46,7 @@ function onDidDisposeWebviewPanel() {
 }
 
 async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, firstTimeRun: boolean, onDisposeCallback: () => void) {
-    webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
+    webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.svg"));
     const resourceUri = context.asAbsolutePath("./out/assets/welcome/index.html");
     webviewPanel.webview.html = await loadTextFromFile(resourceUri);
     context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));

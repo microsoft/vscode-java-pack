@@ -38,7 +38,7 @@ function onDidDisposeWebviewPanel() {
 }
 
 async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
-  webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
+  webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.svg"));
   const resourceUri = context.asAbsolutePath("./out/assets/java-runtime/index.html");
   webviewPanel.webview.html = await loadTextFromFile(resourceUri);
 
