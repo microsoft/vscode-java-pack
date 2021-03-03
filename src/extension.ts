@@ -66,6 +66,12 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
+  const presentWelcomePageByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentWelcomePageByDefault") || false;
+  if (presentWelcomePageByDefault) {
+    await showWelcomeWebview(context);
+    return;
+  }
+
   const presentExtensionGuideByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentExtensionGuideByDefault") || false;
   if (presentExtensionGuideByDefault) {
     showExtensionGuide(context);
