@@ -45,7 +45,7 @@ function onDidDisposeWebviewPanel() {
 }
 
 async function initializeJavaGettingStartedView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void, operationId: string) {
-  webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.lowres.png"));
+  webviewPanel.iconPath = vscode.Uri.file(path.join(context.extensionPath, "logo.svg"));
   const resourceUri = context.asAbsolutePath("./out/assets/getting-started/index.html");
   webviewPanel.webview.html = await loadTextFromFile(resourceUri);
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));

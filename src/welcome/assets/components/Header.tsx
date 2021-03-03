@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as React from "react";
-const logo = require("../../../../logo.png");
+const logo = require("../../../../logo.svg");
 
 export default class Header extends React.Component {
   render() {
