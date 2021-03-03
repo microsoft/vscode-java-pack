@@ -47,3 +47,14 @@ export function showWelcomePage(tour?: boolean) {
     firstTimeRun : tour
   });
 }
+
+export function reportTabSwitch(from: string, to: string) {
+  vscode.postMessage({
+    command: "sendInfo",
+    data: {
+      name: "switchTabs",
+      from,
+      to
+    }
+  });
+}

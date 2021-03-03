@@ -97,7 +97,6 @@ export default class TourPage extends Component<{
         const showRunAndDebugViewCommand: string = encodeCommandUriWithTelemetry("show run and debug view", "workbench.view.debug");
         const showTestExplorerViewCommand: string = encodeCommandUriWithTelemetry("show test explorer", "testExplorer.focus");
 
-        // TODO: images are blank now
         const content = [{
             title: "Open Project Folder",
             description: <div><a href={openFolderCommand}>Open a folder</a> containing your Java project for full features.</div>,

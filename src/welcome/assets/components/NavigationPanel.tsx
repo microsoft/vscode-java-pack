@@ -10,42 +10,44 @@ import globeIcon from "@iconify-icons/codicon/globe";
 import mortarBoardIcon from "@iconify-icons/codicon/mortar-board";
 import rocketIcon from "@iconify-icons/codicon/rocket";
 import { ListGroup } from "react-bootstrap";
-import { encodeCommandUriWithTelemetry } from "../utils";
+import { encodeCommandUriWithTelemetry, reportTabSwitch } from "../utils";
 
 export default class NavigationPanel extends React.Component {
-  render() {
-    const groups = [
-      {
-        name: "Configuration",
-        icon: <Icon className="codicon" icon={gearIcon} />,
-        actions: [
-          { name: "Configure Java Runtime", command: "java.runtime"},
-          { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] },
-          { name: "Open Extension Guide", command: "java.extGuide" }
-        ]
-      },
-      {
-        name: "Spring",
-        icon: <Icon className="codicon" icon={globeIcon} />,
-        actions: [
-          { name: "Spring Boot with VS Code", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-spring-boot"] },
-          { name: "Spring PetClinic Sample Application", command: "java.helper.openUrl", args: ["https://github.com/spring-projects/spring-petclinic"] },
-          { name: "Install Spring Boot Extension Pack ...", command: "java.helper.installExtension", args: ["pivotal.vscode-boot-dev-pack", "Spring Boot Extension Pack"] }
-        ]
-      },
-      {
-        name: "Student",
-        icon: <Icon className="codicon" icon={mortarBoardIcon} />,
-        actions: [
-          { name: "Getting Started", command: "java.gettingStarted" },
-          { name: "Tutorial: Running and Debugging", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-debugging"] },
-          { name: "Tutorial: Testing", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] }
-        ]
-      },
-    ];
+  private groups = [
+    {
+      name: "Configuration",
+      icon: <Icon className="codicon" icon={gearIcon} />,
+      actions: [
+        { name: "Configure Java Runtime", command: "java.runtime" },
+        { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] },
+        { name: "Open Extension Guide", command: "java.extGuide" }
+      ]
+    },
+    {
+      name: "Spring",
+      icon: <Icon className="codicon" icon={globeIcon} />,
+      actions: [
+        { name: "Spring Boot with VS Code", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-spring-boot"] },
+        { name: "Spring PetClinic Sample Application", command: "java.helper.openUrl", args: ["https://github.com/spring-projects/spring-petclinic"] },
+        { name: "Install Spring Boot Extension Pack ...", command: "java.helper.installExtension", args: ["pivotal.vscode-boot-dev-pack", "Spring Boot Extension Pack"] }
+      ]
+    },
+    {
+      name: "Student",
+      icon: <Icon className="codicon" icon={mortarBoardIcon} />,
+      actions: [
+        { name: "Getting Started", command: "java.gettingStarted" },
+        { name: "Tutorial: Running and Debugging", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-debugging"] },
+        { name: "Tutorial: Testing", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] }
+      ]
+    },
+  ];
 
+  private currentTab: string = this.groups[0].name;
+
+  render() {
     const itemIcon = <Icon className="codicon" icon={rocketIcon} />;
-    const tabItems = groups.map(group => {
+    const tabItems = this.groups.map(group => {
       const actionItems = group.actions.map(action => (
         <a
           href={encodeCommandUriWithTelemetry(action.name, action.command, action.args)}
@@ -63,10 +65,17 @@ export default class NavigationPanel extends React.Component {
     });
 
     return (
-      <Tabs defaultActiveKey={groups[0].name} id="navigationPanel">
+      <Tabs defaultActiveKey={this.currentTab} id="navigationPanel" onSelect={this.onSwitchTab}>
         {tabItems}
       </Tabs>
     );
   }
-}
 
+  onSwitchTab = (eventKey: string | null, _e: React.SyntheticEvent<unknown>) => {
+    if (eventKey) {
+      reportTabSwitch(this.currentTab, eventKey);
+      this.currentTab = eventKey;
+    }
+  }
+
+}

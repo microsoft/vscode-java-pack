@@ -4,7 +4,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { getExtensionContext, loadTextFromFile } from "../utils";
-import { instrumentSimpleOperation } from "vscode-extension-telemetry-wrapper";
+import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 
 const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
 const KEY_IS_WELCOME_PAGE_VIEWED = "isWelcomePageViewed";
@@ -65,6 +65,8 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
                         }
                     });
                 }
+            case "sendInfo":
+                sendInfo("", message.data);
             default:
                 break;
         }
