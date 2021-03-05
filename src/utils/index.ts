@@ -58,5 +58,10 @@ export async function webviewCmdLinkHandler(obj: { webview: string, identifier: 
     webview,
     identifier
   });
-  await vscode.commands.executeCommand(command, args);
+
+  if (args !== undefined) {
+    await vscode.commands.executeCommand(command, ...args);
+  } else {
+    await vscode.commands.executeCommand(command);
+  }
 }

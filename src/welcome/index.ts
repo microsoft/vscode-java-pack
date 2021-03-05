@@ -10,9 +10,9 @@ const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
 const KEY_IS_WELCOME_PAGE_VIEWED = "isWelcomePageViewed";
 let welcomeView: vscode.WebviewPanel | undefined;
 
-export async function showWelcomeWebview(context: vscode.ExtensionContext, args?: any[]) {
+export async function showWelcomeWebview(context: vscode.ExtensionContext, options?: any) {
     if (welcomeView) {
-        const firstTimeRun = args?.[0]?.firstTimeRun;
+        const firstTimeRun = options?.firstTimeRun;
         if (firstTimeRun === undefined) {
             welcomeView.reveal();
         } else {
@@ -37,7 +37,7 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, args?
             retainContextWhenHidden: true
         }
     );
-    let firstTimeRun = args?.[0]?.firstTimeRun || context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true;
+    let firstTimeRun = options?.firstTimeRun || context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true;
     await initializeWelcomeView(context, welcomeView, firstTimeRun, onDidDisposeWebviewPanel);
 }
 
