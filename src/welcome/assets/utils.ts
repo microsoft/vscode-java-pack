@@ -9,6 +9,15 @@ export function encodeCommandUri(command: string, args?: string[]) {
   return ret;
 }
 
+/**
+ * URL for webview commands. 
+ * By executing the retured command, telemetry is sent before finally executing {command} {args}.
+ * 
+ * @param identifier will be record in telemetry
+ * @param command command to execute
+ * @param args must be an array, if provided
+ * @returns 
+ */
 export function encodeCommandUriWithTelemetry(identifier: string, command: string, args?: any[]) {
   const helperCommand = "java.webview.runCommand";
   const wrappedArgs = {
