@@ -11,6 +11,7 @@ import { JdkConfigurationPanel } from "./jdk.configure";
 import { JdkInstallationPanel } from "./jdk.installation";
 import { requestJdkInfo } from "./vscode.api";
 import bytes = require("bytes");
+import "./style.scss";
 
 window.addEventListener("message", event => {
   if (event.data.command === "applyJdkInfo") {
