@@ -5,6 +5,7 @@
  * URL for webview commands. 
  * By executing the retured command, telemetry is sent before finally executing {command} {args}.
  * 
+ * @param webview ID of the webview where the command runs
  * @param identifier will be record in telemetry
  * @param command command to execute
  * @param args must be an array, if provided
