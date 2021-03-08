@@ -1,34 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-export function encodeCommandUri(command: string, args?: string[]) {
-  let ret = `command:${command}`;
-  if (args && args.length > 0) {
-    ret += `?${encodeURIComponent(JSON.stringify(args))}`;
-  }
-  return ret;
-}
-
-/**
- * URL for webview commands. 
- * By executing the retured command, telemetry is sent before finally executing {command} {args}.
- * 
- * @param identifier will be record in telemetry
- * @param command command to execute
- * @param args must be an array, if provided
- * @returns 
- */
-export function encodeCommandUriWithTelemetry(identifier: string, command: string, args?: any[]) {
-  const helperCommand = "java.webview.runCommand";
-  const wrappedArgs = {
-    webview: WEBVIEW_ID,
-    identifier,
-    command,
-    args
-  };
-  return `command:${helperCommand}?${encodeURIComponent(JSON.stringify(wrappedArgs))}`;
-}
-
 /**
  * Check if navigator.platform matches os.
  * @param os "win", "linux", "mac"

@@ -3,7 +3,8 @@
 
 import * as React from "react";
 import { ListGroup } from "react-bootstrap";
-import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../utils";
+import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
+import { supportedByNavigator, WEBVIEW_ID } from "../utils";
 
 export default class QuickActionPanel extends React.Component {
     render() {
@@ -29,7 +30,7 @@ export default class QuickActionPanel extends React.Component {
         const actionItems = actions.filter(action => !action.os || supportedByNavigator(action.os)).map(action => (
             <ListGroup.Item
                 action
-                href={encodeCommandUriWithTelemetry(action.name, action.command, action.args)}
+                href={encodeCommandUriWithTelemetry(WEBVIEW_ID, action.name, action.command, action.args)}
                 key={action.name}
             >{action.element}</ListGroup.Item>
         ));

@@ -10,7 +10,8 @@ import globeIcon from "@iconify-icons/codicon/globe";
 import mortarBoardIcon from "@iconify-icons/codicon/mortar-board";
 import rocketIcon from "@iconify-icons/codicon/rocket";
 import { ListGroup } from "react-bootstrap";
-import { encodeCommandUriWithTelemetry, reportTabSwitch } from "../utils";
+import { reportTabSwitch, WEBVIEW_ID } from "../utils";
+import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
 
 export default class NavigationPanel extends React.Component {
   private groups = [
@@ -50,7 +51,7 @@ export default class NavigationPanel extends React.Component {
     const tabItems = this.groups.map(group => {
       const actionItems = group.actions.map(action => (
         <a
-          href={encodeCommandUriWithTelemetry(action.name, action.command, action.args)}
+          href={encodeCommandUriWithTelemetry(WEBVIEW_ID, action.name, action.command, action.args)}
           key={action.name}
         >{itemIcon} {action.name}</a>
       ));
