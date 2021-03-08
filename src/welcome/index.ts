@@ -65,6 +65,7 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
                         }
                     });
                 }
+                break;
             case "sendInfo":
                 sendInfo("", message.data);
             default:
