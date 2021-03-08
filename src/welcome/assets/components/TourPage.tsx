@@ -3,7 +3,8 @@
 
 import React, { Component } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
-import { encodeCommandUriWithTelemetry, reportSkipTour, showWelcomePage, supportedByNavigator } from "../utils";
+import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
+import { reportSkipTour, showWelcomePage, supportedByNavigator, WEBVIEW_ID } from "../utils";
 
 const logoIcon = require("../../../../logo.svg");
 const doneIcon = require("../resources/done.svg");
@@ -92,10 +93,10 @@ export default class TourPage extends Component<{
          * 4. testing
          */
 
-        const openFolderCommand: string = encodeCommandUriWithTelemetry("open folder", supportedByNavigator("mac") ? "workbench.action.files.openFileFolder" : "workbench.action.files.openFolder");
-        const showProjectExplorerCommand: string = encodeCommandUriWithTelemetry("show project explorer", "javaProjectExplorer.focus");
-        const showRunAndDebugViewCommand: string = encodeCommandUriWithTelemetry("show run and debug view", "workbench.view.debug");
-        const showTestExplorerViewCommand: string = encodeCommandUriWithTelemetry("show test explorer", "testExplorer.focus");
+        const openFolderCommand: string = encodeCommandUriWithTelemetry(WEBVIEW_ID, "open folder", supportedByNavigator("mac") ? "workbench.action.files.openFileFolder" : "workbench.action.files.openFolder");
+        const showProjectExplorerCommand: string = encodeCommandUriWithTelemetry(WEBVIEW_ID, "show project explorer", "javaProjectExplorer.focus");
+        const showRunAndDebugViewCommand: string = encodeCommandUriWithTelemetry(WEBVIEW_ID, "show run and debug view", "workbench.view.debug");
+        const showTestExplorerViewCommand: string = encodeCommandUriWithTelemetry(WEBVIEW_ID, "show test explorer", "testExplorer.focus");
 
         const content = [{
             title: "Open Project Folder",
