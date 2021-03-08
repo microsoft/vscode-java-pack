@@ -67,3 +67,13 @@ export function reportTabSwitch(from: string, to: string) {
     }
   });
 }
+
+export function reportSkipTour(from: string) {
+  vscode.postMessage({
+    command: "sendInfo",
+    data: {
+      name: "skipTour",
+      from
+    }
+  });
+}

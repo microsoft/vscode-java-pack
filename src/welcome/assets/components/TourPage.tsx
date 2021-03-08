@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import React, { Component } from "react";
-import { Container, Row, Col, Button } from "react-bootstrap";
-import { encodeCommandUriWithTelemetry, showWelcomePage, supportedByNavigator } from "../utils";
+import { Button, Col, Container, Row } from "react-bootstrap";
+import { encodeCommandUriWithTelemetry, reportSkipTour, showWelcomePage, supportedByNavigator } from "../utils";
 
 const logoIcon = require("../../../../logo.svg");
 const doneIcon = require("../resources/done.svg");
@@ -123,7 +123,7 @@ export default class TourPage extends Component<{
             <div>{elem.description}</div>
             <img src={elem.imageUri} alt={elem.title} className="screenshot" />
             <Button onClick={this.nextStep}>Next Step</Button>
-            <div><a href="#" onClick={() => showWelcomePage(false)}>skip</a></div>
+            <div><a href="#" onClick={() => skipTourFrom(elem.title)}>skip</a></div>
         </div>, this);
     }
 
@@ -133,7 +133,7 @@ export default class TourPage extends Component<{
             <h2>Welcome to use Java Tools</h2>
             <div>lightweight, performant, powerful.</div>
             <div><Button onClick={this.nextStep}>Get Started</Button></div>
-            <div><a href="#" onClick={() => showWelcomePage(false)}>skip</a></div>
+            <div><a href="#" onClick={() => skipTourFrom("Starting Page")}>skip</a></div>
         </div>;
     }
 
@@ -145,5 +145,10 @@ export default class TourPage extends Component<{
             <div><Button onClick={this.nextStep}>What's next?</Button></div>
         </div>;
     }
+}
+
+function skipTourFrom(page: string) {
+    reportSkipTour(page);
+    showWelcomePage(false);
 }
 
