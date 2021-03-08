@@ -1,5 +1,17 @@
 # Change Log
 
+## 0.13.0
+
+### Added
+- New UX for welcome page. [#540](https://github.com/microsoft/vscode-java-pack/issues/540)
+
+### Changed
+- By default, show overview page only on Desktop and not in Web. [#536](https://github.com/microsoft/vscode-java-pack/pull/536)
+- Use new extension icons. [#552](https://github.com/microsoft/vscode-java-pack/pull/552)
+
+### Fixed
+- Re-enable restoring webview pages after reloading window. [#549](https://github.com/microsoft/vscode-java-pack/pull/549)
+
 ## 0.12.1
 - Fixed error `Cannot read property 'onDidClasspathUpdate' of undefined` on opening `Configure Java Runtime` page. [#521](https://github.com/microsoft/vscode-java-pack/issues/521)
 
