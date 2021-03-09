@@ -3,7 +3,7 @@
 
 /**
  * URL for webview commands. 
- * By executing the retured command, telemetry is sent before finally executing {command} {args}.
+ * By executing the returned command, telemetry is sent before finally executing {command} {args}.
  * 
  * @param webview ID of the webview where the command runs
  * @param identifier will be record in telemetry
@@ -20,4 +20,13 @@ export function encodeCommandUriWithTelemetry(webview: string, identifier: strin
     args
   };
   return `command:${helperCommand}?${encodeURIComponent(JSON.stringify(wrappedArgs))}`;
+}
+
+
+/**
+ * Check if navigator.platform matches os.
+ * @param os "win", "linux", "mac"
+ */
+ export function supportedByNavigator(os: string): boolean {
+  return navigator.platform.toLowerCase().indexOf(os.toLowerCase()) === 0;
 }

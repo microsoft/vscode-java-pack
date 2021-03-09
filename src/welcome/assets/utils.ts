@@ -1,14 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-/**
- * Check if navigator.platform matches os.
- * @param os "win", "linux", "mac"
- */
-export function supportedByNavigator(os: string): boolean {
-  return navigator.platform.toLowerCase().indexOf(os.toLowerCase()) === 0;
-}
-
 export const WEBVIEW_ID: string = "java.welcome";
 
 // RPC calls to VS Code
