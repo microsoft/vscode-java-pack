@@ -3,8 +3,8 @@
 
 import React, { Component } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
-import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
-import { reportSkipTour, showWelcomePage, supportedByNavigator, WEBVIEW_ID } from "../utils";
+import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../../../utils/webview";
+import { reportSkipTour, showWelcomePage, WEBVIEW_ID } from "../utils";
 
 const logoIcon = require("../../../../logo.svg");
 const doneIcon = require("../resources/done.svg");

@@ -3,7 +3,7 @@
 
 /**
  * URL for webview commands. 
- * By executing the retured command, telemetry is sent before finally executing {command} {args}.
+ * By executing the returned command, telemetry is sent before finally executing {command} {args}.
  * 
  * @param webview ID of the webview where the command runs
  * @param identifier will be record in telemetry
@@ -20,4 +20,24 @@ export function encodeCommandUriWithTelemetry(webview: string, identifier: strin
     args
   };
   return `command:${helperCommand}?${encodeURIComponent(JSON.stringify(wrappedArgs))}`;
+}
+
+
+/**
+ * Check if navigator.platform matches os.
+ * @param os "win", "linux", "mac"
+ */
+ export function supportedByNavigator(os: string): boolean {
+  // Refer the implementation at https://github.com/microsoft/vscode/blob/413963c489fafa5163b5d6513731c7953de07fb3/src/vs/base/common/platform.ts#L86-L96
+  const userAgent = navigator.userAgent;
+  switch(os) {
+    case "win":
+      return userAgent.indexOf("Windows") >= 0;
+    case "linux":
+      return userAgent.indexOf("Linux") >= 0;
+    case "mac":
+      return userAgent.indexOf("Macintosh") >= 0;
+  }
+
+  return navigator.platform.toLowerCase().indexOf(os.toLowerCase()) === 0;
 }

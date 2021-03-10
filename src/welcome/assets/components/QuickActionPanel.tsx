@@ -3,8 +3,8 @@
 
 import * as React from "react";
 import { ListGroup } from "react-bootstrap";
-import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
-import { supportedByNavigator, WEBVIEW_ID } from "../utils";
+import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../../../utils/webview";
+import { WEBVIEW_ID } from "../utils";
 
 export default class QuickActionPanel extends React.Component {
     render() {
