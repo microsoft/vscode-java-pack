@@ -6,6 +6,7 @@
   "version": "0.13.0",
   "publisher": "vscjava",
   "preview": true,
+  "enableProposedApi": true,
   "engines": {
     "vscode": "^1.52.0"
   },
@@ -48,6 +49,60 @@
     "onWebviewPanel:java.welcome"
   ],
   "contributes": {
+    "gettingStarted": [
+      {
+        "id": "java.openProjectFolder",
+        "title": "Open Project Folder",
+        "description": "Open a folder containing your Java project for full features.",
+        "button": {
+          "command": "workbench.action.files.openFolder",
+          "title": "Open Project Folder"
+        },
+        "media": {
+          "path": "src/welcome/assets/resources/open-project.png",
+          "altText": "Open Project Folder"
+        }
+      },
+      {
+        "id": "java.showProjectExplorer",
+        "title": "Project Explorer",
+        "description": "Expand Java Project Explorer to view your project structure.",
+        "button": {
+          "command": "javaProjectExplorer.focus",
+          "title": "Show Java Projects"
+        },
+        "media": {
+          "path": "src/welcome/assets/resources/project-manager.png",
+          "altText": "Project Explorer"
+        }
+      },
+      {
+        "id": "java.showDebugView",
+        "title": "Running and Debugging",
+        "description": "Open Run and Debug View to start your project.",
+        "button": {
+          "command": "workbench.view.debug",
+          "title": "Show Run and Debug View"
+        },
+        "media": {
+          "path": "src/welcome/assets/resources/debugger.png",
+          "altText": "Running and Debugging"
+        }
+      },
+      {
+        "id": "java.showTesting",
+        "title": "Testing",
+        "description": "Use Testing View to run unit tests.",
+        "button": {
+          "command": "testExplorer.focus",
+          "title": "Show Testing View"
+        },
+        "media": {
+          "path": "src/welcome/assets/resources/testing.png",
+          "altText": "Testing"
+        }
+      }
+    ],
     "commands": [
       {
         "command": "java.welcome",
