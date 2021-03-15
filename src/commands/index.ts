@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
-
 import { instrumentCommand, webviewCmdLinkHandler } from "../utils";
 import { createMavenProjectCmdHandler, createSpringBootProjectCmdHandler, createQuarkusProjectCmdHandler, createMicroProfileStarterProjectCmdHandler, showExtensionCmdHandler, openUrlCmdHandler, showReleaseNotesHandler, installExtensionCmdHandler } from "./handler";
 import { overviewCmdHandler } from "../overview";
@@ -11,6 +10,7 @@ import { javaGettingStartedCmdHandler } from "../getting-started";
 import { javaExtGuideCmdHandler } from "../ext-guide";
 import { instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
 import { showWelcomeWebview } from "../welcome";
+import { showClasspathConfigurationPage } from "../classpath/classpathConfigurationView";
 
 export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.overview", instrumentCommand(context, "java.overview", instrumentCommand(context, "java.helper.overview", overviewCmdHandler))));
@@ -27,4 +27,5 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.extGuide", instrumentCommand(context, "java.extGuide", javaExtGuideCmdHandler)));
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.webview.runCommand", webviewCmdLinkHandler));
   context.subscriptions.push(vscode.commands.registerCommand("java.welcome", (options) => showWelcomeWebview(context, options)));
+  context.subscriptions.push(vscode.commands.registerCommand("java.classpathConfiguration", () => showClasspathConfigurationPage(context)));
 }

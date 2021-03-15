@@ -14,6 +14,7 @@ module.exports = function (env, argv) {
       'getting-started': './src/getting-started/assets/index.ts',
       'ext-guide': './src/ext-guide/assets/index.ts',
       welcome: './src/welcome/assets/index.ts',
+      classpath: './src/classpath/assets/index.tsx'
     },
     module: {
       rules: [{
@@ -80,6 +81,12 @@ module.exports = function (env, argv) {
         template: 'src/welcome/assets/index.html',
         inlineSource: '.(js|css)$',
         chunks: ['welcome']
+      }),
+      new HtmlWebpackPlugin({
+        filename: path.resolve(__dirname, 'out/assets/classpath/index.html'),
+        template: 'src/classpath/assets/index.html',
+        inlineSource: '.(js|css)$',
+        chunks: ['classpath']
       }),
       new HtmlWebpackInlineSourcePlugin(),
     ],

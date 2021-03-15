@@ -15,6 +15,7 @@ import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
+import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -35,6 +36,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.welcome", new WelcomeViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.classpathConfiguration", new ClassPathConfigurationViewSerializer()));
 
   const config = vscode.workspace.getConfiguration("java.help");
 
