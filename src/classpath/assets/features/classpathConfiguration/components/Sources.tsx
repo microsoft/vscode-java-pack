@@ -9,7 +9,7 @@ import { ListGroup } from "react-bootstrap";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
 import { onWillAddSourcePath, onWillRemoveSourcePath } from "../../../utils";
-import { ProjectType } from "../../../../types";
+import { ProjectType } from "../../../../../utils/webview";
 
 const Sources = (): JSX.Element => {
   const sources: string[] = useSelector((state: any) => state.classpathConfig.sources);

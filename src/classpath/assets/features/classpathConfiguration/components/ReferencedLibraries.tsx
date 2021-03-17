@@ -9,7 +9,7 @@ import { Icon } from "@iconify/react";
 import closeIcon from "@iconify-icons/codicon/chrome-close";
 import { removeReferencedLibrary, addReferencedLibraries } from "../classpathConfigurationViewSlice";
 import { onWillAddReferencedLibraries, onWillRemoveReferencedLibraries } from "../../../utils";
-import { ProjectType } from "../../../../types";
+import { ProjectType } from "../../../../../utils/webview";
 
 const ReferencedLibraries = (): JSX.Element => {
   const referencedLibraries: string[] = useSelector((state: any) => state.classpathConfig.referencedLibraries);

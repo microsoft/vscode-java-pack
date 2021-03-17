@@ -9,9 +9,10 @@ import { getExtensionContext, loadTextFromFile } from "../utils";
 import { findJavaHomes, JavaRuntime } from "./utils/findJavaRuntime";
 import architecture = require("arch");
 import { resolveRequirements } from "./utils/upstreamApi";
-import { JavaRuntimeEntry, NatureId, ProjectRuntimeEntry, ProjectType } from "./types";
+import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { pathExists } from "fs-extra";
+import { ProjectType, NatureId } from "../utils/webview";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];

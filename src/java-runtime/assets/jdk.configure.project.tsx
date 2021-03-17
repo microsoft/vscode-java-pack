@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import * as React from "react";
-import { JavaRuntimeEntry, ProjectRuntimeEntry, ProjectType } from "../types";
+import { ProjectType } from "../../utils/webview";
+import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
 import { InvisibleProjectsRuntimePanel } from "./project.invisible";
 import { ManagedProjectRuntimePanel } from "./project.managed";
 import { openBuildScript } from "./vscode.api";

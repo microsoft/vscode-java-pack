@@ -4,7 +4,7 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { ProjectType } from "../../../../types";
+import { ProjectType } from "../../../../../utils/webview";
 import { onWillSelectOutputPath } from "../../../utils";
 import { setOutputPath } from "../classpathConfigurationViewSlice";
 

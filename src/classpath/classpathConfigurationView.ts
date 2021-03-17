@@ -5,10 +5,11 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getExtensionContext, loadTextFromFile } from "../utils";
 import * as fse from "fs-extra";
-import { ProjectInfo, ClasspathComponent, ProjectType, ClasspathViewException } from "./types";
+import { ProjectInfo, ClasspathComponent, ClasspathViewException } from "./types";
 import _ from "lodash";
 import minimatch from "minimatch";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
+import { ProjectType } from "../utils/webview";
 
 let classpathConfigurationPanel: vscode.WebviewPanel | undefined;
 let lsApi: LanguageServerAPI | undefined;

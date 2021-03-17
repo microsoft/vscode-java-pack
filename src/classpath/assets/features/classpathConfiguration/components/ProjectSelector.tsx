@@ -4,11 +4,12 @@
 import React, { useEffect } from "react";
 import { Dropdown } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
-import { ProjectInfo, ProjectType } from "../../../../types";
+import { ProjectInfo } from "../../../../types";
 import { Col, Row } from "react-bootstrap";
 import { Dispatch } from "@reduxjs/toolkit";
 import { activeProjectChange } from "../classpathConfigurationViewSlice";
 import { onClickGotoProjectConfiguration, onWillLoadProjectClasspath } from "../../../utils";
+import { ProjectType } from "../../../../../utils/webview";
 
 const ProjectSelector = (): JSX.Element | null => {
   const activeProjectIndex: number = useSelector((state: any) => state.classpathConfig.activeProjectIndex);
