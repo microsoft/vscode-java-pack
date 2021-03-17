@@ -99,7 +99,8 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
 
     context.subscriptions.push(lsApi!.onDidClasspathUpdate((uri: vscode.Uri) => {
         if (!path.relative(uri.fsPath, currentProjectRoot.fsPath)) {
-            loadProjectClasspath(uri);
+            // Use debounced function to avoid UI jittery
+            debounceLoadProjectClasspath(uri);
         }
     }));
 }
@@ -162,6 +163,8 @@ const loadProjectClasspath = instrumentOperation("classpath.loadClasspath", asyn
         projectType: classpath.projectType,
     });
 });
+
+const debounceLoadProjectClasspath = _.debounce(loadProjectClasspath, 3000 /*ms*/);
 
 const addSourcePath = instrumentOperation("classpath.addSourcePath", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
     const sourceFolder: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
