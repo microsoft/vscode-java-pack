@@ -11,8 +11,8 @@ import architecture = require("arch");
 import { resolveRequirements } from "./utils/upstreamApi";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
-import { pathExists } from "fs-extra";
 import { ProjectType, NatureId } from "../utils/webview";
+import { getProjectType } from "../utils/jdt";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
@@ -276,7 +276,7 @@ async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
 
     for (const projectRoot of projects) {
       const runtimeSpec = await getRuntimeSpec(projectRoot);
-      const projectType: ProjectType = await getProjectType(projectRoot);
+      const projectType: ProjectType = await getProjectType(vscode.Uri.parse(projectRoot).fsPath);
       ret.push({
         name: path.basename(projectRoot),
         rootPath: projectRoot,
@@ -308,26 +308,6 @@ async function getRuntimeSpec(projectRootUri: string) {
     runtimePath,
     sourceLevel
   };
-}
-
-async function getProjectType(rootPathUri: string): Promise<ProjectType> {
-  if (rootPathUri.endsWith("jdt.ls-java-project") || rootPathUri.endsWith("jdt.ls-java-project/")) {
-    return ProjectType.Default;
-  }
-  const rootPath = vscode.Uri.parse(rootPathUri).fsPath;
-  const dotProjectFile = path.join(rootPath, ".project");
-  if (!await pathExists(dotProjectFile)) { // for invisible projects, .project file is located in workspace storage.
-    return ProjectType.UnmanagedFolder;
-  }
-  const pomDotXmlFile = path.join(rootPath, "pom.xml");
-  if (await pathExists(pomDotXmlFile)) {
-    return ProjectType.Maven;
-  }
-  const buildDotGradleFile = path.join(rootPath, "build.gradle");
-  if (await pathExists(buildDotGradleFile)) {
-    return ProjectType.Gradle;
-  }
-  return ProjectType.Others;
 }
 
 export async function suggestOpenJdk(jdkVersion: string = "openjdk11", impl: string = "hotspot") {
