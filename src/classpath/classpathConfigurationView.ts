@@ -9,6 +9,7 @@ import { ProjectInfo, ClasspathComponent, ClasspathViewException } from "./types
 import _ from "lodash";
 import minimatch from "minimatch";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
+import { getProjectType, isDefaultProject } from "../utils/jdt";
 import { ProjectType } from "../utils/webview";
 
 let classpathConfigurationPanel: vscode.WebviewPanel | undefined;
@@ -397,29 +398,6 @@ async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComp
         }
     });
     return classpath;
-}
-
-async function getProjectType(fsPath: string): Promise<ProjectType> {
-    if (isDefaultProject(fsPath)) {
-        return ProjectType.Default;
-    }
-    const dotProjectFile = path.join(fsPath, ".project");
-    if (!await fse.pathExists(dotProjectFile)) { // for invisible projects, .project file is located in workspace storage.
-      return ProjectType.UnmanagedFolder;
-    }
-    const buildDotGradleFile = path.join(fsPath, "build.gradle");
-    if (await fse.pathExists(buildDotGradleFile)) {
-      return ProjectType.Gradle;
-    }
-    const pomDotXmlFile = path.join(fsPath, "pom.xml");
-    if (await fse.pathExists(pomDotXmlFile)) {
-      return ProjectType.Maven;
-    }
-    return ProjectType.Others;
-}
-
-function isDefaultProject(path: string): boolean {
-    return path.indexOf("jdt.ls-java-project") > -1;
 }
 
 function getReferencedLibrariesSetting(): IReferencedLibraries {
