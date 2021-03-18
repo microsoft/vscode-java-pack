@@ -63,11 +63,13 @@
       },
       {
         "command": "java.overview",
-        "title": "Java: Overview"
+        "category": "Java",
+        "title": "Overview"
       },
       {
         "command": "java.showReleaseNotes",
-        "title": "Java: Show Release Notes"
+        "category": "Java",
+        "title": "Show Release Notes"
       },
       {
         "command": "java.runtime",
@@ -76,11 +78,13 @@
       },
       {
         "command": "java.gettingStarted",
-        "title": "Java: Getting Started"
+        "category": "Java",
+        "title": "Getting Started"
       },
       {
         "command": "java.extGuide",
-        "title": "Java: Extension Guide"
+        "category": "Java",
+        "title": "Extension Guide"
       }
     ],
     "configuration": {
