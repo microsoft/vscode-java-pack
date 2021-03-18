@@ -11,26 +11,6 @@ export enum HelpViewType {
   None = "none",
 }
 
-function showInfoButton() {
-  const config = vscode.workspace.getConfiguration("java.help");
-  const firstView = config.get("firstView");
-
-  let infoButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-  switch (firstView) {
-    case HelpViewType.None:
-      return;
-    case HelpViewType.GettingStarted:
-      infoButton.command = "java.gettingStarted";
-      break;
-    default:
-      infoButton.command = "java.overview";
-  }
-
-  infoButton.text = "$(info)";
-  infoButton.tooltip = "Learn more about Java features";
-  infoButton.show();
-}
-
 type ReleaseNotesPresentationHistoryEntry = { version: string, timeStamp: string };
 const RELEASE_NOTE_PRESENTATION_HISTORY = "releaseNotesPresentationHistory";
 
@@ -54,8 +34,4 @@ export async function showReleaseNotesOnStart(context: vscode.ExtensionContext) 
   });
 
   context.globalState.update(RELEASE_NOTE_PRESENTATION_HISTORY, history);
-}
-
-export function initialize(_context: vscode.ExtensionContext) {
-  showInfoButton();
 }
