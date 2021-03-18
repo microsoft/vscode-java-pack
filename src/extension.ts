@@ -7,7 +7,7 @@ import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } f
 import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
-import { initialize as initMisc, showReleaseNotesOnStart, HelpViewType } from "./misc";
+import { showReleaseNotesOnStart, HelpViewType } from "./misc";
 import { initialize as initExp, getExpService } from "./exp";
 import { KEY_SHOW_WHEN_USING_JAVA, OverviewViewSerializer, showOverviewPageOnActivation } from "./overview";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
@@ -27,7 +27,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initUtils(context);
   initCommands(context);
   initRecommendations(context);
-  initMisc(context);
   initExp(context);
 
   // webview serializers to restore pages
