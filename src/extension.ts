@@ -64,18 +64,20 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
     });
   }
 
+  // Progression rollout EXP for showing extension guide.
+  const presentExtensionGuideByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentExtensionGuideByDefault") || false;
+  if (presentExtensionGuideByDefault) {
+    scheduleAction("showExtensionGuide", false, true).then(() => {
+      showExtensionGuide(context);
+    });
+  }
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
+  // Progression rollout EXP for showing welcome page.
   const presentWelcomePageByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentWelcomePageByDefault") || false;
   if (presentWelcomePageByDefault) {
     await showWelcomeWebview(context);
-    return;
-  }
-
-  const presentExtensionGuideByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentExtensionGuideByDefault") || false;
-  if (presentExtensionGuideByDefault) {
-    showExtensionGuide(context);
     return;
   }
 
@@ -88,10 +90,8 @@ async function presentFirstView(context: vscode.ExtensionContext) {
       await showGettingStartedView(context);
       break;
     case HelpViewType.Overview:
-      await showOverviewPageOnActivation(context);
-      break;
     default:
-      await showWelcomeWebview(context);
+      await showOverviewPageOnActivation(context);
   }
 }
 
