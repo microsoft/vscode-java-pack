@@ -72,7 +72,17 @@ $enable-rounded: false;
       background-color: var(--vscode-list-activeSelectionBackground) !important;
       color: var(--vscode-list-activeSelectionForeground) !important;
     }
-  }  
+  }
+
+  .dropdown-toggle {
+    &:after {
+      display: none !important;
+    }
+  }
+
+  svg.codicon {
+    color: var(--vscode-settings-textInputForeground);
+  }
 }
 
 div.list {
@@ -97,17 +107,17 @@ div.list {
       background-color: hsla(0, 0%, 51%, .04) !important;
     }
   }
+
+  svg.codicon {
+    width: 1.2em;
+    height: 1.2em;
+  }
 }
 
 .flex-vertical-center {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-}
-
-svg.codicon {
-  width: 1.2em;
-  height: 1.2em;
 }
 
 .btn-action {
