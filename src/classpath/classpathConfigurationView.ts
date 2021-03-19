@@ -9,7 +9,7 @@ import { ProjectInfo, ClasspathComponent, ClasspathViewException } from "./types
 import _ from "lodash";
 import minimatch from "minimatch";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
-import { getProjectType, isDefaultProject } from "../utils/jdt";
+import { getProjectNameFromUri, getProjectType, isDefaultProject } from "../utils/jdt";
 import { ProjectType } from "../utils/webview";
 
 let classpathConfigurationPanel: vscode.WebviewPanel | undefined;
@@ -338,7 +338,7 @@ async function getProjectsFromLS(): Promise<ProjectInfo[]> {
 
     for (const projectRoot of projects) {
         ret.push({
-            name: path.basename(projectRoot),
+            name: getProjectNameFromUri(projectRoot),
             rootPath: projectRoot,
         });
     }
