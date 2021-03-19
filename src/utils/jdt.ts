@@ -4,6 +4,7 @@
 import * as fse from "fs-extra";
 import * as path from "path";
 import { ProjectType } from "./webview";
+import * as vscode from "vscode";
 
 export async function getProjectType(fsPath: string): Promise<ProjectType> {
     if (isDefaultProject(fsPath)) {
@@ -26,4 +27,8 @@ export async function getProjectType(fsPath: string): Promise<ProjectType> {
 
 export function isDefaultProject(path: string): boolean {
     return path.indexOf("jdt.ls-java-project") > -1;
+}
+
+export function getProjectNameFromUri(uri: string): string {
+  return path.basename(vscode.Uri.parse(uri).fsPath);
 }

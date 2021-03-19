@@ -12,7 +12,7 @@ import { resolveRequirements } from "./utils/upstreamApi";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { ProjectType, NatureId } from "../utils/webview";
-import { getProjectType } from "../utils/jdt";
+import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
@@ -278,7 +278,7 @@ async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
       const runtimeSpec = await getRuntimeSpec(projectRoot);
       const projectType: ProjectType = await getProjectType(vscode.Uri.parse(projectRoot).fsPath);
       ret.push({
-        name: path.basename(projectRoot),
+        name: getProjectNameFromUri(projectRoot),
         rootPath: projectRoot,
         projectType: projectType,
         ...runtimeSpec
