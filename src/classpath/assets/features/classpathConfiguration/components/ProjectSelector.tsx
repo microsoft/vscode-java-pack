@@ -10,6 +10,8 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { activeProjectChange } from "../classpathConfigurationViewSlice";
 import { onClickGotoProjectConfiguration, onWillLoadProjectClasspath } from "../../../utils";
 import { ProjectType } from "../../../../../utils/webview";
+import { Icon } from "@iconify/react";
+import chevronDownIcon from "@iconify-icons/codicon/chevron-down";
 
 const ProjectSelector = (): JSX.Element | null => {
   const activeProjectIndex: number = useSelector((state: any) => state.classpathConfig.activeProjectIndex);
@@ -47,10 +49,11 @@ const ProjectSelector = (): JSX.Element | null => {
   return (
     <Row className="setting-section">
       <Col>
-        <span>Select the project.</span>
+        <span className="setting-section-description">Select the project.</span>
         <Dropdown className="mt-1">
           <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left">
-            {projects[activeProjectIndex].name}
+            <span>{projects[activeProjectIndex].name}</span>
+            <Icon className="codicon" icon={chevronDownIcon} />
           </Dropdown.Toggle>
 
           <Dropdown.Menu className="dropdown-menu mt-0 p-0">

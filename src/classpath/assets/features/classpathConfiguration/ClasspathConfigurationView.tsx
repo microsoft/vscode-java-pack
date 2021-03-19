@@ -71,7 +71,7 @@ const ClasspathConfigurationView = (): JSX.Element => {
   }, []);
 
   return (
-    <Container className="root">
+    <Container className="root mt-4">
       <Row className="setting-header">
         <Col>
           <Header />
