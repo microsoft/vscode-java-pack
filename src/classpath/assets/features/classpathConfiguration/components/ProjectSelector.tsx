@@ -66,7 +66,7 @@ const ProjectSelector = (): JSX.Element | null => {
         {(projectType === ProjectType.Gradle || projectType === ProjectType.Maven) &&
           <div className="mt-1">
             <span className="warning">
-              Below settings are only editable for projects without build tools. For {projectType} project, please edit the <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openBuildToolDoc", "java.helper.openUrl", [buildFileDocUrl])}>entries</a> in <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a>.
+              Below settings are only editable for projects without build tools. For {projectType} project, please edit the <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, `classpath.open${projectType}Doc`, "java.helper.openUrl", [buildFileDocUrl])}>entries</a> in <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a>.
             </span>
           </div>
         }
