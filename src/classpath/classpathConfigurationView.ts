@@ -180,7 +180,7 @@ const addSourcePath = instrumentOperation("classpath.addSourcePath", async (_ope
         const projectRootPath: string = currentProjectRoot.fsPath;
         let relativePath: string = path.relative(projectRootPath, sourceFolderPath);
         if (relativePath.startsWith("..")) {
-            const err: Error = new Error("Cannot set the source path outside the project root.");
+            const err: Error = new Error("The source path must be contained in the project root folder.");
             vscode.window.showErrorMessage(err.message);
             setUserError(err);
             throw(err);
@@ -227,7 +227,7 @@ const setOutputPath = instrumentOperation("classpath.setOutputPath", async (oper
         const outputFullPath: string = outputFolder[0].fsPath;
         const outputRelativePath: string = path.relative(projectRootPath, outputFullPath);
         if (outputRelativePath.startsWith("..")) {
-            const err: Error = new Error("Cannot set the output path outside the project root.");
+            const err: Error = new Error("The customized output path must be contained in the project root folder.");
             vscode.window.showErrorMessage(err.message);
             setUserError(err);
             throw(err);
