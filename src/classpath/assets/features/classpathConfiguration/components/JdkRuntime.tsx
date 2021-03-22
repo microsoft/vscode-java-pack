@@ -9,7 +9,7 @@ const JdkRuntime = (): JSX.Element => {
   return (
     <div>
       <h4 className="setting-section-header mb-1">JDK Runtime</h4>
-      <span className="setting-section-description">Map Java execution environment to local JDKs. Edit in <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.runtime", "java.runtime")}>Configure Java Runtime</a>.</span>
+      <span className="setting-section-description">To configure JDK runtimes, please edit in <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.runtime", "java.runtime")}>Configure Java Runtime</a>.</span>
     </div>
   );
 };

@@ -8,8 +8,8 @@ import { ProjectInfo } from "../../../../types";
 import { Col, Row } from "react-bootstrap";
 import { Dispatch } from "@reduxjs/toolkit";
 import { activeProjectChange } from "../classpathConfigurationViewSlice";
-import { onClickGotoProjectConfiguration, onWillLoadProjectClasspath } from "../../../utils";
-import { ProjectType } from "../../../../../utils/webview";
+import { onClickGotoProjectConfiguration, onWillLoadProjectClasspath, WEBVIEW_ID } from "../../../utils";
+import { encodeCommandUriWithTelemetry, ProjectType } from "../../../../../utils/webview";
 import { Icon } from "@iconify/react";
 import chevronDownIcon from "@iconify-icons/codicon/chevron-down";
 
@@ -18,10 +18,13 @@ const ProjectSelector = (): JSX.Element | null => {
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
   const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType);
   let buildFile: string = "";
+  let buildFileDocUrl: string = "";
   if (projectType === ProjectType.Maven) {
     buildFile = "pom.xml";
+    buildFileDocUrl = "https://maven.apache.org/pom.html#directories";
   } else if (projectType === ProjectType.Gradle) {
     buildFile = "build.gradle";
+    buildFileDocUrl = "https://docs.gradle.org/current/userguide/java_plugin.html#source_sets";
   }
 
   const dispatch: Dispatch<any> = useDispatch();
@@ -63,7 +66,7 @@ const ProjectSelector = (): JSX.Element | null => {
         {(projectType === ProjectType.Gradle || projectType === ProjectType.Maven) &&
           <div className="mt-1">
             <span className="warning">
-              Below settings are only applicable for non-build tool projects. For the {projectType} project, please edit them in the <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a> file.
+              Below settings are only editable for projects without build tools. For {projectType} project, please edit the <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, `classpath.open${projectType}Doc`, "java.helper.openUrl", [buildFileDocUrl])}>entries</a> in <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a>.
             </span>
           </div>
         }
