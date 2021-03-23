@@ -17,5 +17,6 @@ export interface ClasspathComponent {
 
 export enum ClasspathViewException {
     JavaExtensionNotInstalled = "javaExtensionNotInstalled",
+    StaleJavaExtension = "staleJavaExtension",
     NoJavaProjects = "noJavaProjects",
 }
