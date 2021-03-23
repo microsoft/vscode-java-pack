@@ -19,7 +19,7 @@ let currentProjectRoot: vscode.Uri;
 const SOURCE_PATH_KEY: string = "org.eclipse.jdt.ls.core.sourcePaths";
 const OUTPUT_PATH_KEY: string = "org.eclipse.jdt.ls.core.outputPath";
 const REFERENCED_LIBRARIES_KEY: string = "org.eclipse.jdt.ls.core.referencedLibraries";
-const LEAST_JLS_VERSION: string = "0.77.0";
+const LEAST_JAVA_EXTENSION_VERSION: string = "0.77.0";
 
 export async function showClasspathConfigurationPage(context: vscode.ExtensionContext): Promise<void> {
     if (classpathConfigurationPanel) {
@@ -121,12 +121,13 @@ async function checkRequirement(): Promise<boolean> {
         return false;
     }
 
-    if (compareVersions(javaExt.packageJSON.version, LEAST_JLS_VERSION) < 0) {
+    const javaExtVersion: string = javaExt.packageJSON.version;
+    if (compareVersions(javaExtVersion, LEAST_JAVA_EXTENSION_VERSION) < 0) {
         classpathConfigurationPanel?.webview.postMessage({
             command: "onException",
             exception: ClasspathViewException.StaleJavaExtension,
         });
-        const err: Error = new Error("The extension version of 'redhat.java' is too stale.");
+        const err: Error = new Error(`The extension version of 'redhat.java' (${javaExtVersion}) is too stale.`);
         setUserError(err);
         sendError(err);
         return false;
