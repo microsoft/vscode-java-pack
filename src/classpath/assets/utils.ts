@@ -9,6 +9,12 @@ export const WEBVIEW_ID = "java.classpathConfiguration";
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi && acquireVsCodeApi();
 
+export function onWillListProjects() {
+  vscode.postMessage({
+    command: "onWillListProjects",
+  });
+}
+
 export function onWillLoadProjectClasspath(uri: string) {
   vscode.postMessage({
     command: "onWillLoadProjectClasspath",

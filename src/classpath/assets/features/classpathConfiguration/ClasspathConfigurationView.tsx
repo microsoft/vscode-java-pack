@@ -14,6 +14,7 @@ import Exception from "./components/Exception";
 import { ClasspathViewException, ProjectInfo } from "../../../types";
 import { catchException, listProjects, loadClasspath } from "./classpathConfigurationViewSlice";
 import JdkRuntime from "./components/JdkRuntime";
+import { onWillListProjects } from "../../utils";
 
 const ClasspathConfigurationView = (): JSX.Element => {
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
@@ -67,6 +68,7 @@ const ClasspathConfigurationView = (): JSX.Element => {
 
   useEffect(() => {
     window.addEventListener("message", onInitialize);
+    onWillListProjects();
     return () => window.removeEventListener("message", onInitialize);
   }, []);
 
