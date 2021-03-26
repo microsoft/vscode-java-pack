@@ -53,22 +53,19 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
         sendError(new Error("classpathConfigurationPanel is not defined."));
         return;
     }
-    
+
     context.subscriptions.push(classpathConfigurationPanel.onDidDispose(_e => classpathConfigurationPanel = undefined));
+
     classpathConfigurationPanel.iconPath = {
         light: vscode.Uri.file(path.join(context.extensionPath, "caption.light.svg")),
         dark: vscode.Uri.file(path.join(context.extensionPath, "caption.dark.svg"))
     };
-    const resourceUri = context.asAbsolutePath("./out/assets/classpath/index.html");
-    classpathConfigurationPanel.webview.html = await loadTextFromFile(resourceUri);
-
-    if (!(await checkRequirement())) {
-        return;
-    }
-    await listProjects();
 
     context.subscriptions.push(classpathConfigurationPanel.webview.onDidReceiveMessage((async (message) => {
         switch (message.command) {
+            case "onWillListProjects":
+                await listProjects();
+                break;
             case "onWillLoadProjectClasspath":
                 currentProjectRoot = vscode.Uri.parse(message.uri);
                 await loadProjectClasspath(currentProjectRoot);
@@ -96,19 +93,16 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
         }
     })));
 
-    context.subscriptions.push(lsApi!.onDidProjectsImport(() => {
-        listProjects();
-    }));
+    const resourceUri = context.asAbsolutePath("./out/assets/classpath/index.html");
+    classpathConfigurationPanel.webview.html = await loadTextFromFile(resourceUri);
 
-    context.subscriptions.push(lsApi!.onDidClasspathUpdate((uri: vscode.Uri) => {
-        if (!path.relative(uri.fsPath, currentProjectRoot.fsPath)) {
-            // Use debounced function to avoid UI jittery
-            debounceLoadProjectClasspath(uri);
-        }
-    }));
+    await checkRequirement();
 }
 
 async function checkRequirement(): Promise<boolean> {
+    if (lsApi) {
+        return true;
+    }
     const javaExt = vscode.extensions.getExtension("redhat.java");
     if (!javaExt) {
         classpathConfigurationPanel?.webview.postMessage({
@@ -135,10 +129,30 @@ async function checkRequirement(): Promise<boolean> {
 
     await javaExt.activate(); 
     lsApi = javaExt.exports;
+
+    if (lsApi) {
+        getExtensionContext().subscriptions.push(
+            lsApi.onDidProjectsImport(() => {
+                listProjects();
+            }),
+            lsApi.onDidClasspathUpdate((uri: vscode.Uri) => {
+                if (!path.relative(uri.fsPath, currentProjectRoot.fsPath)) {
+                    // Use debounced function to avoid UI jittery
+                    debounceLoadProjectClasspath(uri);
+                }
+            }),
+        );
+    }
+
     return true;
 }
 
 const listProjects = instrumentOperation("classpath.listProjects", async (operationId: string) => {
+    // listProjects() will be called when the component is mounted,
+    // we first check the requirement here in case user triggers 'reload webview'
+    if (!(await checkRequirement())) {
+        return;
+    }
     let projects: ProjectInfo[] = await getProjectsFromLS();
 
     _.remove(projects, (p: ProjectInfo) => {
