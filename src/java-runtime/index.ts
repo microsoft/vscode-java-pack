@@ -11,7 +11,7 @@ import architecture = require("arch");
 import { resolveRequirements } from "./utils/upstreamApi";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
-import { ProjectType, NatureId } from "../utils/webview";
+import { ProjectType } from "../utils/webview";
 import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
@@ -238,7 +238,7 @@ async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeEntry[]> {
 
       for (const project of projects) {
         const runtimeSpec = await getRuntimeSpec(project.uri);
-        const projectType: ProjectType = projecTypeFromNature(project.metaData.NatureId);
+        const projectType: ProjectType = await getProjectType(vscode.Uri.parse(project.uri).fsPath);
         ret.push({
           name: project.displayName || project.name,
           rootPath: project.uri,
@@ -250,18 +250,6 @@ async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeEntry[]> {
   }
   return ret;
 }
-
-function projecTypeFromNature(natureIds: string[]) {
-  if (natureIds.includes(NatureId.Maven)) {
-    return ProjectType.Maven;
-  } else if (natureIds.includes(NatureId.Gradle)) {
-    return ProjectType.Gradle;
-  } else if (natureIds.includes(NatureId.Java)) {
-    return ProjectType.UnmanagedFolder;
-  }
-  return ProjectType.Others;
-}
-
 
 async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
   const ret: ProjectRuntimeEntry[] = [];
