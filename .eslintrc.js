@@ -27,6 +27,10 @@ module.exports = {
         "@typescript-eslint",
         "react"
     ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended"
+    ],
     "rules": {
         "@typescript-eslint/member-delimiter-style": [
             "warn",
@@ -55,12 +59,28 @@ module.exports = {
         ],
         "no-redeclare": "warn",
         "no-throw-literal": "warn",
-        "no-unused-vars": [2, {"args": "after-used", "argsIgnorePattern": "^_"}]
+        "no-unused-vars": [2, { "args": "after-used", "argsIgnorePattern": "^_" }],
+        "@typescript-eslint/naming-convention": [
+            "error",
+            {
+                selector: "typeLike",
+                format: [
+                    "PascalCase"
+                ]
+            },
+            {
+                selector: "variable", 
+                types: [
+                    "boolean"
+                ],
+                format: [
+                    "camelCase",
+                    "PascalCase",
+                    "UPPER_CASE"
+                ]
+            },
+        ],
     },
-    "extends": [
-        "eslint:recommended",
-        "plugin:react/recommended"
-    ],
     "settings": {
         "react": {
             "createClass": "createReactClass", // Regex for Component Factory to use,
@@ -88,5 +108,6 @@ module.exports = {
     globals: {
         React: true,
         JSX: true,
+        Winreg: true,
     },
 };
