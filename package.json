@@ -56,6 +56,32 @@
       "description": "Java description",
         "tasks": [
           {
+            "id": "java.runtime",
+            "title": "Configure Java Runtime",
+            "description": "Pick the right JDK for running Java with the built-in configurator.",
+            "button": {
+              "command": "java.runtime",
+              "title": "Configure Java Runtime"
+            },
+            "media": {
+              "path": "walkthrough/runtime.png",
+              "altText": "Open Project Folder"
+            }
+          },
+          {
+            "id": "java.extGuide",
+            "title": "Java Extensions",
+            "description": "Additional s extensions for Java development.",
+            "button": {
+              "command": "java.extGuide",
+              "title": "Configure Java Runtime"
+            },
+            "media": {
+              "path": "walkthrough/extGuide.png",
+              "altText": "Open Project Folder"
+            }
+          },
+          {
             "id": "java.openProjectFolder",
             "title": "Open Project Folder",
             "description": "Open a folder containing your Java project for full features.",
@@ -67,7 +93,7 @@
               "path": "walkthrough/open-project.png",
               "altText": "Open Project Folder"
             },
-            "when": "!isMac"
+            "when": "!isMac && workspaceFolderCount == 0"
           },
           {
             "id": "java.openProjectFolder.mac",
@@ -81,7 +107,7 @@
               "path": "walkthrough/open-project.png",
               "altText": "Open Project Folder"
             },
-            "when": "isMac"
+            "when": "isMac && workspaceFolderCount == 0"
           },
           {
             "id": "java.showProjectExplorer",
@@ -120,6 +146,19 @@
             "media": {
               "path": "walkthrough/testing.png",
               "altText": "Testing"
+            }
+          },
+          {
+            "id": "java.showTesting",
+            "title": "Quick start with Java",
+            "description": "Just starting with Java? Get hands on with these tutorials to learn the fundamentals of Java editing & debugging.",
+            "button": {
+              "command": "java.gettingStarted",
+              "title": "Open Tutorials"
+            },
+            "media": {
+              "path": "walkthrough/tutorials.png",
+              "altText": "Tutorials"
             }
           }
         ]
