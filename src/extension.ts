@@ -16,8 +16,11 @@ import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
+import { TreatmentVariables } from "./exp/TrearmentVariables";
 
 export async function activate(context: vscode.ExtensionContext) {
+  // initialize exp service ahead of activation operation to make sure exp context properties are set.
+  await initExp(context);
   syncState(context);
   initializeTelemetry(context);
   await instrumentOperation("activation", initializeExtension)(context);
@@ -27,7 +30,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initUtils(context);
   initCommands(context);
   initRecommendations(context);
-  initExp(context);
 
   // webview serializers to restore pages
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.extGuide", new JavaExtGuideViewSerializer()));
@@ -63,19 +65,11 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
       vscode.commands.executeCommand("java.runtime");
     });
   }
-
-  // Progression rollout EXP for showing extension guide.
-  const presentExtensionGuideByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentExtensionGuideByDefault") || false;
-  if (presentExtensionGuideByDefault) {
-    scheduleAction("showExtensionGuide", false, true).then(() => {
-      showExtensionGuide(context);
-    });
-  }
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
   // Progression rollout EXP for showing welcome page.
-  const presentWelcomePageByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentWelcomePageByDefault") || false;
+  const presentWelcomePageByDefault: boolean = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.PresentWelcomePageByDefault, true /*checkCache*/) || false;
   if (presentWelcomePageByDefault) {
     await showWelcomeWebview(context);
     return;
