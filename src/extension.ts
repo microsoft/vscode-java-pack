@@ -3,7 +3,6 @@
 
 import * as vscode from "vscode";
 import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } from "vscode-extension-telemetry-wrapper";
-
 import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
@@ -87,15 +86,6 @@ async function presentFirstView(context: vscode.ExtensionContext) {
     default:
       await showOverviewPageOnActivation(context);
   }
-}
-
-async function showExtensionGuide(context: vscode.ExtensionContext) {
-  if (!!context.globalState.get("isExtensionGuidePresented")) {
-    return;
-  }
-
-  await vscode.commands.executeCommand("java.extGuide");
-  context.globalState.update("isExtensionGuidePresented", true);
 }
 
 async function showGettingStartedView(context: vscode.ExtensionContext, _isForce: boolean = false) {
