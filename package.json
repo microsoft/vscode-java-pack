@@ -51,27 +51,27 @@
   "contributes": {
     "walkthroughs": [
       {
-      "id": "javaWelcome",
-      "title": "welcome to Java",
-      "description": "Java description",
+        "id": "javaWelcome",
+        "title": "Dive into Java Development",
+        "description": "Your first steps to set up powerful Java tools in a lightweight, performant editor!",
         "tasks": [
           {
             "id": "java.runtime",
-            "title": "Configure Java Runtime",
-            "description": "Pick the right JDK for running Java with the built-in configurator.",
+            "title": "Get your Java runtime ready",
+            "description": "The built-in configurator makes it easy to set up your preferred Java runtime.",
             "button": {
               "command": "java.runtime",
               "title": "Configure Java Runtime"
             },
             "media": {
               "path": "walkthrough/runtime.png",
-              "altText": "Open Project Folder"
+              "altText": "Configure Java Runtime page"
             }
           },
           {
             "id": "java.extGuide",
-            "title": "Java Extensions",
-            "description": "Additional s extensions for Java development.",
+            "title": "Support additional tools & frameworks",
+            "description": "Got additional support for major tool chains, frameworks and application servers.",
             "button": {
               "command": "java.extGuide",
               "title": "Configure Java Runtime"
@@ -83,8 +83,8 @@
           },
           {
             "id": "java.openProjectFolder",
-            "title": "Open Project Folder",
-            "description": "Open a folder containing your Java project for full features.",
+            "title": "Open project folder",
+            "description": "Open an existing folder that contains your Java project, or create a new folder.",
             "button": {
               "command": "workbench.action.files.openFolder",
               "title": "Open Folder..."
@@ -97,8 +97,8 @@
           },
           {
             "id": "java.openProjectFolder.mac",
-            "title": "Open Project Folder",
-            "description": "Open a folder containing your Java project for full features.",
+            "title": "Open project folder",
+            "description": "Open an existing folder that contains your Java project, or create a new folder.",
             "button": {
               "command": "workbench.action.files.openFileFolder",
               "title": "Open Folder..."
@@ -111,8 +111,8 @@
           },
           {
             "id": "java.showProjectExplorer",
-            "title": "Project Explorer",
-            "description": "Expand Java Project Explorer to view your project structure.",
+            "title": "Explore your project",
+            "description": "View class paths and dependencies, and create new projects, packages, and classes.",
             "button": {
               "command": "javaProjectExplorer.focus",
               "title": "Show Java Projects"
@@ -124,8 +124,8 @@
           },
           {
             "id": "java.showDebugView",
-            "title": "Running and Debugging",
-            "description": "Open Run and Debug View to start your project.",
+            "title": "Launch and debug your app",
+            "description": "The debugger will automatically find the entry point of your project, launch it and start debugging.",
             "button": {
               "command": "workbench.view.debug",
               "title": "Show Run and Debug View"
@@ -137,8 +137,8 @@
           },
           {
             "id": "java.showTesting",
-            "title": "Testing",
-            "description": "Use Testing View to run unit tests.",
+            "title": "Run & debug tests",
+            "description": "The place to show all the test cases in your project. You can also run/debug your test cases from here.",
             "button": {
               "command": "testExplorer.focus",
               "title": "Show Testing View"
@@ -282,8 +282,8 @@
     "ts-loader": "^4.3.0",
     "tslint": "^5.20.1",
     "typescript": "^3.7.5",
-    "vscode-tas-client": "^0.1.17",
     "url-loader": "^4.1.1",
+    "vscode-tas-client": "^0.1.17",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
