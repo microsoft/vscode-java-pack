@@ -18,10 +18,10 @@ import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfi
 import { TreatmentVariables } from "./exp/TrearmentVariables";
 
 export async function activate(context: vscode.ExtensionContext) {
-  // initialize exp service ahead of activation operation to make sure exp context properties are set.
-  await initExp(context);
   syncState(context);
   initializeTelemetry(context);
+  // initialize exp service ahead of activation operation to make sure exp context properties are set.
+  await initExp(context);
   await instrumentOperation("activation", initializeExtension)(context);
 }
 
