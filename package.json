@@ -183,7 +183,7 @@
     "tslint": "^5.20.1",
     "typescript": "^3.7.5",
     "url-loader": "^4.1.1",
-    "vscode-tas-client": "^0.1.17",
+    "vscode-tas-client": "^0.1.22",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
