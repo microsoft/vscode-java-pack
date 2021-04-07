@@ -117,7 +117,7 @@ const Setting = (prop: SettingProps): JSX.Element => {
     }
   });
   return (
-    <div style={{ height: "400px" }}>{result}</div>
+    <div className="formatter-setting-section">{result}</div>
   );
 };
 

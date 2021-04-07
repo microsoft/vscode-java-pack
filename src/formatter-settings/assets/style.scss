@@ -4,6 +4,8 @@ $enable-rounded: false;
   margin: auto;
   overflow: hidden;
   max-width: 1080px !important;
+  min-width: 600px !important;
+  min-height: 700px !important;
 }
 
 .setting-header {
@@ -12,6 +14,7 @@ $enable-rounded: false;
 
 .setting-section {
   padding: 12px 0px 18px 0px;
+  max-width: 300px;
 
   &:hover {
     background-color: var(--vscode-notebook-rowHoverBackground) !important;
@@ -234,9 +237,12 @@ body.vscode-high-contrast {
 
 .setting-nav .nav-link {
   color: var(--vscode-descriptionForeground);
+  min-width: 100px;
+  max-width: 180px;
 
   &.active {
-    color: var(--vscode-settings-headerForeground);
+    color: var(--vscode-sideBarTitle-foreground) !important;
+    border: blueviolet;
     font-weight: 700;
   }
 }
@@ -247,6 +253,31 @@ input[type=number]::-webkit-outer-spin-button {
     -moz-appearance: none;
     appearance: none;
     margin: 0; 
+}
+
+.preview {
+  min-width: 300px !important;
+  max-width: 540px !important;
+  max-height: 400px !important;
+  min-height: 300px !important;
+}
+
+.formatter-setting-section {
+  min-width: 200px !important;
+  max-width: 360px !important;
+  max-height: 500px !important;
+  overflow: auto !important;
+}
+
+pre.hljs
+code.hljs {
+  background-color: var(--vscode-notebook-rowHoverBackground);
+  border: 1px solid var(--vscode-settings-textInputBorder);
+  padding: 4px;
+}
+
+.hljs {
+  font-size: medium;
 }
 
 @import "../../assets/vscode.scss";

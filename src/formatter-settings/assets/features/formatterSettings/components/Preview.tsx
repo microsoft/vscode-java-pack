@@ -24,7 +24,7 @@ const Preview = (): JSX.Element => {
       <div className="setting-section-header mb-1">
         <h4 className="mb-0">Preview{(format === true) ? "" : "(Raw Code)"}</h4>
       </div>
-      <div style={{ height: "400px", overflow: "auto" }}>{Highlighter(content)}</div>
+      <div>{Highlighter(content)}</div>
       <Button className={`${changed ? "" : "disabled"} float-right`} aria-disabled={!changed} onClick={handleApply}>Apply</Button>
     </div>
   );

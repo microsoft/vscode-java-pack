@@ -227,7 +227,7 @@ export namespace SupportedSettings {
 
 export namespace PreviewExample {
 
-    export const COMMON_EXAMPLE = "package com.example\n" +
+    export const COMMON_EXAMPLE = "package com.example;\n" +
         "\n" +
         "class Example {\n" +
         "    int[] myArray = { 1, 2, 3, 4, 5, 6 };\n" +
@@ -239,7 +239,7 @@ export namespace PreviewExample {
         "\"\"\";\n" +
         "}\n";
 
-    export const BLANKLINE_EXAMPLE = "package com.example\n" +
+    export const BLANKLINE_EXAMPLE = "package com.example;\n" +
         "\n" +
         "import java.util.List;\n" +
         "import java.util.Arrays;\n" +
@@ -293,7 +293,7 @@ export namespace PreviewExample {
         "    }\n" +
         "}\n";
 
-    export const WHITESPACE_EXAMPLE = "package example\n" +
+    export const WHITESPACE_EXAMPLE = "package example;\n" +
         "\n" +
         "@interface MyAnnotation { String value(); }\n" +
         "int[] array1 = new int[]{ 1, 2, 3 };\n" +
