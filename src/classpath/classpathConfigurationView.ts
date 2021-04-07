@@ -19,7 +19,7 @@ let currentProjectRoot: vscode.Uri;
 const SOURCE_PATH_KEY: string = "org.eclipse.jdt.ls.core.sourcePaths";
 const OUTPUT_PATH_KEY: string = "org.eclipse.jdt.ls.core.outputPath";
 const REFERENCED_LIBRARIES_KEY: string = "org.eclipse.jdt.ls.core.referencedLibraries";
-const MINIMUM_JAVA_EXTENSION_VERSION: string = "0.77.0";
+const MINIMUM_JAVA_EXTENSION_VERSION: string = "0.76.0";
 
 export async function showClasspathConfigurationPage(context: vscode.ExtensionContext): Promise<void> {
     if (classpathConfigurationPanel) {

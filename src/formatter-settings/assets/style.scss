@@ -158,10 +158,15 @@ body.vscode-high-contrast {
   transform: scale(1.2);
 }
 
+.form-label {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
 .form-check {
-  position: relative;
-  min-height: 1.5rem;
-  padding-left: 1.5rem;
+  position: relative !important;
+  min-height: 1.5rem !important;
+  padding-left: 1.5rem !important;
 
   .form-check-input {
     position: absolute;
@@ -235,6 +240,14 @@ body.vscode-high-contrast {
     color: var(--vscode-settings-headerForeground);
     font-weight: 700;
   }
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0; 
 }
 
 @import "../../assets/vscode.scss";

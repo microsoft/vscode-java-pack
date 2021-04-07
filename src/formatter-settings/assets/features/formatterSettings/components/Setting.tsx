@@ -26,21 +26,26 @@ const Setting = (prop: SettingProps): JSX.Element => {
   const handleChangeCheckbox = (e: any) => {
     const id = e.target.id;
     const value = (e.target.checked === true) ? "true" : "false";
-    dispatch(updateSetting({id: id, value: formatterConverter.valueConvert(id, value)}));
+    dispatch(updateSetting({ id: id, value: formatterConverter.valueConvert(id, value) }));
     changeSetting(id, value);
   };
 
   const handleChangeInput = (e: any) => {
     const id = e.target.id;
-    const value = e.target.value;
-    dispatch(updateSetting({id: id, value: value}));
+    let value = e.target.value;
+    if (!value || value === "") {
+      value = "0";
+    }
+    dispatch(updateSetting({ id: id, value: value }));
     changeSetting(id, value);
   };
 
   const handleSelect = (setting: JavaFormatterSetting, entry: string) => {
-    dispatch(updateSetting({id: setting.id, value: entry}));
+    dispatch(updateSetting({ id: setting.id, value: entry }));
     changeSetting(setting.id, entry);
   };
+
+  
 
   const generateSettingsLeaf = (setting: JavaFormatterSetting) => {
     if (!setting.name || !setting.id || !setting.value) {
@@ -94,7 +99,7 @@ const Setting = (prop: SettingProps): JSX.Element => {
           <Row className="setting-section">
             <Col>
               <Form.Label className="setting-section-description">{setting.name}.</Form.Label>
-              <Form.Control className="text-break pl-1 mt-1" id={setting.id} defaultValue={setting.value} onChange={handleChangeInput}></Form.Control>
+              <Form.Control className="pl-1 mt-1" type="number" id={setting.id} defaultValue={setting.value} onChange={handleChangeInput}></Form.Control>
             </Col>
           </Row>
         );
