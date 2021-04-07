@@ -39,7 +39,8 @@ export default class NavigationPanel extends React.Component {
       actions: [
         { name: "Getting Started", command: "java.gettingStarted" },
         { name: "Tutorial: Running and Debugging", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-debugging"] },
-        { name: "Tutorial: Testing", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] }
+        { name: "Tutorial: Testing", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] },
+        { name: "Configure Sources, Dependencies, Output Folder...", command: "java.classpathConfiguration"}
       ]
     },
   ];

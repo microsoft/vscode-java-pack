@@ -52,7 +52,7 @@ const ProjectSelector = (): JSX.Element | null => {
   return (
     <Row className="setting-section">
       <Col>
-        <span className="setting-section-description">Select the project.</span>
+        <span className="setting-section-description">Select the project folder.</span>
         <Dropdown className="mt-1">
           <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left">
             <span>{projects[activeProjectIndex].name}</span>

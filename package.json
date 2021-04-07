@@ -126,6 +126,18 @@
           "command": "java.runtime",
           "group": "overflow_30@10",
           "when": "view == javaProjectExplorer"
+        },
+        {
+          "command": "java.classpathConfiguration",
+          "group": "overflow_30@20",
+          "when": "view == javaProjectExplorer"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "java.classpathConfiguration",
+          "group": "9_configuration@20",
+          "when": "view == javaProjectExplorer && viewItem =~ /java:project(?=.*?\\b\\+unmanagedFolder\\b)(?=.*?\\b\\+uri\\b)/"
         }
       ]
     }
