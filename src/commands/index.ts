@@ -39,7 +39,7 @@ export function initialize(context: vscode.ExtensionContext) {
       // To filter the setting in the workspace scope, see: https://github.com/microsoft/vscode/issues/90086#issuecomment-803510704
       await vscode.commands.executeCommand("workbench.action.openSettings", "java.project.sourcePaths");
       await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings");
-      markdownPreviewProvider.show(context.asAbsolutePath(path.join("src", "classpath", "assets", "classpathConfiguration.md")), "Classpath Settings", context);
+      markdownPreviewProvider.show(context.asAbsolutePath(path.join("webview-resources", "classpathConfiguration.md")), "Classpath Settings", context);
     }
   }));
 }
