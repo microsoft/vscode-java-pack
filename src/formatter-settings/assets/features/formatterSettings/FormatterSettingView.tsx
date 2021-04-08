@@ -115,9 +115,9 @@ const FormatterSettingsView = (): JSX.Element => {
         </Col>
       </Row>
       <Row>
-        <Col className="col-2">{naviBar}</Col>
-        <Col className="col-4">{content}</Col>
-        <Col className="col-6"><Preview /></Col>
+        <Col sm={0} md={2} lg={2}>{naviBar}</Col>
+        <Col sm={4} md={4} lg={4}>{content}</Col>
+        <Col sm={8} md={6} lg={6}><Preview /></Col>
       </Row>
     </Container>
   );

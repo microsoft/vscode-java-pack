@@ -25,7 +25,7 @@ const Preview = (): JSX.Element => {
         <h4 className="mb-0">Preview{(format === true) ? "" : "(Raw Code)"}</h4>
       </div>
       <div>{Highlighter(content)}</div>
-      <Button className={`${changed ? "" : "disabled"} float-right`} aria-disabled={!changed} onClick={handleApply}>Apply</Button>
+      <Button className={`${changed ? "" : "disabled"} float-right`} aria-disabled={!changed} onClick={handleApply}>Apply Changes</Button>
     </div>
   );
 };

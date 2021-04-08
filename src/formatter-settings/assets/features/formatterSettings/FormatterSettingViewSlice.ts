@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { createSlice } from "@reduxjs/toolkit";
-import { Catagory, JavaFormatterSetting, PreviewExample } from "../../../FormatterConstants";
+import { Catagory, PreviewExample } from "../../../FormatterConstants";
 import { initializeSupportedSettings } from "./SupportedSettings";
 import { applyChanges, changeCatagory } from "../../vscode.api";
 
@@ -10,7 +10,7 @@ export const formatterSettingsViewSlice = createSlice({
   name: "formatterSettings",
   initialState: {
     activeCatagory: Catagory.Common,
-    settings: [] as JavaFormatterSetting[],
+    settings: initializeSupportedSettings(21),
     version: 21,
     content: PreviewExample.COMMON_EXAMPLE,
     formattedContent: "",

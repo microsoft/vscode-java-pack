@@ -3,18 +3,23 @@ $enable-rounded: false;
 .root {
   margin: auto;
   overflow: hidden;
-  max-width: 1080px !important;
-  min-width: 600px !important;
-  min-height: 700px !important;
+  max-width: 1200px !important;
+  min-width: 576px !important;
 }
 
 .setting-header {
   padding: 15px 0px 10px 0px;
 }
 
+.setting {
+  max-height: 550px !important;
+  overflow: auto !important;
+}
+
 .setting-section {
   padding: 12px 0px 18px 0px;
-  max-width: 300px;
+  max-width: 370px;
+  min-width: 150px !important;
 
   &:hover {
     background-color: var(--vscode-notebook-rowHoverBackground) !important;
@@ -237,13 +242,17 @@ body.vscode-high-contrast {
 
 .setting-nav .nav-link {
   color: var(--vscode-descriptionForeground);
-  min-width: 100px;
-  max-width: 180px;
+  min-width: 96px;
+  max-width: 200px;
 
   &.active {
     color: var(--vscode-sideBarTitle-foreground) !important;
-    border: blueviolet;
     font-weight: 700;
+  }
+
+  &:focus {
+    outline: 1px solid var(--vscode-focusBorder) !important;
+    outline-offset: -1px;
   }
 }
 
@@ -255,25 +264,14 @@ input[type=number]::-webkit-outer-spin-button {
     margin: 0; 
 }
 
-.preview {
-  min-width: 300px !important;
-  max-width: 540px !important;
-  max-height: 400px !important;
-  min-height: 300px !important;
-}
-
-.formatter-setting-section {
-  min-width: 200px !important;
-  max-width: 360px !important;
-  max-height: 500px !important;
-  overflow: auto !important;
-}
-
 pre.hljs
 code.hljs {
   background-color: var(--vscode-notebook-rowHoverBackground);
   border: 1px solid var(--vscode-settings-textInputBorder);
   padding: 4px;
+  min-width: 288px !important;
+  max-height: 550px !important;
+  min-height: 300px !important;
 }
 
 .hljs {
