@@ -46,7 +46,7 @@ const FormatterSettingsView = (): JSX.Element => {
   };
 
   const naviBar: JSX.Element = (
-    <Nav activeKey={activeCatagory} className="setting-nav" onSelect={onClickNaviBar}>
+    <Nav activeKey={activeCatagory} className="setting-nav flex-sm-column" onSelect={onClickNaviBar}>
       <Nav.Item>
         <Nav.Link eventKey={Catagory.Common}>Common</Nav.Link>
       </Nav.Item>
@@ -115,9 +115,9 @@ const FormatterSettingsView = (): JSX.Element => {
         </Col>
       </Row>
       <Row>
-        <Col sm={0} md={2} lg={2}>{naviBar}</Col>
-        <Col sm={4} md={4} lg={4}>{content}</Col>
-        <Col sm={8} md={6} lg={6}><Preview /></Col>
+        <Col sm="auto" md={1} lg={1}>{naviBar}</Col>
+        <Col sm="auto" md="auto" lg="auto">{content}</Col>
+        <Col sm="auto" md="auto" lg="auto"><Preview /></Col>
       </Row>
     </Container>
   );

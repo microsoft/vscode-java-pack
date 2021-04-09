@@ -96,7 +96,14 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         if (text.trim().length === 0) {
             return;
         }
-        const builder = new xml2js.Builder();
+        const options = {
+            xmldec: {
+                version: "1.0",
+                encoding: "UTF-8",
+                standalone: false,
+            }
+        };
+        const builder = new xml2js.Builder(options);
         try {
             const result = await xml2js.parseStringPromise(text);
             for (const profile of result.profiles.profile) {
@@ -109,8 +116,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             const profile = builder.buildObject(result);
             const edit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
             edit.replace(document.uri, new vscode.Range(new vscode.Position(0, 0), new vscode.Position(document.lineCount, 0)), profile);
-            await vscode.workspace.applyEdit(edit);
-            document.save();
+            vscode.workspace.applyEdit(edit);
         } catch (e) {
             throw new Error(e);
         }
@@ -140,6 +146,16 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 });
             }
         }
+
+        const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
+            if (e.document.uri.toString() === document.uri.toString()) {
+                // updateWebview();
+            }
+        });
+
+        webviewPanel.onDidDispose(() => {
+            changeDocumentSubscription.dispose();
+        });
 
         webviewPanel.webview.onDidReceiveMessage(async (e) => {
             switch (e.command) {
