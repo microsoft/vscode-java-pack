@@ -47,7 +47,8 @@
     "onCommand:java.welcome",
     "onWebviewPanel:java.welcome",
     "onCommand:java.classpathConfiguration",
-    "onWebviewPanel:java.classpathConfiguration"
+    "onWebviewPanel:java.classpathConfiguration",
+    "onWebviewPanel:java.markdownPreview"
   ],
   "contributes": {
     "commands": [
