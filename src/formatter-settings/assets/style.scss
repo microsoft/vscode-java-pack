@@ -6,19 +6,23 @@ $enable-rounded: false;
   min-width: 576px !important;
 }
 
+.setting-content {
+  display: flex;
+}
+
 .setting-header {
   padding: 15px 0px 10px 0px;
 }
 
 .setting {
   max-height: 550px !important;
+  width: 300px;
   overflow: auto !important;
 }
 
 .setting-section {
   padding: 12px 14px 18px 14px;
-  max-width: 340px;
-
+  width: 280px;
   &:hover {
     background-color: var(--vscode-notebook-rowHoverBackground) !important;
   }
@@ -28,6 +32,7 @@ $enable-rounded: false;
   color: var(--vscode-settings-headerForeground) !important;
   display: flex;
   align-items: baseline;
+  padding-top: 12px;
 
   span {
     color: var(--vscode-descriptionForeground) !important;
@@ -35,9 +40,16 @@ $enable-rounded: false;
 }
 
 .setting-section-description {
-  color: var(--vscode-descriptionForeground) !important;
+  color: rgba(var(--vscode-descriptionForeground), 0.9) !important;
   font-size: 13px;
   line-height: 1.4em;
+}
+
+.setting-section-description-checkbox {
+  color: rgba(var(--vscode-descriptionForeground), 0.9) !important;
+  font-size: 13px;
+  line-height: 1.4em;
+  padding-left: 27px !important;
 }
 
 .warning {
@@ -45,11 +57,11 @@ $enable-rounded: false;
 }
 
 .inactive {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .dropdown {
-  max-width: 200px !important;
+  width: 200px !important;
 
   .dropdown-button {
     color: var(--vscode-settings-dropdownForeground) !important;
@@ -152,7 +164,7 @@ body.vscode-high-contrast {
   border: 1px solid var(--vscode-settings-textInputBorder);
   height: auto;
   padding: 4px;
-  min-width: 200px;
+  width: 200px;
   min-height: 26px;
   display: table;
 }
@@ -181,8 +193,8 @@ body.vscode-high-contrast {
     top: 0;
     margin: 0;
     padding: 0;
-    width: 0;
-    height: 0;
+    width: 18px;
+    height: 18px;
     opacity: 0;
 
     &:checked~.form-check-label svg.codicon {
@@ -231,7 +243,7 @@ body.vscode-high-contrast {
   border: 1px solid var(--vscode-settings-textInputBorder) !important;
   height: auto !important;
   padding: 2px 4px !important;
-  max-width: 200px !important;
+  width: 200px !important;
   &:focus, &:active{
     outline: none !important;
     box-shadow: none !important;
@@ -240,15 +252,15 @@ body.vscode-high-contrast {
 }
 
 .setting-nav .nav-link {
-  color: var(--vscode-descriptionForeground);
-  width: 80px;
+  color: rgba(var(--vscode-sideBarTitle-foreground), 0.9) !important;
+  width: 100px;
   height: 22px;
-  padding: 0px;
+  padding: 11px 0px 0px 0px !important;
   font-size: 13px;
   line-height: 22px;
 
   &.active {
-    color: var(--vscode-sideBarTitle-foreground) !important;
+    color: rgba(var(--vscode-sideBarTitle-foreground), 0.9) !important;
     font-weight: 700;
   }
 
@@ -270,8 +282,6 @@ code.hljs {
   background-color: var(--vscode-notebook-rowHoverBackground);
   border: 1px solid var(--vscode-settings-textInputBorder);
   padding: 20px !important;
-  margin-bottom: 0px !important;
-  min-width: 288px !important;
   max-height: 550px !important;
   min-height: 300px !important;
 }

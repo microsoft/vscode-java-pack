@@ -46,26 +46,30 @@ const FormatterSettingsView = (): JSX.Element => {
   };
 
   const naviBar: JSX.Element = (
-    <Nav activeKey={activeCatagory} className="setting-nav flex-sm-column" onSelect={onClickNaviBar}>
-      <Nav.Item>
-        <Nav.Link eventKey={Catagory.Common}>Common</Nav.Link>
-      </Nav.Item>
-      <Nav.Item>
-        <Nav.Link eventKey={Catagory.Blankline}>Blankline</Nav.Link>
-      </Nav.Item>
-      <Nav.Item>
-        <Nav.Link eventKey={Catagory.Comment}>Comment</Nav.Link>
-      </Nav.Item>
-      <Nav.Item>
-        <Nav.Link eventKey={Catagory.Newline}>Newline</Nav.Link>
-      </Nav.Item>
-      <Nav.Item>
-        <Nav.Link eventKey={Catagory.Whitespace}>Whitespace</Nav.Link>
-      </Nav.Item>
-      <Nav.Item>
-        <Nav.Link eventKey={Catagory.Wrapping}>Wrapping</Nav.Link>
-      </Nav.Item>
-    </Nav>
+    <Row>
+      <Col>
+        <Nav activeKey={activeCatagory} className="setting-nav flex-sm-column" onSelect={onClickNaviBar}>
+          <Nav.Item>
+            <Nav.Link eventKey={Catagory.Common}>Common</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey={Catagory.Blankline}>Blankline</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey={Catagory.Comment}>Comment</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey={Catagory.Newline}>Newline</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey={Catagory.Whitespace}>Whitespace</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey={Catagory.Wrapping}>Wrapping</Nav.Link>
+          </Nav.Item>
+        </Nav>
+      </Col>
+    </Row>
   );
 
   const dispatch: Dispatch<any> = useDispatch();
@@ -114,10 +118,10 @@ const FormatterSettingsView = (): JSX.Element => {
           <Header />
         </Col>
       </Row>
-      <Row>
-        <Col sm="auto" md={1} lg={1}>{naviBar}</Col>
-        <Col sm="auto" md="auto" lg="auto">{content}</Col>
-        <Col sm="auto" md="auto" lg="auto"><Preview /></Col>
+      <Row className="flex-nowrap overflow-auto">
+        <Col className="flex-grow-0 flex-shrink-0">{naviBar}</Col>
+        <Col className="flex-grow-0 flex-shrink-0">{content}</Col>
+        <Col sm={6}><Preview /></Col>
       </Row>
     </Container>
   );

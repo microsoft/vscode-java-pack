@@ -61,7 +61,7 @@ const Setting = (prop: SettingProps): JSX.Element => {
                 <Form.Check.Input type="checkbox" checked={(setting.value === "true" || setting.value === "insert")} onChange={handleChangeCheckbox} />
                 <Form.Check.Label className="setting-section-description">
                   <Icon className="codicon" icon={checkIcon} />
-                  {setting.name}.
+                  <div className="setting-section-description-checkbox">{setting.name}.</div>
                 </Form.Check.Label>
               </Form.Check>
             </Col>
