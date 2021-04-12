@@ -13,10 +13,3 @@ window.addEventListener("message", event => {
         ReactDOM.render(React.createElement(GetStartedPage, data.props), document.getElementById("content"));
     }
   });
-  
-
-function render() {
-    ReactDOM.render(React.createElement(GetStartedPage), document.getElementById("content"));
-}
-
-render();
