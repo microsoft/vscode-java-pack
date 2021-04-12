@@ -252,11 +252,15 @@ body.vscode-high-contrast {
   }
 }
 
+.setting-nav {
+  padding: 11px 0px 0px 0px !important;
+}
+
 .setting-nav .nav-link {
   color: rgba(var(--vscode-sideBarTitle-foreground), 0.9) !important;
   width: 80px;
   height: 22px;
-  padding: 11px 0px 0px 0px !important;
+  padding: 0px 0px 0px 0px !important;
   font-size: var(--vscode-font-size);
   line-height: 22px;
 
@@ -278,15 +282,11 @@ input[type=number]::-webkit-outer-spin-button {
     margin: 0; 
 }
 
-.preview-header {
-  padding-left: 15px;
-}
-
-pre.hljs
-code.hljs {
-  background-color: var(--vscode-notebook-rowHoverBackground);
+pre.hljs {
+  color: var(--vscode-notebook-rowHoverBackground) !important;
   border: 1px solid var(--vscode-settings-textInputBorder);
-  padding: 10px 15px 15px 15px !important;
+  margin: 0px 0px 0px 0px !important;
+  padding: 0px 0px 0px 15px !important;
   @media (max-width: 1200px) and (min-width: 992px) {
     max-width: 595px !important;
   }
@@ -297,14 +297,26 @@ code.hljs {
   min-height: 300px !important;
 }
 
+.preview-header {
+  padding-left: 15px;
+  padding-bottom: 5px;
+}
+
+code.hljs {
+  background-color: var(--vscode-notebook-rowHoverBackground) !important;
+  border: 1px solid var(--vscode-settings-textInputBorder);
+  padding: 10px 15px 15px 15px !important;
+  @media (max-width: 991px) {
+    width: 565px !important;
+  }
+  max-height: 550px !important;
+  min-height: 300px !important;
+}
+
 .hljs {
   font-size: medium;
-  padding: 5px 0px 0px 15px !important;
-  @media (max-width: 1200px) and (min-width: 992px) {
-    max-width: 625px !important;
-  }
   @media (max-width: 991px) {
-    width: 625px !important;
+    width: 595px !important;
   }
 }
 

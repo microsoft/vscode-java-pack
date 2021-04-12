@@ -11,7 +11,6 @@ class FormatterConverter {
             case SupportedSettings.INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS:
             case SupportedSettings.INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST:
             case SupportedSettings.INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER:
-            case SupportedSettings.INSERT_SPACE_BEFORE_AT_IN_ANNOTATION_TYPE_DECLARATION:
             case SupportedSettings.INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER:
             case SupportedSettings.INSERT_NEW_LINE_IN_CONTROL_STATEMENTS:
             case SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION:

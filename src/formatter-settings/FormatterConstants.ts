@@ -54,7 +54,6 @@ export namespace SupportedSettings {
     export const INSERT_SPACE_BEFORE_FIRST_INITIALIZER = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_space_before_first_initializer`;
     // Active Settings
     export const INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_space_before_closing_brace_in_array_initializer`;
-    export const INSERT_SPACE_BEFORE_AT_IN_ANNOTATION_TYPE_DECLARATION = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_space_before_at_in_annotation_type_declaration`;
     export const INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_space_after_opening_brace_in_array_initializer`;
     export const INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_space_after_closing_paren_in_cast`;
     export const INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_space_after_closing_angle_bracket_in_type_arguments`;
@@ -95,6 +94,8 @@ export namespace SupportedSettings {
     export const COMMENT_FORMATHEADER = "comment_format_header";
     export const COMMENT_CLEARBLANKLINES = "comment_clear_blank_lines";
     export const COMMENT_CLEAR_BLANK_LINES = "comment.clear_blank_lines";
+    export const COMMENT_FORMATTER_COMMENT = "comment_format_comments";
+    export const COMMENT_FORMATTER_COMMENT_CORE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.comment.format_comments`;
     // Current Settings
     export const COMMENT_INDENT_ROOT_TAGS = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.comment.indent_root_tags`;
     export const COMMENT_INDENT_PARAMETER_DESCRIPTION = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.comment.indent_parameter_description`;
@@ -105,8 +106,8 @@ export namespace SupportedSettings {
     export const COMMENT_CLEAR_BLANK_LINES_IN_BLOCK_COMMENT = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.comment.clear_blank_lines_in_block_comment`;
     export const COMMENT_ALIGN_TAGS_DESCRIPTIONS_GROUPED = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.comment.align_tags_descriptions_grouped`;
     export const COMMENT_LINE_LENGTH = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.comment.line_length`;
-    export const COMMENT_ON_OFF_TAGS = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.comment.use_on_off_tags`;
-    export const FORMAT_LINE_COMMENT_STARTING_ON_FIRST_COLUMN = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.format_line_comment_starting_on_first_column`;
+    export const COMMENT_ON_OFF_TAGS = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.use_on_off_tags`;
+    export const FORMAT_LINE_COMMENTS = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.comment.format_line_comments`;
     // Blank Lines
     export const BLANK_LINES_BETWEEN_TYPE_DECLARATIONS = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.blank_lines_between_type_declarations`;
     export const BLANK_LINES_BETWEEN_IMPORT_GROUPS = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.blank_lines_between_import_groups`;
@@ -145,14 +146,23 @@ export namespace SupportedSettings {
     ];
 
     export const whitespaceSettings: string[] = [
+        INSERT_SPACE_BEFORE_FIRST_INITIALIZER,
         INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER,
-        INSERT_SPACE_BEFORE_AT_IN_ANNOTATION_TYPE_DECLARATION,
         INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER,
         INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST,
         INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS
     ];
 
     export const newlineSettings: string[] = [
+        INSERT_NEW_LINE_IN_CONTROL_STATEMENTS,
+        INSERT_NEW_LINE_AFTER_ANNOTATION,
+        INSERT_NEW_LINE_AFTER_ANNOTATION_ON_MEMBER,
+        INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION,
+        INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY,
+        INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION,
+        INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT,
+        INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION,
+        INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION,
         INSERT_NEW_LINE_BEFORE_WHILE_IN_DO_STATEMENT,
         INSERT_NEW_LINE_BEFORE_FINALLY_IN_TRY_STATEMENT,
         INSERT_NEW_LINE_BEFORE_ELSE_IN_IF_STATEMENT,
@@ -174,17 +184,24 @@ export namespace SupportedSettings {
     ];
 
     export const commentsSettings: string[] = [
+        COMMENT_LINELENGTH,
+        COMMENT_INDENTPARAMETERDESCRIPTION,
+        COMMENT_FORMATHEADER,
+        COMMENT_CLEARBLANKLINES,
+        COMMENT_CLEAR_BLANK_LINES,
+        COMMENT_FORMATTER_COMMENT,
+        COMMENT_FORMATTER_COMMENT_CORE,
         COMMENT_INDENT_ROOT_TAGS,
         COMMENT_INDENT_PARAMETER_DESCRIPTION,
         COMMENT_FORMAT_HEADER,
         COMMENT_FORMAT_BLOCK_COMMENTS,
+        FORMAT_LINE_COMMENTS,
         COMMENT_COUNT_LINE_LENGTH_FROM_STARTING_POSITION,
         COMMENT_CLEAR_BLANK_LINES_IN_JAVADOC_COMMENT,
         COMMENT_CLEAR_BLANK_LINES_IN_BLOCK_COMMENT,
         COMMENT_ALIGN_TAGS_DESCRIPTIONS_GROUPED,
         COMMENT_LINE_LENGTH,
         COMMENT_ON_OFF_TAGS,
-        FORMAT_LINE_COMMENT_STARTING_ON_FIRST_COLUMN,
     ];
 
     export const blanklinesSettings: string[] = [
@@ -286,30 +303,34 @@ export namespace PreviewExample {
         "     * @param second The second parameter.\n" +
         "     * @return The result of the foo operation, usually an even number within 0 and 1000.\n" +
         "     */ int foo(int first, int second);\n" +
+        "// This is a long comment that should be split in multiple line comments in case the line comment formatting is enabled\n" +
+        "     int foo2();\n" +
+        "     // @formatter:off\n" +
+        "     void method2(int     a,   int   b);\n" +
+        "     // @formatter:on\n" +
         "}\n";
 
-    export const NEWLINE_EXAMPLE = "class Example {\n" +
-        "    void bar() {\n" +
-        "        label: do { } while (true);\n" +
+    export const NEWLINE_EXAMPLE = "@Deprecated package com.example;\n" +
+        "class Example {\n" +
+        "    static int [] fArray= {1, 2, 3, 4, 5 };\n" +
+        // eslint-disable-next-line @typescript-eslint/quotes
+        `    void bar(@SuppressWarnings("unused") int i) {\n` +
+        "        do { } while (true);\n" +
         "        try { } catch (Exception e) { } finally { }\n" +
+        "        if (true) { return; } else if (false) { return; }\n" +
+        "        ;;\n" +
         "    }\n" +
-        "    void foo(int state) {\n" +
-        "        if (true) return;\n" +
-        "        if (true) return; else if (false) return; else return;\n" +
-        "    }\n" +
-        "    void bar2() {\n" +
-        "        while(!stop)doSomething();\n" +
-        "        for(String s : myStrings)System.out.println(s);\n" +
-        "        do doSomethingElse();while(!stop);\n" +
-        "    }\n" +
-        "}\n";
+        "}\n" +
+        "enum MyEnum {    @Deprecated UNDEFINED(0) { }}\n";
 
     export const WHITESPACE_EXAMPLE = "package example;\n" +
-        "\n" +
-        "@interface MyAnnotation { String value(); }\n" +
-        "int[] array1 = new int[]{ 1, 2, 3 };\n" +
-        "String s = ((String)object);\n" +
-        "x.<String, Element>foo();\n";
+        "class Example {\n" +
+        "public int[] array1 = new int[]{ 1, 2, 3 };\n" +
+        "public String s = ((String)object);\n" +
+        "public void foo(){\n" +
+        "x.<String, Element>foo();\n" +
+        "}\n" +
+        "}\n";
 
     export const WRAPPING_EXAMPLE = "public class Example {\n" +
         "\n" +

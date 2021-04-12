@@ -53,13 +53,13 @@ const FormatterSettingsView = (): JSX.Element => {
             <Nav.Link eventKey={Catagory.Common}>Common</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey={Catagory.Blankline}>Blankline</Nav.Link>
+            <Nav.Link eventKey={Catagory.Blankline}>Blank Lines</Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link eventKey={Catagory.Comment}>Comment</Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey={Catagory.Newline}>Newline</Nav.Link>
+            <Nav.Link eventKey={Catagory.Newline}>New Lines</Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link eventKey={Catagory.Whitespace}>Whitespace</Nav.Link>

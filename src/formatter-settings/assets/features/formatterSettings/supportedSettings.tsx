@@ -74,7 +74,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_BEFORE_ELSE_IN_IF_STATEMENT,
-    name: "Before 'else' in a 'if' statement",
+    name: "Before 'else' in an 'if' statement",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -156,7 +156,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION,
-    name: "In empty type declaration",
+    name: "In empty class declaration",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -415,12 +415,41 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
   });
 
   settings.push({
+    id: SupportedSettings.COMMENT_FORMATTER_COMMENT,
+    name: "Enable comment formatting",
+    valueKind: ValueKind.Boolean,
+    value: "true",
+    catagory: Catagory.Comment,
+    startVersion: 1,
+    deprecatedVersion: 7,
+  });
+
+  settings.push({
+    id: SupportedSettings.COMMENT_FORMATTER_COMMENT_CORE,
+    name: "Enable comment formatting",
+    valueKind: ValueKind.Boolean,
+    value: "true",
+    catagory: Catagory.Comment,
+    startVersion: 7,
+    deprecatedVersion: 11,
+  });
+
+  settings.push({
     id: SupportedSettings.COMMENT_FORMAT_BLOCK_COMMENTS,
     name: "Enable block comment formatting",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Comment,
-    startVersion: 1,
+    startVersion: 11,
+  });
+
+  settings.push({
+    id: SupportedSettings.FORMAT_LINE_COMMENTS,
+    name: "Enable line comment formatting",
+    valueKind: ValueKind.Boolean,
+    value: "true",
+    catagory: Catagory.Comment,
+    startVersion: 11,
   });
 
   settings.push({
@@ -480,26 +509,8 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
   });
 
   settings.push({
-    id: SupportedSettings.FORMAT_LINE_COMMENT_STARTING_ON_FIRST_COLUMN,
-    name: "Format line comments on first column",
-    valueKind: ValueKind.Boolean,
-    value: "false",
-    catagory: Catagory.Comment,
-    startVersion: 1,
-  });
-
-  settings.push({
     id: SupportedSettings.INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER,
     name: "Before closing brace in array initializer",
-    valueKind: ValueKind.Boolean,
-    value: "true",
-    catagory: Catagory.Whitespace,
-    startVersion: 1,
-  });
-
-  settings.push({
-    id: SupportedSettings.INSERT_SPACE_BEFORE_AT_IN_ANNOTATION_TYPE_DECLARATION,
-    name: "Before '@ in annotation type declaration",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Whitespace,
