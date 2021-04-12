@@ -48,7 +48,7 @@ const FormatterSettingsView = (): JSX.Element => {
   const naviBar: JSX.Element = (
     <Row>
       <Col>
-        <Nav activeKey={activeCatagory} className="setting-nav flex-sm-column" onSelect={onClickNaviBar}>
+        <Nav activeKey={activeCatagory} className="setting-nav flex-column" onSelect={onClickNaviBar}>
           <Nav.Item>
             <Nav.Link eventKey={Catagory.Common}>Common</Nav.Link>
           </Nav.Item>
@@ -118,10 +118,14 @@ const FormatterSettingsView = (): JSX.Element => {
           <Header />
         </Col>
       </Row>
-      <Row className="flex-nowrap overflow-auto">
-        <Col className="flex-grow-0 flex-shrink-0">{naviBar}</Col>
-        <Col className="flex-grow-0 flex-shrink-0">{content}</Col>
-        <Col sm={6}><Preview /></Col>
+      <Row>
+        <Col xs="auto" sm="auto" md="auto" lg="auto">{naviBar}</Col>
+        <Col xs={10} sm={10} md={10} lg={10}>
+          <Row>
+            <Col className="flex-lg-grow-0">{content}</Col>
+            <Col lg={7}><Preview/></Col>
+          </Row>
+        </Col>
       </Row>
     </Container>
   );

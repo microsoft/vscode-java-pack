@@ -9,7 +9,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
   // Section: common settings
   settings.push({
     id: SupportedSettings.TABULATION_CHAR,
-    name: "Controls Tabulation Type",
+    name: "Tab policy",
     valueKind: ValueKind.Enum,
     candidates: ["tab", "space", "mixed"],
     value: "mixed",
@@ -19,7 +19,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.TABULATION_SIZE,
-    name: "Controls Tabulation Size",
+    name: "Tabulation Size",
     valueKind: ValueKind.Number,
     value: "4",
     catagory: Catagory.Common,
@@ -28,7 +28,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INDENTATION_SIZE,
-    name: "Controls Indentation Size",
+    name: "Indentation Size",
     valueKind: ValueKind.Number,
     value: "4",
     catagory: Catagory.Common,
@@ -46,7 +46,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_IN_CONTROL_STATEMENTS,
-    name: "Insert New Line in control statements",
+    name: "In control statements",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -56,7 +56,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_BEFORE_WHILE_IN_DO_STATEMENT,
-    name: "Insert New Line before 'while' in a 'do' statement",
+    name: "Before 'while' in a 'do' statement",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -65,7 +65,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_BEFORE_FINALLY_IN_TRY_STATEMENT,
-    name: "Insert New Line before 'finally' in a 'try' statement",
+    name: "Before 'finally' in a 'try' statement",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -74,7 +74,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_BEFORE_ELSE_IN_IF_STATEMENT,
-    name: "Insert New Line before 'else' in a 'if' statement",
+    name: "Before 'else' in a 'if' statement",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -83,7 +83,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_BEFORE_CATCH_IN_TRY_STATEMENT,
-    name: "Insert New Line before 'catch' in a 'try' statement",
+    name: "Before 'catch' in a 'try' statement",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -92,7 +92,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER,
-    name: "Insert New Line before closing brace of array initializer",
+    name: "Before closing brace of array initializer",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -101,7 +101,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER,
-    name: "Insert New Line after opening brace of array initializer",
+    name: "After opening brace of array initializer",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -110,7 +110,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION,
-    name: "Insert New Line after annotation",
+    name: "After annotation",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -120,7 +120,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER,
-    name: "Insert New Line after annotation on parameters",
+    name: "After annotation on parameters",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -129,7 +129,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PACKAGE,
-    name: "Insert New Line after annotation on packages",
+    name: "After annotation on packages",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -138,7 +138,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_ENUM_CONSTANT,
-    name: "Insert New Line after annotation on enum constants",
+    name: "After annotation on enum constants",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -147,7 +147,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.PUT_EMPTY_STATEMENT_ON_NEW_LINE,
-    name: "Insert New Line before empty statement",
+    name: "Before empty statement",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Newline,
@@ -156,7 +156,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION,
-    name: "Insert New Line in empty type declaration",
+    name: "In empty type declaration",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -166,7 +166,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.KEEP_TYPE_DECLARATION_ON_ONE_LINE,
-    name: "New Line policy for class declaration",
+    name: "For class declaration",
     valueKind: ValueKind.Enum,
     candidates: ["Never", "If empty", "If at most one item", "If fits in width limit", "Preserve state"],
     value: "Never",
@@ -176,7 +176,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.KEEP_RECORD_DECLARATION_ON_ONE_LINE,
-    name: "New Line policy for record declaration",
+    name: "For record declaration",
     valueKind: ValueKind.Enum,
     candidates: ["Never", "If empty", "If at most one item", "If fits in width limit", "Preserve state"],
     value: "Never",
@@ -186,7 +186,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.KEEP_RECORD_CONSTRUCTOR_ON_ONE_LINE,
-    name: "New Line policy for record constructor",
+    name: "For record constructor",
     valueKind: ValueKind.Enum,
     candidates: ["Never", "If empty", "If at most one item", "If fits in width limit", "Preserve state"],
     value: "Never",
@@ -196,7 +196,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY,
-    name: "Insert New Line in empty method body",
+    name: "In empty method body",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -206,7 +206,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.KEEP_METHOD_BODY_ON_ONE_LINE,
-    name: "New Line policy for method body",
+    name: "For method body",
     valueKind: ValueKind.Enum,
     candidates: ["Never", "If empty", "If at most one item", "If fits in width limit", "Preserve state"],
     value: "Never",
@@ -216,7 +216,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION,
-    name: "Insert New Line in empty enum declaration",
+    name: "In empty enum declaration",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -226,7 +226,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.KEEP_ENUM_DECLARATION_ON_ONE_LINE,
-    name: "New Line policy for enum declaration",
+    name: "For enum declaration",
     valueKind: ValueKind.Enum,
     candidates: ["Never", "If empty", "If at most one item", "If fits in width limit", "Preserve state"],
     value: "Never",
@@ -236,7 +236,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT,
-    name: "Insert New Line in empty enum constant",
+    name: "In empty enum constant",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -246,7 +246,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE,
-    name: "New Line policy for enum constant declaration",
+    name: "For enum constant declaration",
     valueKind: ValueKind.Enum,
     candidates: ["Never", "If empty", "If at most one item", "If fits in width limit", "Preserve state"],
     value: "Never",
@@ -256,7 +256,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION,
-    name: "Insert New Line in empty anonymous type declaration",
+    name: "In empty anonymous type declaration",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -266,7 +266,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE,
-    name: "New Line policy for anonymous type declaration",
+    name: "For anonymous type declaration",
     valueKind: ValueKind.Enum,
     candidates: ["Never", "If empty", "If at most one item", "If fits in width limit", "Preserve state"],
     value: "Never",
@@ -276,7 +276,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION,
-    name: "Insert New Line in empty annotation declaration",
+    name: "In empty annotation declaration",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Newline,
@@ -286,7 +286,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE,
-    name: "New Line policy for annotation declaration",
+    name: "For annotation declaration",
     valueKind: ValueKind.Enum,
     candidates: ["Never", "If empty", "If at most one item", "If fits in width limit", "Preserve state"],
     value: "Never",
@@ -296,7 +296,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.BLANK_LINES_BETWEEN_TYPE_DECLARATIONS,
-    name: "Blank lines between type declarations",
+    name: "Between class declarations",
     valueKind: ValueKind.Number,
     value: "1",
     catagory: Catagory.Blankline,
@@ -305,7 +305,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.BLANK_LINES_BETWEEN_IMPORT_GROUPS,
-    name: "Blank lines between input groups",
+    name: "Between import groups",
     valueKind: ValueKind.Number,
     value: "1",
     catagory: Catagory.Blankline,
@@ -314,7 +314,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.BLANK_LINES_BEFORE_PACKAGE,
-    name: "Blank lines before package",
+    name: "Before package declarations",
     valueKind: ValueKind.Number,
     value: "0",
     catagory: Catagory.Blankline,
@@ -322,8 +322,8 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
   });
 
   settings.push({
-    id: SupportedSettings.BLANK_LINES_BEFORE_MEMBER_TYPE,
-    name: "Blank lines before member type",
+    id: SupportedSettings.BLANK_LINES_BEFORE_IMPORTS,
+    name: "Before import declarations",
     valueKind: ValueKind.Number,
     value: "1",
     catagory: Catagory.Blankline,
@@ -331,8 +331,8 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
   });
 
   settings.push({
-    id: SupportedSettings.BLANK_LINES_BEFORE_IMPORTS,
-    name: "Blank lines before imports",
+    id: SupportedSettings.BLANK_LINES_BEFORE_MEMBER_TYPE,
+    name: "Between member type declarations",
     valueKind: ValueKind.Number,
     value: "1",
     catagory: Catagory.Blankline,
@@ -425,7 +425,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.COMMENT_COUNT_LINE_LENGTH_FROM_STARTING_POSITION,
-    name: "Count line length from comment's starting position",
+    name: "Count line length from starting position",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Comment,
@@ -490,7 +490,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER,
-    name: "Insert whitespace before closing brace in array initializer",
+    name: "Before closing brace in array initializer",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Whitespace,
@@ -499,7 +499,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_SPACE_BEFORE_AT_IN_ANNOTATION_TYPE_DECLARATION,
-    name: "Insert whitespace before @ in annotation type declaration",
+    name: "Before '@ in annotation type declaration",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Whitespace,
@@ -508,7 +508,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_SPACE_BEFORE_FIRST_INITIALIZER,
-    name: "Insert whitespace before first initializer",
+    name: "Before first initializer",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Whitespace,
@@ -518,7 +518,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER,
-    name: "Insert whitespace after opening brace in array initializer",
+    name: "After opening brace in array initializer",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Whitespace,
@@ -527,7 +527,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST,
-    name: "Insert whitespace after closing parenthesis in cast",
+    name: "After closing parenthesis in cast",
     valueKind: ValueKind.Boolean,
     value: "true",
     catagory: Catagory.Whitespace,
@@ -536,7 +536,7 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
 
   settings.push({
     id: SupportedSettings.INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS,
-    name: "Insert whitespace after closing angle bracket in type arguments",
+    name: "After closing angle bracket in type",
     valueKind: ValueKind.Boolean,
     value: "false",
     catagory: Catagory.Whitespace,

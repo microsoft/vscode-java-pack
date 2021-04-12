@@ -6,7 +6,7 @@ import chevronDownIcon from "@iconify-icons/codicon/chevron-down";
 import { Icon } from "@iconify/react";
 import { Dispatch } from "@reduxjs/toolkit";
 import React from "react";
-import { Col, Dropdown, Form, Row } from "react-bootstrap";
+import { Dropdown, Form } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { Catagory, JavaFormatterSetting, ValueKind } from "../../../../FormatterConstants";
 import { changeSetting } from "../../../vscode.api";
@@ -45,7 +45,7 @@ const Setting = (prop: SettingProps): JSX.Element => {
     changeSetting(setting.id, entry);
   };
 
-  
+
 
   const generateSettingsLeaf = (setting: JavaFormatterSetting) => {
     if (!setting.name || !setting.id || !setting.value) {
@@ -55,17 +55,15 @@ const Setting = (prop: SettingProps): JSX.Element => {
     switch (setting.valueKind as ValueKind) {
       case ValueKind.Boolean:
         return (
-          <Row className="setting-section">
-            <Col>
-              <Form.Check type="checkbox" id={`${setting.id}`} >
-                <Form.Check.Input type="checkbox" checked={(setting.value === "true" || setting.value === "insert")} onChange={handleChangeCheckbox} />
-                <Form.Check.Label className="setting-section-description">
-                  <Icon className="codicon" icon={checkIcon} />
-                  <div className="setting-section-description-checkbox">{setting.name}.</div>
-                </Form.Check.Label>
-              </Form.Check>
-            </Col>
-          </Row>
+          <div className="setting-section">
+            <Form.Check type="checkbox" id={`${setting.id}`} >
+              <Form.Check.Input type="checkbox" checked={(setting.value === "true" || setting.value === "insert")} onChange={handleChangeCheckbox} />
+              <Form.Check.Label className="setting-section-description">
+                <Icon className="codicon" icon={checkIcon} />
+                <div className="setting-section-description-checkbox">{setting.name}.</div>
+              </Form.Check.Label>
+            </Form.Check>
+          </div>
         );
       case ValueKind.Enum:
         if (!setting.candidates) {
@@ -79,29 +77,25 @@ const Setting = (prop: SettingProps): JSX.Element => {
           );
         }
         return (
-          <Row className="setting-section">
-            <Col>
-              <span className="setting-section-description">{setting.name}.</span>
-              <Dropdown className="mt-1">
-                <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left">
-                  <span>{setting.value ? setting.value : setting.value}</span>
-                  <Icon className="codicon" icon={chevronDownIcon} />
-                </Dropdown.Toggle>
-                <Dropdown.Menu className="dropdown-menu mt-0 p-0">
-                  {candidates}
-                </Dropdown.Menu>
-              </Dropdown>
-            </Col>
-          </Row >
+          <div className="setting-section">
+            <span className="setting-section-description">{setting.name}.</span>
+            <Dropdown className="mt-1">
+              <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left">
+                <span>{setting.value ? setting.value : setting.value}</span>
+                <Icon className="codicon" icon={chevronDownIcon} />
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="dropdown-menu mt-0 p-0">
+                {candidates}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div >
         );
       case ValueKind.Number:
         return (
-          <Row className="setting-section">
-            <Col>
-              <Form.Label className="setting-section-description">{setting.name}.</Form.Label>
-              <Form.Control className="pl-1 mt-1" type="number" id={setting.id} defaultValue={setting.value} onChange={handleChangeInput}></Form.Control>
-            </Col>
-          </Row>
+          <div className="setting-section">
+            <Form.Label className="setting-section-description">{setting.name}.</Form.Label>
+            <Form.Control className="pl-1 mt-1" type="number" id={setting.id} defaultValue={setting.value} onChange={handleChangeInput}></Form.Control>
+          </div>
         );
       default:
         return;

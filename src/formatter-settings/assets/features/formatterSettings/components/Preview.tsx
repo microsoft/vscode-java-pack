@@ -11,14 +11,10 @@ const Preview = (): JSX.Element => {
   const format: boolean = useSelector((state: any) => state.formatterSettings.format);
   const content: string = format ? useSelector((state: any) => state.formatterSettings.formattedContent) : useSelector((state: any) => state.formatterSettings.content);
   return (
-    <Row>
-      <Col>
-      <Row className="setting-section-header mb-1">
-        <h4 className="mb-0">Preview{(format === true) ? "" : "(Raw Code)"}</h4>
-      </Row>
+    <Col>
+      <Row className="setting-section-header mb-0 h4 preview-header">Preview{(format === true) ? "" : "(Raw Code)"}</Row>
       <Row>{Highlighter(content)}</Row>
-      </Col>
-    </Row>
+    </Col>
   );
 };
 

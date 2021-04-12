@@ -3,11 +3,7 @@ $enable-rounded: false;
 .root {
   overflow: hidden;
   max-width: 1200px !important;
-  min-width: 576px !important;
-}
-
-.setting-content {
-  display: flex;
+  min-width: 768px !important;
 }
 
 .setting-header {
@@ -15,14 +11,19 @@ $enable-rounded: false;
 }
 
 .setting {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
   max-height: 550px !important;
-  width: 300px;
+  min-height: 150px !important;
+  max-width: 650px !important;
   overflow: auto !important;
 }
 
 .setting-section {
   padding: 12px 14px 18px 14px;
-  width: 280px;
+  width: 300px;
   &:hover {
     background-color: var(--vscode-notebook-rowHoverBackground) !important;
   }
@@ -41,13 +42,13 @@ $enable-rounded: false;
 
 .setting-section-description {
   color: rgba(var(--vscode-descriptionForeground), 0.9) !important;
-  font-size: 13px;
+  font-size: var(--vscode-font-size);
   line-height: 1.4em;
 }
 
 .setting-section-description-checkbox {
   color: rgba(var(--vscode-descriptionForeground), 0.9) !important;
-  font-size: 13px;
+  font-size: var(--vscode-font-size);
   line-height: 1.4em;
   padding-left: 27px !important;
 }
@@ -61,7 +62,7 @@ $enable-rounded: false;
 }
 
 .dropdown {
-  width: 200px !important;
+  width: 250px !important;
 
   .dropdown-button {
     color: var(--vscode-settings-dropdownForeground) !important;
@@ -164,7 +165,7 @@ body.vscode-high-contrast {
   border: 1px solid var(--vscode-settings-textInputBorder);
   height: auto;
   padding: 4px;
-  width: 200px;
+  width: 250px;
   min-height: 26px;
   display: table;
 }
@@ -212,7 +213,7 @@ body.vscode-high-contrast {
     position: relative;
     vertical-align: top;
     line-height: 1.4em !important;
-    font-size: 13px !important;
+    font-size: var(--vscode-font-size) !important;
 
     svg.codicon {
       position: absolute;
@@ -243,7 +244,7 @@ body.vscode-high-contrast {
   border: 1px solid var(--vscode-settings-textInputBorder) !important;
   height: auto !important;
   padding: 2px 4px !important;
-  width: 200px !important;
+  width: 250px !important;
   &:focus, &:active{
     outline: none !important;
     box-shadow: none !important;
@@ -253,10 +254,10 @@ body.vscode-high-contrast {
 
 .setting-nav .nav-link {
   color: rgba(var(--vscode-sideBarTitle-foreground), 0.9) !important;
-  width: 100px;
+  width: 80px;
   height: 22px;
   padding: 11px 0px 0px 0px !important;
-  font-size: 13px;
+  font-size: var(--vscode-font-size);
   line-height: 22px;
 
   &.active {
@@ -277,18 +278,34 @@ input[type=number]::-webkit-outer-spin-button {
     margin: 0; 
 }
 
+.preview-header {
+  padding-left: 15px;
+}
+
 pre.hljs
 code.hljs {
   background-color: var(--vscode-notebook-rowHoverBackground);
   border: 1px solid var(--vscode-settings-textInputBorder);
-  padding: 20px !important;
+  padding: 10px 15px 15px 15px !important;
+  @media (max-width: 1200px) and (min-width: 992px) {
+    max-width: 595px !important;
+  }
+  @media (max-width: 991px) {
+    width: 595px !important;
+  }
   max-height: 550px !important;
   min-height: 300px !important;
 }
 
 .hljs {
   font-size: medium;
-  padding: 0px !important;
+  padding: 5px 0px 0px 15px !important;
+  @media (max-width: 1200px) and (min-width: 992px) {
+    max-width: 625px !important;
+  }
+  @media (max-width: 991px) {
+    width: 625px !important;
+  }
 }
 
 @import "../../assets/vscode.scss";

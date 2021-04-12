@@ -249,12 +249,20 @@ export namespace PreviewExample {
         "public class Example {\n" +
         "    public interface ExampleProvider {\n" +
         "        Example getExample();\n" +
+        "        // Between here...\n" +
+        "\n" +
+        "\n" +
+        "\n" +
+        "        // and here are 3 blank lines\n" +
         "        List<Example> getManyExamples();\n" +
         "    }\n" +
         "\n" +
         "    public class Foo {\n" +
         "        int a;\n" +
         "    }\n" +
+        "}\n" +
+        "class Another {\n" +
+        "\n" +
         "}\n";
 
     export const COMMENT_EXAMPLE = "/**\n" +
@@ -263,7 +271,10 @@ export namespace PreviewExample {
         "package mypackage;\n" +
         "\n" +
         "interface Example {\n" +
-        "    /* block comment          on first column*/\n" +
+        "    /*\n" +
+        "     *\n" +
+        "     *block comment          on first column\n" +
+        "     */\n" +
         "    int bar();\n" +
         "\n" +
         "    /**\n" +
