@@ -42,9 +42,7 @@ export namespace SupportedSettings {
 
     // Common
     export const TABULATION_SIZE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.tabulation.size`;
-    export const INDENTATION_SIZE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.indentation.size`;
     export const TABULATION_CHAR = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.tabulation.char`;
-    export const INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_at_end_of_file_if_missing`;
     // Indentation
     export const INDENT_SWITCHSTATEMENTS_COMPARE_TO_SWITCH = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.indent_switchstatements_compare_to_switch`;
     export const CONTINUATION_INDENTATION_FOR_ARRAY_INITIALIZER = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.continuation_indentation_for_array_initializer`;
@@ -87,6 +85,7 @@ export namespace SupportedSettings {
     export const KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.keep_enum_constant_declaration_on_one_line`;
     export const KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.keep_anonymous_type_declaration_on_one_line`;
     export const KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.keep_annotation_declaration_on_one_line`;
+    export const INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_at_end_of_file_if_missing`;
     // Comments
     // Deprecated Settings
     export const COMMENT_LINELENGTH = "comment_line_length";
@@ -134,9 +133,7 @@ export namespace SupportedSettings {
 
     export const commonSettings: string[] = [
         TABULATION_SIZE,
-        INDENTATION_SIZE,
-        TABULATION_CHAR,
-        INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING
+        TABULATION_CHAR
     ];
 
     export const indentationSettings: string[] = [
@@ -181,6 +178,7 @@ export namespace SupportedSettings {
         KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE,
         KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE,
         KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE,
+        INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING
     ];
 
     export const commentsSettings: string[] = [
@@ -232,7 +230,7 @@ export namespace SupportedSettings {
     ];
 
     export const settings: string[] = [
-        ...commonSettings,
+        // Common settings inherit from VS Code, so we will not change them in the profile
         ...indentationSettings,
         ...whitespaceSettings,
         ...newlineSettings,

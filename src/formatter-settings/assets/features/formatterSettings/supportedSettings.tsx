@@ -6,40 +6,21 @@ import { SupportedSettings, JavaFormatterSetting, Catagory, ValueKind } from "..
 export function initializeSupportedSettings(version: number): JavaFormatterSetting[] {
   const settings: JavaFormatterSetting[] = [];
 
-  // Section: common settings
   settings.push({
     id: SupportedSettings.TABULATION_CHAR,
-    name: "Tab policy",
+    name: "Tab Policy",
     valueKind: ValueKind.Enum,
-    candidates: ["tab", "space", "mixed"],
-    value: "mixed",
+    candidates: ["tab", "space"],
+    value: "tab",
     catagory: Catagory.Common,
     startVersion: 1,
   });
 
   settings.push({
     id: SupportedSettings.TABULATION_SIZE,
-    name: "Tabulation Size",
+    name: "Tab Size",
     valueKind: ValueKind.Number,
     value: "4",
-    catagory: Catagory.Common,
-    startVersion: 1,
-  });
-
-  settings.push({
-    id: SupportedSettings.INDENTATION_SIZE,
-    name: "Indentation Size",
-    valueKind: ValueKind.Number,
-    value: "4",
-    catagory: Catagory.Common,
-    startVersion: 1,
-  });
-
-  settings.push({
-    id: SupportedSettings.INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING,
-    name: "Keep a new line at the end of file",
-    valueKind: ValueKind.Boolean,
-    value: "false",
     catagory: Catagory.Common,
     startVersion: 1,
   });
@@ -292,6 +273,15 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
     value: "Never",
     catagory: Catagory.Newline,
     startVersion: 15,
+  });
+
+  settings.push({
+    id: SupportedSettings.INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING,
+    name: "Keep a new line at the end of file",
+    valueKind: ValueKind.Boolean,
+    value: "false",
+    catagory: Catagory.Newline,
+    startVersion: 1,
   });
 
   settings.push({

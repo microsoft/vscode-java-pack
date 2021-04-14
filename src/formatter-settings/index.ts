@@ -122,6 +122,21 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         }
     }
 
+    private findJavaSpecificSetting(setting: string): string | boolean | number | undefined {
+        const config = vscode.workspace.getConfiguration().get<Object>("[java]");
+        if (!config) {
+            return undefined;
+        }
+        const entries = Object.entries(config);
+        let result: string | boolean | number | undefined;
+        for (const entry of entries) {
+            if (entry[0] === setting) {
+                result = entry[1];
+            }
+        }
+        return result;
+    }
+
     public async resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
 
         webviewPanel.webview.options = {
@@ -146,6 +161,9 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 });
             }
         }
+
+        const javaTabSize = this.findJavaSpecificSetting("editor.tabSize");
+        const javaTabPolicy = this.findJavaSpecificSetting("editor.insertSpaces");
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document.uri.toString() === document.uri.toString()) {

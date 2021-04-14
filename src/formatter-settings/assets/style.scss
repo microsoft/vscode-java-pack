@@ -12,12 +12,10 @@ $enable-rounded: false;
 
 .setting {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: flex-start;
   flex-wrap: wrap;
-  max-height: 550px !important;
-  min-height: 150px !important;
-  max-width: 650px !important;
+  max-width: 600px !important;
   overflow: auto !important;
 }
 
@@ -67,7 +65,7 @@ $enable-rounded: false;
   .dropdown-button {
     color: var(--vscode-settings-dropdownForeground) !important;
     background-color: var(--vscode-settings-dropdownBackground) !important;
-    border: 1px solid var(--vscode-settings-dropdownBorder) !important;
+    border: 0px solid var(--vscode-settings-dropdownBorder) !important;
     padding: 2px 4px !important;
     width: 100%;
   
@@ -274,12 +272,11 @@ body.vscode-high-contrast {
   }
 }
 
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    margin: 0; 
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0; 
 }
 
 pre.hljs {
@@ -287,12 +284,7 @@ pre.hljs {
   border: 1px solid var(--vscode-settings-textInputBorder);
   margin: 0px 0px 0px 0px !important;
   padding: 0px 0px 0px 15px !important;
-  @media (max-width: 1200px) and (min-width: 992px) {
-    max-width: 595px !important;
-  }
-  @media (max-width: 991px) {
-    width: 595px !important;
-  }
+  width: 100%;
   max-height: 550px !important;
   min-height: 300px !important;
 }
@@ -306,17 +298,49 @@ code.hljs {
   background-color: var(--vscode-notebook-rowHoverBackground) !important;
   border: 1px solid var(--vscode-settings-textInputBorder);
   padding: 10px 15px 15px 15px !important;
-  @media (max-width: 991px) {
-    width: 565px !important;
-  }
+  width: 100%;
   max-height: 550px !important;
   min-height: 300px !important;
 }
 
 .hljs {
   font-size: medium;
-  @media (max-width: 991px) {
-    width: 595px !important;
+  width: 100%;
+}
+
+.setting-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.setting-col-nav {
+  flex: 0 0 80px;
+}
+
+.setting-col-content {
+  flex: 1 1 0;
+  min-width: 0px;
+  max-width: 100%;
+}
+
+.setting-col-setting {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+.setting-col-preview {
+  flex: 0 0 100%;
+  max-width: 565px;
+}
+
+@media (min-width: 768px) {
+  .setting-col-setting {
+    flex: 0 0 300px;
+  }
+  .setting-col-preview {
+    flex: 1 1 300px;
+    min-width: 300px;
+    max-width: 60%;
   }
 }
 

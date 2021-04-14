@@ -118,15 +118,15 @@ const FormatterSettingsView = (): JSX.Element => {
           <Header />
         </Col>
       </Row>
-      <Row>
-        <Col xs="auto" sm="auto" md="auto" lg="auto">{naviBar}</Col>
-        <Col xs={10} sm={10} md={10} lg={10}>
-          <Row>
-            <Col className="flex-lg-grow-0">{content}</Col>
-            <Col lg={7}><Preview/></Col>
-          </Row>
-        </Col>
-      </Row>
+      <div className="setting-row">
+        <div className="setting-col-nav">{naviBar}</div>
+        <div className="setting-col-content">
+          <div className="setting-row">
+            <div className="setting-col-setting">{content}</div>
+            <div className="setting-col-preview"><Preview/></div>
+          </div>
+        </div>
+      </div>
     </Container>
   );
 };
