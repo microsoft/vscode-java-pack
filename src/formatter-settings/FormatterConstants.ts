@@ -85,7 +85,6 @@ export namespace SupportedSettings {
     export const KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.keep_enum_constant_declaration_on_one_line`;
     export const KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.keep_anonymous_type_declaration_on_one_line`;
     export const KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.keep_annotation_declaration_on_one_line`;
-    export const INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_at_end_of_file_if_missing`;
     // Comments
     // Deprecated Settings
     export const COMMENT_LINELENGTH = "comment_line_length";
@@ -178,7 +177,6 @@ export namespace SupportedSettings {
         KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE,
         KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE,
         KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE,
-        INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING
     ];
 
     export const commentsSettings: string[] = [

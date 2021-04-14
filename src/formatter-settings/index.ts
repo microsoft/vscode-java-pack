@@ -164,6 +164,8 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
 
         const javaTabSize = this.findJavaSpecificSetting("editor.tabSize");
         const javaTabPolicy = this.findJavaSpecificSetting("editor.insertSpaces");
+        const tabSize = vscode.workspace.getConfiguration().get<number>("editor.tabSize");
+        const tabPolicy = vscode.workspace.getConfiguration().get<boolean>("editor.insertSpaces");
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document.uri.toString() === document.uri.toString()) {

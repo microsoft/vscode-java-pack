@@ -276,15 +276,6 @@ export function initializeSupportedSettings(version: number): JavaFormatterSetti
   });
 
   settings.push({
-    id: SupportedSettings.INSERT_NEW_LINE_AT_THE_END_OF_FILE_IF_MISSING,
-    name: "Keep a new line at the end of file",
-    valueKind: ValueKind.Boolean,
-    value: "false",
-    catagory: Catagory.Newline,
-    startVersion: 1,
-  });
-
-  settings.push({
     id: SupportedSettings.BLANK_LINES_BETWEEN_TYPE_DECLARATIONS,
     name: "Between class declarations",
     valueKind: ValueKind.Number,
