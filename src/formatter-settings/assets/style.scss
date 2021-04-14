@@ -3,7 +3,7 @@ $enable-rounded: false;
 .root {
   overflow: hidden;
   max-width: 1200px !important;
-  min-width: 768px !important;
+  min-width: 400px !important;
 }
 
 .setting-header {
@@ -285,8 +285,7 @@ pre.hljs {
   margin: 0px 0px 0px 0px !important;
   padding: 0px 0px 0px 15px !important;
   width: 100%;
-  max-height: 550px !important;
-  min-height: 300px !important;
+  height: 100%;
 }
 
 .preview-header {
@@ -299,8 +298,7 @@ code.hljs {
   border: 1px solid var(--vscode-settings-textInputBorder);
   padding: 10px 15px 15px 15px !important;
   width: 100%;
-  max-height: 550px !important;
-  min-height: 300px !important;
+  height: 100%;
 }
 
 .hljs {
@@ -331,16 +329,23 @@ code.hljs {
 .setting-col-preview {
   flex: 0 0 100%;
   max-width: 565px;
+  max-height: 100%;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .setting-col-setting {
     flex: 0 0 300px;
   }
   .setting-col-preview {
     flex: 1 1 300px;
     min-width: 300px;
-    max-width: 60%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 750px) {
+  .setting-col-preview {
+    max-width: 265px !important;
   }
 }
 
