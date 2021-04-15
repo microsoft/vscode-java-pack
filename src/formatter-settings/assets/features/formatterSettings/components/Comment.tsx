@@ -10,9 +10,7 @@ const Comment = (): JSX.Element => {
   const settings: JavaFormatterSetting[] = useSelector((state: any) => state.formatterSettings.settings);
 
   return (
-    <div>
-        <Setting setting={settings}  catagory={Catagory.Comment}/>
-    </div>
+    <Setting setting={settings}  catagory={Catagory.Comment}/>
   );
 };
 

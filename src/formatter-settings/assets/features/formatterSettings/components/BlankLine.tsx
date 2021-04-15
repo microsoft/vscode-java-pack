@@ -10,9 +10,7 @@ const BlankLine = (): JSX.Element => {
   const settings: JavaFormatterSetting[] = useSelector((state: any) => state.formatterSettings.settings);
 
   return (
-    <div>
-        <Setting setting={settings} catagory={Catagory.Blankline}/>
-    </div>
+    <Setting setting={settings} catagory={Catagory.Blankline}/>
   );
 };
 

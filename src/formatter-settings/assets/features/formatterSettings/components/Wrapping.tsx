@@ -10,9 +10,7 @@ const Wrapping = (): JSX.Element => {
   const settings: JavaFormatterSetting[] = useSelector((state: any) => state.formatterSettings.settings);
 
   return (
-    <div>
-        <Setting setting={settings} catagory={Catagory.Wrapping}/>
-    </div>
+    <Setting setting={settings} catagory={Catagory.Wrapping}/>
   );
 };
 

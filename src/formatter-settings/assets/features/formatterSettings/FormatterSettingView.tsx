@@ -9,15 +9,18 @@ import { Catagory } from "../../../FormatterConstants";
 import Header from "./components/Header";
 import Common from "./components/Common";
 import WhiteSpace from "./components/WhiteSpace";
-import Preview from "./components/Preview";
 import BlankLine from "./components/BlankLine";
 import Comment from "./components/Comment";
 import Wrapping from "./components/Wrapping";
 import NewLine from "./components/NewLine";
 import { changeActiveCatagory, applyFormatResult, initSetting, initVersion } from "./formatterSettingViewSlice";
+import { Highlighter } from "./utils/Highlight";
 
 const FormatterSettingsView = (): JSX.Element => {
   const activeCatagory: Catagory = useSelector((state: any) => state.formatterSettings.activeCatagory);
+  const format: boolean = useSelector((state: any) => state.formatterSettings.format);
+  const contentText: string = format ? useSelector((state: any) => state.formatterSettings.formattedContent) : useSelector((state: any) => state.formatterSettings.content);
+  
   let content: JSX.Element = <div></div>;
 
   const onClickNaviBar = (element: any) => {
@@ -121,9 +124,9 @@ const FormatterSettingsView = (): JSX.Element => {
       <div className="setting-row">
         <div className="setting-col-nav">{naviBar}</div>
         <div className="setting-col-content">
-          <div className="setting-row">
+          <div className="setting-row1">
             <div className="setting-col-setting">{content}</div>
-            <div className="setting-col-preview"><Preview/></div>
+            <div className="setting-col-preview">{Highlighter(contentText)}</div>
           </div>
         </div>
       </div>
