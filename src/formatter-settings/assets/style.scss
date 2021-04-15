@@ -4,6 +4,8 @@ $enable-rounded: false;
   overflow: hidden;
   max-width: 1200px !important;
   min-width: 380px !important;
+  min-height: 220px !important;
+  height: 100vh !important;
 }
 
 .setting-header {
@@ -16,6 +18,7 @@ $enable-rounded: false;
   justify-content: flex-start;
   flex-wrap: wrap;
   max-width: 600px !important;
+  max-height: 300px !important;
   overflow: auto !important;
 }
 
@@ -325,6 +328,7 @@ code.hljs {
 .setting-col-setting {
   flex: 0 0 100%;
   max-width: 100%;
+  max-height: 100%;
 }
 
 .setting-col-preview {
@@ -341,6 +345,7 @@ code.hljs {
     flex: 1 1 300px;
     min-width: 300px;
     max-width: 100%;
+    max-height: 100%;
   }
 }
 
