@@ -123,11 +123,9 @@ const FormatterSettingsView = (): JSX.Element => {
       </Row>
       <div className="setting-row">
         <div className="setting-col-nav">{naviBar}</div>
-        <div className="setting-col-content">
-          <div className="setting-row1">
-            <div className="setting-col-setting">{content}</div>
-            <div className="setting-col-preview">{Highlighter(contentText)}</div>
-          </div>
+        <div className="setting-col-content setting-row">
+          <div className="setting-col-setting">{content}</div>
+          <div className="setting-col-preview">{Highlighter(contentText)}</div>
         </div>
       </div>
     </Container>
