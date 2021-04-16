@@ -2,7 +2,7 @@
 
 ## 0.14.0
 ### Added
-- placeholder for classpath configuration page
+- Add classpath configuration page for unmanaged folder. [#567](https://github.com/microsoft/vscode-java-pack/pull/567), [#578](https://github.com/microsoft/vscode-java-pack/pull/578)
 
 ### Changed
 - Removed `ⓘ` button from status bar. [#573](https://github.com/microsoft/vscode-java-pack/pull/573)
