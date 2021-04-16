@@ -1,7 +1,18 @@
 # Change Log
 
-## 0.13.0
+## 0.14.0
+### Added
+- Add classpath configuration page for unmanaged folder. [#567](https://github.com/microsoft/vscode-java-pack/pull/567), [#578](https://github.com/microsoft/vscode-java-pack/pull/578)
 
+### Changed
+- Remove `ⓘ` button from status bar. [#573](https://github.com/microsoft/vscode-java-pack/pull/573)
+
+### Fixed
+- Wrong project type was displayed in `Configure Java Runtime` page for some projects. [#583](https://github.com/microsoft/vscode-java-pack/issues/583)
+- Unicode characters in project name were not correctly displayed. [#576](https://github.com/microsoft/vscode-java-pack/pull/576)
+- Checkbox `Show welcome page when using Java` was always checked. [#597](https://github.com/microsoft/vscode-java-pack/pull/597)
+
+## 0.13.0
 ### Added
 - New UX for welcome page. [#540](https://github.com/microsoft/vscode-java-pack/issues/540)
 

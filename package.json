@@ -3,7 +3,7 @@
   "displayName": "Java Extension Pack",
   "description": "Popular extensions for Java development and more.",
   "license": "MIT",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "publisher": "vscjava",
   "preview": true,
   "engines": {
