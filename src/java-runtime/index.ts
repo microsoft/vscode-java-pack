@@ -49,6 +49,15 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     switch (e.command) {
+      case "onWillListRuntimes": {
+        suggestOpenJdk().then(jdkInfo => {
+          applyJdkInfo(jdkInfo);
+        });
+        findJavaRuntimeEntries().then(data => {
+          showJavaRuntimeEntries(data);
+        });
+        break;
+      }
       case "requestJdkInfo": {
         let jdkInfo = await suggestOpenJdk(e.jdkVersion, e.jvmImpl);
         applyJdkInfo(jdkInfo);
@@ -132,14 +141,6 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
       args: args,
     });
   }
-
-  suggestOpenJdk().then(jdkInfo => {
-    applyJdkInfo(jdkInfo);
-  });
-
-  findJavaRuntimeEntries().then(data => {
-    showJavaRuntimeEntries(data);
-  });
 
   // refresh webview with latest source levels when classpath (project info) changes
   const javaExt = vscode.extensions.getExtension("redhat.java");
