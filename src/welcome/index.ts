@@ -11,41 +11,46 @@ const KEY_IS_WELCOME_PAGE_VIEWED = "isWelcomePageViewed";
 let welcomeView: vscode.WebviewPanel | undefined;
 
 export async function showWelcomeWebview(context: vscode.ExtensionContext, options?: any) {
-    if (welcomeView) {
-        const firstTimeRun = options?.firstTimeRun;
-        if (firstTimeRun === undefined) {
-            welcomeView.reveal();
-        } else {
-            welcomeView.webview.postMessage({
-                command: "renderWelcomePage",
-                props: {
-                    showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
-                    firstTimeRun
-                }
-            });
-        }
-        return;
+    if (options?.firstTimeRun) {
+        setFirstTimeRun(context, true);
     }
 
-    welcomeView = vscode.window.createWebviewPanel(
-        "java.welcome",
-        "Welcome",
-        vscode.ViewColumn.Beside,
-        {
-            enableScripts: true,
-            enableCommandUris: true,
-            retainContextWhenHidden: true
+    if (welcomeView) {
+        welcomeView.reveal();
+        fetchInitProps(context);
+    } else {
+        welcomeView = vscode.window.createWebviewPanel(
+            "java.welcome",
+            "Welcome",
+            vscode.ViewColumn.Beside,
+            {
+                enableScripts: true,
+                enableCommandUris: true,
+                retainContextWhenHidden: true
+            }
+        );
+        await initializeWelcomeView(context, welcomeView, onDidDisposeWebviewPanel);
+    }
+}
+
+export class WelcomeViewSerializer implements vscode.WebviewPanelSerializer {
+    async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, _state: any) {
+        if (welcomeView) {
+            welcomeView.reveal();
+            webviewPanel.dispose();
+            return;
         }
-    );
-    let firstTimeRun = options?.firstTimeRun || context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true;
-    await initializeWelcomeView(context, welcomeView, firstTimeRun, onDidDisposeWebviewPanel);
+
+        welcomeView = webviewPanel;
+        initializeWelcomeView(getExtensionContext(), webviewPanel, onDidDisposeWebviewPanel);
+    }
 }
 
 function onDidDisposeWebviewPanel() {
     welcomeView = undefined;
 }
 
-async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, firstTimeRun: boolean, onDisposeCallback: () => void) {
+async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
     webviewPanel.iconPath = {
         light: vscode.Uri.file(path.join(context.extensionPath, "caption.light.svg")),
         dark: vscode.Uri.file(path.join(context.extensionPath, "caption.dark.svg"))
@@ -55,51 +60,50 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
     context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
     context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage((message => {
         switch (message.command) {
+            case "onWillFetchInitProps":
+                fetchInitProps(context);
+                break;
+            case "onWillShowTourPage":
+                showTourPage(context);
+                break;
             case "setWelcomeVisibility":
                 setWelcomeVisibility(context, message.visibility);
                 break;
-            case "showWelcomePage":
-                if (webviewPanel !== undefined) {
-                    webviewPanel.webview.postMessage({
-                        command: "renderWelcomePage",
-                        props: {
-                            showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
-                            firstTimeRun: message.firstTimeRun
-                        }
-                    });
-                }
-                break;
             case "sendInfo":
                 sendInfo("", message.data);
+                break;
             default:
                 break;
         }
     })));
-
-    webviewPanel.webview.postMessage({
-        command: "renderWelcomePage",
-        props: {
-            showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
-            firstTimeRun
-        }
-    });
-    context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, true);
 }
 
 const setWelcomeVisibility = instrumentSimpleOperation("setWelcomeVisibility", (context: vscode.ExtensionContext, visibility: boolean) => {
     context.globalState.update(KEY_SHOW_WHEN_USING_JAVA, visibility);
 });
 
-export class WelcomeViewSerializer implements vscode.WebviewPanelSerializer {
-    async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, _state: any) {
-      if (welcomeView) {
-        welcomeView.reveal();
-        webviewPanel.dispose();
-        return;
-      }
-  
-      welcomeView = webviewPanel;
-      initializeWelcomeView(getExtensionContext(), webviewPanel, false, onDidDisposeWebviewPanel);
-    }
-  }
-  
+const setFirstTimeRun = (context: vscode.ExtensionContext, firstTimeRun: boolean) => {
+    context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, !firstTimeRun);
+};
+
+const fetchInitProps = (context: vscode.ExtensionContext) => {
+    welcomeView?.webview.postMessage({
+        command: "onDidFetchInitProps",
+        props: {
+            showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
+            firstTimeRun: context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true
+        }
+    });
+    setFirstTimeRun(context, false);
+};
+
+const showTourPage = (context: vscode.ExtensionContext) => {
+    welcomeView?.webview.postMessage({
+        command: "onDidFetchInitProps",
+        props: {
+            showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
+            firstTimeRun: true
+        }
+    });
+    setFirstTimeRun(context, false);
+};
