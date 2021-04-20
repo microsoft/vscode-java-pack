@@ -14,12 +14,6 @@ export function setWelcomeVisibility(visibility: boolean) {
   });
 }
 
-export function showWelcomePage(tour?: boolean) {
-  vscode.postMessage({
-    command: "showWelcomePage",
-    firstTimeRun : tour
-  });
-}
 
 export function reportTabSwitch(from: string, to: string) {
   vscode.postMessage({
@@ -39,5 +33,23 @@ export function reportSkipTour(from: string) {
       name: "skipTour",
       from
     }
+  });
+}
+
+/**
+ * Request main process to fetch init properties for welcome page.
+ */
+export function onWillFetchInitProps() {
+  vscode.postMessage({
+    command: "onWillFetchInitProps"
+  });
+}
+
+/**
+ * Request main process to initialize a tour page.
+ */
+export function onWillShowTourPage() {
+  vscode.postMessage({
+    command: "onWillShowTourPage"
   });
 }
