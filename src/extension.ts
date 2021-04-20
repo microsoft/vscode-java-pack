@@ -15,7 +15,7 @@ import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
-import { TreatmentVariables } from "./exp/TrearmentVariables";
+import { TreatmentVariables } from "./exp/TreatmentVariables";
 import { MarkdownPreviewSerializer } from "./classpath/markdownPreviewProvider";
 
 export async function activate(context: vscode.ExtensionContext) {
