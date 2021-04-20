@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi();
 
@@ -37,5 +40,11 @@ export function openBuildScript(rootUri: string, scriptFile: string) {
     command: "openBuildScript",
     rootUri,
     scriptFile
+  });
+}
+
+export function onWillListRuntimes() {
+  vscode.postMessage({
+    command: "onWillListRuntimes"
   });
 }
