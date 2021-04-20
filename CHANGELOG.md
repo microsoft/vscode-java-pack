@@ -11,6 +11,7 @@
 - Wrong project type was displayed in `Configure Java Runtime` page for some projects. [#583](https://github.com/microsoft/vscode-java-pack/issues/583)
 - Unicode characters in project name were not correctly displayed. [#576](https://github.com/microsoft/vscode-java-pack/pull/576)
 - Checkbox `Show welcome page when using Java` was always checked. [#597](https://github.com/microsoft/vscode-java-pack/pull/597)
+- Webview content was not correctly displayed after reloading. [#581](https://github.com/microsoft/vscode-java-pack/issues/581)
 
 ## 0.13.0
 ### Added
