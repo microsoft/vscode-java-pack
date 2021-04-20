@@ -14,7 +14,7 @@ import { showWelcomeWebview } from "../welcome";
 import { showClasspathConfigurationPage } from "../classpath/classpathConfigurationView";
 import { markdownPreviewProvider } from "../classpath/markdownPreviewProvider";
 import { getExpService } from "../exp";
-import { TreatmentVariables } from "../exp/TrearmentVariables";
+import { TreatmentVariables } from "../exp/TreatmentVariables";
 
 export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.overview", instrumentCommand(context, "java.overview", instrumentCommand(context, "java.helper.overview", overviewCmdHandler))));
