@@ -51,46 +51,52 @@
   "contributes": {
     "walkthroughs": [
       {
-      "id": "javaWelcome",
-      "title": "welcome to Java",
-      "description": "Java description",
+        "id": "javaWelcome",
+        "title": "Dive into Java Development",
+        "description": "Your first steps to set up powerful Java tools in a lightweight, performant editor!",
         "tasks": [
           {
+            "id": "java.runtime",
+            "title": "Get your Java runtime ready",
+            "description": "The built-in configurator makes it easy to set up your preferred Java runtime.\n[Configure Java Runtime](command:toSide:java.runtime)",
+            "media": {
+              "path": "walkthrough/runtime.png",
+              "altText": "Configure Java Runtime with tabs for Project SDKs"
+            }
+          },
+          {
+            "id": "java.extGuide",
+            "title": "Support additional tools & frameworks",
+            "description": "Got additional support for major tool chains, frameworks and application servers.\n[Recommended Java Extensions](command:toSide:java.extGuide)",
+            "media": {
+              "path": "walkthrough/extGuide.png",
+              "altText": "Open Project Folder"
+            }
+          },
+          {
             "id": "java.openProjectFolder",
-            "title": "Open Project Folder",
-            "description": "Open a folder containing your Java project for full features.",
-            "button": {
-              "command": "workbench.action.files.openFolder",
-              "title": "Open Folder..."
-            },
+            "title": "Open project folder",
+            "description": "Open an existing folder that contains your Java project, or create a new folder.\n[Open Folder...](command:workbench.action.files.openFolder)\n[Create new Project](command:java.project.create)",
             "media": {
               "path": "walkthrough/open-project.png",
               "altText": "Open Project Folder"
             },
-            "when": "!isMac"
+            "when": "!isMac && workspaceFolderCount == 0"
           },
           {
             "id": "java.openProjectFolder.mac",
-            "title": "Open Project Folder",
-            "description": "Open a folder containing your Java project for full features.",
-            "button": {
-              "command": "workbench.action.files.openFileFolder",
-              "title": "Open Folder..."
-            },
+            "title": "Open project folder",
+            "description": "Open an existing folder that contains your Java project, or create a new folder.\n[Open Folder...](command:workbench.action.files.openFileFolder)\n[Create new Project](command:java.project.create)",
             "media": {
               "path": "walkthrough/open-project.png",
               "altText": "Open Project Folder"
             },
-            "when": "isMac"
+            "when": "isMac && workspaceFolderCount == 0"
           },
           {
             "id": "java.showProjectExplorer",
-            "title": "Project Explorer",
-            "description": "Expand Java Project Explorer to view your project structure.",
-            "button": {
-              "command": "javaProjectExplorer.focus",
-              "title": "Show Java Projects"
-            },
+            "title": "Explore your project",
+            "description": "View class paths and dependencies, and create new projects, packages, and classes.\n[Show Java Projects](command:javaProjectExplorer.focus)",
             "media": {
               "path": "walkthrough/project-manager.png",
               "altText": "Project Explorer"
@@ -98,12 +104,8 @@
           },
           {
             "id": "java.showDebugView",
-            "title": "Running and Debugging",
-            "description": "Open Run and Debug View to start your project.",
-            "button": {
-              "command": "workbench.view.debug",
-              "title": "Show Run and Debug View"
-            },
+            "title": "Launch and debug your app",
+            "description": "The debugger will automatically find the entry point of your project, launch it and start debugging.\n[Show Run and Debug View](command:workbench.view.debug)",
             "media": {
               "path": "walkthrough/debugger.png",
               "altText": "Running and Debugging"
@@ -111,15 +113,20 @@
           },
           {
             "id": "java.showTesting",
-            "title": "Testing",
-            "description": "Use Testing View to run unit tests.",
-            "button": {
-              "command": "testExplorer.focus",
-              "title": "Show Testing View"
-            },
+            "title": "Run & debug tests",
+            "description": "The place to show all the test cases in your project. You can also run/debug your test cases from here.\n[Show Testing View](command:testExplorer.focus)",
             "media": {
               "path": "walkthrough/testing.png",
               "altText": "Testing"
+            }
+          },
+          {
+            "id": "java.tutorial",
+            "title": "Quick start with Java",
+            "description": "Just starting with Java? Get hands on with these tutorials to learn the fundamentals of Java editing & debugging.\n[Open Tutorials](command:toSide:java.gettingStarted)",
+            "media": {
+              "path": "walkthrough/tutorials.png",
+              "altText": "Tutorials"
             }
           }
         ]
@@ -243,8 +250,8 @@
     "ts-loader": "^4.3.0",
     "tslint": "^5.20.1",
     "typescript": "^3.7.5",
-    "vscode-tas-client": "^0.1.17",
     "url-loader": "^4.1.1",
+    "vscode-tas-client": "^0.1.17",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
   },
