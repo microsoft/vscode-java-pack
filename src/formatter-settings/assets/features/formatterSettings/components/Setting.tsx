@@ -6,23 +6,20 @@ import chevronDownIcon from "@iconify-icons/codicon/chevron-down";
 import { Icon } from "@iconify/react";
 import React, { Dispatch } from "react";
 import { Dropdown, Form } from "react-bootstrap";
-import { useDispatch } from "react-redux";
-import { Catagory, JavaFormatterSetting, ValueKind } from "../../../../types";
+import { useDispatch, useSelector } from "react-redux";
+import { Category, JavaFormatterSetting, ValueKind } from "../../../../types";
 import { changeSetting } from "../formatterSettingViewSlice";
 
-export interface SettingProps {
-  setting: JavaFormatterSetting[];
-  catagory: Catagory;
-}
-
-const Setting = (prop: SettingProps): JSX.Element => {
+const Setting = (): JSX.Element => {
 
   const dispatch: Dispatch<any> = useDispatch();
+  const settings: JavaFormatterSetting[] = useSelector((state: any) => state.formatterSettings.settings);
+  const activeCategory: Category = useSelector((state: any) => state.formatterSettings.activeCategory);
 
   const handleChangeCheckbox = (e: any) => {
     const id = e.target.id;
     const value = (e.target.checked === true) ? "true" : "false";
-    dispatch(changeSetting({id: id, value: value}));
+    dispatch(changeSetting({ id: id, value: value }));
   };
 
   const handleChangeInput = (e: any) => {
@@ -31,11 +28,11 @@ const Setting = (prop: SettingProps): JSX.Element => {
     if (!value || value === "") {
       value = "0";
     }
-    dispatch(changeSetting({id: id, value: value}));
+    dispatch(changeSetting({ id: id, value: value }));
   };
 
   const handleSelect = (setting: JavaFormatterSetting, entry: string) => {
-    dispatch(changeSetting({id: setting.id, value: entry}));
+    dispatch(changeSetting({ id: setting.id, value: entry }));
   };
 
   const generateSetting = (setting: JavaFormatterSetting) => {
@@ -47,7 +44,7 @@ const Setting = (prop: SettingProps): JSX.Element => {
       case ValueKind.Boolean:
         return (
           <div className="setting-section">
-            <Form.Check type="checkbox" id={`${setting.id}`} >
+            <Form.Check type="checkbox" className="pl-0" id={`${setting.id}`} >
               <Form.Check.Input type="checkbox" checked={setting.value === "true"} onChange={handleChangeCheckbox} />
               <Form.Check.Label className="setting-section-description">
                 <Icon className="codicon" icon={checkIcon} />
@@ -84,7 +81,7 @@ const Setting = (prop: SettingProps): JSX.Element => {
       case ValueKind.Number:
         return (
           <div className="setting-section">
-            <Form.Label className="setting-section-description">{setting.name}.</Form.Label>
+            <Form.Label className="setting-section-description my-0">{setting.name}.</Form.Label>
             <Form.Control className="pl-1 mt-1" type="number" id={setting.id} value={setting.value} onChange={handleChangeInput}></Form.Control>
           </div>
         );
@@ -93,11 +90,8 @@ const Setting = (prop: SettingProps): JSX.Element => {
     }
   };
 
-  if (!prop.setting) {
-    return (<></>);
-  }
-  const result = prop.setting.map((value, _index) => {
-    if (value.catagory === prop.catagory) {
+  const result = settings.map((value, _index) => {
+    if (value.category === activeCategory) {
       return generateSetting(value);
     }
     return (<></>);

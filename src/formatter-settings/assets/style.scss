@@ -92,15 +92,9 @@ $enable-rounded: false;
   align-items: center !important;
 }
 
-.form-label {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-}
-
 .form-check {
   position: relative !important;
   min-height: 1.5rem !important;
-  padding-left: 0px !important;
   .form-check-input {
     opacity: 0;
     &:checked~.form-check-label svg.codicon {
@@ -118,6 +112,7 @@ $enable-rounded: false;
     vertical-align: top;
     line-height: 1.4em !important;
     font-size: var(--vscode-font-size) !important;
+    user-select: none;
     svg.codicon {
       position: absolute;
       color: var(--vscode-settings-textInputForeground);
@@ -158,7 +153,6 @@ $enable-rounded: false;
   color: rgba(var(--vscode-sideBarTitle-foreground), 0.9) !important;
   width: 80px;
   height: 22px;
-  padding: 0px !important;
   font-size: var(--vscode-font-size);
   line-height: 22px;
   &.active {

@@ -2,44 +2,44 @@
 // Licensed under the MIT license.
 
 import { createSlice } from "@reduxjs/toolkit";
-import { ExampleManager, initializeSupportedProfileSettings, initializeSupportedVSCodeSettings } from "../../../FormatterConstants";
-import { Catagory, ExampleKind } from "../../../types";
+import { Example, initializeSupportedProfileSettings, initializeSupportedVSCodeSettings } from "../../../FormatterConstants";
+import { Category, ExampleKind } from "../../../types";
 
 export const formatterSettingsViewSlice = createSlice({
   name: "formatterSettings",
   initialState: {
-    activeCatagory: Catagory.Common,
+    activeCategory: Category.Common,
     // only for display, settings will come from backend in next PR.
     settings: [...initializeSupportedProfileSettings(20), ...initializeSupportedVSCodeSettings()],
     exampleKind: ExampleKind.COMMON_EXAMPLE,
     // only for display, code will come from backend in next PR.
-    formattedContent: ExampleManager.getExample(ExampleKind.COMMON_EXAMPLE),
+    formattedContent: Example.getExample(ExampleKind.COMMON_EXAMPLE),
   },
   reducers: {
-    changeActiveCatagory: (state, action) => {
-      const activeCatagory: Catagory = action.payload as Catagory;
-      state.activeCatagory = activeCatagory;
-      switch (activeCatagory) {
-        case Catagory.BlankLine:
+    changeActiveCategory: (state, action) => {
+      const activeCategory: Category = action.payload as Category;
+      state.activeCategory = activeCategory;
+      switch (activeCategory) {
+        case Category.BlankLine:
           state.exampleKind = ExampleKind.BLANKLINE_EXAMPLE;
           break;
-        case Catagory.Comment:
+        case Category.Comment:
           state.exampleKind = ExampleKind.COMMENT_EXAMPLE;
           break;
-        case Catagory.Common:
+        case Category.Common:
           state.exampleKind = ExampleKind.COMMON_EXAMPLE;
           break;
-        case Catagory.InsertLine:
+        case Category.InsertLine:
           state.exampleKind = ExampleKind.INSERTLINE_EXAMPLE;
           break;
-        case Catagory.Whitespace:
+        case Category.Whitespace:
           state.exampleKind = ExampleKind.WHITESPACE_EXAMPLE;
           break;
-        case Catagory.Wrapping:
+        case Category.Wrapping:
           state.exampleKind = ExampleKind.WRAPPING_EXAMPLE;
           break;
       }
-      state.formattedContent = ExampleManager.getExample(state.exampleKind);
+      state.formattedContent = Example.getExample(state.exampleKind);
     },
     changeSetting: (state, action) => {
       for (const setting of state.settings) {
@@ -47,7 +47,7 @@ export const formatterSettingsViewSlice = createSlice({
           setting.value = action.payload.value;
           if (setting.exampleKind !== state.exampleKind) {
             state.exampleKind = setting.exampleKind;
-            state.formattedContent = ExampleManager.getExample(state.exampleKind);
+            state.formattedContent = Example.getExample(state.exampleKind);
           }
           break;
         }
@@ -57,7 +57,7 @@ export const formatterSettingsViewSlice = createSlice({
 });
 
 export const {
-  changeActiveCatagory,
+  changeActiveCategory,
   changeSetting,
 } = formatterSettingsViewSlice.actions;
 

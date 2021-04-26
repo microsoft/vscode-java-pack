@@ -3,12 +3,12 @@
 
 export interface JavaFormatterSetting {
     id: string;
-    name?: string;
+    name: string;
     value: string;
     candidates?: string[];
-    catagory: Catagory;
+    category: Category;
     exampleKind: ExampleKind;
-    valueKind?: ValueKind;
+    valueKind: ValueKind;
     // the first profile version the setting becomes valid, default is 1.
     startVersion: number;
     // the first profile version the settings becomes deprecated, if undefined, the setting is valid in the current version.
@@ -21,7 +21,7 @@ export enum ValueKind {
     Enum,
 }
 
-export enum Catagory {
+export enum Category {
     Common,
     Whitespace,
     Comment,

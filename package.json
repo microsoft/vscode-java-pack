@@ -91,7 +91,7 @@
       {
         "command": "java.formatterSettings",
         "category": "Java",
-        "title": "Formatter Settings"
+        "title": "Open Java Formatter Settings with Preview"
       }
     ],
     "configuration": {
@@ -106,7 +106,6 @@
             "overview",
             "gettingStarted",
             "welcome",
-            "formatterSettings",
             "none"
           ],
           "enumDescriptions": [
@@ -114,7 +113,6 @@
             "Present the Java Overview page",
             "Present the Java Getting Started page",
             "Present the Java Welcome page",
-            "Present the Java Formatter Settings page",
             "Do not show any view"
           ],
           "default": "auto",

@@ -19,14 +19,18 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     }
 
     public async resolveCustomTextEditor(_document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
-        
+
         webviewPanel.webview.options = {
             enableScripts: true,
             enableCommandUris: true,
         };
         const resourceUri = this.context.asAbsolutePath("./out/assets/formatter-settings/index.html");
-        const buffer: string = fs.readFileSync(resourceUri).toString();
-        webviewPanel.webview.html = buffer;
-        
+        fs.readFile(resourceUri, (err, data) => {
+            if (err) {
+                vscode.window.showErrorMessage("Fail to load the content of Java Formatter Settings Editor.");
+                return;
+            }
+            webviewPanel.webview.html = data.toString();
+        });
     }
 }

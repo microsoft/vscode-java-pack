@@ -5,41 +5,34 @@ import React from "react";
 import { Col, Container, Nav, Row } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
-import Common from "./components/Common";
-import WhiteSpace from "./components/WhiteSpace";
-import BlankLine from "./components/BlankLine";
-import Comment from "./components/Comment";
-import Wrapping from "./components/Wrapping";
-import InsertLine from "./components/InsertLine";
-import { changeActiveCatagory } from "./formatterSettingViewSlice";
-import { Highlighter } from "./utils/Highlight";
-import { Catagory } from "../../../types";
+import { changeActiveCategory } from "./formatterSettingViewSlice";
+import { Highlighter } from "./components/Highlight";
+import { Category } from "../../../types";
+import Setting from "./components/Setting";
 
 const FormatterSettingsView = (): JSX.Element => {
-  const activeCatagory: Catagory = useSelector((state: any) => state.formatterSettings.activeCatagory);
+  const activeCategory: Category = useSelector((state: any) => state.formatterSettings.activeCategory);
   const contentText: string = useSelector((state: any) => state.formatterSettings.formattedContent);
-
-  let content: JSX.Element = <div></div>;
-
+  const dispatch: Dispatch<any> = useDispatch();
   const onClickNaviBar = (element: any) => {
     switch (element) {
-      case String(Catagory.Common):
-        dispatch(changeActiveCatagory(Catagory.Common));
+      case String(Category.Common):
+        dispatch(changeActiveCategory(Category.Common));
         break;
-      case String(Catagory.BlankLine):
-        dispatch(changeActiveCatagory(Catagory.BlankLine));
+      case String(Category.BlankLine):
+        dispatch(changeActiveCategory(Category.BlankLine));
         break;
-      case String(Catagory.Comment):
-        dispatch(changeActiveCatagory(Catagory.Comment));
+      case String(Category.Comment):
+        dispatch(changeActiveCategory(Category.Comment));
         break;
-      case String(Catagory.InsertLine):
-        dispatch(changeActiveCatagory(Catagory.InsertLine));
+      case String(Category.InsertLine):
+        dispatch(changeActiveCategory(Category.InsertLine));
         break;
-      case String(Catagory.Whitespace):
-        dispatch(changeActiveCatagory(Catagory.Whitespace));
+      case String(Category.Whitespace):
+        dispatch(changeActiveCategory(Category.Whitespace));
         break;
-      case String(Catagory.Wrapping):
-        dispatch(changeActiveCatagory(Catagory.Wrapping));
+      case String(Category.Wrapping):
+        dispatch(changeActiveCategory(Category.Wrapping));
         break;
       default:
         break;
@@ -47,51 +40,27 @@ const FormatterSettingsView = (): JSX.Element => {
   };
 
   const naviBar: JSX.Element = (
-    <Nav activeKey={activeCatagory} className="setting-nav flex-column" onSelect={onClickNaviBar}>
+    <Nav activeKey={activeCategory} className="setting-nav flex-column" onSelect={onClickNaviBar}>
       <Nav.Item>
-        <Nav.Link eventKey={Catagory.Common}>Common</Nav.Link>
+        <Nav.Link className="p-0" eventKey={Category.Common}>Common</Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Nav.Link eventKey={Catagory.BlankLine}>Blank Lines</Nav.Link>
+        <Nav.Link className="p-0" eventKey={Category.BlankLine}>Blank Lines</Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Nav.Link eventKey={Catagory.Comment}>Comment</Nav.Link>
+        <Nav.Link className="p-0" eventKey={Category.Comment}>Comment</Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Nav.Link eventKey={Catagory.InsertLine}>Insert Lines</Nav.Link>
+        <Nav.Link className="p-0" eventKey={Category.InsertLine}>Insert Lines</Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Nav.Link eventKey={Catagory.Whitespace}>Whitespace</Nav.Link>
+        <Nav.Link className="p-0" eventKey={Category.Whitespace}>Whitespace</Nav.Link>
       </Nav.Item>
       <Nav.Item>
-        <Nav.Link eventKey={Catagory.Wrapping}>Wrapping</Nav.Link>
+        <Nav.Link className="p-0" eventKey={Category.Wrapping}>Wrapping</Nav.Link>
       </Nav.Item>
     </Nav>
   );
-
-  const dispatch: Dispatch<any> = useDispatch();
-
-  switch (activeCatagory) {
-    case Catagory.Common:
-      content = (<Common />);
-      break;
-    case Catagory.BlankLine:
-      content = (<BlankLine />);
-      break;
-    case Catagory.Comment:
-      content = (<Comment />);
-      break;
-    case Catagory.InsertLine:
-      content = (<InsertLine />);
-      break;
-    case Catagory.Whitespace:
-      content = (<WhiteSpace />);
-      break;
-    case Catagory.Wrapping:
-      content = (<Wrapping />);
-      break;
-    default:
-  }
 
   return (
     <Container className="root d-flex flex-column">
@@ -104,8 +73,8 @@ const FormatterSettingsView = (): JSX.Element => {
         <Col className="flex-grow-0">{naviBar}</Col>
         <Col className="d-flex view-content">
           <Row className="flex-nowrap flex-column flex-lg-row d-flex w-100 h-100">
-            <Col className="flex-grow-0 setting-container d-flex flex-row flex-lg-column flex-lg-nowrap">{content}</Col>
-            <Col className="preview-container d-flex">{Highlighter(contentText, "java")}</Col>
+            <Col className="flex-grow-0 setting-container d-flex flex-row flex-lg-column flex-lg-nowrap">{<Setting/>}</Col>
+            <Col className="preview-container d-flex">{Highlighter(contentText)}</Col>
           </Row>
         </Col>
       </Row>
