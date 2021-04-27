@@ -3,7 +3,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import * as fse from "fs-extra";
+import { loadTextFromFile } from "../utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
@@ -25,6 +25,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             enableCommandUris: true,
         };
         const resourceUri = this.context.asAbsolutePath("./out/assets/formatter-settings/index.html");
-        webviewPanel.webview.html = (await fse.readFile(resourceUri)).toString();
+        webviewPanel.webview.html = await loadTextFromFile(resourceUri);
     }
 }
