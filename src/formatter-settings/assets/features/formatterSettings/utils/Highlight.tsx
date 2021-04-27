@@ -13,7 +13,14 @@ export function Highlighter(content: string, language?: string): JSX.Element {
     const childNodes = document.childNodes;
     if (childNodes) {
       for (let i = 0; i < childNodes.length; i++) {
-        const child = childNodes.item(i);
+        let child = childNodes.item(i);
+        if (child.nodeType === 3) {
+          child = child as CharacterData;
+          child.appendChild(child);
+          //child.nodeValue = child.nodeValue.replace(" ", "\u00B7");
+          //child.data = child.nodeValue;
+          const test2 = 0;
+        }
         const test1 = 0;
       }
     } else {
@@ -22,7 +29,7 @@ export function Highlighter(content: string, language?: string): JSX.Element {
   }
   return (
     <pre className="hljs d-flex flex-grow-1">
-      <code className="hljs flex-grow-1" dangerouslySetInnerHTML={{ __html: highlighted.value }} />
+      <code className="hljs flex-grow-1" dangerouslySetInnerHTML={{ __html: new XMLSerializer().serializeToString(document) }} />
     </pre>
   );
 }

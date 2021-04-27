@@ -174,21 +174,32 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 code.hljs {
   background-color: var(--vscode-notebook-rowHoverBackground) !important;
+  font-family: SpaceDiff, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   border: 1px solid var(--vscode-settings-textInputBorder);
   padding: 10px 15px 15px 15px !important;
+}
+
+code > span {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 ::-webkit-scrollbar-corner { background-color: transparent; }
 
 .hljs {
   color: var(--vscode-editor-foreground);
-  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;;
+  
+  color: rgba(var(--vscode-descriptionForeground), 0.2);
   font-size: medium;
   tab-size: var(--vscode-tab-size);
   overflow: hidden !important;
   &:hover {
     overflow: overlay !important;
   }
+}
+
+@font-face {
+  font-family: SpaceDiff;
+  src: url("./SpaceDiff.woff2");
 }
 
 .view-body {
