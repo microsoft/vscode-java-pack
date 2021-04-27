@@ -6,7 +6,7 @@ import { Col, Container, Nav, Row } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { changeActiveCategory } from "./formatterSettingViewSlice";
-import { Highlighter } from "./components/Highlight";
+import { highlight } from "./components/Highlight";
 import { Category } from "../../../types";
 import Setting from "./components/Setting";
 
@@ -74,7 +74,7 @@ const FormatterSettingsView = (): JSX.Element => {
         <Col className="d-flex view-content">
           <Row className="flex-nowrap flex-column flex-lg-row d-flex w-100 h-100">
             <Col className="flex-grow-0 setting-container d-flex flex-row flex-lg-column flex-lg-nowrap">{<Setting/>}</Col>
-            <Col className="preview-container d-flex">{Highlighter(contentText)}</Col>
+            <Col className="preview-container d-flex">{highlight(contentText)}</Col>
           </Row>
         </Col>
       </Row>

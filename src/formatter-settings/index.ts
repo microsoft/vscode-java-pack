@@ -3,7 +3,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import * as fs from "fs";
+import * as fse from "fs-extra";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
@@ -25,12 +25,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             enableCommandUris: true,
         };
         const resourceUri = this.context.asAbsolutePath("./out/assets/formatter-settings/index.html");
-        fs.readFile(resourceUri, (err, data) => {
-            if (err) {
-                vscode.window.showErrorMessage("Fail to load the content of Java Formatter Settings Editor.");
-                return;
-            }
-            webviewPanel.webview.html = data.toString();
-        });
+        webviewPanel.webview.html = (await fse.readFile(resourceUri)).toString();
     }
 }

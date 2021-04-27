@@ -140,6 +140,6 @@ module.exports = function (env, argv) {
       'diagnostic-channel-publishers': 'commonjs diagnostic-channel-publishers',
       vscode: 'commonjs vscode'
     },
-    devtool: 'inline-source-map'
+    devtool: 'source-map'
   }]
 };
