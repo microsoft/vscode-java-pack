@@ -3,11 +3,10 @@
 
 import * as vscode from "vscode";
 import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } from "vscode-extension-telemetry-wrapper";
-
 import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
-import { initialize as initMisc, showReleaseNotesOnStart, HelpViewType } from "./misc";
+import { showReleaseNotesOnStart, HelpViewType } from "./misc";
 import { initialize as initExp, getExpService } from "./exp";
 import { KEY_SHOW_WHEN_USING_JAVA, OverviewViewSerializer, showOverviewPageOnActivation } from "./overview";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
@@ -15,10 +14,15 @@ import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
+import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
+import { TreatmentVariables } from "./exp/TreatmentVariables";
+import { MarkdownPreviewSerializer } from "./classpath/markdownPreviewProvider";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
   initializeTelemetry(context);
+  // initialize exp service ahead of activation operation to make sure exp context properties are set.
+  await initExp(context);
   await instrumentOperation("activation", initializeExtension)(context);
 }
 
@@ -26,8 +30,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initUtils(context);
   initCommands(context);
   initRecommendations(context);
-  initMisc(context);
-  initExp(context);
 
   // webview serializers to restore pages
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.extGuide", new JavaExtGuideViewSerializer()));
@@ -35,6 +37,8 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.welcome", new WelcomeViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.classpathConfiguration", new ClassPathConfigurationViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.markdownPreview", new MarkdownPreviewSerializer()));
 
   const config = vscode.workspace.getConfiguration("java.help");
 
@@ -62,19 +66,13 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
       vscode.commands.executeCommand("java.runtime");
     });
   }
-
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
-  const presentWelcomePageByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentWelcomePageByDefault") || false;
+  // Progression rollout EXP for showing welcome page.
+  const presentWelcomePageByDefault: boolean = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.PresentWelcomePageByDefault, true /*checkCache*/) || false;
   if (presentWelcomePageByDefault) {
     await showWelcomeWebview(context);
-    return;
-  }
-
-  const presentExtensionGuideByDefault: boolean = await getExpService()?.isFlightEnabledAsync("presentExtensionGuideByDefault") || false;
-  if (presentExtensionGuideByDefault) {
-    showExtensionGuide(context);
     return;
   }
 
@@ -87,20 +85,9 @@ async function presentFirstView(context: vscode.ExtensionContext) {
       await showGettingStartedView(context);
       break;
     case HelpViewType.Overview:
-      await showOverviewPageOnActivation(context);
-      break;
     default:
-      await showWelcomeWebview(context);
+      await showOverviewPageOnActivation(context);
   }
-}
-
-async function showExtensionGuide(context: vscode.ExtensionContext) {
-  if (!!context.globalState.get("isExtensionGuidePresented")) {
-    return;
-  }
-
-  await vscode.commands.executeCommand("java.extGuide");
-  context.globalState.update("isExtensionGuidePresented", true);
 }
 
 async function showGettingStartedView(context: vscode.ExtensionContext, _isForce: boolean = false) {

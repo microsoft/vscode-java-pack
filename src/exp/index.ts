@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
-import { IExperimentationService, IExperimentationTelemetry, getExperimentationService, TargetPopulation } from "vscode-tas-client";
+import { IExperimentationService, IExperimentationTelemetry, TargetPopulation, getExperimentationServiceAsync } from "vscode-tas-client";
 import { addContextProperty, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getExtensionName, getExtensionVersion } from "../utils";
 
@@ -29,8 +29,8 @@ export function getExpService() {
   return expService;
 }
 
-export function initialize(context: vscode.ExtensionContext) {
-  expService = getExperimentationService(
+export async function initialize(context: vscode.ExtensionContext) {
+  expService = await getExperimentationServiceAsync(
     getExtensionName(),
     getExtensionVersion(),
     TargetPopulation.Public,

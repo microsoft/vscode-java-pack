@@ -21,7 +21,7 @@ export default class NavigationPanel extends React.Component {
       actions: [
         { name: "Configure Java Runtime", command: "java.runtime" },
         { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] },
-        { name: "Open Extension Guide", command: "java.extGuide" }
+        { name: "Install Extensions...", command: "java.extGuide" }
       ]
     },
     {
@@ -39,7 +39,8 @@ export default class NavigationPanel extends React.Component {
       actions: [
         { name: "Getting Started", command: "java.gettingStarted" },
         { name: "Tutorial: Running and Debugging", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-debugging"] },
-        { name: "Tutorial: Testing", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] }
+        { name: "Tutorial: Testing", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] },
+        { name: "Configure Sources, Dependencies, Output Folder...", command: "java.classpathConfiguration"}
       ]
     },
   ];

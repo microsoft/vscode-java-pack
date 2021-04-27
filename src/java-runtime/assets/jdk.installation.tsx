@@ -8,7 +8,7 @@ import { JdkData } from "../types";
 export type JdkRquestHandler = (jdkVersion: string, jvmImpl: string) => void;
 
 export interface JdkInstallationPanelProps {
-  jdkData: JdkData;
+  jdkData?: JdkData;
   onRequestJdk: JdkRquestHandler;
 }
 
@@ -63,7 +63,7 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
       }
     }
 
-    this.props.onRequestJdk(newState.jdkVersion, newState.jvmImpl);
+    this.props?.onRequestJdk(newState.jdkVersion, newState.jvmImpl);
     this.setState(newState);
   }
 

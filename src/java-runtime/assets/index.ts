@@ -6,46 +6,50 @@ const $ = require("jquery");
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import "../../assets/vscode.scss";
-import { JavaRuntimeEntry, JdkData, ProjectRuntimeEntry } from "../types";
 import { JdkConfigurationPanel } from "./jdk.configure";
 import { JdkInstallationPanel } from "./jdk.installation";
-import { requestJdkInfo } from "./vscode.api";
+import { onWillListRuntimes, requestJdkInfo } from "./vscode.api";
 import bytes = require("bytes");
 import "./style.scss";
 
-window.addEventListener("message", event => {
-  if (event.data.command === "applyJdkInfo") {
-    applyJdkInfo(event.data.jdkInfo);
-  } else if (event.data.command === "showJavaRuntimeEntries") {
-    showJavaRuntimeEntries(event.data.args);
+const onInitialize = (event: any) => {
+  const { data } = event;
+  if (data.command === "applyJdkInfo") {
+    applyJdkInfo(data.jdkInfo);
+  } else if (data.command === "showJavaRuntimeEntries") {
+    showJavaRuntimeEntries(data.args);
   }
-});
+};
 
-let jdkEntries: JavaRuntimeEntry[] | undefined;
-let projectRuntimes: ProjectRuntimeEntry[] | undefined;
-let javaHomeError: any;
-let javaDotHome: string | undefined;
-function showJavaRuntimeEntries(args: {
-  javaRuntimes?: JavaRuntimeEntry[];
-  projectRuntimes?: ProjectRuntimeEntry[];
-  javaHomeError?: string;
-  javaDotHome?: string;
-}) {
-  jdkEntries = args.javaRuntimes;
-  projectRuntimes = args.projectRuntimes;
-  javaHomeError = args.javaHomeError;
-  javaDotHome = args.javaDotHome;
-  render();
+window.addEventListener("message", onInitialize);
+renderLoadingPage();
+onWillListRuntimes();
+
+/**
+ * Listing runtime can be slow, show loading page immediately after opening webview
+ */
+function renderLoadingPage() {
+  ReactDOM.render(React.createElement(JdkConfigurationPanel), document.getElementById("jdkConfigurationPanel"));
+  ReactDOM.render(React.createElement(JdkInstallationPanel), document.getElementById("jdkInstallationPanel"));
 }
 
-let jdkData: JdkData;
+function showJavaRuntimeEntries(args: any) {
+  const props = {
+    jdkEntries: args.javaRuntimes,
+    projectRuntimes: args.projectRuntimes,
+    javaHomeError: args.javaHomeError,
+    javaDotHome: args.javaDotHome
+  };
+  ReactDOM.render(React.createElement(JdkConfigurationPanel, props), document.getElementById("jdkConfigurationPanel"));
+  registerTabSwitchEvents();
+}
 
 function applyJdkInfo(jdkInfo: any) {
   let binary = jdkInfo.binaries[0];
   let downloadLink = binary.installer_link || binary.binary_link;
   let encodedLink = `command:java.helper.openUrl?${encodeURIComponent(JSON.stringify(downloadLink))}`;
 
-  jdkData = {
+  const jdkData = {
     name: jdkInfo.release_name,
     os: binary.os,
     arch: binary.architecture,
@@ -53,27 +57,19 @@ function applyJdkInfo(jdkInfo: any) {
     downloadLink: encodedLink
   };
 
-  render();
-}
-
-function render() {
   const props = {
-    jdkEntries: jdkEntries,
-    projectRuntimes: projectRuntimes,
-    jdkData: jdkData,
-    onRequestJdk: requestJdkInfo,
-    javaHomeError,
-    javaDotHome
+    jdkData,
+    onRequestJdk: requestJdkInfo
   };
 
-  ReactDOM.render(React.createElement(JdkConfigurationPanel, props), document.getElementById("jdkConfigurationPanel"));
   ReactDOM.render(React.createElement(JdkInstallationPanel, props), document.getElementById("jdkInstallationPanel"));
+}
 
+/**
+ * To remove after we retire jQuery from this page/
+ */
+function registerTabSwitchEvents() {
   $("a.navigation").click((e: any) => {
     ($($(e.target).attr("href") || "") as any).tab("show");
   });
-
 }
-
-render();
-

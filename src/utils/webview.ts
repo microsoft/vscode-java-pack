@@ -41,3 +41,18 @@ export function encodeCommandUriWithTelemetry(webview: string, identifier: strin
 
   return navigator.platform.toLowerCase().indexOf(os.toLowerCase()) === 0;
 }
+
+
+export enum ProjectType {
+  Default = "Default project",
+  UnmanagedFolder = "Unmanaged folder",
+  Maven = "Maven",
+  Gradle = "Gradle",
+  Others = "Others",
+}
+
+export enum NatureId {
+  Maven = "org.eclipse.m2e.core.maven2Nature",
+  Gradle = "org.eclipse.buildship.core.gradleprojectnature",
+  Java = "org.eclipse.jdt.core.javanature",
+}

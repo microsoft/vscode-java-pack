@@ -9,9 +9,10 @@ import { getExtensionContext, loadTextFromFile } from "../utils";
 import { findJavaHomes, JavaRuntime } from "./utils/findJavaRuntime";
 import architecture = require("arch");
 import { resolveRequirements } from "./utils/upstreamApi";
-import { JavaRuntimeEntry, NatureId, ProjectRuntimeEntry, ProjectType } from "./types";
+import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
-import { pathExists } from "fs-extra";
+import { ProjectType } from "../utils/webview";
+import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
@@ -48,6 +49,15 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     switch (e.command) {
+      case "onWillListRuntimes": {
+        suggestOpenJdk().then(jdkInfo => {
+          applyJdkInfo(jdkInfo);
+        });
+        findJavaRuntimeEntries().then(data => {
+          showJavaRuntimeEntries(data);
+        });
+        break;
+      }
       case "requestJdkInfo": {
         let jdkInfo = await suggestOpenJdk(e.jdkVersion, e.jvmImpl);
         applyJdkInfo(jdkInfo);
@@ -131,14 +141,6 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
       args: args,
     });
   }
-
-  suggestOpenJdk().then(jdkInfo => {
-    applyJdkInfo(jdkInfo);
-  });
-
-  findJavaRuntimeEntries().then(data => {
-    showJavaRuntimeEntries(data);
-  });
 
   // refresh webview with latest source levels when classpath (project info) changes
   const javaExt = vscode.extensions.getExtension("redhat.java");
@@ -237,7 +239,7 @@ async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeEntry[]> {
 
       for (const project of projects) {
         const runtimeSpec = await getRuntimeSpec(project.uri);
-        const projectType: ProjectType = projecTypeFromNature(project.metaData.NatureId);
+        const projectType: ProjectType = await getProjectType(vscode.Uri.parse(project.uri).fsPath);
         ret.push({
           name: project.displayName || project.name,
           rootPath: project.uri,
@@ -249,18 +251,6 @@ async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeEntry[]> {
   }
   return ret;
 }
-
-function projecTypeFromNature(natureIds: string[]) {
-  if (natureIds.includes(NatureId.Maven)) {
-    return ProjectType.Maven;
-  } else if (natureIds.includes(NatureId.Gradle)) {
-    return ProjectType.Gradle;
-  } else if (natureIds.includes(NatureId.Java)) {
-    return ProjectType.UnmanagedFolder;
-  }
-  return ProjectType.Others;
-}
-
 
 async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
   const ret: ProjectRuntimeEntry[] = [];
@@ -275,9 +265,9 @@ async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
 
     for (const projectRoot of projects) {
       const runtimeSpec = await getRuntimeSpec(projectRoot);
-      const projectType: ProjectType = await getProjectType(projectRoot);
+      const projectType: ProjectType = await getProjectType(vscode.Uri.parse(projectRoot).fsPath);
       ret.push({
-        name: path.basename(projectRoot),
+        name: getProjectNameFromUri(projectRoot),
         rootPath: projectRoot,
         projectType: projectType,
         ...runtimeSpec
@@ -307,26 +297,6 @@ async function getRuntimeSpec(projectRootUri: string) {
     runtimePath,
     sourceLevel
   };
-}
-
-async function getProjectType(rootPathUri: string): Promise<ProjectType> {
-  if (rootPathUri.endsWith("jdt.ls-java-project") || rootPathUri.endsWith("jdt.ls-java-project/")) {
-    return ProjectType.Default;
-  }
-  const rootPath = vscode.Uri.parse(rootPathUri).fsPath;
-  const dotProjectFile = path.join(rootPath, ".project");
-  if (!await pathExists(dotProjectFile)) { // for invisible projects, .project file is located in workspace storage.
-    return ProjectType.UnmanagedFolder;
-  }
-  const pomDotXmlFile = path.join(rootPath, "pom.xml");
-  if (await pathExists(pomDotXmlFile)) {
-    return ProjectType.Maven;
-  }
-  const buildDotGradleFile = path.join(rootPath, "build.gradle");
-  if (await pathExists(buildDotGradleFile)) {
-    return ProjectType.Gradle;
-  }
-  return ProjectType.Others;
 }
 
 export async function suggestOpenJdk(jdkVersion: string = "openjdk11", impl: string = "hotspot") {

@@ -4,7 +4,7 @@
 import React, { Component } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../../../utils/webview";
-import { reportSkipTour, showWelcomePage, WEBVIEW_ID } from "../utils";
+import { onWillFetchInitProps, reportSkipTour, WEBVIEW_ID } from "../utils";
 
 const logoIcon = require("../../../../logo.svg");
 const doneIcon = require("../resources/done.svg");
@@ -42,11 +42,11 @@ export default class TourPage extends Component<{
         }
 
         if (step >= this.steps.length) {
-            showWelcomePage(false);
+            onWillFetchInitProps();
             return <div>Loading...</div>;
         } else if (step === this.steps.length - 1) {
             this.timer = setTimeout(() => {
-                showWelcomePage(false);
+                onWillFetchInitProps();
             }, 5000);
         }
 
@@ -150,6 +150,6 @@ export default class TourPage extends Component<{
 
 function skipTourFrom(page: string) {
     reportSkipTour(page);
-    showWelcomePage(false);
+    onWillFetchInitProps();
 }
 
