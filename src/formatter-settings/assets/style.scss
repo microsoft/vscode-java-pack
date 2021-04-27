@@ -174,13 +174,8 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 code.hljs {
   background-color: var(--vscode-notebook-rowHoverBackground) !important;
-  font-family: SpaceDiff, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   border: 1px solid var(--vscode-settings-textInputBorder);
   padding: 10px 15px 15px 15px !important;
-}
-
-code > span {
-  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 ::-webkit-scrollbar-corner { background-color: transparent; }
