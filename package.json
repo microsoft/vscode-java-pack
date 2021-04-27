@@ -48,7 +48,8 @@
     "onWebviewPanel:java.welcome",
     "onCommand:java.classpathConfiguration",
     "onWebviewPanel:java.classpathConfiguration",
-    "onWebviewPanel:java.markdownPreview"
+    "onWebviewPanel:java.markdownPreview",
+    "onCommand:java.formatterSettings"
   ],
   "contributes": {
     "commands": [
@@ -86,6 +87,11 @@
         "command": "java.extGuide",
         "category": "Java",
         "title": "Extension Guide"
+      },
+      {
+        "command": "java.formatterSettings",
+        "category": "Java",
+        "title": "Open Java Formatter Settings with Preview"
       }
     ],
     "configuration": {
@@ -141,7 +147,19 @@
           "when": "view == javaProjectExplorer && viewItem =~ /java:project(?=.*?\\b\\+unmanagedFolder\\b)(?=.*?\\b\\+uri\\b)/"
         }
       ]
-    }
+    },
+    "customEditors": [
+      {
+        "viewType": "java.formatterSettingsEditor",
+        "displayName": "Java Formatter Settings Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.xml"
+          }
+        ],
+        "priority": "option"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
@@ -175,6 +193,7 @@
     "expand-tilde": "^2.0.2",
     "file-loader": "^6.2.0",
     "find-java-home": "^1.1.0",
+    "highlight.js": "10.5.0",
     "html-webpack-inline-source-plugin": "0.0.10",
     "html-webpack-plugin": "^3.2.0",
     "jquery": "^3.5.1",
