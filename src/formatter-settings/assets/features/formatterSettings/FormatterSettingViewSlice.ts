@@ -9,9 +9,9 @@ import { changeExampleKind } from "../../vscode.api";
 export const formatterSettingsViewSlice = createSlice({
   name: "formatterSettings",
   initialState: {
-    activeCatagory: Catagory.Common,
+    activeCatagory: Catagory.Comment,
     settings: [] as JavaFormatterSetting[],
-    exampleKind: ExampleKind.COMMON_EXAMPLE,
+    exampleKind: ExampleKind.COMMENT_EXAMPLE,
     formattedContent: "",
   },
   reducers: {

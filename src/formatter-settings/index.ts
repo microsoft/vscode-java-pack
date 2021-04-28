@@ -36,7 +36,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 this.settingsProfile = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_PROFILE_KEY);
             }
         }));
-        this.exampleKind = ExampleKind.COMMON_EXAMPLE;
+        this.exampleKind = ExampleKind.COMMENT_EXAMPLE;
         this.supportedProfileSettings = [];
         this.supportedVSCodeSettings = [];
     }
@@ -230,7 +230,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         const resourceUri = this.context.asAbsolutePath("./out/assets/formatter-settings/index.html");
         const buffer: string = fs.readFileSync(resourceUri).toString();
         webviewPanel.webview.html = buffer;
-        this.exampleKind = ExampleKind.COMMON_EXAMPLE;
+        this.exampleKind = ExampleKind.COMMENT_EXAMPLE;
         this.formatWithProfileSettings(webviewPanel);
 
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(async (e: vscode.TextDocumentChangeEvent) => {
