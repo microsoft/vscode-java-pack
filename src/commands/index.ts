@@ -31,12 +31,12 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.gettingStarted", instrumentCommand(context, "java.gettingStarted", javaGettingStartedCmdHandler)));
   context.subscriptions.push(vscode.commands.registerCommand("java.extGuide", instrumentCommand(context, "java.extGuide", javaExtGuideCmdHandler)));
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.webview.runCommand", webviewCmdLinkHandler));
-  context.subscriptions.push(vscode.commands.registerCommand("java.welcome", (options) => showWelcomeWebview(context, options)));
+  context.subscriptions.push(vscode.commands.registerCommand("java.welcome", instrumentCommand(context, "java.welcome", showWelcomeWebview)));
   const javaFormatterSettingsEditorProvider: JavaFormatterSettingsEditorProvider = new JavaFormatterSettingsEditorProvider(context);
   const editorOptions = { webviewOptions: {enableFindWidget: true, retainContextWhenHidden: true}, supportsMultipleEditorsPerDocument: false };
   context.subscriptions.push(vscode.window.registerCustomEditorProvider(JavaFormatterSettingsEditorProvider.viewType, javaFormatterSettingsEditorProvider, editorOptions));
-  context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings", () => javaFormatterSettingsEditorProvider.showFormatterSettingsEditor()));
-  context.subscriptions.push(vscode.commands.registerCommand("java.classpathConfiguration", async () => {
+  context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings", instrumentCommand(context, "java.formatterSettings", () => javaFormatterSettingsEditorProvider.showFormatterSettingsEditor())));
+  context.subscriptions.push(vscode.commands.registerCommand("java.classpathConfiguration", instrumentCommand(context, "java.classpathConfiguration", async () => {
     const showCustomizedView: boolean = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.CustomizedClasspathConfigurationView, true /*checkCache*/) || false;
     if (showCustomizedView) {
       showClasspathConfigurationPage(context);
@@ -46,5 +46,5 @@ export function initialize(context: vscode.ExtensionContext) {
       await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings");
       markdownPreviewProvider.show(context.asAbsolutePath(path.join("webview-resources", "classpathConfiguration.md")), "Classpath Settings", context);
     }
-  }));
+  })));
 }

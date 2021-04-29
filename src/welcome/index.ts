@@ -10,7 +10,7 @@ const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
 const KEY_IS_WELCOME_PAGE_VIEWED = "isWelcomePageViewed";
 let welcomeView: vscode.WebviewPanel | undefined;
 
-export async function showWelcomeWebview(context: vscode.ExtensionContext, options?: any) {
+export async function showWelcomeWebview(context: vscode.ExtensionContext, _operationId: string, options?: any) {
     if (options?.firstTimeRun) {
         setFirstTimeRun(context, true);
     }
