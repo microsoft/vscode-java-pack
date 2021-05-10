@@ -89,7 +89,7 @@
           {
             "id": "java.openProjectFolder.mac",
             "title": "Open project folder",
-            "description": "Open an existing folder that contains your Java project, or create a new folder.\n[Open Folder...](command:workbench.action.files.openFileFolder)\n\n[Create new Project](command:java.project.create)",
+            "description": "Open an existing folder that contains your Java project, or create a new folder.\n[Open Folder...](command:workbench.action.files.openFileFolder)\n[Create new Project](command:java.project.create)",
             "media": {
               "path": "walkthrough/open-project.png",
               "altText": "Open Project Folder"
@@ -99,7 +99,7 @@
           {
             "id": "java.showProjectExplorer",
             "title": "Explore your project",
-            "description": "View class paths and dependencies, and create new projects, packages, and classes.\n[Show Java Projects](command:javaProjectExplorer.focus)",
+            "description": "View classpaths and dependencies, and create new projects, packages and classes.\n[Show Java Projects](command:javaProjectExplorer.focus)",
             "media": {
               "path": "walkthrough/project-manager.png",
               "altText": "Project Explorer"
@@ -109,7 +109,7 @@
           {
             "id": "java.showProjectExplorer.notActivated",
             "title": "Explore your project",
-            "description": "View class paths and dependencies, and create new projects, packages, and classes.",
+            "description": "View classpaths and dependencies, and create new projects, packages and classes.",
             "media": {
               "path": "walkthrough/project-manager.png",
               "altText": "Project Explorer"
