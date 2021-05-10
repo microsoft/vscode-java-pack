@@ -34,7 +34,6 @@
     "onLanguage:java",
     "workspaceContains:pom.xml",
     "workspaceContains:build.gradle",
-    "workspaceContains:mnvw",
     "onCommand:java.overview",
     "onCommand:java.showReleaseNotes",
     "onWebviewPanel:java.overview",
