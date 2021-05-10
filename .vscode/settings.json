@@ -5,5 +5,19 @@
     },
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
-    }
+    },
+    "cSpell.words": [
+        "SDKs",
+        "classpaths",
+        "codicon",
+        "configurator",
+        "iconify",
+        "performant",
+        "redhat",
+        "reduxjs",
+        "vscjava",
+        "vscodeintellicode",
+        "walkthrough",
+        "walkthroughs"
+    ]
 }
