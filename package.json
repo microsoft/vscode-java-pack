@@ -57,7 +57,7 @@
         "id": "javaWelcome",
         "title": "Dive into Java Development",
         "description": "Your first steps to set up powerful Java tools in a lightweight, performant editor!",
-        "tasks": [
+        "steps": [
           {
             "id": "java.runtime",
             "title": "Get your Java runtime ready",
@@ -69,7 +69,7 @@
           },
           {
             "id": "java.extGuide",
-            "title": "Support additional tools & frameworks",
+            "title": "Support additional tools and frameworks",
             "description": "Got additional support for major tool chains, frameworks and application servers.\n[Recommended Java Extensions](command:toSide:java.extGuide)",
             "media": {
               "path": "walkthrough/extGuide.png",
@@ -89,7 +89,7 @@
           {
             "id": "java.openProjectFolder.mac",
             "title": "Open project folder",
-            "description": "Open an existing folder that contains your Java project, or create a new folder.\n[Open Folder...](command:workbench.action.files.openFileFolder)\n[Create new Project](command:java.project.create)",
+            "description": "Open an existing folder that contains your Java project, or create a new folder.\n[Open Folder...](command:workbench.action.files.openFileFolder)\n\n[Create new Project](command:java.project.create)",
             "media": {
               "path": "walkthrough/open-project.png",
               "altText": "Open Project Folder"
@@ -103,7 +103,18 @@
             "media": {
               "path": "walkthrough/project-manager.png",
               "altText": "Project Explorer"
-            }
+            },
+            "when": "java:projectManagerActivated"
+          },
+          {
+            "id": "java.showProjectExplorer.notActivated",
+            "title": "Explore your project",
+            "description": "View class paths and dependencies, and create new projects, packages, and classes.",
+            "media": {
+              "path": "walkthrough/project-manager.png",
+              "altText": "Project Explorer"
+            },
+            "when": "!java:projectManagerActivated"
           },
           {
             "id": "java.showDebugView",
@@ -116,12 +127,23 @@
           },
           {
             "id": "java.showTesting",
-            "title": "Run & debug tests",
+            "title": "Run and debug tests",
             "description": "The place to show all the test cases in your project. You can also run/debug your test cases from here.\n[Show Testing View](command:testExplorer.focus)",
             "media": {
               "path": "walkthrough/testing.png",
               "altText": "Testing"
-            }
+            },
+            "when": "java:testRunnerActivated"
+          },
+          {
+            "id": "java.showTesting.notActivated",
+            "title": "Run and debug tests",
+            "description": "The place to show all the test cases in your project. You can also run/debug your test cases from here.",
+            "media": {
+              "path": "walkthrough/testing.png",
+              "altText": "Testing"
+            },
+            "when": "!java:testRunnerActivated"
           },
           {
             "id": "java.tutorial",
