@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Col, Container, Nav, Row } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
@@ -9,6 +9,7 @@ import { changeActiveCategory } from "./formatterSettingViewSlice";
 import { highlight } from "./components/Highlight";
 import { Category } from "../../../types";
 import Setting from "./components/Setting";
+import { renderWhitespace } from "../../whitespace";
 
 const FormatterSettingsView = (): JSX.Element => {
   const activeCategory: Category = useSelector((state: any) => state.formatterSettings.activeCategory);
@@ -61,6 +62,10 @@ const FormatterSettingsView = (): JSX.Element => {
       </Nav.Item>
     </Nav>
   );
+
+  useEffect(() => {
+    renderWhitespace();
+  }, [contentText]);
 
   return (
     <Container className="root d-flex flex-column">
