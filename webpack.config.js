@@ -51,7 +51,10 @@ module.exports = function (env, argv) {
         }, {
           loader: 'css-loader'
         }]
-      }
+      }, {
+        test: /\.woff2$/,
+        loader: 'url-loader',
+      },
       ]
     },
     output: {

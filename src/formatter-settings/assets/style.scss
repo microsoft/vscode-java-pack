@@ -212,4 +212,53 @@ code.hljs {
   }
 }
 
+@font-face {
+  font-family: SpaceDiff;
+  src: url("./SpaceDiff.woff2");
+}
+
+body.vscode-dark {
+  .whitespace-style {
+    color: rgba(212, 212, 212, 0.3);
+  }
+  .tab-style {
+    color: rgba(212, 212, 212, 0.3);
+  }
+}
+
+body.vscode-light {
+  .whitespace-style {
+    color: rgba(0, 0, 0, 0.3);
+  }
+  .tab-style {
+    color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+body.vscode-high-contrast {
+  .whitespace-style {
+    color: rgba(255, 255, 255, 0.3);
+  }
+  .tab-style {
+    color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.whitespace-style {
+  font-style: normal;
+  font-family: SpaceDiff;
+}
+
+.tab-style {
+  font-style: normal;
+}
+
+.tab-style::before {
+  content: "→";
+  position: relative;
+  width: 0px;
+  height: 0px;
+  display: inline-block;
+}
+
 @import "../../assets/vscode.scss";
