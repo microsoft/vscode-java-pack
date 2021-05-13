@@ -15,9 +15,6 @@ export function renderWhitespace(): void {
     }
     const elements = document.querySelectorAll("code");
     for (let i = 0; i < elements.length; i++) {
-        if (elements[i].getElementsByClassName(SPACE_STYLE).length > 0) {
-            continue;
-        }
         const treeWalker: TreeWalker = document.createTreeWalker(elements[i], NodeFilter.SHOW_TEXT);
         const nodes: Node[] = [];
         while (treeWalker.nextNode()) {
@@ -49,7 +46,7 @@ function replace(node: Node): void {
         }
         let spaceCount = 0;
         for (let j = 0; j < tabSpaces[i].length; j++) {
-            if (isConsequentSpace(tabSpaces[i][j]) && j !== tabSpaces[i].length - 1) {
+            if (tabSpaces[i][j] === "" && j !== tabSpaces[i].length - 1) {
                 spaceCount = spaceCount + 1;
                 continue;
             }
@@ -61,10 +58,6 @@ function replace(node: Node): void {
         }
     }
     parent.removeChild(node);
-}
-
-function isConsequentSpace(text: string): boolean {
-    return text === "";
 }
 
 function createSpaceElement(count: number): HTMLSpanElement {
