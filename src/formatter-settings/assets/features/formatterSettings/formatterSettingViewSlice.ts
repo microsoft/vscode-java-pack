@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { createSlice } from "@reduxjs/toolkit";
-import { Example, getSupportedProfileSettings, getSupportedVSCodeSettings, SupportedSettings, VSCodeSettings } from "../../../FormatterConstants";
+import { SupportedSettings, VSCodeSettings } from "../../../FormatterConstants";
 import { Category, ExampleKind, JavaFormatterSetting } from "../../../types";
 import { onWillChangeExampleKind } from "../../utils";
 
