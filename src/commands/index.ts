@@ -33,7 +33,7 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.webview.runCommand", webviewCmdLinkHandler));
   context.subscriptions.push(vscode.commands.registerCommand("java.welcome", instrumentCommand(context, "java.welcome", showWelcomeWebview)));
   const javaFormatterSettingsEditorProvider: JavaFormatterSettingsEditorProvider = new JavaFormatterSettingsEditorProvider(context);
-  const editorOptions = { webviewOptions: {enableFindWidget: true, retainContextWhenHidden: true}, supportsMultipleEditorsPerDocument: false };
+  const editorOptions = { webviewOptions: {enableFindWidget: true, retainContextWhenHidden: true}};
   context.subscriptions.push(vscode.window.registerCustomEditorProvider(JavaFormatterSettingsEditorProvider.viewType, javaFormatterSettingsEditorProvider, editorOptions));
   context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings", instrumentCommand(context, "java.formatterSettings", () => javaFormatterSettingsEditorProvider.showFormatterSettingsEditor())));
   context.subscriptions.push(vscode.commands.registerCommand("java.classpathConfiguration", instrumentCommand(context, "java.classpathConfiguration", async () => {

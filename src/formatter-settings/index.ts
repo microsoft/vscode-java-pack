@@ -4,16 +4,21 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { loadTextFromFile } from "../utils";
+import { Example, getSupportedProfileSettings, getSupportedVSCodeSettings, JavaConstants } from "./FormatterConstants";
+import { ExampleKind, JavaFormatterSetting } from "./types";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
+    private exampleKind: ExampleKind = ExampleKind.INDENTATION_EXAMPLE;
+    private supportedProfileSettings: Map<string, JavaFormatterSetting> = getSupportedProfileSettings(20);
+    private supportedVSCodeSettings: Map<string, JavaFormatterSetting> = getSupportedVSCodeSettings();
 
     constructor(private readonly context: vscode.ExtensionContext) {
     }
 
     public async showFormatterSettingsEditor() {
         // Use a fake profile
-        const defaultProfile: string = path.join(this.context.extensionPath, "webview-resources", "formatter.xml");
+        const defaultProfile: string = path.join(this.context.extensionPath, "webview-resources", "java-formatter.xml");
         const resource = vscode.Uri.file(defaultProfile);
         vscode.commands.executeCommand("vscode.openWith", resource, "java.formatterSettingsEditor");
     }
@@ -26,5 +31,65 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         };
         const resourceUri = this.context.asAbsolutePath("./out/assets/formatter-settings/index.html");
         webviewPanel.webview.html = await loadTextFromFile(resourceUri);
+        this.exampleKind = ExampleKind.INDENTATION_EXAMPLE;
+        webviewPanel.webview.onDidReceiveMessage(async (e) => {
+            switch (e.command) {
+                case "onWillInitialize": {
+                    // fake provider: use default values
+                    webviewPanel.webview.postMessage({
+                        command: "loadProfileSetting",
+                        setting: Array.from(this.supportedProfileSettings.values()),
+                    });
+                    webviewPanel.webview.postMessage({
+                        command: "loadVSCodeSetting",
+                        setting: Array.from(this.supportedVSCodeSettings.values()),
+                    });
+                    this.formatWithProfileSettings(webviewPanel);
+                    break;
+                }
+                case "onWillChangeExampleKind": {
+                    this.exampleKind = e.exampleKind;
+                    this.formatWithProfileSettings(webviewPanel);
+                    break;
+                }
+                case "onWillChangeSetting": {
+                    // fake provider: replace the setting directly 
+                    for (const entry of this.supportedProfileSettings.entries()) {
+                        if (entry[0] === e.id) {
+                            entry[1].value = e.value;
+                            break;
+                        }
+                    }
+                    for (const entry of this.supportedVSCodeSettings.entries()) {
+                        if (entry[0] === e.id) {
+                            entry[1].value = e.value;
+                            break;
+                        }
+                    }
+                    webviewPanel.webview.postMessage({
+                        command: "loadProfileSetting",
+                        setting: Array.from(this.supportedProfileSettings.values()),
+                    });
+                    webviewPanel.webview.postMessage({
+                        command: "loadVSCodeSetting",
+                        setting: Array.from(this.supportedVSCodeSettings.values()),
+                    });
+                    break;
+                }
+                default:
+                    break;
+            }
+        });
+    }
+
+    private async formatWithProfileSettings(webviewPanel: vscode.WebviewPanel) {
+        // fake provider: use currently default settings
+        const content = await vscode.commands.executeCommand<string>("java.execute.workspaceCommand", "java.edit.stringFormatting", Example.getExample(this.exampleKind), JSON.stringify([]), JavaConstants.CURRENT_FORMATTER_SETTINGS_VERSION);
+        if (webviewPanel && webviewPanel.webview) {
+            webviewPanel.webview.postMessage({
+                command: "formattedContent",
+                content: content,
+            });
+        }
     }
 }
