@@ -42,3 +42,9 @@ export enum ExampleKind {
     WHITESPACE_EXAMPLE,
     WRAPPING_EXAMPLE,
 }
+
+// two extra properties from xmldom package, see https://www.npmjs.com/package/xmldom
+export interface DOMElement extends Element {
+    lineNumber: number;
+    columnNumber: number;
+}

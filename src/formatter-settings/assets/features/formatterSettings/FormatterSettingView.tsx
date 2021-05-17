@@ -18,8 +18,8 @@ const FormatterSettingsView = (): JSX.Element => {
   const dispatch: Dispatch<any> = useDispatch();
   const onClickNaviBar = (element: any) => {
     const activeCategory: Category = Number(element);
-    let exampleKind: ExampleKind = ExampleKind.INDENTATION_EXAMPLE;
     dispatch(changeActiveCategory(activeCategory));
+    let exampleKind: ExampleKind = ExampleKind.INDENTATION_EXAMPLE;
     switch (activeCategory) {
       case Category.BlankLine:
         exampleKind = ExampleKind.BLANKLINE_EXAMPLE;

@@ -6,6 +6,9 @@ import { Category, ExampleKind, JavaFormatterSetting, ValueKind } from "./types"
 export namespace JavaConstants {
     export const JAVA_CORE_FORMATTER_ID = "org.eclipse.jdt.core.formatter";
     export const CURRENT_FORMATTER_SETTINGS_VERSION = "21";
+    export const SETTINGS_URL_KEY = "format.settings.url";
+    export const SETTINGS_PROFILE_KEY = "format.settings.profile";
+    export const MINIMUM_JAVA_EXTENSION_VERSION: string = "0.77.0";
 }
 
 export namespace VSCodeSettings {
