@@ -2,63 +2,46 @@
 // Licensed under the MIT license.
 
 import { createSlice } from "@reduxjs/toolkit";
-import { Example, initializeSupportedProfileSettings, initializeSupportedVSCodeSettings } from "../../../FormatterConstants";
-import { Category, ExampleKind } from "../../../types";
+import { SupportedSettings, VSCodeSettings } from "../../../FormatterConstants";
+import { Category, JavaFormatterSetting } from "../../../types";
 
 export const formatterSettingsViewSlice = createSlice({
   name: "formatterSettings",
   initialState: {
-    activeCategory: Category.Common,
-    // only for display, settings will come from backend in next PR.
-    settings: [...initializeSupportedProfileSettings(20), ...initializeSupportedVSCodeSettings()],
-    exampleKind: ExampleKind.COMMON_EXAMPLE,
-    // only for display, code will come from backend in next PR.
-    formattedContent: Example.getExample(ExampleKind.COMMON_EXAMPLE),
+    activeCategory: Category.Indentation,
+    profileSettings: [] as JavaFormatterSetting[],
+    vscodeSettings: [] as JavaFormatterSetting[],
+    detectIndentation: false,
+    formattedContent: "",
   },
   reducers: {
     changeActiveCategory: (state, action) => {
-      const activeCategory: Category = action.payload as Category;
-      state.activeCategory = activeCategory;
-      switch (activeCategory) {
-        case Category.BlankLine:
-          state.exampleKind = ExampleKind.BLANKLINE_EXAMPLE;
-          break;
-        case Category.Comment:
-          state.exampleKind = ExampleKind.COMMENT_EXAMPLE;
-          break;
-        case Category.Common:
-          state.exampleKind = ExampleKind.COMMON_EXAMPLE;
-          break;
-        case Category.InsertLine:
-          state.exampleKind = ExampleKind.INSERTLINE_EXAMPLE;
-          break;
-        case Category.Whitespace:
-          state.exampleKind = ExampleKind.WHITESPACE_EXAMPLE;
-          break;
-        case Category.Wrapping:
-          state.exampleKind = ExampleKind.WRAPPING_EXAMPLE;
-          break;
-      }
-      state.formattedContent = Example.getExample(state.exampleKind);
+      state.activeCategory = action.payload;
     },
-    changeSetting: (state, action) => {
-      for (const setting of state.settings) {
-        if (setting.id === action.payload.id) {
-          setting.value = action.payload.value;
-          if (setting.exampleKind !== state.exampleKind) {
-            state.exampleKind = setting.exampleKind;
-            state.formattedContent = Example.getExample(state.exampleKind);
-          }
-          break;
+    loadProfileSetting: (state, action) => {
+      state.profileSettings = action.payload.setting;
+    },
+    loadVSCodeSetting: (state, action) => {
+      state.vscodeSettings = action.payload.setting;
+      for (const setting of state.vscodeSettings) {
+        if (setting.id === SupportedSettings.TABULATION_SIZE) {
+          document.documentElement.style.setProperty("--vscode-tab-size", setting.value);
+        } else if (setting.id === VSCodeSettings.DETECT_INDENTATION) {
+          state.detectIndentation = (setting.value === "true");
         }
       }
+    },
+    applyFormatResult: (state, action) => {
+      state.formattedContent = action.payload.content;
     },
   },
 });
 
 export const {
   changeActiveCategory,
-  changeSetting,
+  loadProfileSetting,
+  loadVSCodeSetting,
+  applyFormatResult,
 } = formatterSettingsViewSlice.actions;
 
 export default formatterSettingsViewSlice.reducer;

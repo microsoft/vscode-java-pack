@@ -5,10 +5,17 @@ import { Category, ExampleKind, JavaFormatterSetting, ValueKind } from "./types"
 
 export namespace JavaConstants {
     export const JAVA_CORE_FORMATTER_ID = "org.eclipse.jdt.core.formatter";
+    export const CURRENT_FORMATTER_SETTINGS_VERSION = "21";
+}
+
+export namespace VSCodeSettings {
+    export const INSERT_SPACES = "editor.insertSpaces";
+    export const TAB_SIZE = "editor.tabSize";
+    export const DETECT_INDENTATION = "editor.detectIndentation";
 }
 
 export namespace SupportedSettings {
-    // Common
+    // Indentation
     export const TABULATION_SIZE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.tabulation.size`;
     export const TABULATION_CHAR = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.tabulation.char`;
     // WhiteSpace
@@ -23,7 +30,6 @@ export namespace SupportedSettings {
     // Deprecated Settings
     export const INSERT_NEW_LINE_IN_CONTROL_STATEMENTS = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_in_control_statements`;
     export const INSERT_NEW_LINE_AFTER_ANNOTATION = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_after_annotation`;
-    export const INSERT_NEW_LINE_AFTER_ANNOTATION_ON_MEMBER = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_after_annotation_on_member`;
     export const INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_in_empty_type_declaration`;
     export const INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_in_empty_method_body`;
     export const INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.insert_new_line_in_empty_enum_declaration`;
@@ -94,7 +100,7 @@ export namespace SupportedSettings {
     export const ALIGNMENT_FOR_ANNOTATIONS_ON_PACKAGE = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.alignment_for_annotations_on_package`;
     export const ALIGNMENT_FOR_ANNOTATIONS_ON_ENUM_CONSTANT = `${JavaConstants.JAVA_CORE_FORMATTER_ID}.alignment_for_annotations_on_enum_constant`;
 
-    export const commonSettings: string[] = [
+    export const indentationSettings: string[] = [
         TABULATION_SIZE,
         TABULATION_CHAR
     ];
@@ -102,11 +108,16 @@ export namespace SupportedSettings {
 
 export namespace Example {
 
-    export const COMMON_EXAMPLE = "package com.example;\n" +
+    export const INDENTATION_EXAMPLE = "package com.example;\n" +
         "\n" +
         "class Example {\n" +
         "\tint[] myArray = { 1, 2, 3, 4, 5, 6 };\n" +
-        "\tString strWithTabs = \"1	2	3	4\";\n" +
+        "\tvoid foo(int a, int b, int c) {\n" +
+        "\t\tswitch (a) {\n" +
+        "\t\tcase 0: Other.doFoo(); break;\n" +
+        "\t\tdefault: Other.doBaz();\n" +
+        "\t\t}\n" +
+        "\t}\n" +
         "}\n";
 
     export const BLANKLINE_EXAMPLE = "package com.example;\n" +
@@ -241,8 +252,8 @@ export namespace Example {
 
     export function getExample(example: ExampleKind): string {
         switch (example) {
-            case ExampleKind.COMMON_EXAMPLE:
-                return Example.COMMON_EXAMPLE;
+            case ExampleKind.INDENTATION_EXAMPLE:
+                return Example.INDENTATION_EXAMPLE;
             case ExampleKind.BLANKLINE_EXAMPLE:
                 return Example.BLANKLINE_EXAMPLE;
             case ExampleKind.COMMENT_EXAMPLE:
@@ -267,38 +278,43 @@ export namespace Example {
     }
 }
 
-export function initializeSupportedVSCodeSettings(): JavaFormatterSetting[] {
-    const settings: JavaFormatterSetting[] = [];
-
-    const tabPolicy: JavaFormatterSetting = {
+const supportedVSCodeSettings: Map<string, JavaFormatterSetting> = new Map<string, JavaFormatterSetting>([
+    [SupportedSettings.TABULATION_CHAR, {
         id: SupportedSettings.TABULATION_CHAR,
-        name: "Tab Policy",
+        name: "Indentation policy",
         valueKind: ValueKind.Enum,
         candidates: ["tab", "space"],
         value: "tab",
-        category: Category.Common,
-        exampleKind: ExampleKind.COMMON_EXAMPLE,
+        category: Category.Indentation,
+        exampleKind: ExampleKind.INDENTATION_EXAMPLE,
         startVersion: 1,
-    };
-
-    const tabSize: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.TABULATION_SIZE, {
         id: SupportedSettings.TABULATION_SIZE,
-        name: "Tab Size",
+        name: "Tab size",
         valueKind: ValueKind.Number,
         value: "4",
-        category: Category.Common,
-        exampleKind: ExampleKind.COMMON_EXAMPLE,
+        category: Category.Indentation,
+        exampleKind: ExampleKind.INDENTATION_EXAMPLE,
         startVersion: 1,
-    };
+    }],
+    [VSCodeSettings.DETECT_INDENTATION, {
+        id: VSCodeSettings.DETECT_INDENTATION,
+        name: "Detect indentation from file content",
+        valueKind: ValueKind.Boolean,
+        value: "true",
+        category: Category.Indentation,
+        exampleKind: ExampleKind.INDENTATION_EXAMPLE,
+        startVersion: 1,
+    }],
+]);
 
-    settings.push(tabPolicy, tabSize);
-    return settings;
+export function getSupportedVSCodeSettings(): Map<string, JavaFormatterSetting> {
+    return supportedVSCodeSettings;
 }
 
-export function initializeSupportedProfileSettings(version: number): JavaFormatterSetting[] {
-    const settings: JavaFormatterSetting[] = [];
-
-    const insertLineInControlStatements: JavaFormatterSetting = {
+const supportedProfileSettings: Map<string, JavaFormatterSetting> = new Map<string, JavaFormatterSetting>([
+    [SupportedSettings.INSERT_NEW_LINE_IN_CONTROL_STATEMENTS, {
         id: SupportedSettings.INSERT_NEW_LINE_IN_CONTROL_STATEMENTS,
         name: "In control statements",
         valueKind: ValueKind.Boolean,
@@ -307,9 +323,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 6
-    };
-
-    const insertLineBeforeWhileInDo: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_BEFORE_WHILE_IN_DO_STATEMENT, {
         id: SupportedSettings.INSERT_NEW_LINE_BEFORE_WHILE_IN_DO_STATEMENT,
         name: "Before 'while' in a 'do' statement",
         valueKind: ValueKind.Boolean,
@@ -317,9 +332,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 6,
-    };
-
-    const insertLineBeforeFinallyInTry: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_BEFORE_FINALLY_IN_TRY_STATEMENT, {
         id: SupportedSettings.INSERT_NEW_LINE_BEFORE_FINALLY_IN_TRY_STATEMENT,
         name: "Before 'finally' in a 'try' statement",
         valueKind: ValueKind.Boolean,
@@ -327,9 +341,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 6,
-    };
-
-    const insertLineBeforeElseInIf: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_BEFORE_ELSE_IN_IF_STATEMENT, {
         id: SupportedSettings.INSERT_NEW_LINE_BEFORE_ELSE_IN_IF_STATEMENT,
         name: "Before 'else' in an 'if' statement",
         valueKind: ValueKind.Boolean,
@@ -337,9 +350,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 6,
-    };
-
-    const insertLineBeforeCatchInTry: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_BEFORE_CATCH_IN_TRY_STATEMENT, {
         id: SupportedSettings.INSERT_NEW_LINE_BEFORE_CATCH_IN_TRY_STATEMENT,
         name: "Before 'catch' in a 'try' statement",
         valueKind: ValueKind.Boolean,
@@ -347,9 +359,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 6,
-    };
-
-    const insertLineBeforeClosingBraceinArrayInitializer: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER, {
         id: SupportedSettings.INSERT_NEW_LINE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER,
         name: "Before closing brace in array initializer",
         valueKind: ValueKind.Boolean,
@@ -357,9 +368,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const insertLineAfterOpeningBraceInArrayInitializer: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER, {
         id: SupportedSettings.INSERT_NEW_LINE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER,
         name: "After opening brace in array initializer",
         valueKind: ValueKind.Boolean,
@@ -367,9 +377,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const insertLineAfterAnnotation: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION, {
         id: SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION,
         name: "After annotation",
         valueKind: ValueKind.Boolean,
@@ -378,9 +387,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 12,
-    };
-
-    const insertLineAfterAnnotationOnParameters: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER, {
         id: SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER,
         name: "After annotation on parameters",
         valueKind: ValueKind.Boolean,
@@ -388,9 +396,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 12,
-    };
-
-    const insertLineAfterAnnotationOnPackages: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PACKAGE, {
         id: SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PACKAGE,
         name: "After annotation on packages",
         valueKind: ValueKind.Boolean,
@@ -398,9 +405,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 12,
-    };
-
-    const insertLineAfterAnnotationOnEnumConstants: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_ENUM_CONSTANT, {
         id: SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_ENUM_CONSTANT,
         name: "After annotation on enum constants",
         valueKind: ValueKind.Boolean,
@@ -408,9 +414,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const insertLineBeforeEmptyStatement: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.PUT_EMPTY_STATEMENT_ON_NEW_LINE, {
         id: SupportedSettings.PUT_EMPTY_STATEMENT_ON_NEW_LINE,
         name: "Before empty statement",
         valueKind: ValueKind.Boolean,
@@ -418,9 +423,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.InsertLine,
         exampleKind: ExampleKind.INSERTLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const insertLineInEmptyClassDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION, {
         id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION,
         name: "In empty class declaration",
         valueKind: ValueKind.Boolean,
@@ -429,42 +433,38 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.BRACED_CODE_TYPE_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 15,
-    };
-
-    const insertLinePolicyForClassDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.KEEP_TYPE_DECLARATION_ON_ONE_LINE, {
         id: SupportedSettings.KEEP_TYPE_DECLARATION_ON_ONE_LINE,
-        name: "For class declaration",
+        name: "Reserve line for class declaration",
         valueKind: ValueKind.Enum,
         candidates: ["never", "if empty", "if at most one item"],
         value: "never",
         category: Category.InsertLine,
         exampleKind: ExampleKind.BRACED_CODE_TYPE_EXAMPLE,
         startVersion: 15,
-    };
-
-    const insertLinePolicyForRecordDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.KEEP_RECORD_DECLARATION_ON_ONE_LINE, {
         id: SupportedSettings.KEEP_RECORD_DECLARATION_ON_ONE_LINE,
-        name: "For record declaration",
+        name: "Reserve line for record declaration",
         valueKind: ValueKind.Enum,
         candidates: ["never", "if empty", "if at most one item"],
         value: "never",
         category: Category.InsertLine,
         exampleKind: ExampleKind.BRACED_CODE_RECORD_EXAMPLE,
         startVersion: 19,
-    };
-
-    const insertLinePolicyForRecordConstructor: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.KEEP_RECORD_CONSTRUCTOR_ON_ONE_LINE, {
         id: SupportedSettings.KEEP_RECORD_CONSTRUCTOR_ON_ONE_LINE,
-        name: "For record constructor",
+        name: "Reserve line for record constructor",
         valueKind: ValueKind.Enum,
         candidates: ["never", "if empty", "if at most one item"],
         value: "never",
         category: Category.InsertLine,
         exampleKind: ExampleKind.BRACED_CODE_RECORD_EXAMPLE,
         startVersion: 19,
-    };
-
-    const insertLineInEmptyMethod: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY, {
         id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY,
         name: "In empty method body",
         valueKind: ValueKind.Boolean,
@@ -473,20 +473,18 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.BRACED_CODE_TYPE_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 15,
-    };
-
-    const insertLinePolicyForMethodBody: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.KEEP_METHOD_BODY_ON_ONE_LINE, {
         id: SupportedSettings.KEEP_METHOD_BODY_ON_ONE_LINE,
-        name: "For method body",
+        name: "Reserve line for method body",
         valueKind: ValueKind.Enum,
         candidates: ["never", "if empty", "if at most one item"],
         value: "never",
         category: Category.InsertLine,
         exampleKind: ExampleKind.BRACED_CODE_TYPE_EXAMPLE,
         startVersion: 15,
-    };
-
-    const insertLineInEmptyEnumDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION, {
         id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION,
         name: "In empty enum declaration",
         valueKind: ValueKind.Boolean,
@@ -495,20 +493,18 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.BRACED_CODE_ENUM_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 15,
-    };
-
-    const insertLinePolicyForEnumDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.KEEP_ENUM_DECLARATION_ON_ONE_LINE, {
         id: SupportedSettings.KEEP_ENUM_DECLARATION_ON_ONE_LINE,
-        name: "For enum declaration",
+        name: "Reserve line for enum declaration",
         valueKind: ValueKind.Enum,
         candidates: ["never", "if empty", "if at most one item"],
         value: "never",
         category: Category.InsertLine,
         exampleKind: ExampleKind.BRACED_CODE_ENUM_EXAMPLE,
         startVersion: 15,
-    };
-
-    const insertLineInEmptyEnumConstant: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT, {
         id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT,
         name: "In empty enum constant",
         valueKind: ValueKind.Boolean,
@@ -517,20 +513,18 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.BRACED_CODE_ENUM_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 15,
-    };
-
-    const insertLinePolicyForEnumConstantDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE, {
         id: SupportedSettings.KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE,
-        name: "For enum constant declaration",
+        name: "Reserve line for enum constant declaration",
         valueKind: ValueKind.Enum,
         candidates: ["never", "if empty", "if at most one item"],
         value: "never",
         category: Category.InsertLine,
         exampleKind: ExampleKind.BRACED_CODE_ENUM_EXAMPLE,
         startVersion: 15,
-    };
-
-    const insertLineInEmptyAnonymousTypeDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION, {
         id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION,
         name: "In empty anonymous type declaration",
         valueKind: ValueKind.Boolean,
@@ -539,20 +533,18 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.ANNOTATION_AND_ANONYMOUS_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 15,
-    };
-
-    const insertLinePolicyForAnonymousTypeDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE, {
         id: SupportedSettings.KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE,
-        name: "For anonymous type declaration",
+        name: "Reserve line for anonymous type declaration",
         valueKind: ValueKind.Enum,
         candidates: ["never", "if empty", "if at most one item"],
         value: "never",
         category: Category.InsertLine,
         exampleKind: ExampleKind.ANNOTATION_AND_ANONYMOUS_EXAMPLE,
         startVersion: 15
-    };
-
-    const insertLineInEmptyAnnotationDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION, {
         id: SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION,
         name: "In empty annotation declaration",
         valueKind: ValueKind.Boolean,
@@ -561,20 +553,18 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.ANNOTATION_AND_ANONYMOUS_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 15,
-    };
-
-    const insertLinePolicyForAnnotationDeclaration: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE, {
         id: SupportedSettings.KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE,
-        name: "For annotation declaration",
+        name: "Reserve line for annotation declaration",
         valueKind: ValueKind.Enum,
         candidates: ["never", "if empty", "if at most one item"],
         value: "never",
         category: Category.InsertLine,
         exampleKind: ExampleKind.ANNOTATION_AND_ANONYMOUS_EXAMPLE,
         startVersion: 15,
-    };
-
-    const blankLinesBetweenClassDeclarations: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.BLANK_LINES_BETWEEN_TYPE_DECLARATIONS, {
         id: SupportedSettings.BLANK_LINES_BETWEEN_TYPE_DECLARATIONS,
         name: "Between class declarations",
         valueKind: ValueKind.Number,
@@ -582,9 +572,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.BlankLine,
         exampleKind: ExampleKind.BLANKLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const blankLinesBetweenImportGroups: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.BLANK_LINES_BETWEEN_IMPORT_GROUPS, {
         id: SupportedSettings.BLANK_LINES_BETWEEN_IMPORT_GROUPS,
         name: "Between import groups",
         valueKind: ValueKind.Number,
@@ -592,9 +581,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.BlankLine,
         exampleKind: ExampleKind.BLANKLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const blankLinesBeforePackageDeclarations: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.BLANK_LINES_BEFORE_PACKAGE, {
         id: SupportedSettings.BLANK_LINES_BEFORE_PACKAGE,
         name: "Before package declarations",
         valueKind: ValueKind.Number,
@@ -602,9 +590,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.BlankLine,
         exampleKind: ExampleKind.BLANKLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const blankLinesBeforeImportDeclarations: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.BLANK_LINES_BEFORE_IMPORTS, {
         id: SupportedSettings.BLANK_LINES_BEFORE_IMPORTS,
         name: "Before import declarations",
         valueKind: ValueKind.Number,
@@ -612,9 +599,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.BlankLine,
         exampleKind: ExampleKind.BLANKLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const blankLinesBetweenMemberTypeDeclarations: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.BLANK_LINES_BEFORE_MEMBER_TYPE, {
         id: SupportedSettings.BLANK_LINES_BEFORE_MEMBER_TYPE,
         name: "Between member type declarations",
         valueKind: ValueKind.Number,
@@ -622,19 +608,17 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.BlankLine,
         exampleKind: ExampleKind.BLANKLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const blankLinesPreserveEmptyLines: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.NUMBER_OF_EMPTY_LINES_TO_PRESERVE, {
         id: SupportedSettings.NUMBER_OF_EMPTY_LINES_TO_PRESERVE,
-        name: "Preserve empty lines",
+        name: "Empty lines to preserve",
         valueKind: ValueKind.Number,
         value: "1",
         category: Category.BlankLine,
         exampleKind: ExampleKind.BLANKLINE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const maxLineWidth: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.LINESPLIT, {
         id: SupportedSettings.LINESPLIT,
         name: "Maximum line width",
         valueKind: ValueKind.Number,
@@ -642,9 +626,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Wrapping,
         exampleKind: ExampleKind.WRAPPING_EXAMPLE,
         startVersion: 1
-    };
-
-    const maxCommentLineLength: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_LINELENGTH, {
         id: SupportedSettings.COMMENT_LINELENGTH,
         name: "Maximum comment line length",
         valueKind: ValueKind.Number,
@@ -653,9 +636,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 7
-    };
-
-    const maxCommentLineLengthCurrent: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_LINE_LENGTH, {
         id: SupportedSettings.COMMENT_LINE_LENGTH,
         name: "Maximum comment line length",
         valueKind: ValueKind.Number,
@@ -663,9 +645,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 7,
-    };
-
-    const indentWrappedParameterDescription: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_INDENTPARAMETERDESCRIPTION, {
         id: SupportedSettings.COMMENT_INDENTPARAMETERDESCRIPTION,
         name: "Indent wrapped parameter description",
         valueKind: ValueKind.Boolean,
@@ -674,9 +655,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 7,
-    };
-
-    const indentWrappedParameterDescriptionCurrent: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_INDENT_PARAMETER_DESCRIPTION, {
         id: SupportedSettings.COMMENT_INDENT_PARAMETER_DESCRIPTION,
         name: "Indent wrapped parameter description",
         valueKind: ValueKind.Boolean,
@@ -684,9 +664,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 7,
-    };
-
-    const headerCommentFormatting: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_FORMATHEADER, {
         id: SupportedSettings.COMMENT_FORMATHEADER,
         name: "Enable header comment formatting",
         valueKind: ValueKind.Boolean,
@@ -695,9 +674,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 7
-    };
-
-    const headerCommentFormattingCurrent: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_FORMAT_HEADER, {
         id: SupportedSettings.COMMENT_FORMAT_HEADER,
         name: "Enable header comment formatting",
         valueKind: ValueKind.Boolean,
@@ -705,9 +683,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 7,
-    };
-
-    const commentFormatting: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_FORMATTER_COMMENT, {
         id: SupportedSettings.COMMENT_FORMATTER_COMMENT,
         name: "Enable comment formatting",
         valueKind: ValueKind.Boolean,
@@ -716,9 +693,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 7,
-    };
-
-    const commentFormattingSecond: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_FORMATTER_COMMENT_CORE, {
         id: SupportedSettings.COMMENT_FORMATTER_COMMENT_CORE,
         name: "Enable comment formatting",
         valueKind: ValueKind.Boolean,
@@ -727,9 +703,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 7,
         deprecatedVersion: 11,
-    };
-
-    const blockCommentFormatting: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_FORMAT_BLOCK_COMMENTS, {
         id: SupportedSettings.COMMENT_FORMAT_BLOCK_COMMENTS,
         name: "Enable block comment formatting",
         valueKind: ValueKind.Boolean,
@@ -737,9 +712,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 11,
-    };
-
-    const lineCommentFormatting: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.FORMAT_LINE_COMMENTS, {
         id: SupportedSettings.FORMAT_LINE_COMMENTS,
         name: "Enable line comment formatting",
         valueKind: ValueKind.Boolean,
@@ -747,9 +721,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 11,
-    };
-
-    const countLineLengthFromStarting: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_COUNT_LINE_LENGTH_FROM_STARTING_POSITION, {
         id: SupportedSettings.COMMENT_COUNT_LINE_LENGTH_FROM_STARTING_POSITION,
         name: "Count line length from starting position",
         valueKind: ValueKind.Boolean,
@@ -757,9 +730,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 13,
-    };
-
-    const removeBlankLinesInComment: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_CLEARBLANKLINES, {
         id: SupportedSettings.COMMENT_CLEARBLANKLINES,
         name: "Remove blank lines in comment",
         valueKind: ValueKind.Boolean,
@@ -768,9 +740,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 7
-    };
-
-    const removeBlankLinesInCommentSecond = {
+    }],
+    [SupportedSettings.COMMENT_CLEAR_BLANK_LINES, {
         id: SupportedSettings.COMMENT_CLEAR_BLANK_LINES,
         name: "Remove blank lines in comment",
         valueKind: ValueKind.Boolean,
@@ -779,9 +750,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 7,
         deprecatedVersion: 11
-    };
-
-    const removeBlankLinesInJavadoc: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_CLEAR_BLANK_LINES_IN_JAVADOC_COMMENT, {
         id: SupportedSettings.COMMENT_CLEAR_BLANK_LINES_IN_JAVADOC_COMMENT,
         name: "Remove blank lines in Javadoc",
         valueKind: ValueKind.Boolean,
@@ -789,9 +759,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 11,
-    };
-
-    const removeBlankLinesInBlockComment: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_CLEAR_BLANK_LINES_IN_BLOCK_COMMENT, {
         id: SupportedSettings.COMMENT_CLEAR_BLANK_LINES_IN_BLOCK_COMMENT,
         name: "Remove blank lines in block comment",
         valueKind: ValueKind.Boolean,
@@ -799,9 +768,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 11,
-    };
-
-    const onOffTags: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.COMMENT_ON_OFF_TAGS, {
         id: SupportedSettings.COMMENT_ON_OFF_TAGS,
         name: "Use On/Off tags",
         valueKind: ValueKind.Boolean,
@@ -809,9 +777,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Comment,
         exampleKind: ExampleKind.COMMENT_EXAMPLE,
         startVersion: 1,
-    };
-
-    const whitespaceBeforeClosingBraceInArrayInitializer: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER, {
         id: SupportedSettings.INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER,
         name: "Before closing brace in array initializer",
         valueKind: ValueKind.Boolean,
@@ -819,9 +786,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Whitespace,
         exampleKind: ExampleKind.WHITESPACE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const whitespaceBeforeFirstInitializer: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_SPACE_BEFORE_FIRST_INITIALIZER, {
         id: SupportedSettings.INSERT_SPACE_BEFORE_FIRST_INITIALIZER,
         name: "Before first initializer",
         valueKind: ValueKind.Boolean,
@@ -830,9 +796,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         exampleKind: ExampleKind.WHITESPACE_EXAMPLE,
         startVersion: 1,
         deprecatedVersion: 3,
-    };
-
-    const whitespaceAfterOpeningBraceInArrayInitializer: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER, {
         id: SupportedSettings.INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER,
         name: "After opening brace in array initializer",
         valueKind: ValueKind.Boolean,
@@ -840,9 +805,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Whitespace,
         exampleKind: ExampleKind.WHITESPACE_EXAMPLE,
         startVersion: 3,
-    };
-
-    const whitespaceAfterClosingParenthesisInCast: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST, {
         id: SupportedSettings.INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST,
         name: "After closing parenthesis in cast",
         valueKind: ValueKind.Boolean,
@@ -850,9 +814,8 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Whitespace,
         exampleKind: ExampleKind.WHITESPACE_EXAMPLE,
         startVersion: 1,
-    };
-
-    const whitespaceAfterClosingAngleBracketInType: JavaFormatterSetting = {
+    }],
+    [SupportedSettings.INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS, {
         id: SupportedSettings.INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS,
         name: "After closing angle bracket in type",
         valueKind: ValueKind.Boolean,
@@ -860,30 +823,89 @@ export function initializeSupportedProfileSettings(version: number): JavaFormatt
         category: Category.Whitespace,
         exampleKind: ExampleKind.WHITESPACE_EXAMPLE,
         startVersion: 1,
-    };
+    }]
+]);
 
-    settings.push(insertLineInControlStatements, insertLineBeforeWhileInDo, insertLineBeforeFinallyInTry,
-        insertLineBeforeElseInIf, insertLineBeforeCatchInTry, insertLineBeforeClosingBraceinArrayInitializer,
-        insertLineAfterOpeningBraceInArrayInitializer, insertLineAfterAnnotation, insertLineAfterAnnotationOnParameters,
-        insertLineAfterAnnotationOnPackages, insertLineAfterAnnotationOnEnumConstants, insertLineBeforeEmptyStatement,
-        insertLineInEmptyClassDeclaration, insertLinePolicyForClassDeclaration, insertLinePolicyForRecordDeclaration,
-        insertLinePolicyForRecordConstructor, insertLineInEmptyMethod, insertLinePolicyForMethodBody, insertLineInEmptyEnumDeclaration,
-        insertLinePolicyForEnumDeclaration, insertLineInEmptyEnumConstant, insertLinePolicyForEnumConstantDeclaration,
-        insertLineInEmptyAnonymousTypeDeclaration, insertLinePolicyForAnonymousTypeDeclaration, insertLineInEmptyAnnotationDeclaration,
-        insertLinePolicyForAnnotationDeclaration, blankLinesBetweenClassDeclarations, blankLinesBetweenImportGroups,
-        blankLinesBeforePackageDeclarations, blankLinesBeforeImportDeclarations, blankLinesBetweenMemberTypeDeclarations,
-        blankLinesPreserveEmptyLines, maxLineWidth, maxCommentLineLength, maxCommentLineLengthCurrent, indentWrappedParameterDescription,
-        indentWrappedParameterDescriptionCurrent, headerCommentFormatting, headerCommentFormattingCurrent, commentFormatting,
-        commentFormattingSecond, blockCommentFormatting, lineCommentFormatting, countLineLengthFromStarting, removeBlankLinesInComment,
-        removeBlankLinesInCommentSecond, removeBlankLinesInJavadoc, removeBlankLinesInBlockComment, onOffTags,
-        whitespaceBeforeClosingBraceInArrayInitializer, whitespaceBeforeFirstInitializer, whitespaceAfterOpeningBraceInArrayInitializer,
-        whitespaceAfterClosingParenthesisInCast, whitespaceAfterClosingAngleBracketInType);
-
-    const supportedSettings: JavaFormatterSetting[] = [];
-    for (const setting of settings) {
-        if (setting.startVersion <= version && (!setting.deprecatedVersion || setting.deprecatedVersion > version)) {
-            supportedSettings.push(setting);
+export function getSupportedProfileSettings(version: number): Map<string, JavaFormatterSetting> {
+    const settings: Map<string, JavaFormatterSetting> = new Map<string, JavaFormatterSetting>();
+    supportedProfileSettings.forEach((value, key) => {
+        if (value.startVersion <= version && (!value.deprecatedVersion || value.deprecatedVersion > version)) {
+            settings.set(key, value);
         }
+    });
+    return settings;
+}
+
+export function getDefaultValue(id: string): string | undefined {
+    switch (id) {
+        case SupportedSettings.TABULATION_CHAR:
+            return "tab";
+        case SupportedSettings.TABULATION_SIZE:
+            return "4";
+        case SupportedSettings.PUT_EMPTY_STATEMENT_ON_NEW_LINE:
+        case SupportedSettings.COMMENT_INDENTPARAMETERDESCRIPTION:
+        case SupportedSettings.COMMENT_INDENT_PARAMETER_DESCRIPTION:
+        case SupportedSettings.COMMENT_FORMATHEADER:
+        case SupportedSettings.COMMENT_FORMAT_HEADER:
+        case SupportedSettings.COMMENT_CLEARBLANKLINES:
+        case SupportedSettings.COMMENT_CLEAR_BLANK_LINES:
+        case SupportedSettings.COMMENT_CLEAR_BLANK_LINES_IN_JAVADOC_COMMENT:
+        case SupportedSettings.COMMENT_CLEAR_BLANK_LINES_IN_BLOCK_COMMENT:
+        case SupportedSettings.COMMENT_ON_OFF_TAGS:
+            return "false";
+        case SupportedSettings.INSERT_NEW_LINE_IN_CONTROL_STATEMENTS:
+        case SupportedSettings.INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS:
+        case SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION:
+        case SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER:
+        case SupportedSettings.INSERT_NEW_LINE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER:
+        case SupportedSettings.INSERT_NEW_LINE_BEFORE_WHILE_IN_DO_STATEMENT:
+        case SupportedSettings.INSERT_NEW_LINE_BEFORE_ELSE_IN_IF_STATEMENT:
+        case SupportedSettings.INSERT_NEW_LINE_BEFORE_CATCH_IN_TRY_STATEMENT:
+        case SupportedSettings.INSERT_NEW_LINE_BEFORE_FINALLY_IN_TRY_STATEMENT:
+        case SupportedSettings.INSERT_NEW_LINE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER:
+            return "do not insert";
+        case SupportedSettings.COMMENT_FORMATTER_COMMENT:
+        case SupportedSettings.COMMENT_FORMATTER_COMMENT_CORE:
+        case SupportedSettings.COMMENT_FORMAT_BLOCK_COMMENTS:
+        case SupportedSettings.FORMAT_LINE_COMMENTS:
+        case SupportedSettings.COMMENT_COUNT_LINE_LENGTH_FROM_STARTING_POSITION:
+            return "true";
+        case SupportedSettings.INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER:
+        case SupportedSettings.INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER:
+        case SupportedSettings.INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST:
+        case SupportedSettings.INSERT_SPACE_BEFORE_FIRST_INITIALIZER:
+        case SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_TYPE_DECLARATION:
+        case SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_METHOD_BODY:
+        case SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ENUM_DECLARATION:
+        case SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ENUM_CONSTANT:
+        case SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ANONYMOUS_TYPE_DECLARATION:
+        case SupportedSettings.INSERT_NEW_LINE_IN_EMPTY_ANNOTATION_DECLARATION:
+        case SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_ENUM_CONSTANT:
+        case SupportedSettings.INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PACKAGE:
+            return "insert";
+        case SupportedSettings.KEEP_TYPE_DECLARATION_ON_ONE_LINE:
+        case SupportedSettings.KEEP_RECORD_DECLARATION_ON_ONE_LINE:
+        case SupportedSettings.KEEP_RECORD_CONSTRUCTOR_ON_ONE_LINE:
+        case SupportedSettings.KEEP_METHOD_BODY_ON_ONE_LINE:
+        case SupportedSettings.KEEP_ENUM_DECLARATION_ON_ONE_LINE:
+        case SupportedSettings.KEEP_ENUM_CONSTANT_DECLARATION_ON_ONE_LINE:
+        case SupportedSettings.KEEP_ANONYMOUS_TYPE_DECLARATION_ON_ONE_LINE:
+        case SupportedSettings.KEEP_ANNOTATION_DECLARATION_ON_ONE_LINE:
+            return "one_line_never";
+        case SupportedSettings.BLANK_LINES_BETWEEN_TYPE_DECLARATIONS:
+        case SupportedSettings.BLANK_LINES_BETWEEN_IMPORT_GROUPS:
+        case SupportedSettings.BLANK_LINES_BEFORE_IMPORTS:
+        case SupportedSettings.BLANK_LINES_BEFORE_MEMBER_TYPE:
+        case SupportedSettings.NUMBER_OF_EMPTY_LINES_TO_PRESERVE:
+            return "1";
+        case SupportedSettings.BLANK_LINES_BEFORE_PACKAGE:
+            return "0";
+        case SupportedSettings.LINESPLIT:
+            return "120";
+        case SupportedSettings.COMMENT_LINELENGTH:
+        case SupportedSettings.COMMENT_LINE_LENGTH:
+            return "80";
+        default:
+            return undefined;
     }
-    return supportedSettings;
 }

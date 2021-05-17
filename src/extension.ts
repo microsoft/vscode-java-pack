@@ -17,6 +17,7 @@ import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
 import { TreatmentVariables } from "./exp/TreatmentVariables";
 import { MarkdownPreviewSerializer } from "./classpath/markdownPreviewProvider";
+import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -27,6 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 async function initializeExtension(_operationId: string, context: vscode.ExtensionContext) {
+  initFormatterSettingsEditorProvider(context);
   initUtils(context);
   initCommands(context);
   initRecommendations(context);

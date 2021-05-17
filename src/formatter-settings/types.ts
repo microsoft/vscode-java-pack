@@ -22,7 +22,7 @@ export enum ValueKind {
 }
 
 export enum Category {
-    Common,
+    Indentation,
     Whitespace,
     Comment,
     Wrapping,
@@ -31,7 +31,7 @@ export enum Category {
 }
 
 export enum ExampleKind {
-    COMMON_EXAMPLE,
+    INDENTATION_EXAMPLE,
     BLANKLINE_EXAMPLE,
     COMMENT_EXAMPLE,
     INSERTLINE_EXAMPLE,

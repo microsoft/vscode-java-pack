@@ -34,6 +34,12 @@ $enable-rounded: false;
   }
 }
 
+@media (max-width: 992px) and (min-width: 783px) {
+  .setting-section {
+    max-width: 50%;
+  }
+}
+
 .setting-section-description {
   color: rgba(var(--vscode-descriptionForeground), 0.9) !important;
   font-size: var(--vscode-font-size);
@@ -215,6 +221,14 @@ code.hljs {
 @font-face {
   font-family: SpaceDiff;
   src: url("./SpaceDiff.woff2");
+}
+
+.warning {
+  display: table;
+  width: 250px;
+  color: var(--vscode-editorWarning-foreground);
+  font-size: var(--vscode-font-size);
+  line-height: 1.4em;
 }
 
 body.vscode-dark {
