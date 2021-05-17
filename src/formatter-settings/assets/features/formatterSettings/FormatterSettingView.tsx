@@ -7,17 +7,42 @@ import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { applyFormatResult, changeActiveCategory, loadProfileSetting, loadVSCodeSetting } from "./formatterSettingViewSlice";
 import { highlight } from "./components/Highlight";
-import { Category } from "../../../types";
+import { Category, ExampleKind } from "../../../types";
 import Setting from "./components/Setting";
 import { renderWhitespace } from "../../whitespace";
-import { onWillInitialize } from "../../utils";
+import { onWillChangeExampleKind, onWillInitialize } from "../../utils";
 
 const FormatterSettingsView = (): JSX.Element => {
   const activeCategory: Category = useSelector((state: any) => state.formatterSettings.activeCategory);
   const contentText: string = useSelector((state: any) => state.formatterSettings.formattedContent);
   const dispatch: Dispatch<any> = useDispatch();
   const onClickNaviBar = (element: any) => {
-    dispatch(changeActiveCategory(Number(element)));
+    const activeCategory: Category = Number(element);
+    let exampleKind: ExampleKind = ExampleKind.INDENTATION_EXAMPLE;
+    dispatch(changeActiveCategory(activeCategory));
+    switch (activeCategory) {
+      case Category.BlankLine:
+        exampleKind = ExampleKind.BLANKLINE_EXAMPLE;
+        break;
+      case Category.Comment:
+        exampleKind = ExampleKind.COMMENT_EXAMPLE;
+        break;
+      case Category.Indentation:
+        exampleKind = ExampleKind.INDENTATION_EXAMPLE;
+        break;
+      case Category.InsertLine:
+        exampleKind = ExampleKind.INSERTLINE_EXAMPLE;
+        break;
+      case Category.Whitespace:
+        exampleKind = ExampleKind.WHITESPACE_EXAMPLE;
+        break;
+      case Category.Wrapping:
+        exampleKind = ExampleKind.WRAPPING_EXAMPLE;
+        break;
+      default:
+        exampleKind = ExampleKind.INDENTATION_EXAMPLE;
+    }
+    onWillChangeExampleKind(exampleKind);
   };
 
   const naviBar: JSX.Element = (

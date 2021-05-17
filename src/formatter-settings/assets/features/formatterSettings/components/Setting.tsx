@@ -4,17 +4,15 @@
 import checkIcon from "@iconify-icons/codicon/check";
 import chevronDownIcon from "@iconify-icons/codicon/chevron-down";
 import { Icon } from "@iconify/react";
-import React, { Dispatch } from "react";
+import React from "react";
 import { Dropdown, Form } from "react-bootstrap";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { VSCodeSettings } from "../../../../FormatterConstants";
 import { Category, ExampleKind, JavaFormatterSetting, ValueKind } from "../../../../types";
-import { onWillChangeSetting } from "../../../utils";
-import { activateExampleKind } from "../formatterSettingViewSlice";
+import { onWillChangeExampleKind, onWillChangeSetting } from "../../../utils";
 
 const Setting = (): JSX.Element => {
 
-  const dispatch: Dispatch<any> = useDispatch();
   const profileSettings: JavaFormatterSetting[] = useSelector((state: any) => state.formatterSettings.profileSettings);
   const vscodeSettings: JavaFormatterSetting[] = useSelector((state: any) => state.formatterSettings.vscodeSettings);
   const activeCategory: Category = useSelector((state: any) => state.formatterSettings.activeCategory);
@@ -40,12 +38,12 @@ const Setting = (): JSX.Element => {
   };
 
   const handleClick = (exampleKind: ExampleKind) => {
-    dispatch(activateExampleKind({ exampleKind: exampleKind }));
+    onWillChangeExampleKind(exampleKind);
   };
 
   const generateSetting = (setting: JavaFormatterSetting): JSX.Element => {
     if (!setting.name || !setting.id || !setting.value) {
-      return (<></>);
+      return null;
     }
     const candidates = [];
     switch (setting.valueKind as ValueKind) {
@@ -61,14 +59,14 @@ const Setting = (): JSX.Element => {
               </Form.Check.Label>
               <br></br>
               <span className="warning">
-                {willBeOverriden ? "When detecting, the indentation settings will be overriden based on file contents." : ""}
+                {willBeOverriden ? "When enabled, the indentation settings will be overriden based on the file contents." : ""}
               </span>
             </Form.Check>
           </div>
         );
       case ValueKind.Enum:
         if (!setting.candidates) {
-          return (<></>);
+          return null;
         }
         for (const candidate of setting.candidates) {
           candidates.push(
@@ -99,7 +97,7 @@ const Setting = (): JSX.Element => {
           </div>
         );
       default:
-        return (<></>);
+        return null;
     }
   };
 

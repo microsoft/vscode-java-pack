@@ -34,8 +34,8 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         this.exampleKind = ExampleKind.INDENTATION_EXAMPLE;
         webviewPanel.webview.onDidReceiveMessage(async (e) => {
             switch (e.command) {
-                case "onWillInitialize": {
-                    // fake provider: use default values
+                case "onWillInitialize":
+                    // use default values temporarily
                     webviewPanel.webview.postMessage({
                         command: "loadProfileSetting",
                         setting: Array.from(this.supportedProfileSettings.values()),
@@ -46,14 +46,12 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     });
                     this.formatWithProfileSettings(webviewPanel);
                     break;
-                }
-                case "onWillChangeExampleKind": {
+                case "onWillChangeExampleKind":
                     this.exampleKind = e.exampleKind;
                     this.formatWithProfileSettings(webviewPanel);
                     break;
-                }
-                case "onWillChangeSetting": {
-                    // fake provider: replace the setting directly 
+                case "onWillChangeSetting":
+                    // modify the settings in memory temporarily
                     for (const entry of this.supportedProfileSettings.entries()) {
                         if (entry[0] === e.id) {
                             entry[1].value = e.value;
@@ -75,7 +73,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                         setting: Array.from(this.supportedVSCodeSettings.values()),
                     });
                     break;
-                }
                 default:
                     break;
             }
@@ -83,7 +80,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     }
 
     private async formatWithProfileSettings(webviewPanel: vscode.WebviewPanel) {
-        // fake provider: use currently default settings
+        // use default settings temporarily
         const content = await vscode.commands.executeCommand<string>("java.execute.workspaceCommand", "java.edit.stringFormatting", Example.getExample(this.exampleKind), JSON.stringify([]), JavaConstants.CURRENT_FORMATTER_SETTINGS_VERSION);
         if (webviewPanel && webviewPanel.webview) {
             webviewPanel.webview.postMessage({
@@ -92,4 +89,11 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             });
         }
     }
+}
+
+export let javaFormatterSettingsEditorProvider: JavaFormatterSettingsEditorProvider;
+
+export function initFormatterSettingsEditorProvider(context: vscode.ExtensionContext) {
+    javaFormatterSettingsEditorProvider = new JavaFormatterSettingsEditorProvider(context);
+    context.subscriptions.push(vscode.window.registerCustomEditorProvider(JavaFormatterSettingsEditorProvider.viewType, javaFormatterSettingsEditorProvider, { webviewOptions: {enableFindWidget: true, retainContextWhenHidden: true}}));
 }
