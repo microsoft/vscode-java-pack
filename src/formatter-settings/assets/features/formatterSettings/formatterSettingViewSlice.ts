@@ -3,8 +3,7 @@
 
 import { createSlice } from "@reduxjs/toolkit";
 import { SupportedSettings, VSCodeSettings } from "../../../FormatterConstants";
-import { Category, ExampleKind, JavaFormatterSetting } from "../../../types";
-import { onWillChangeExampleKind } from "../../utils";
+import { Category, JavaFormatterSetting } from "../../../types";
 
 export const formatterSettingsViewSlice = createSlice({
   name: "formatterSettings",

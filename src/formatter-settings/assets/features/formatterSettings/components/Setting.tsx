@@ -41,7 +41,7 @@ const Setting = (): JSX.Element => {
     onWillChangeExampleKind(exampleKind);
   };
 
-  const generateSetting = (setting: JavaFormatterSetting): JSX.Element => {
+  const generateSetting = (setting: JavaFormatterSetting) => {
     if (!setting.name || !setting.id || !setting.value) {
       return null;
     }
@@ -101,7 +101,7 @@ const Setting = (): JSX.Element => {
     }
   };
 
-  const result: JSX.Element[] = [];
+  const result = [];
   if (activeCategory === Category.Indentation) {
     for (const setting of vscodeSettings) {
       result.push(generateSetting(setting));
