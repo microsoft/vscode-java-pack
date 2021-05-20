@@ -25,9 +25,7 @@ const Setting = (): JSX.Element => {
   };
 
   const handleChangeInput = (e: any) => {
-    const id = e.target.id;
-    let value = e.target.value;
-    onWillChangeSetting(id, value);
+    onWillChangeSetting(e.target.id, e.target.value);
   };
 
   const handleSelect = (setting: JavaFormatterSetting, entry: string) => {
