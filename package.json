@@ -47,8 +47,7 @@
     "onWebviewPanel:java.welcome",
     "onCommand:java.classpathConfiguration",
     "onWebviewPanel:java.classpathConfiguration",
-    "onWebviewPanel:java.markdownPreview",
-    "onCommand:java.formatterSettings"
+    "onWebviewPanel:java.markdownPreview"
   ],
   "contributes": {
     "walkthroughs": [
@@ -191,11 +190,6 @@
         "command": "java.extGuide",
         "category": "Java",
         "title": "Extension Guide"
-      },
-      {
-        "command": "java.formatterSettings",
-        "category": "Java",
-        "title": "Open Java Formatter Settings with Preview"
       }
     ],
     "configuration": {
@@ -251,19 +245,7 @@
           "when": "view == javaProjectExplorer && viewItem =~ /java:project(?=.*?\\b\\+unmanagedFolder\\b)(?=.*?\\b\\+uri\\b)/"
         }
       ]
-    },
-    "customEditors": [
-      {
-        "viewType": "java.formatterSettingsEditor",
-        "displayName": "Java Formatter Settings Editor",
-        "selector": [
-          {
-            "filenamePattern": "*.xml"
-          }
-        ],
-        "priority": "option"
-      }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
