@@ -3,7 +3,6 @@
 
 import compareVersions from "compare-versions";
 import * as fse from "fs-extra";
-import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 import { XMLSerializer } from "xmldom";
@@ -11,7 +10,7 @@ import { loadTextFromFile } from "../utils";
 import { Example, getDefaultValue, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
 import { DOMElement, ExampleKind, ProfileContent } from "./types";
-import { getProfilePath, getVSCodeSetting, isRemote, getTargetProfilePath, parseProfile } from "./utils";
+import { getProfilePath, getVSCodeSetting, isRemote, parseProfile, addDefaultProfile } from "./utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
@@ -39,7 +38,8 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_URL_KEY}`)) {
                 this.settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
                 if (this.settingsUrl) {
-                    this.profilePath = await getProfilePath(this.settingsUrl);
+                    const res = await getProfilePath(this.settingsUrl);
+                    this.profilePath = res;
                 }
             }
         });
@@ -257,7 +257,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             await vscode.window.showInformationMessage("No active Formatter Profile found, do you want to create a default one?",
                 "Yes", "No").then((result) => {
                     if (result === "Yes") {
-                        this.addDefaultProfile();
+                        addDefaultProfile(this.context);
                     }
                 });
         } else {
@@ -267,7 +267,8 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 return false;
             }
             if (!this.profilePath) {
-                this.profilePath = await getProfilePath(this.settingsUrl);
+                const res = await getProfilePath(this.settingsUrl);
+                this.profilePath = res;
             }
             if (!(await fse.pathExists(this.profilePath))) {
                 sendInfo(operationId, { formatterProfile: "notExist" });
@@ -279,7 +280,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                                 vscode.commands.executeCommand("workbench.action.openWorkspaceSettings");
                             }
                         } else if (result === "Generate a default profile") {
-                            this.addDefaultProfile();
+                            addDefaultProfile(this.context);
                         }
                     });
                 return false;
@@ -289,13 +290,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         }
         return this.checkedProfileSettings;
     });
-
-    private async addDefaultProfile(): Promise<void> {
-        const defaultProfile: string = path.join(this.context.extensionPath, "webview-resources", "java-formatter.xml");
-        const profilePath = await getTargetProfilePath(this.context);
-        await fse.copy(defaultProfile, profilePath);
-        vscode.commands.executeCommand("vscode.openWith", vscode.Uri.file(profilePath), "java.formatterSettingsEditor");
-    }
 }
 
 export let javaFormatterSettingsEditorProvider: JavaFormatterSettingsEditorProvider;

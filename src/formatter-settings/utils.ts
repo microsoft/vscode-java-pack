@@ -37,8 +37,9 @@ export function isRemote(path: string): boolean {
     return path !== null && path.startsWith("http:/") || path.startsWith("https:/");
 }
 
-export async function getTargetProfilePath(context: vscode.ExtensionContext, fileName?: string): Promise<string> {
-    const targetFileName = fileName || "java-formatter.xml";
+export async function addDefaultProfile(context: vscode.ExtensionContext): Promise<void> {
+    const defaultProfile: string = path.join(context.extensionPath, "webview-resources", "java-formatter.xml");
+    const targetFileName = "java-formatter.xml";
     let profilePath: string;
     const workspaceFolder = vscode.workspace.workspaceFolders;
     if (workspaceFolder?.length) {
@@ -51,8 +52,9 @@ export async function getTargetProfilePath(context: vscode.ExtensionContext, fil
     // bug: https://github.com/redhat-developer/vscode-java/issues/1944, only the profiles in posix path can be monitored when changes, so we use posix path for default profile creation temporarily.
     const relativePath = toPosixPath(path.join(".vscode", targetFileName));
     profilePath = toPosixPath(profilePath);
+    await fse.copy(defaultProfile, profilePath);
     await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolder?.length ? relativePath : profilePath), !(workspaceFolder?.length));
-    return profilePath;
+    vscode.commands.executeCommand("vscode.openWith", vscode.Uri.file(profilePath), "java.formatterSettingsEditor");
 }
 
 function toPosixPath(inputPath: string): string {
