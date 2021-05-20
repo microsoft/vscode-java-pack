@@ -75,7 +75,7 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
             <a className="nav-link active" id="adoptOpenJdkTab" data-toggle="tab" href="#adoptOpenJdkPanel" role="tab" aria-controls="adoptOpenJdkPanel" aria-selected="true" title="Reliable source of OpenJDK binaries for all platforms">AdoptOpenJDK</a>
           </li>
           <li className="nav-item">
-            <a className="nav-link" id="otherJdkTab" data-toggle="tab" href="#otherJdkPanel" role="tab" aria-controls="otherJdkPanel" aria-selected="false" title="Other choices">Others</a>
+            <a className="nav-link" id="otherJdkTab" data-toggle="tab" href="#otherJdkPanel" role="tab" aria-controls="otherJdkPanel" aria-selected="false" title="Other choices">Others<span className="red-dot"></span></a>
           </li>
         </ul>
         <div className="tab-content" id="jdkTabContent">
@@ -148,6 +148,7 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
           </div>
           <div className="tab-pane fade" id="otherJdkPanel" role="tabpanel" aria-labelledby="otherJdkTab">
             <ul id="jdkProviderList" className="list-unstyled">
+              <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.microsoft.com%2Fopenjdk%22" title="Microsoft Build of OpenJDK">Microsoft Build of OpenJDK</a><sup className="newtag">NEW</sup></li>
               <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fwww.azul.com%2Fdownloads%2Fazure-only%2Fzulu%2F%22" title="Recommended for Microsoft Azure Cloud and Azure Stack applications">Azul Zulu Enterprise build of OpenJDK for Azure</a></li>
               <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fdevelopers.redhat.com%2Fproducts%2Fopenjdk%2Fdownload%22" title="Red Hat build of OpenJDK">Red Hat build of OpenJDK</a></li>
               <li><a href="command:java.helper.openUrl?%22https%3A%2F%2Fsapmachine.io%2F%22" title="SapMachine - An OpenJDK release maintained and supported by SAP">SapMachine - An OpenJDK release maintained and supported by SAP</a></li>
