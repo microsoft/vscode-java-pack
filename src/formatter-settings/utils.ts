@@ -5,7 +5,7 @@ import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
-import { DOMElement, ProfileContent } from "./types";
+import { DOMAttr, DOMElement, ProfileContent } from "./types";
 import { DOMParser, XMLSerializer } from "xmldom";
 import { getDefaultValue, getSupportedProfileSettings, JavaConstants } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
@@ -23,17 +23,15 @@ export async function getProfilePath(formatterUrl: string): Promise<string> {
     return path.resolve(formatterUrl);
 }
 
-export async function getVSCodeSetting(setting: string, defaultValue: any): Promise<any> {
-    return await instrumentOperation("formatter.getSetting", async (operationId: string) => {
-        const config = vscode.workspace.getConfiguration(undefined, { languageId: "java" });
-        let result = config.get<any>(setting) ?? vscode.workspace.getConfiguration().get<any>(setting);
-        if (result === undefined) {
-            sendInfo(operationId, { notFoundSetting: setting });
-            return defaultValue;
-        }
-        return result;
-    })();
-}
+export const getVSCodeSetting = instrumentOperation("formatter.getSetting", async (operationId: string, setting: string, defaultValue: any) => {
+    const config = vscode.workspace.getConfiguration(undefined, { languageId: "java" });
+    let result = config.get<any>(setting) ?? vscode.workspace.getConfiguration().get<any>(setting);
+    if (result === undefined) {
+        sendInfo(operationId, { notFoundSetting: setting });
+        return defaultValue;
+    }
+    return result;
+});
 
 export function isRemote(path: string): boolean {
     return path !== null && path.startsWith("http:/") || path.startsWith("https:/");
@@ -68,16 +66,10 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
     const diagnostics: vscode.Diagnostic[] = [];
     const documentDOM = new DOMParser({
         locator: {}, errorHandler: (_level, msg) => {
-            const bracketExp: RegExp = new RegExp("\\[(.*?)\\]", "g");
-            const result: RegExpMatchArray = msg.match(bracketExp);
-            if (result && result.length) {
-                const lineExp: RegExp = new RegExp("line:(\\d*)");
-                const colExp: RegExp = new RegExp("col:(\\d*)");
-                const line = result[result.length - 1].match(lineExp);
-                const column = result[result.length - 1].match(colExp);
-                if (line && line.length === 2 && column && column.length === 2) {
-                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(Number(line[1]) - 1, Number(column[1]) - 1), new vscode.Position(Number(line[1]) - 1, Number(column[1]))), msg));
-                }
+            const bracketExp: RegExp = new RegExp("\\[line:(\\d*),col:(\\d*)\\]", "g");
+            const result = bracketExp.exec(msg);
+            if (result && result.length === 3) {
+                diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(Number(result[1]) - 1, Number(result[2]) - 1), new vscode.Position(Number(result[1]) - 1, Number(result[2]))), msg));
             }
         }
     }).parseFromString(document.getText());
@@ -85,7 +77,7 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
     const profiles = documentDOM.documentElement.getElementsByTagName("profile");
     if (!profiles || profiles.length === 0) {
         diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)), "No valid profiles found."));
-        return { settingsVersion: settingsVersion, diagnostics: diagnostics };
+        return { settingsVersion, diagnostics };
     }
     const settingsProfileName: string | undefined = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_PROFILE_KEY);
     for (let i = 0; i < profiles.length; i++) {
@@ -117,7 +109,7 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
     }
     if (!profileElements.size) {
         diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)), "No valid settings found in the profile."));
-        return { settingsVersion: settingsVersion, diagnostics: diagnostics };
+        return { settingsVersion, diagnostics };
     }
     const supportedProfileSettings = getSupportedProfileSettings(Number(settingsVersion));
     for (const setting of supportedProfileSettings.values()) {
@@ -129,9 +121,12 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
         }
         const webViewValue: string | undefined = FormatterConverter.profile2WebViewConvert(setting.id, value);
         if (!webViewValue) {
-            const elementContent = new XMLSerializer().serializeToString(element);
-            const elementRange = new vscode.Range(new vscode.Position(element.lineNumber - 1, element.columnNumber - 1), new vscode.Position(element.lineNumber - 1, element.columnNumber - 1 + elementContent.length));
-            diagnostics.push(new vscode.Diagnostic(elementRange, `Invalid value in id: "${setting.id}", "${value}" is not supported.`, vscode.DiagnosticSeverity.Error));
+            const valueNode = element.getAttributeNode("value") as DOMAttr;
+            if (!valueNode || !valueNode.nodeValue) {
+                continue;
+            }
+            const elementRange = new vscode.Range(new vscode.Position(valueNode.lineNumber - 1, valueNode.columnNumber), new vscode.Position(valueNode.lineNumber - 1, valueNode.columnNumber + valueNode.nodeValue.length));
+            diagnostics.push(new vscode.Diagnostic(elementRange, `"${value}" is not supported in id: "${setting.id}".`, vscode.DiagnosticSeverity.Error));
             profileSettings.delete(setting.id);
             setting.value = FormatterConverter.profile2WebViewConvert(setting.id, getDefaultValue(setting.id))!;
             continue;
@@ -139,11 +134,11 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
         setting.value = webViewValue;
     }
     return {
-        profileElements: profileElements,
-        profileSettings: profileSettings,
-        lastElement: lastElement,
-        supportedProfileSettings: supportedProfileSettings,
-        settingsVersion: settingsVersion,
-        diagnostics: diagnostics
+        settingsVersion,
+        diagnostics,
+        profileElements,
+        profileSettings,
+        lastElement,
+        supportedProfileSettings,
     }
 }

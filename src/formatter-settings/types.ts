@@ -50,11 +50,16 @@ export interface DOMElement extends Element {
     columnNumber: number;
 }
 
+export interface DOMAttr extends Attr {
+    lineNumber: number;
+    columnNumber: number;
+}
+
 export interface ProfileContent {
+    settingsVersion: string,
+    diagnostics: vscode.Diagnostic[],
     profileElements?: Map<string, DOMElement>,
     profileSettings?: Map<string, string>,
     lastElement?: DOMElement,
     supportedProfileSettings?: Map<string, JavaFormatterSetting>
-    settingsVersion: string,
-    diagnostics: vscode.Diagnostic[],
 }
