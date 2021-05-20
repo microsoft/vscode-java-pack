@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as vscode from "vscode";
 export interface JavaFormatterSetting {
     id: string;
     name: string;
@@ -47,4 +48,13 @@ export enum ExampleKind {
 export interface DOMElement extends Element {
     lineNumber: number;
     columnNumber: number;
+}
+
+export interface ProfileContent {
+    profileElements?: Map<string, DOMElement>,
+    profileSettings?: Map<string, string>,
+    lastElement?: DOMElement,
+    supportedProfileSettings?: Map<string, JavaFormatterSetting>
+    settingsVersion: string,
+    diagnostics: vscode.Diagnostic[],
 }

@@ -6,18 +6,16 @@ import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
-import { DOMParser, XMLSerializer } from "xmldom";
+import { XMLSerializer } from "xmldom";
 import { loadTextFromFile } from "../utils";
-import { Example, getDefaultValue, getSupportedProfileSettings, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
+import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
-import { DOMElement, ExampleKind, JavaFormatterSetting } from "./types";
-import { getProfilePath, getVSCodeSetting, isRemote, getTargetProfilePath } from "./utils";
+import { DOMElement, ExampleKind, ProfileContent } from "./types";
+import { getProfilePath, getVSCodeSetting, isRemote, getTargetProfilePath, parseProfile } from "./utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
     private exampleKind: ExampleKind = ExampleKind.INDENTATION_EXAMPLE;
-    private supportedProfileSettings: Map<string, JavaFormatterSetting> = getSupportedProfileSettings(20);
-    private supportedVSCodeSettings: Map<string, JavaFormatterSetting> = getSupportedVSCodeSettings();
     private profileElements: Map<string, DOMElement> = new Map<string, DOMElement>();
     private profileSettings: Map<string, string> = new Map<string, string>();
     private lastElement: DOMElement | undefined;
@@ -25,57 +23,64 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     private checkedRequirement: boolean = false;
     private checkedProfile: boolean = false;
     private diagnosticCollection: vscode.DiagnosticCollection = vscode.languages.createDiagnosticCollection();
+    private settingsUrl: string | undefined = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
+    private webviewPanel: vscode.WebviewPanel | undefined;
 
     constructor(private readonly context: vscode.ExtensionContext) {
         vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_URL_KEY}`) || e.affectsConfiguration(`java.${JavaConstants.SETTINGS_PROFILE_KEY}`)) {
+            if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_URL_KEY}`)) {
+                this.checkedProfile = false;
+                this.settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
+            } else if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_PROFILE_KEY}`)) {
                 this.checkedProfile = false;
             }
+        });
+        vscode.workspace.onDidChangeTextDocument(async (e: vscode.TextDocumentChangeEvent) => {
+            if (!this.settingsUrl || e.document.uri.toString() !== vscode.Uri.file(await getProfilePath(this.settingsUrl)).toString()) {
+                return;
+            }
+            await this.parseProfileAndUpdate(e.document);
         });
     }
 
     public async showFormatterSettingsEditor(): Promise<void> {
-        if (!await this.checkProfile()) {
+        if (!await this.checkProfile() || !this.settingsUrl) {
             return;
         }
-        const settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
-        if (!settingsUrl) {
-            return;
-        }
-        const filePath = vscode.Uri.file(await getProfilePath(settingsUrl));
+        const filePath = vscode.Uri.file(await getProfilePath(this.settingsUrl));
         vscode.commands.executeCommand("vscode.openWith", filePath, "java.formatterSettingsEditor");
     }
 
     public async resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
 
+        // restrict one webviewpanel only
+        if (this.webviewPanel) {
+            vscode.commands.executeCommand("vscode.open", document.uri);
+            webviewPanel.dispose();
+            return;
+        } else {
+            this.webviewPanel = webviewPanel;
+        }
+        
         webviewPanel.webview.options = {
             enableScripts: true,
             enableCommandUris: true,
         };
+        this.webviewPanel.onDidDispose(() => {
+            this.webviewPanel = undefined;
+        })
         const resourceUri = this.context.asAbsolutePath("./out/assets/formatter-settings/index.html");
-        webviewPanel.webview.html = await loadTextFromFile(resourceUri);
-        const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(async (e: vscode.TextDocumentChangeEvent) => {
-            if (e.document.uri.toString() !== document.uri.toString()) {
-                return;
-            }
-            const diagnostics = this.updateProfileSettings(e.document, webviewPanel);
-            this.diagnosticCollection.set(e.document.uri, diagnostics);
-            await this.updateVSCodeSettings(webviewPanel);
-            this.format(webviewPanel);
-        });
-        webviewPanel.onDidDispose(() => {
-            changeDocumentSubscription.dispose();
-        });
-        webviewPanel.webview.onDidReceiveMessage(async (e) => {
+        this.webviewPanel.webview.html = await loadTextFromFile(resourceUri);
+        this.webviewPanel.webview.onDidReceiveMessage(async (e) => {
             switch (e.command) {
                 case "onWillInitialize":
-                    if (!await this.initialize(document, webviewPanel)) {
-                        webviewPanel.dispose();
+                    if (!await this.initialize(document)) {
+                        this.webviewPanel?.dispose();
                     }
                     break;
                 case "onWillChangeExampleKind":
                     this.exampleKind = e.exampleKind;
-                    this.format(webviewPanel);
+                    this.format();
                     break;
                 case "onWillChangeSetting":
                     const settingValue: string | undefined = FormatterConverter.webView2ProfileConvert(e.id, e.value.toString());
@@ -130,7 +135,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         return true;
     }
 
-    private async initialize(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel): Promise<boolean> {
+    private async initialize(document: vscode.TextDocument): Promise<boolean> {
         if (!await this.checkRequirement()) {
             return false;
         }
@@ -140,24 +145,40 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         this.exampleKind = ExampleKind.INDENTATION_EXAMPLE;
         const onDidChangeSetting: vscode.Disposable = vscode.workspace.onDidChangeConfiguration(async (e) => {
             if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_URL_KEY}`) || e.affectsConfiguration(`java.${JavaConstants.SETTINGS_PROFILE_KEY}`)) {
-                this.onChangeProfile(webviewPanel);
+                this.onChangeProfile();
             } else if (e.affectsConfiguration(VSCodeSettings.TAB_SIZE) || e.affectsConfiguration(VSCodeSettings.INSERT_SPACES) || e.affectsConfiguration(VSCodeSettings.DETECT_INDENTATION)) {
-                await this.updateVSCodeSettings(webviewPanel);
-                this.format(webviewPanel);
+                await this.updateVSCodeSettings();
+                this.format();
             }
         });
-        webviewPanel.onDidDispose(() => {
+        this.webviewPanel?.onDidDispose(() => {
             onDidChangeSetting.dispose();
         });
-        const diagnostics = this.updateProfileSettings(document, webviewPanel);
-        this.diagnosticCollection.set(document.uri, diagnostics);
-        await this.updateVSCodeSettings(webviewPanel);
-        this.format(webviewPanel);
+        await this.parseProfileAndUpdate(document);
         return true;
     }
 
-    private onChangeProfile(webviewPanel: vscode.WebviewPanel): void {
-        if (webviewPanel.visible) {
+    private async parseProfileAndUpdate(document: vscode.TextDocument): Promise<void> {
+        const content: ProfileContent = parseProfile(document);
+        this.diagnosticCollection.set(document.uri, content.diagnostics);
+        if (this.webviewPanel) {
+            this.profileElements = content.profileElements || this.profileElements;
+            this.profileSettings = content.profileSettings || this.profileSettings;
+            this.lastElement = content.lastElement || this.lastElement;
+            this.settingsVersion = content.settingsVersion;
+            if (content.supportedProfileSettings) {
+                this.webviewPanel.webview.postMessage({
+                    command: "loadProfileSetting",
+                    setting: Array.from(content.supportedProfileSettings.values()),
+                });
+            }
+            await this.updateVSCodeSettings();
+            this.format();
+        }
+    }
+
+    private onChangeProfile(): void {
+        if (this.webviewPanel?.visible) {
             vscode.window.showInformationMessage(`Formatter Profile settings have been changed, do you want to reload this editor?`,
                 "Yes", "No").then(async (result) => {
                     if (result === "Yes") {
@@ -167,79 +188,9 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         }
     }
 
-    private updateProfileSettings(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel): vscode.Diagnostic[] {
-        this.profileElements.clear();
-        this.profileSettings.clear();
-        this.lastElement = undefined;
-        this.diagnosticCollection.clear();
-        const diagnostics: vscode.Diagnostic[] = [];
-        const documentDOM = new DOMParser().parseFromString(document.getText());
-        this.settingsVersion = documentDOM.documentElement.getAttribute("version") || this.settingsVersion;
-        const profiles = documentDOM.documentElement.getElementsByTagName("profile");
-        if (!profiles || profiles.length === 0) {
-            diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)), "No valid profiles found."));
-            return diagnostics;
-        }
-        const settingsProfileName: string | undefined = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_PROFILE_KEY);
-        for (let i = 0; i < profiles.length; i++) {
-            if (!settingsProfileName || settingsProfileName === profiles[i].getAttribute("name")) {
-                if (profiles[i].getAttribute("kind") !== "CodeFormatterProfile") {
-                    continue;
-                }
-                this.settingsVersion = profiles[i].getAttribute("version") || this.settingsVersion;
-                const settings = profiles[i].getElementsByTagName("setting");
-                for (let j = 0; j < settings.length; j++) {
-                    const setting: DOMElement = settings[j] as DOMElement;
-                    const settingContent: string = new XMLSerializer().serializeToString(setting);
-                    const id = setting.getAttribute("id");
-                    if (!id) {
-                        diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no 'id' property.", vscode.DiagnosticSeverity.Error));
-                        continue;
-                    }
-                    const value = settings[j].getAttribute("value");
-                    if (!value) {
-                        diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no 'value' property.", vscode.DiagnosticSeverity.Error));
-                        continue;
-                    }
-                    this.profileElements.set(id, setting);
-                    this.profileSettings.set(id, value);
-                    this.lastElement = setting;
-                }
-                break;
-            }
-        }
-        if (!this.profileElements.size) {
-            diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)), "No valid settings found in the profile."));
-            return diagnostics;
-        }
-        this.supportedProfileSettings = getSupportedProfileSettings(Number(this.settingsVersion));
-        for (const setting of this.supportedProfileSettings.values()) {
-            const element = this.profileElements.get(setting.id);
-            const value = this.profileSettings.get(setting.id);
-            if (!element || !value) {
-                continue;
-            }
-            const webViewValue: string | undefined = FormatterConverter.profile2WebViewConvert(setting.id, value);
-            if (!webViewValue) {
-                const elementContent = new XMLSerializer().serializeToString(element);
-                const elementRange = new vscode.Range(new vscode.Position(element.lineNumber - 1, element.columnNumber - 1), new vscode.Position(element.lineNumber - 1, element.columnNumber - 1 + elementContent.length));
-                diagnostics.push(new vscode.Diagnostic(elementRange, `Invalid value in id: "${setting.id}", "${value}" is not supported.`, vscode.DiagnosticSeverity.Error));
-                this.profileSettings.delete(setting.id);
-                setting.value = FormatterConverter.profile2WebViewConvert(setting.id, getDefaultValue(setting.id))!;
-                continue;
-            }
-            setting.value = webViewValue;
-        }
-        webviewPanel.webview.postMessage({
-            command: "loadProfileSetting",
-            setting: Array.from(this.supportedProfileSettings.values()),
-        });
-        return diagnostics;
-    }
-
-    private async updateVSCodeSettings(webviewPanel: vscode.WebviewPanel): Promise<void> {
-        this.supportedVSCodeSettings = getSupportedVSCodeSettings();
-        for (const setting of this.supportedVSCodeSettings.values()) {
+    private async updateVSCodeSettings(): Promise<void> {
+        const supportedVSCodeSettings = getSupportedVSCodeSettings();
+        for (const setting of supportedVSCodeSettings.values()) {
             switch (setting.id) {
                 case SupportedSettings.TABULATION_CHAR:
                     setting.value = (await getVSCodeSetting(VSCodeSettings.INSERT_SPACES, true) === false) ? "tab" : "space";
@@ -256,16 +207,16 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     return;
             }
         }
-        webviewPanel.webview.postMessage({
+        this.webviewPanel?.webview.postMessage({
             command: "loadVSCodeSetting",
-            setting: Array.from(this.supportedVSCodeSettings.values()),
+            setting: Array.from(supportedVSCodeSettings.values()),
         });
     }
 
-    private async format(webviewPanel: vscode.WebviewPanel): Promise<void> {
+    private async format(): Promise<void> {
         const content = await vscode.commands.executeCommand<string>("java.execute.workspaceCommand", "java.edit.stringFormatting", Example.getExample(this.exampleKind), JSON.stringify([...this.profileSettings]), this.settingsVersion);
-        if (webviewPanel && webviewPanel.webview) {
-            webviewPanel.webview.postMessage({
+        if (this.webviewPanel?.webview) {
+            this.webviewPanel.webview.postMessage({
                 command: "formattedContent",
                 content: content,
             });
@@ -285,14 +236,14 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             cloneElement.setAttribute("value", value);
             const edit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
             edit.insert(document.uri, new vscode.Position(cloneElement.lineNumber - 1, cloneElement.columnNumber - 1 + originalString.length), ((document.eol === vscode.EndOfLine.LF) ? "\n" : "\r\n") + " ".repeat(cloneElement.columnNumber - 1) + new XMLSerializer().serializeToString(cloneElement));
-            vscode.workspace.applyEdit(edit);
+            await vscode.workspace.applyEdit(edit);
         } else {
             // edit a current setting in the profile
             const originalSetting: string = new XMLSerializer().serializeToString(profileElement);
             profileElement.setAttribute("value", value);
             const edit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
             edit.replace(document.uri, new vscode.Range(new vscode.Position(profileElement.lineNumber - 1, profileElement.columnNumber - 1), new vscode.Position(profileElement.lineNumber - 1, profileElement.columnNumber - 1 + originalSetting.length)), new XMLSerializer().serializeToString(profileElement));
-            vscode.workspace.applyEdit(edit);
+            await vscode.workspace.applyEdit(edit);
         }
     }
 
@@ -300,9 +251,8 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         if (this.checkedProfile) {
             return true;
         }
-        const settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
         this.checkedProfile = await instrumentOperation("formatter.checkProfileSetting", async (operationId: string) => {
-            if (!settingsUrl) {
+            if (!this.settingsUrl) {
                 sendInfo(operationId, { formatterProfile: "undefined" });
                 await vscode.window.showInformationMessage("No active Formatter Profile found, do you want to create a default one?",
                     "Yes", "No").then((result) => {
@@ -312,12 +262,12 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     });
                 return false;
             } else {
-                if (isRemote(settingsUrl)) {
+                if (isRemote(this.settingsUrl)) {
                     // Will handle remote profile in the next PR
                     sendInfo(operationId, { formatterProfile: "remote" });
                     return false;
                 }
-                const profilePath = await getProfilePath(settingsUrl);
+                const profilePath = await getProfilePath(this.settingsUrl);
                 if (!(await fse.pathExists(profilePath))) {
                     sendInfo(operationId, { formatterProfile: "notExist" });
                     await vscode.window.showInformationMessage("The active formatter profile does not exist, please check it in the Settings and try again.",

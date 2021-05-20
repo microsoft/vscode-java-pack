@@ -30,6 +30,7 @@ const Setting = (): JSX.Element => {
     if (!value || value === "") {
       value = "0";
     }
+    value = Number(value);
     onWillChangeSetting(id, value);
   };
 
