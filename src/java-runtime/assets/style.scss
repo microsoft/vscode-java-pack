@@ -3,7 +3,7 @@ div.container {
 }
 
 sup.newtag {
-    color: red;
+    color: var(--vscode-terminal-ansiRed);
     font-weight: bold;
     margin-left: 0.2rem;
 }
@@ -11,7 +11,7 @@ sup.newtag {
 span.red-dot {
     height: 0.5rem;
     width: 0.5rem;
-    background-color: red;
+    background-color: var(--vscode-terminal-ansiRed);
     border-radius: 50%;
     display: inline-block;
     margin-left: 0.2rem;
