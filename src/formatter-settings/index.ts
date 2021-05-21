@@ -12,7 +12,7 @@ import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, 
 import { FormatterConverter } from "./FormatterConverter";
 import { RemoteProfileProvider } from "./RemoteProfileProvider";
 import { DOMElement, ExampleKind, ProfileContent } from "./types";
-import { addDefaultProfile, downloadFile, getProfilePath, getTargetPath, getVersion, getVSCodeSetting, isRemote, openFormatterSettings, parseProfile } from "./utils";
+import { addDefaultProfile, downloadFile, getProfilePath, getAbsoluteTargetPath, getVSCodeSetting, isRemote, openFormatterSettings, parseProfile } from "./utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
@@ -54,7 +54,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     }
 
     public async showFormatterSettingsEditor(): Promise<void> {
-        if (!await this.checkProfileSettings() || !this.settingsUrl) {
+        if (this.webviewPanel || !await this.checkProfileSettings() || !this.settingsUrl) {
             return;
         }
         const filePath = this.readOnly ? vscode.Uri.parse(this.settingsUrl).with({ scheme: RemoteProfileProvider.scheme }) : vscode.Uri.file(this.profilePath);
@@ -72,7 +72,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             this.webviewPanel = webviewPanel;
         }
 
-        webviewPanel.webview.options = {
+        this.webviewPanel.webview.options = {
             enableScripts: true,
             enableCommandUris: true,
         };
@@ -125,7 +125,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                             });
                         return;
                     }
-                    webviewPanel.dispose();
+                    this.webviewPanel?.dispose();
                     await this.downloadAndUse(settingsUrl);
                     break;
                 }
@@ -267,10 +267,11 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     }
 
     private async downloadAndUse(settingsUrl: string): Promise<void> {
-        const targetPath = await getTargetPath(this.context, path.basename(settingsUrl));
-        await downloadFile(settingsUrl, await getVersion(this.context), targetPath.profilePath);
+        const profilePath = await getAbsoluteTargetPath(this.context, path.basename(settingsUrl));
+        const data = await downloadFile(settingsUrl);
+        await fse.outputFile(profilePath, data);
         const workspaceFolders = vscode.workspace.workspaceFolders;
-        await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolders?.length ? targetPath.relativePath : targetPath.profilePath), !(workspaceFolders?.length));
+        await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolders?.length ? vscode.workspace.asRelativePath(profilePath) : profilePath), !(workspaceFolders?.length));
         this.showFormatterSettingsEditor();
     }
 
@@ -295,8 +296,8 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                         this.readOnly = true;
                         return true;
                     } else if (result === "Download and use it locally") {
-                        await this.downloadAndUse(this.settingsUrl!);
-                        return true;
+                        this.downloadAndUse(this.settingsUrl!);
+                        return false;
                     } else {
                         return false;
                     }
