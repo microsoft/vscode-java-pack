@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.15.0
+### Added
+Add setup-focused getting started walkthrough. [#608](https://github.com/microsoft/vscode-java-pack/pull/608)
+
+### Changed
+Refine wording in webview pages. [#606](https://github.com/microsoft/vscode-java-pack/pull/606) [#619](https://github.com/microsoft/vscode-java-pack/pull/619) [#631](https://github.com/microsoft/vscode-java-pack/pull/631)
+
 ## 0.14.0
 ### Added
 - Add classpath configuration page for unmanaged folder. [#567](https://github.com/microsoft/vscode-java-pack/pull/567), [#578](https://github.com/microsoft/vscode-java-pack/pull/578)
