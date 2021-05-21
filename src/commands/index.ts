@@ -15,7 +15,6 @@ import { showClasspathConfigurationPage } from "../classpath/classpathConfigurat
 import { markdownPreviewProvider } from "../classpath/markdownPreviewProvider";
 import { getExpService } from "../exp";
 import { TreatmentVariables } from "../exp/TreatmentVariables";
-import { javaFormatterSettingsEditorProvider } from "../formatter-settings";
 
 export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.overview", instrumentCommand(context, "java.overview", instrumentCommand(context, "java.helper.overview", overviewCmdHandler))));
@@ -32,7 +31,6 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.extGuide", instrumentCommand(context, "java.extGuide", javaExtGuideCmdHandler)));
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.webview.runCommand", webviewCmdLinkHandler));
   context.subscriptions.push(vscode.commands.registerCommand("java.welcome", instrumentCommand(context, "java.welcome", showWelcomeWebview)));
-  context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings", instrumentCommand(context, "java.formatterSettings", () => javaFormatterSettingsEditorProvider.showFormatterSettingsEditor())));
   context.subscriptions.push(vscode.commands.registerCommand("java.classpathConfiguration", instrumentCommand(context, "java.classpathConfiguration", async () => {
     const showCustomizedView: boolean = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.CustomizedClasspathConfigurationView, true /*checkCache*/) || false;
     if (showCustomizedView) {
