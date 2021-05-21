@@ -99,6 +99,7 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
                 }
                 const value = settings[j].getAttribute("value");
                 if (!value) {
+                    // value maybe "" or null, "" is an valid value comes from deleting the values in the inpux box of the editor, and we will still push diagnostic here.
                     diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no valid 'value' property.", vscode.DiagnosticSeverity.Error));
                     if (value === null) {
                         continue;
@@ -119,6 +120,7 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
     for (const setting of supportedProfileSettings.values()) {
         const element = profileElements.get(setting.id);
         const value = profileSettings.get(setting.id);
+        // "" is a valid value, so we distinguish it and undefined here.
         if (!element || value === undefined)  {
             setting.value = FormatterConverter.profile2WebViewConvert(setting.id, getDefaultValue(setting.id))!;
             continue;

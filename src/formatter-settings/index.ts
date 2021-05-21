@@ -91,6 +91,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     break;
                 case "onWillChangeSetting":
                     const settingValue: string | undefined = FormatterConverter.webView2ProfileConvert(e.id, e.value.toString());
+                    // "" represents an empty inputbox, we regard it as a valid value.
                     if (settingValue === undefined) {
                         return;
                     }

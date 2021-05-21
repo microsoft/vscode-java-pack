@@ -33,6 +33,7 @@ export namespace FormatterConverter {
                         return "insert";
                     case "false":
                         return "do not insert";
+                    // We regard an empty string as a valid value and may write it to the profile
                     case "":
                         return "";
                     default:
@@ -53,6 +54,7 @@ export namespace FormatterConverter {
                         return "one_line_if_empty";
                     case "if at most one item":
                         return "one_line_if_single_item";
+                    // We regard an empty string as a valid value and may write it to the profile
                     case "":
                         return "";
                     default:
@@ -91,6 +93,7 @@ export namespace FormatterConverter {
                         return "true";
                     case "do not insert":
                         return "false";
+                    // We regard an empty string as a valid value and show it in the webview
                     case "":
                         return "";
                     default:
@@ -111,6 +114,7 @@ export namespace FormatterConverter {
                         return "if empty";
                     case "one_line_if_single_item":
                         return "if at most one item";
+                    // We regard an empty string as a valid value and show it in the webview
                     case "":
                         return "";
                     default:
@@ -136,6 +140,7 @@ export namespace FormatterConverter {
             case SupportedSettings.INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER:
             case SupportedSettings.INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST:
             case SupportedSettings.INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS:
+                // We regard an empty string as a valid value and show it in the webview
                 if (value === "true" || value === "false" || value === "") {
                     return value;
                 }
