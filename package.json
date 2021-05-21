@@ -30,6 +30,9 @@
     "url": "https://github.com/Microsoft/vscode-java-pack"
   },
   "main": "./out/extension",
+  "capabilities": {
+    "virtualWorkspaces": false
+  },
   "activationEvents": [
     "onLanguage:java",
     "workspaceContains:pom.xml",
