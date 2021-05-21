@@ -4,7 +4,7 @@
 import * as vscode from "vscode";
 import { downloadFile, getVersion } from "./utils";
 
-class RemoteProfileProvider implements vscode.TextDocumentContentProvider {
+export class RemoteProfileProvider implements vscode.TextDocumentContentProvider {
 
     public static scheme = "formatter";
 
@@ -17,9 +17,7 @@ class RemoteProfileProvider implements vscode.TextDocumentContentProvider {
     } 
 }
 
-export let remoteProfileProvider: RemoteProfileProvider;
-
 export function initRemoteProfileProvider(context: vscode.ExtensionContext) {
-    remoteProfileProvider = new RemoteProfileProvider(context);
+    const remoteProfileProvider = new RemoteProfileProvider(context);
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(RemoteProfileProvider.scheme, remoteProfileProvider));
 }

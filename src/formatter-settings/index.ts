@@ -10,6 +10,7 @@ import { XMLSerializer } from "xmldom";
 import { loadTextFromFile } from "../utils";
 import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
+import { RemoteProfileProvider } from "./RemoteProfileProvider";
 import { DOMElement, ExampleKind, ProfileContent } from "./types";
 import { addDefaultProfile, downloadFile, getProfilePath, getTargetPath, getVersion, getVSCodeSetting, isRemote, openFormatterSettings, parseProfile } from "./utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
@@ -56,7 +57,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         if (!await this.checkProfileSettings() || !this.settingsUrl) {
             return;
         }
-        const filePath = this.readOnly ? vscode.Uri.parse(this.settingsUrl).with({ scheme: "formatter" }) : vscode.Uri.file(this.profilePath);
+        const filePath = this.readOnly ? vscode.Uri.parse(this.settingsUrl).with({ scheme: RemoteProfileProvider.scheme }) : vscode.Uri.file(this.profilePath);
         vscode.commands.executeCommand("vscode.openWith", filePath, "java.formatterSettingsEditor");
     }
 
