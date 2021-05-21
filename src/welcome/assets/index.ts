@@ -13,7 +13,7 @@ const onInitialize =  (event: any) => {
     if (data.command === "onDidFetchInitProps") {
         ReactDOM.render(React.createElement(GetStartedPage, data.props), document.getElementById("content"));
     }
-}
+};
 
 window.addEventListener("message", onInitialize);
 onWillFetchInitProps();
