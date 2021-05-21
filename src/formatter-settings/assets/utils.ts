@@ -26,3 +26,9 @@ export function onWillChangeSetting(id: string, value: any) {
     value: value,
   });
 }
+
+export function onWillDownloadAndUse() {
+  vscode.postMessage({
+    command: "onWillDownloadAndUse"
+  });
+}

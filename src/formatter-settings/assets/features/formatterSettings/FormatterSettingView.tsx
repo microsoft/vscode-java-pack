@@ -5,16 +5,19 @@ import React, { useEffect } from "react";
 import { Col, Container, Nav, Row } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
-import { applyFormatResult, changeActiveCategory, loadProfileSetting, loadVSCodeSetting } from "./formatterSettingViewSlice";
+import { applyFormatResult, changeActiveCategory, changeReadOnlyState, loadProfileSetting, loadVSCodeSetting } from "./formatterSettingViewSlice";
 import { highlight } from "./components/Highlight";
 import { Category, ExampleKind } from "../../../types";
 import Setting from "./components/Setting";
 import { renderWhitespace } from "../../whitespace";
-import { onWillChangeExampleKind, onWillInitialize } from "../../utils";
+import { onWillChangeExampleKind, onWillDownloadAndUse, onWillInitialize } from "../../utils";
 
 const FormatterSettingsView = (): JSX.Element => {
   const activeCategory: Category = useSelector((state: any) => state.formatterSettings.activeCategory);
   const contentText: string = useSelector((state: any) => state.formatterSettings.formattedContent);
+  const readOnly: boolean = useSelector((state: any) => state.formatterSettings.readOnly);
+  const title: string = "Java Formatter Settings" + (readOnly ? " (Read Only)" : "");
+
   const dispatch: Dispatch<any> = useDispatch();
   const onClickNaviBar = (element: any) => {
     const activeCategory: Category = Number(element);
@@ -75,6 +78,8 @@ const FormatterSettingsView = (): JSX.Element => {
       dispatch(loadProfileSetting(event.data));
     } else if (event.data.command === "loadVSCodeSetting") {
       dispatch(loadVSCodeSetting(event.data));
+    } else if (event.data.command === "changeReadOnlyState") {
+      dispatch(changeReadOnlyState(event.data));
     }
   };
 
@@ -90,10 +95,9 @@ const FormatterSettingsView = (): JSX.Element => {
 
   return (
     <Container className="root d-flex flex-column">
-      <Row>
-        <Col className="setting-header">
-          <h2 className="mb-0">Java Formatter Settings</h2>
-        </Col>
+      <Row className="setting-header">
+        <Col><h2 className="mb-0">{title}</h2></Col>
+        <Col>{readOnly && (<div><a className="btn btn-primary float-right" role="button" title="Download and edit profile" onClick={() => onWillDownloadAndUse()}>Edit</a></div>)}</Col>
       </Row>
       <Row className="flex-grow-1 d-flex flex-nowrap view-body">
         <Col className="flex-grow-0">{naviBar}</Col>

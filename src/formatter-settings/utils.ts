@@ -4,6 +4,9 @@
 import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
+import * as http from "http";
+import * as https from "https";
+import * as url from "url";
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { DOMAttr, DOMElement, ProfileContent } from "./types";
 import { DOMParser, XMLSerializer } from "xmldom";
@@ -39,22 +42,28 @@ export function isRemote(path: string): boolean {
 
 export async function addDefaultProfile(context: vscode.ExtensionContext): Promise<void> {
     const defaultProfile: string = path.join(context.extensionPath, "webview-resources", "java-formatter.xml");
-    const targetFileName = "java-formatter.xml";
-    let profilePath: string;
+    const targetPath = await getTargetPath(context, "java-formatter.xml");
+    const profilePath = targetPath.profilePath;
+    await fse.copy(defaultProfile, profilePath);
     const workspaceFolders = vscode.workspace.workspaceFolders;
+    await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolders?.length ? targetPath.relativePath : profilePath), !(workspaceFolders?.length));
+    vscode.commands.executeCommand("vscode.openWith", vscode.Uri.file(profilePath), "java.formatterSettingsEditor");
+}
+
+export async function getTargetPath(context: vscode.ExtensionContext, fileName: string): Promise<{relativePath: string, profilePath: string}> {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    let profilePath: string;
     if (workspaceFolders?.length) {
-        profilePath = path.posix.join(workspaceFolders[0].uri.fsPath, ".vscode", targetFileName);
+        profilePath = path.join(workspaceFolders[0].uri.fsPath, ".vscode", fileName);
     } else {
         const folder: string = context.globalStorageUri.fsPath;
         await fse.ensureDir(folder);
-        profilePath = path.posix.join(folder, targetFileName);
+        profilePath = path.join(folder, fileName);
     }
-    // bug: https://github.com/redhat-developer/vscode-java/issues/1944, only the profiles in posix path can be monitored when changes, so we use posix path for default profile creation temporarily.
-    const relativePath = toPosixPath(path.join(".vscode", targetFileName));
+     // bug: https://github.com/redhat-developer/vscode-java/issues/1944, only the profiles in posix path can be monitored when changes, so we use posix path for default profile creation temporarily.
+    const relativePath = toPosixPath(path.join(".vscode", fileName));
     profilePath = toPosixPath(profilePath);
-    await fse.copy(defaultProfile, profilePath);
-    await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolders?.length ? relativePath : profilePath), !(workspaceFolders?.length));
-    vscode.commands.executeCommand("vscode.openWith", vscode.Uri.file(profilePath), "java.formatterSettingsEditor");
+    return {relativePath, profilePath};
 }
 
 function toPosixPath(inputPath: string): string {
@@ -146,5 +155,67 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
         profileSettings,
         lastElement,
         supportedProfileSettings,
+    }
+}
+
+export async function downloadFile(settingsUrl: string, extensionVersion: string, targetPath?: string): Promise<string> {
+    if (targetPath) {
+        await fse.ensureDir(path.dirname(targetPath));
+        if (await fse.pathExists(targetPath)) {
+            await fse.remove(targetPath);
+        }
+    }
+    return await new Promise((resolve: (res: string) => void, reject: (e: Error) => void): void => {
+        const urlObj: url.Url = url.parse(settingsUrl);
+        const options = Object.assign({ headers: Object.assign({}, { "User-Agent": `vscode/${extensionVersion}` }) }, urlObj);
+        let client: any;
+        if (urlObj.protocol === "https:") {
+            client = https;
+            // tslint:disable-next-line:no-http-string
+        } else if (urlObj.protocol === "http:") {
+            client = http;
+        } else {
+            return reject(new Error("Unsupported protocol."));
+        }
+        client.get(options, (res: http.IncomingMessage) => {
+            let ws: fse.WriteStream;
+            let rawData: string;
+            if (targetPath) {
+                ws = fse.createWriteStream(targetPath);
+            } else {
+                rawData = "";
+            }
+            res.on("data", (chunk: string | Buffer) => {
+                if (targetPath) {
+                    ws.write(chunk);
+                } else {
+                    rawData += chunk;
+                }
+            });
+            res.on("end", () => {
+                if (targetPath) {
+                    ws.end();
+                    ws.on("close", () => {
+                        resolve("");
+                    });
+                } else {
+                    resolve(rawData);
+                }
+            });
+        }).on("error", (err: Error) => {
+            reject(err);
+        });
+    });
+}
+
+export async function getVersion(context: vscode.ExtensionContext): Promise<string> {
+    const { version } = await fse.readJSON(context.asAbsolutePath("./package.json"));
+    return version;
+}
+
+export function openFormatterSettings(): void {
+    vscode.commands.executeCommand("workbench.action.openSettings", JavaConstants.SETTINGS_URL_KEY);
+    if (vscode.workspace.workspaceFolders?.length) {
+        vscode.commands.executeCommand("workbench.action.openWorkspaceSettings");
     }
 }

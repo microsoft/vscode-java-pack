@@ -3,6 +3,7 @@
 
 import compareVersions from "compare-versions";
 import * as fse from "fs-extra";
+import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 import { XMLSerializer } from "xmldom";
@@ -10,7 +11,7 @@ import { loadTextFromFile } from "../utils";
 import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
 import { DOMElement, ExampleKind, ProfileContent } from "./types";
-import { getProfilePath, getVSCodeSetting, isRemote, parseProfile, addDefaultProfile } from "./utils";
+import { addDefaultProfile, downloadFile, getProfilePath, getTargetPath, getVersion, getVSCodeSetting, isRemote, openFormatterSettings, parseProfile } from "./utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
@@ -25,6 +26,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     private settingsUrl: string | undefined = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
     private webviewPanel: vscode.WebviewPanel | undefined;
     private profilePath: string = "";
+    private readOnly: boolean = false;
 
     constructor(private readonly context: vscode.ExtensionContext) {
         vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -37,7 +39,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             }
             if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_URL_KEY}`)) {
                 this.settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
-                if (this.settingsUrl) {
+                if (this.settingsUrl && !isRemote(this.settingsUrl)) {
                     this.profilePath = await getProfilePath(this.settingsUrl);
                 }
             }
@@ -54,7 +56,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         if (!await this.checkProfileSettings() || !this.settingsUrl) {
             return;
         }
-        const filePath = vscode.Uri.file(this.profilePath);
+        const filePath = this.readOnly ? vscode.Uri.parse(this.settingsUrl).with({ scheme: "formatter" }) : vscode.Uri.file(this.profilePath);
         vscode.commands.executeCommand("vscode.openWith", filePath, "java.formatterSettingsEditor");
     }
 
@@ -68,7 +70,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         } else {
             this.webviewPanel = webviewPanel;
         }
-        
+
         webviewPanel.webview.options = {
             enableScripts: true,
             enableCommandUris: true,
@@ -111,6 +113,21 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                         await this.modifyProfile(e.id, settingValue, document);
                     }
                     break;
+                case "onWillDownloadAndUse": {
+                    const settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
+                    if (!settingsUrl || !isRemote(settingsUrl)) {
+                        vscode.window.showErrorMessage("The active formatter profile does not exist or is not remote, please check it in the Settings and try again.",
+                            "Open Settings").then((result) => {
+                                if (result === "Open Settings") {
+                                    openFormatterSettings();
+                                }
+                            });
+                        return;
+                    }
+                    webviewPanel.dispose();
+                    await this.downloadAndUse(settingsUrl);
+                    break;
+                }
                 default:
                     break;
             }
@@ -152,6 +169,10 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         }
         this.exampleKind = ExampleKind.INDENTATION_EXAMPLE;
         await this.parseProfileAndUpdate(document);
+        this.webviewPanel?.webview.postMessage({
+            command: "changeReadOnlyState",
+            value: this.readOnly,
+        });
         return true;
     }
 
@@ -244,10 +265,19 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         }
     }
 
+    private async downloadAndUse(settingsUrl: string): Promise<void> {
+        const targetPath = await getTargetPath(this.context, path.basename(settingsUrl));
+        await downloadFile(settingsUrl, await getVersion(this.context), targetPath.profilePath);
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolders?.length ? targetPath.relativePath : targetPath.profilePath), !(workspaceFolders?.length));
+        this.showFormatterSettingsEditor();
+    }
+
     private checkProfileSettings = instrumentOperation("formatter.checkProfileSetting", async (operationId: string) => {
         if (this.checkedProfileSettings) {
             return true;
         }
+        this.readOnly = false;
         if (!this.settingsUrl) {
             sendInfo(operationId, { formatterProfile: "undefined" });
             await vscode.window.showInformationMessage("No active Formatter Profile found, do you want to create a default one?",
@@ -256,25 +286,30 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                         addDefaultProfile(this.context);
                     }
                 });
+        } else if (isRemote(this.settingsUrl)) {
+            sendInfo(operationId, { formatterProfile: "remote" });
+            this.checkedProfileSettings = await vscode.window.showInformationMessage("The active formatter profile is remote, do you want to open it in read-only mode or download and use it locally?",
+                "Open in read-only mode", "Download and use it locally").then(async (result) => {
+                    if (result === "Open in read-only mode") {
+                        this.readOnly = true;
+                        return true;
+                    } else if (result === "Download and use it locally") {
+                        await this.downloadAndUse(this.settingsUrl!);
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
         } else {
-            if (isRemote(this.settingsUrl)) {
-                // Will handle remote profile in the next PR
-                sendInfo(operationId, { formatterProfile: "remote" });
-                return false;
-            }
             if (!this.profilePath) {
-                const res = await getProfilePath(this.settingsUrl);
-                this.profilePath = res;
+                this.profilePath = await getProfilePath(this.settingsUrl);
             }
             if (!(await fse.pathExists(this.profilePath))) {
                 sendInfo(operationId, { formatterProfile: "notExist" });
                 await vscode.window.showInformationMessage("The active formatter profile does not exist, please check it in the Settings and try again.",
                     "Open Settings", "Generate a default profile").then((result) => {
                         if (result === "Open Settings") {
-                            vscode.commands.executeCommand("workbench.action.openSettings", JavaConstants.SETTINGS_URL_KEY);
-                            if (vscode.workspace.workspaceFolders?.length) {
-                                vscode.commands.executeCommand("workbench.action.openWorkspaceSettings");
-                            }
+                            openFormatterSettings();
                         } else if (result === "Generate a default profile") {
                             addDefaultProfile(this.context);
                         }
