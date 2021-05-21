@@ -4,9 +4,6 @@
 import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
-import * as http from "http";
-import * as https from "https";
-import * as url from "url";
 import axios from 'axios';
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { DOMAttr, DOMElement, ProfileContent } from "./types";
