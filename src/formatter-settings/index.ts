@@ -7,7 +7,7 @@ import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 import { XMLSerializer } from "xmldom";
 import { loadTextFromFile } from "../utils";
-import { Example, getDefaultValue, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
+import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
 import { DOMElement, ExampleKind, ProfileContent } from "./types";
 import { getProfilePath, getVSCodeSetting, isRemote, parseProfile, addDefaultProfile } from "./utils";
@@ -91,7 +91,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     break;
                 case "onWillChangeSetting":
                     const settingValue: string | undefined = FormatterConverter.webView2ProfileConvert(e.id, e.value.toString());
-                    if (!settingValue) {
+                    if (settingValue === undefined) {
                         return;
                     }
                     if (SupportedSettings.indentationSettings.includes(e.id)) {
@@ -100,7 +100,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                             const targetValue = (settingValue === "tab") ? false : true;
                             await config.update(VSCodeSettings.INSERT_SPACES, targetValue, undefined, true);
                         } else if (e.id === SupportedSettings.TABULATION_SIZE) {
-                            await config.update(VSCodeSettings.TAB_SIZE, Number(settingValue), undefined, true);
+                            await config.update(VSCodeSettings.TAB_SIZE, (settingValue === "") ? "" : Number(settingValue), undefined, true);
                         }
                         this.profileSettings.set(e.id, settingValue);
                     } else if (e.id === VSCodeSettings.DETECT_INDENTATION) {
@@ -221,10 +221,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
 
     private async modifyProfile(id: string, value: string, document: vscode.TextDocument): Promise<void> {
         const profileElement = this.profileElements.get(id);
-        const fixedValue = value || getDefaultValue(id);
-        if (!fixedValue) {
-            return;
-        }
         if (!profileElement) {
             // add a new setting not exist in the profile
             if (!this.lastElement) {
@@ -233,14 +229,14 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             const cloneElement = this.lastElement.cloneNode() as DOMElement;
             const originalString: string = new XMLSerializer().serializeToString(cloneElement);
             cloneElement.setAttribute("id", id);
-            cloneElement.setAttribute("value", fixedValue);
+            cloneElement.setAttribute("value", value);
             const edit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
             edit.insert(document.uri, new vscode.Position(cloneElement.lineNumber - 1, cloneElement.columnNumber - 1 + originalString.length), ((document.eol === vscode.EndOfLine.LF) ? "\n" : "\r\n") + " ".repeat(cloneElement.columnNumber - 1) + new XMLSerializer().serializeToString(cloneElement));
             await vscode.workspace.applyEdit(edit);
         } else {
             // edit a current setting in the profile
             const originalSetting: string = new XMLSerializer().serializeToString(profileElement);
-            profileElement.setAttribute("value", fixedValue);
+            profileElement.setAttribute("value", value);
             const edit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
             edit.replace(document.uri, new vscode.Range(new vscode.Position(profileElement.lineNumber - 1, profileElement.columnNumber - 1), new vscode.Position(profileElement.lineNumber - 1, profileElement.columnNumber - 1 + originalSetting.length)), new XMLSerializer().serializeToString(profileElement));
             await vscode.workspace.applyEdit(edit);

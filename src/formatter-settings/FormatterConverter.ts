@@ -33,6 +33,8 @@ export namespace FormatterConverter {
                         return "insert";
                     case "false":
                         return "do not insert";
+                    case "":
+                        return "";
                     default:
                         return undefined;
                 }
@@ -51,6 +53,8 @@ export namespace FormatterConverter {
                         return "one_line_if_empty";
                     case "if at most one item":
                         return "one_line_if_single_item";
+                    case "":
+                        return "";
                     default:
                         return undefined;
                 }
@@ -87,6 +91,8 @@ export namespace FormatterConverter {
                         return "true";
                     case "do not insert":
                         return "false";
+                    case "":
+                        return "";
                     default:
                         return undefined;
                 }
@@ -105,6 +111,8 @@ export namespace FormatterConverter {
                         return "if empty";
                     case "one_line_if_single_item":
                         return "if at most one item";
+                    case "":
+                        return "";
                     default:
                         return undefined;
                 }
@@ -128,7 +136,7 @@ export namespace FormatterConverter {
             case SupportedSettings.INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER:
             case SupportedSettings.INSERT_SPACE_AFTER_CLOSING_PAREN_IN_CAST:
             case SupportedSettings.INSERT_SPACE_AFTER_CLOSING_ANGLE_BRACKET_IN_TYPE_ARGUMENTS:
-                if (value === "true" || value === "false") {
+                if (value === "true" || value === "false" || value === "") {
                     return value;
                 }
                 return undefined;

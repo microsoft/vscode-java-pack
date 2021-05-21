@@ -94,13 +94,15 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
                 const settingContent: string = new XMLSerializer().serializeToString(setting);
                 const id = setting.getAttribute("id");
                 if (!id) {
-                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no 'id' property.", vscode.DiagnosticSeverity.Error));
+                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no valid 'id' property.", vscode.DiagnosticSeverity.Error));
                     continue;
                 }
                 const value = settings[j].getAttribute("value");
                 if (!value) {
-                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no 'value' property.", vscode.DiagnosticSeverity.Error));
-                    continue;
+                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no valid 'value' property.", vscode.DiagnosticSeverity.Error));
+                    if (value === null) {
+                        continue;
+                    }
                 }
                 profileElements.set(id, setting);
                 profileSettings.set(id, value);
@@ -117,12 +119,12 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
     for (const setting of supportedProfileSettings.values()) {
         const element = profileElements.get(setting.id);
         const value = profileSettings.get(setting.id);
-        if (!element || !value) {
+        if (!element || value === undefined)  {
             setting.value = FormatterConverter.profile2WebViewConvert(setting.id, getDefaultValue(setting.id))!;
             continue;
         }
         const webViewValue: string | undefined = FormatterConverter.profile2WebViewConvert(setting.id, value);
-        if (!webViewValue) {
+        if (webViewValue === undefined) {
             const valueNode = element.getAttributeNode("value") as DOMAttr;
             if (!valueNode || !valueNode.nodeValue) {
                 continue;

@@ -37,7 +37,7 @@ const Setting = (): JSX.Element => {
   };
 
   const generateSetting = (setting: JavaFormatterSetting) => {
-    if (!setting.name || !setting.id || !setting.value) {
+    if (!setting.name || !setting.id) {
       return null;
     }
     const candidates = [];
