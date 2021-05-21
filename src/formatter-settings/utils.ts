@@ -41,9 +41,9 @@ export async function addDefaultProfile(context: vscode.ExtensionContext): Promi
     const defaultProfile: string = path.join(context.extensionPath, "webview-resources", "java-formatter.xml");
     const targetFileName = "java-formatter.xml";
     let profilePath: string;
-    const workspaceFolder = vscode.workspace.workspaceFolders;
-    if (workspaceFolder?.length) {
-        profilePath = path.posix.join(workspaceFolder[0].uri.fsPath, ".vscode", targetFileName);
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (workspaceFolders?.length) {
+        profilePath = path.posix.join(workspaceFolders[0].uri.fsPath, ".vscode", targetFileName);
     } else {
         const folder: string = context.globalStorageUri.fsPath;
         await fse.ensureDir(folder);
@@ -53,7 +53,7 @@ export async function addDefaultProfile(context: vscode.ExtensionContext): Promi
     const relativePath = toPosixPath(path.join(".vscode", targetFileName));
     profilePath = toPosixPath(profilePath);
     await fse.copy(defaultProfile, profilePath);
-    await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolder?.length ? relativePath : profilePath), !(workspaceFolder?.length));
+    await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolders?.length ? relativePath : profilePath), !(workspaceFolders?.length));
     vscode.commands.executeCommand("vscode.openWith", vscode.Uri.file(profilePath), "java.formatterSettingsEditor");
 }
 

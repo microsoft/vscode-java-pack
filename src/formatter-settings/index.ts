@@ -38,8 +38,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_URL_KEY}`)) {
                 this.settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
                 if (this.settingsUrl) {
-                    const res = await getProfilePath(this.settingsUrl);
-                    this.profilePath = res;
+                    this.profilePath = await getProfilePath(this.settingsUrl);
                 }
             }
         });
