@@ -17,6 +17,7 @@ const Setting = (): JSX.Element => {
   const vscodeSettings: JavaFormatterSetting[] = useSelector((state: any) => state.formatterSettings.vscodeSettings);
   const activeCategory: Category = useSelector((state: any) => state.formatterSettings.activeCategory);
   const detectIndentation: boolean = useSelector((state: any) => state.formatterSettings.detectIndentation);
+  const readOnly: boolean = useSelector((state: any) => state.formatterSettings.readOnly);
 
   const handleChangeCheckbox = (e: any) => {
     const id = e.target.id;
@@ -25,12 +26,7 @@ const Setting = (): JSX.Element => {
   };
 
   const handleChangeInput = (e: any) => {
-    const id = e.target.id;
-    let value = e.target.value;
-    if (!value || value === "") {
-      value = "0";
-    }
-    onWillChangeSetting(id, value);
+    onWillChangeSetting(e.target.id, e.target.value);
   };
 
   const handleSelect = (setting: JavaFormatterSetting, entry: string) => {
@@ -42,7 +38,7 @@ const Setting = (): JSX.Element => {
   };
 
   const generateSetting = (setting: JavaFormatterSetting) => {
-    if (!setting.name || !setting.id || !setting.value) {
+    if (!setting.name || !setting.id) {
       return null;
     }
     const candidates = [];
@@ -52,7 +48,7 @@ const Setting = (): JSX.Element => {
         return (
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
             <Form.Check type="checkbox" className="pl-0" id={`${setting.id}`} >
-              <Form.Check.Input type="checkbox" checked={setting.value === "true"} onChange={handleChangeCheckbox} />
+              <Form.Check.Input type="checkbox" checked={setting.value === "true"} onChange={handleChangeCheckbox} disabled={readOnly} />
               <Form.Check.Label className="setting-section-description">
                 <Icon className="codicon" icon={checkIcon} />
                 <div className="setting-section-description-checkbox">{setting.name}.</div>
@@ -79,7 +75,7 @@ const Setting = (): JSX.Element => {
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
             <span className="setting-section-description">{setting.name}.</span>
             <Dropdown className="mt-1">
-              <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left">
+              <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left" disabled={readOnly}>
                 <span>{setting.value}</span>
                 <Icon className="codicon" icon={chevronDownIcon} />
               </Dropdown.Toggle>
@@ -93,7 +89,7 @@ const Setting = (): JSX.Element => {
         return (
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
             <Form.Label className="setting-section-description my-0">{setting.name}.</Form.Label>
-            <Form.Control className="pl-1 mt-1" type="number" id={setting.id} value={setting.value} onChange={handleChangeInput}></Form.Control>
+            <Form.Control className="pl-1 mt-1" type="number" id={setting.id} value={setting.value} onChange={handleChangeInput} disabled={readOnly}></Form.Control>
           </div>
         );
       default:

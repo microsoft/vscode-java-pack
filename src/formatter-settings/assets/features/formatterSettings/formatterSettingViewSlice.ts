@@ -13,6 +13,7 @@ export const formatterSettingsViewSlice = createSlice({
     vscodeSettings: [] as JavaFormatterSetting[],
     detectIndentation: false,
     formattedContent: "",
+    readOnly: false,
   },
   reducers: {
     changeActiveCategory: (state, action) => {
@@ -34,6 +35,9 @@ export const formatterSettingsViewSlice = createSlice({
     applyFormatResult: (state, action) => {
       state.formattedContent = action.payload.content;
     },
+    changeReadOnlyState: (state, action) => {
+      state.readOnly = Boolean(action.payload.value);
+    },
   },
 });
 
@@ -42,6 +46,7 @@ export const {
   loadProfileSetting,
   loadVSCodeSetting,
   applyFormatResult,
+  changeReadOnlyState,
 } = formatterSettingsViewSlice.actions;
 
 export default formatterSettingsViewSlice.reducer;

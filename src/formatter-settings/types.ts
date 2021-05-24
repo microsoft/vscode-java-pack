@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as vscode from "vscode";
 export interface JavaFormatterSetting {
     id: string;
     name: string;
@@ -41,4 +42,24 @@ export enum ExampleKind {
     ANNOTATION_AND_ANONYMOUS_EXAMPLE,
     WHITESPACE_EXAMPLE,
     WRAPPING_EXAMPLE,
+}
+
+// two extra properties from xmldom package, see https://www.npmjs.com/package/xmldom
+export interface DOMElement extends Element {
+    lineNumber: number;
+    columnNumber: number;
+}
+
+export interface DOMAttr extends Attr {
+    lineNumber: number;
+    columnNumber: number;
+}
+
+export interface ProfileContent {
+    settingsVersion: string,
+    diagnostics: vscode.Diagnostic[],
+    profileElements?: Map<string, DOMElement>,
+    profileSettings?: Map<string, string>,
+    lastElement?: DOMElement,
+    supportedProfileSettings?: Map<string, JavaFormatterSetting>
 }

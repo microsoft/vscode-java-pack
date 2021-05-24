@@ -153,6 +153,9 @@ $enable-rounded: false;
     box-shadow: none !important;
     border: 1px solid var(--vscode-focusBorder) !important;
   }
+  &:disabled {
+    opacity: 0.67 !important;
+  }
 }
 
 .setting-nav .nav-link {
