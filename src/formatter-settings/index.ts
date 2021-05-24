@@ -61,12 +61,11 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         vscode.commands.executeCommand("vscode.openWith", filePath, "java.formatterSettingsEditor");
     }
 
-    public reopenWithTextEditor = instrumentOperation("formatter.showTextEditor", (operationId: string, uri: any) => {
-        sendInfo(operationId, { editor: "RawTextEditor" });
+    public reopenWithTextEditor(_context: vscode.ExtensionContext, _operationId: string, uri: any) {
         if (uri instanceof vscode.Uri) {
             vscode.commands.executeCommand("vscode.openWith", uri, "default");
         }
-    });
+    }
 
     public async resolveCustomTextEditor(document: vscode.TextDocument, webviewPanel: vscode.WebviewPanel, _token: vscode.CancellationToken): Promise<void> {
 

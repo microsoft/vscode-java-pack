@@ -33,7 +33,7 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.webview.runCommand", webviewCmdLinkHandler));
   context.subscriptions.push(vscode.commands.registerCommand("java.welcome", instrumentCommand(context, "java.welcome", showWelcomeWebview)));
   context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings", instrumentCommand(context, "java.formatterSettings", () => javaFormatterSettingsEditorProvider.showFormatterSettingsEditor())));
-  context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings.showTextEditor", (uri) => { javaFormatterSettingsEditorProvider.reopenWithTextEditor(uri); }));
+  context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings.showTextEditor", instrumentCommand(context, "java.formatterSettings.showTextEditor", javaFormatterSettingsEditorProvider.reopenWithTextEditor)));
   context.subscriptions.push(vscode.commands.registerCommand("java.classpathConfiguration", instrumentCommand(context, "java.classpathConfiguration", async () => {
     const showCustomizedView: boolean = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.CustomizedClasspathConfigurationView, true /*checkCache*/) || false;
     if (showCustomizedView) {
