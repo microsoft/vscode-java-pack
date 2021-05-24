@@ -144,11 +144,13 @@ $enable-rounded: false;
 .form-control {
   color: var(--vscode-settings-textInputForeground) !important;
   background-color: var(--vscode-settings-textInputBackground) !important;
-  border: 1px solid var(--vscode-settings-textInputBorder) !important;
-  height: auto !important;
-  padding: 2px 4px !important;
+  border: 0px solid var(--vscode-settings-textInputBorder) !important;
+  height: 25.5px !important;
+  padding: 4px 4px !important;
   width: 250px !important;
+  box-sizing: border-box !important;
   &:focus, &:active{
+    padding: 3px 3px !important;
     outline: none !important;
     box-shadow: none !important;
     border: 1px solid var(--vscode-focusBorder) !important;
