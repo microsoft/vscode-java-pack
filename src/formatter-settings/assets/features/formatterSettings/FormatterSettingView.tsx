@@ -97,7 +97,7 @@ const FormatterSettingsView = (): JSX.Element => {
     <Container className="root d-flex flex-column">
       <Row className="setting-header">
         <Col><h2 className="mb-0">{title}</h2></Col>
-        <Col>{readOnly && (<div><a className="btn btn-primary float-right" role="button" title="Download and edit profile" onClick={() => onWillDownloadAndUse()}>Edit</a></div>)}</Col>
+        <Col className="flex-grow-0">{readOnly && (<div><a className="btn btn-primary float-right" role="button" title="Download and edit profile" onClick={() => onWillDownloadAndUse()}>Edit</a></div>)}</Col>
       </Row>
       <Row className="flex-grow-1 d-flex flex-nowrap view-body">
         <Col className="flex-grow-0">{naviBar}</Col>
