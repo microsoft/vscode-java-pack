@@ -241,6 +241,12 @@
       }
     },
     "menus": {
+      "commandPalette": [
+        {
+          "command": "java.formatterSettings.showTextEditor",
+          "when": "false"
+        }
+      ],
       "view/title": [
         {
           "command": "java.runtime",
@@ -263,7 +269,7 @@
       "editor/title": [
         {
           "command": "java.formatterSettings.showTextEditor",
-          "when": "activeCustomEditorId == java.formatterSettingsEditor && !readOnlyMode",
+          "when": "activeCustomEditorId == java.formatterSettingsEditor",
           "group": "navigation"
         }
       ]

@@ -30,7 +30,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     private readOnly: boolean = false;
 
     constructor(private readonly context: vscode.ExtensionContext) {
-        vscode.commands.executeCommand("setContext", "readOnlyMode", false);
         vscode.workspace.onDidChangeConfiguration(async (e) => {
             if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_URL_KEY}`) || e.affectsConfiguration(`java.${JavaConstants.SETTINGS_PROFILE_KEY}`)) {
                 this.checkedProfileSettings = false;
@@ -65,7 +64,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     public reopenWithTextEditor = instrumentOperation("formatter.showTextEditor", (operationId: string, uri: any) => {
         sendInfo(operationId, { editor: "RawTextEditor" });
         if (uri instanceof vscode.Uri) {
-            this.webviewPanel?.dispose();
             vscode.commands.executeCommand("vscode.openWith", uri, "default");
         }
     });
@@ -87,7 +85,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         };
         this.webviewPanel.onDidDispose(() => {
             this.webviewPanel = undefined;
-        })
+        });
         const resourceUri = this.context.asAbsolutePath("./out/assets/formatter-settings/index.html");
         this.webviewPanel.webview.html = await loadTextFromFile(resourceUri);
         this.webviewPanel.webview.onDidReceiveMessage(async (e) => {
@@ -289,7 +287,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             return true;
         }
         this.readOnly = false;
-        vscode.commands.executeCommand("setContext", "readOnlyMode", false);
         if (!this.settingsUrl) {
             sendInfo(operationId, { formatterProfile: "undefined" });
             await vscode.window.showInformationMessage("No active Formatter Profile found, do you want to create a default one?",
@@ -304,7 +301,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 "Open in read-only mode", "Download and use it locally").then(async (result) => {
                     if (result === "Open in read-only mode") {
                         this.readOnly = true;
-                        vscode.commands.executeCommand("setContext", "readOnlyMode", true);
                         return true;
                     } else if (result === "Download and use it locally") {
                         this.downloadAndUse(this.settingsUrl!);
