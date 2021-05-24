@@ -134,7 +134,6 @@ $enable-rounded: false;
       margin-right: 9px;
       color: var(--vscode-settings-textInputForeground);
       background-color: var(--vscode-settings-textInputBackground);
-      border: 1px solid var(--vscode-settings-textInputBorder);
       border-radius: 3px 3px 3px 3px;
       content: "";
     }
@@ -144,10 +143,12 @@ $enable-rounded: false;
 .form-control {
   color: var(--vscode-settings-textInputForeground) !important;
   background-color: var(--vscode-settings-textInputBackground) !important;
-  border: 1px solid var(--vscode-settings-textInputBorder) !important;
+  border: 1px solid var(--vscode-settings-textInputBackground) !important;
   height: auto !important;
   padding: 2px 4px !important;
   width: 250px !important;
+  box-sizing: border-box !important;
+  transition: none !important;
   &:focus, &:active{
     outline: none !important;
     box-shadow: none !important;
@@ -177,7 +178,6 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 code.hljs {
   background-color: var(--vscode-notebook-rowHoverBackground) !important;
-  border: 1px solid var(--vscode-settings-textInputBorder);
   padding: 10px 15px 15px 15px !important;
 }
 
