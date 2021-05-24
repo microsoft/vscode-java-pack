@@ -199,6 +199,12 @@
         "command": "java.formatterSettings",
         "category": "Java",
         "title": "Open Java Formatter Settings with Preview"
+      },
+      {
+        "command": "java.formatterSettings.showTextEditor",
+        "category": "Java",
+        "title": "Open Text Editor",
+        "icon": "$(go-to-file)"
       }
     ],
     "configuration": {
@@ -252,6 +258,13 @@
           "command": "java.classpathConfiguration",
           "group": "9_configuration@20",
           "when": "view == javaProjectExplorer && viewItem =~ /java:project(?=.*?\\b\\+unmanagedFolder\\b)(?=.*?\\b\\+uri\\b)/"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "java.formatterSettings.showTextEditor",
+          "when": "activeCustomEditorId == java.formatterSettingsEditor && !readOnlyMode",
+          "group": "navigation"
         }
       ]
     },
