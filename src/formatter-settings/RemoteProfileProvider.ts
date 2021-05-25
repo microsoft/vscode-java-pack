@@ -6,15 +6,21 @@ import { downloadFile } from "./utils";
 
 export class RemoteProfileProvider implements vscode.TextDocumentContentProvider {
 
-    public static scheme = "formatter";
+    public static scheme = "java-formatter";
+    private contentStorage: Map<string, string> = new Map<string, string>();
+
+    public setContent(url: string, content: string): void {
+        this.contentStorage.set(url, content);
+    }
 
     async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
         const originalUri: vscode.Uri = uri.with({ scheme: "https" });
-        return await downloadFile(originalUri.toString());
+        return this.contentStorage.get(originalUri.toString()) || downloadFile(originalUri.toString());
     } 
 }
 
+export let remoteProfileProvider = new RemoteProfileProvider();
+
 export function initRemoteProfileProvider(context: vscode.ExtensionContext) {
-    const remoteProfileProvider = new RemoteProfileProvider();
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(RemoteProfileProvider.scheme, remoteProfileProvider));
 }
