@@ -3,7 +3,7 @@ $enable-rounded: false;
 .root {
   overflow: hidden;
   max-width: 1200px !important;
-  min-width: 530px !important;
+  min-width: 600px !important;
   min-height: 220px !important;
   height: 100vh !important;
 }
@@ -283,6 +283,13 @@ body.vscode-high-contrast {
   width: 0px;
   height: 0px;
   display: inline-block;
+}
+
+.edit-button {
+  background-color: var(--vscode-button-background) !important;
+  padding: 4px !important;
+  white-space: nowrap !important;
+  border: 1px solid var(--vscode-settings-dropdownBorder) !important;
 }
 
 @import "../../assets/vscode.scss";
