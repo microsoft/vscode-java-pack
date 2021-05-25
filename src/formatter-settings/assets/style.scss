@@ -189,10 +189,15 @@ code.hljs {
   color: var(--vscode-editor-foreground);
   font-size: medium;
   tab-size: var(--vscode-tab-size);
-  overflow: hidden !important;
-  &:hover {
-    overflow: overlay !important;
-  }
+  overflow: overlay !important;
+}
+
+.hljs::-webkit-scrollbar {
+  display: none;
+}
+
+.hljs:hover::-webkit-scrollbar {
+  display: block;
 }
 
 .view-body {
