@@ -56,6 +56,7 @@ export interface DOMAttr extends Attr {
 }
 
 export interface ProfileContent {
+    isValid: boolean,
     settingsVersion: string,
     diagnostics: vscode.Diagnostic[],
     profileElements?: Map<string, DOMElement>,

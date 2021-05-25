@@ -49,7 +49,9 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             if (!this.settingsUrl || e.document.uri.toString() !== vscode.Uri.file(this.profilePath).toString()) {
                 return;
             }
-            await this.parseProfileAndUpdate(e.document);
+            if (!await this.parseProfileAndUpdate(e.document)) {
+                this.webviewPanel?.dispose();
+            }
         });
     }
 
@@ -168,14 +170,10 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     }
 
     private async initialize(document: vscode.TextDocument): Promise<boolean> {
-        if (!await this.checkRequirement()) {
-            return false;
-        }
-        if (!await this.checkProfileSettings()) {
+        if (!await this.checkRequirement() || !await this.checkProfileSettings() || !await this.parseProfileAndUpdate(document)) {
             return false;
         }
         this.exampleKind = ExampleKind.INDENTATION_EXAMPLE;
-        await this.parseProfileAndUpdate(document);
         this.webviewPanel?.webview.postMessage({
             command: "changeReadOnlyState",
             value: this.readOnly,
@@ -183,8 +181,16 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         return true;
     }
 
-    private async parseProfileAndUpdate(document: vscode.TextDocument): Promise<void> {
+    private async parseProfileAndUpdate(document: vscode.TextDocument): Promise<boolean> {
         const content: ProfileContent = parseProfile(document);
+        if (!content.isValid) {
+            vscode.window.showErrorMessage("The current profile is invalid, please check it in the Settings and try again.", "Open Settings").then((anwser) => {
+                if (anwser === "Open Settings") {
+                    openFormatterSettings();
+                }
+            })
+            return false;
+        }
         this.diagnosticCollection.set(document.uri, content.diagnostics);
         if (this.webviewPanel) {
             this.profileElements = content.profileElements || this.profileElements;
@@ -200,6 +206,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             await this.updateVSCodeSettings();
             this.format();
         }
+        return true;
     }
 
     private onChangeProfileSettings(): void {
