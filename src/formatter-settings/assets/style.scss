@@ -290,6 +290,9 @@ body.vscode-high-contrast {
   padding: 4px !important;
   white-space: nowrap !important;
   border: 1px solid var(--vscode-settings-dropdownBorder) !important;
+  &:hover {
+    background-color: var(--vscode-button-hoverBackground) !important;
+}
 }
 
 @import "../../assets/vscode.scss";
