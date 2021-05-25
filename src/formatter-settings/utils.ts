@@ -156,7 +156,18 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
 }
 
 export async function downloadFile(settingsUrl: string): Promise<string> {
-    return (await axios.get(settingsUrl)).data;
+    let content = "";
+    try {
+        content = (await axios.get(settingsUrl)).data;
+    } catch (e) {
+        const answer = await vscode.window.showErrorMessage(`Failed to get the profile content from uri: ${settingsUrl}. Do you want to retry?`, "Retry", "Open Settings");
+        if (answer === "Retry") {
+            return downloadFile(settingsUrl);
+        } else if (answer === "Open Settings") {
+            openFormatterSettings();
+        }
+    }
+    return content;
 }
 
 export function openFormatterSettings(): void {

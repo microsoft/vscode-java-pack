@@ -10,7 +10,7 @@ import { XMLSerializer } from "xmldom";
 import { loadTextFromFile } from "../utils";
 import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
-import { RemoteProfileProvider } from "./RemoteProfileProvider";
+import { remoteProfileProvider, RemoteProfileProvider } from "./RemoteProfileProvider";
 import { DOMElement, ExampleKind, ProfileContent } from "./types";
 import { addDefaultProfile, downloadFile, getProfilePath, getAbsoluteTargetPath, getVSCodeSetting, isRemote, openFormatterSettings, parseProfile } from "./utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
@@ -272,13 +272,17 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         }
     }
 
-    private async downloadAndUse(settingsUrl: string): Promise<void> {
+    private async downloadAndUse(settingsUrl: string): Promise<boolean> {
         const profilePath = await getAbsoluteTargetPath(this.context, path.basename(settingsUrl));
         const data = await downloadFile(settingsUrl);
+        if (!data) {
+            return false;
+        }
         await fse.outputFile(profilePath, data);
         const workspaceFolders = vscode.workspace.workspaceFolders;
         await vscode.workspace.getConfiguration("java").update("format.settings.url", (workspaceFolders?.length ? vscode.workspace.asRelativePath(profilePath) : profilePath), !(workspaceFolders?.length));
         this.showFormatterSettingsEditor();
+        return true;
     }
 
     private checkProfileSettings = instrumentOperation("formatter.checkProfileSetting", async (operationId: string) => {
@@ -299,6 +303,11 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             this.checkedProfileSettings = await vscode.window.showInformationMessage("The active formatter profile is remote, do you want to open it in read-only mode or download and use it locally?",
                 "Open in read-only mode", "Download and use it locally").then(async (result) => {
                     if (result === "Open in read-only mode") {
+                        const content = await downloadFile(this.settingsUrl!);
+                        if (!content) {
+                            return false;
+                        }
+                        remoteProfileProvider.setContent(this.settingsUrl!, content);
                         this.readOnly = true;
                         return true;
                     } else if (result === "Download and use it locally") {
