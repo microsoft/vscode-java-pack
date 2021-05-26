@@ -59,6 +59,8 @@
         "id": "javaWelcome",
         "title": "Dive into Java Development",
         "description": "Your first steps to set up powerful Java tools in a lightweight, performant editor!",
+        "primary": true,
+        "when": "false",
         "steps": [
           {
             "id": "java.runtime",
