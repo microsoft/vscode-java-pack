@@ -72,6 +72,7 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
     const profileSettings = new Map<string, string>();
     let lastElement = undefined;
     const diagnostics: vscode.Diagnostic[] = [];
+    let settingsVersion = JavaConstants.CURRENT_FORMATTER_SETTINGS_VERSION;
     const documentDOM = new DOMParser({
         locator: {}, errorHandler: (_level, msg) => {
             const bracketExp: RegExp = new RegExp("\\[line:(\\d*),col:(\\d*)\\]", "g");
@@ -81,11 +82,13 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
             }
         }
     }).parseFromString(document.getText());
-    let settingsVersion = documentDOM.documentElement.getAttribute("version") || JavaConstants.CURRENT_FORMATTER_SETTINGS_VERSION;
+    if (!documentDOM) {
+        return { isValid: false, settingsVersion, diagnostics };
+    }
+    settingsVersion = documentDOM.documentElement.getAttribute("version") || settingsVersion;
     const profiles = documentDOM.documentElement.getElementsByTagName("profile");
     if (!profiles || profiles.length === 0) {
-        diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)), "No valid profiles found."));
-        return { settingsVersion, diagnostics };
+       return { isValid: false, settingsVersion, diagnostics };
     }
     const settingsProfileName: string | undefined = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_PROFILE_KEY);
     for (let i = 0; i < profiles.length; i++) {
@@ -119,8 +122,7 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
         }
     }
     if (!profileElements.size) {
-        diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0)), "No valid settings found in the profile."));
-        return { settingsVersion, diagnostics };
+        return { isValid: false, settingsVersion, diagnostics };
     }
     const supportedProfileSettings = getSupportedProfileSettings(Number(settingsVersion));
     for (const setting of supportedProfileSettings.values()) {
@@ -146,6 +148,7 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
         setting.value = webViewValue;
     }
     return {
+        isValid: true,
         settingsVersion,
         diagnostics,
         profileElements,
