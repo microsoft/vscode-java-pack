@@ -5,7 +5,7 @@ import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import axios from 'axios';
-import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { DOMAttr, DOMElement, ProfileContent } from "./types";
 import { DOMParser, XMLSerializer } from "xmldom";
 import { getDefaultValue, getSupportedProfileSettings, JavaConstants } from "./FormatterConstants";
@@ -26,15 +26,15 @@ export async function getProfilePath(formatterUrl: string): Promise<string> {
     return "";
 }
 
-export const getVSCodeSetting = instrumentOperation("formatter.getSetting", async (operationId: string, setting: string, defaultValue: any) => {
+export function getVSCodeSetting(setting: string, defaultValue: any) {
     const config = vscode.workspace.getConfiguration(undefined, { languageId: "java" });
     let result = config.get<any>(setting) ?? vscode.workspace.getConfiguration().get<any>(setting);
     if (result === undefined) {
-        sendInfo(operationId, { notFoundSetting: setting });
+        sendInfo("", { notFoundSetting: setting });
         return defaultValue;
     }
     return result;
-});
+}
 
 export function isRemote(path: string): boolean {
     return path !== null && path.startsWith("http:/") || path.startsWith("https:/");

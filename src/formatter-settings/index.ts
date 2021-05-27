@@ -97,11 +97,13 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     }
                     break;
                 case "onWillChangeExampleKind":
+                    sendInfo("", { formatterExample: e.exampleKind });
                     this.exampleKind = e.exampleKind;
                     this.format();
                     break;
                 case "onWillChangeSetting":
                     const settingValue: string | undefined = FormatterConverter.webView2ProfileConvert(e.id, e.value.toString());
+                    sendInfo("", { formatterSetting: e.id });
                     // "" represents an empty inputbox, we regard it as a valid value.
                     if (settingValue === undefined) {
                         return;
@@ -225,15 +227,15 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         for (const setting of supportedVSCodeSettings.values()) {
             switch (setting.id) {
                 case SupportedSettings.TABULATION_CHAR:
-                    setting.value = (await getVSCodeSetting(VSCodeSettings.INSERT_SPACES, true) === false) ? "tab" : "space";
+                    setting.value = (getVSCodeSetting(VSCodeSettings.INSERT_SPACES, true) === false) ? "tab" : "space";
                     this.profileSettings.set(setting.id, setting.value);
                     break;
                 case SupportedSettings.TABULATION_SIZE:
-                    setting.value = String(await getVSCodeSetting(VSCodeSettings.TAB_SIZE, 4));
+                    setting.value = String(getVSCodeSetting(VSCodeSettings.TAB_SIZE, 4));
                     this.profileSettings.set(setting.id, setting.value);
                     break;
                 case VSCodeSettings.DETECT_INDENTATION:
-                    setting.value = String(await getVSCodeSetting(VSCodeSettings.DETECT_INDENTATION, true));
+                    setting.value = String(getVSCodeSetting(VSCodeSettings.DETECT_INDENTATION, true));
                     break;
                 default:
                     return;
@@ -292,13 +294,13 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         return true;
     }
 
-    private checkProfileSettings = instrumentOperation("formatter.checkProfileSetting", async (operationId: string) => {
+    private checkProfileSettings = instrumentOperation("java.formatter.checkProfileSetting", async (operationId: string) => {
         if (this.checkedProfileSettings) {
             return true;
         }
         this.readOnly = false;
         if (!this.settingsUrl) {
-            sendInfo(operationId, { formatterProfile: "undefined" });
+            sendInfo(operationId, { formatterProfileKind: "undefined" });
             await vscode.window.showInformationMessage("No active Formatter Profile found, do you want to create a default one?",
                 "Yes", "No").then((result) => {
                     if (result === "Yes") {
@@ -306,7 +308,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     }
                 });
         } else if (isRemote(this.settingsUrl)) {
-            sendInfo(operationId, { formatterProfile: "remote" });
+            sendInfo(operationId, { formatterProfileKind: "remote" });
             this.checkedProfileSettings = await vscode.window.showInformationMessage("The active formatter profile is remote, do you want to open it in read-only mode or download and use it locally?",
                 "Open in read-only mode", "Download and use it locally").then(async (result) => {
                     if (result === "Open in read-only mode") {
@@ -329,7 +331,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 this.profilePath = await getProfilePath(this.settingsUrl);
             }
             if (!(await fse.pathExists(this.profilePath))) {
-                sendInfo(operationId, { formatterProfile: "notExist" });
+                sendInfo(operationId, { formatterProfileKind: "notExist" });
                 await vscode.window.showInformationMessage("The active formatter profile does not exist, please check it in the Settings and try again.",
                     "Open Settings", "Generate a default profile").then((result) => {
                         if (result === "Open Settings") {
@@ -340,7 +342,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     });
                 return false;
             }
-            sendInfo(operationId, { formatterProfile: "valid" });
+            sendInfo(operationId, { formatterProfileKind: "valid" });
             this.checkedProfileSettings = true;
         }
         return this.checkedProfileSettings;
