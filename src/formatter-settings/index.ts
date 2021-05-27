@@ -170,10 +170,10 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     }
 
     private async initialize(document: vscode.TextDocument): Promise<boolean> {
+        this.exampleKind = ExampleKind.INDENTATION_EXAMPLE;
         if (!await this.checkRequirement() || !await this.checkProfileSettings() || !await this.parseProfileAndUpdate(document)) {
             return false;
         }
-        this.exampleKind = ExampleKind.INDENTATION_EXAMPLE;
         this.webviewPanel?.webview.postMessage({
             command: "changeReadOnlyState",
             value: this.readOnly,
