@@ -2,32 +2,27 @@
 // Licensed under the MIT license.
 
 import compareVersions from "compare-versions";
+import * as vscode from "vscode";
 import * as fse from "fs-extra";
 import * as path from "path";
-import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
-import { XMLSerializer } from "xmldom";
 import { loadTextFromFile } from "../utils";
-import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
+import { JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
 import { remoteProfileProvider, RemoteProfileProvider } from "./RemoteProfileProvider";
-import { DOMElement, ExampleKind, ProfileContent } from "./types";
-import { addDefaultProfile, downloadFile, getProfilePath, getAbsoluteTargetPath, getVSCodeSetting, isRemote, openFormatterSettings, parseProfile } from "./utils";
+import { SettingModel } from "./SettingModel";
+import { ExampleKind } from "./types";
+import { addDefaultProfile, downloadFile, getAbsoluteTargetPath, getProfilePath, isRemote, openFormatterSettings } from "./utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
-    private exampleKind: ExampleKind = ExampleKind.INDENTATION_EXAMPLE;
-    private profileElements: Map<string, DOMElement> = new Map<string, DOMElement>();
-    private profileSettings: Map<string, string> = new Map<string, string>();
-    private lastElement: DOMElement | undefined;
-    private settingsVersion: string = JavaConstants.CURRENT_FORMATTER_SETTINGS_VERSION;
     private checkedRequirement: boolean = false;
     private checkedProfileSettings: boolean = false;
-    private diagnosticCollection: vscode.DiagnosticCollection = vscode.languages.createDiagnosticCollection();
     private settingsUrl: string | undefined = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
     private webviewPanel: vscode.WebviewPanel | undefined;
     private profilePath: string = "";
     private readOnly: boolean = false;
+    private settingModel: SettingModel | undefined;
 
     constructor(private readonly context: vscode.ExtensionContext) {
         vscode.workspace.onDidChangeConfiguration(async (e) => {
@@ -35,22 +30,14 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 this.checkedProfileSettings = false;
                 this.onChangeProfileSettings();
             } else if (this.webviewPanel && (e.affectsConfiguration(VSCodeSettings.TAB_SIZE) || e.affectsConfiguration(VSCodeSettings.INSERT_SPACES) || e.affectsConfiguration(VSCodeSettings.DETECT_INDENTATION))) {
-                await this.updateVSCodeSettings();
-                this.format();
+                await this.settingModel?.updateVSCodeSettings();
+                this.settingModel?.format();
             }
             if (e.affectsConfiguration(`java.${JavaConstants.SETTINGS_URL_KEY}`)) {
                 this.settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
                 if (this.settingsUrl && !isRemote(this.settingsUrl)) {
                     this.profilePath = await getProfilePath(this.settingsUrl);
                 }
-            }
-        });
-        vscode.workspace.onDidChangeTextDocument(async (e: vscode.TextDocumentChangeEvent) => {
-            if (!this.settingsUrl || e.document.uri.toString() !== vscode.Uri.file(this.profilePath).toString()) {
-                return;
-            }
-            if (!await this.parseProfileAndUpdate(e.document)) {
-                this.webviewPanel?.dispose();
             }
         });
     }
@@ -80,6 +67,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             this.webviewPanel = webviewPanel;
         }
 
+        this.settingModel = new SettingModel(webviewPanel);
         this.webviewPanel.webview.options = {
             enableScripts: true,
             enableCommandUris: true,
@@ -98,7 +86,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     break;
                 case "onWillChangeExampleKind":
                     this.exampleKind = e.exampleKind;
-                    this.format();
+                    this.settingModel?.format();
                     break;
                 case "onWillChangeSetting":
                     const settingValue: string | undefined = FormatterConverter.webView2ProfileConvert(e.id, e.value.toString());
@@ -119,7 +107,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                         const config = vscode.workspace.getConfiguration(undefined, { languageId: "java" });
                         await config.update(VSCodeSettings.DETECT_INDENTATION, (settingValue === "true"), undefined, true);
                     } else {
-                        await this.modifyProfile(e.id, settingValue, document);
+                        await this.settingModel?.modifyProfile(e.id, settingValue, document);
                     }
                     break;
                 case "onWillDownloadAndUse": {
@@ -170,7 +158,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     }
 
     private async initialize(document: vscode.TextDocument): Promise<boolean> {
-        if (!await this.checkRequirement() || !await this.checkProfileSettings() || !await this.parseProfileAndUpdate(document)) {
+        if (!await this.checkRequirement() || !await this.checkProfileSettings() || !await this.settingModel?.parseProfileAndUpdate(document)) {
             return false;
         }
         this.exampleKind = ExampleKind.INDENTATION_EXAMPLE;
@@ -178,34 +166,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             command: "changeReadOnlyState",
             value: this.readOnly,
         });
-        return true;
-    }
-
-    private async parseProfileAndUpdate(document: vscode.TextDocument): Promise<boolean> {
-        const content: ProfileContent = parseProfile(document);
-        if (!content.isValid) {
-            vscode.window.showErrorMessage("The current profile is invalid, please check it in the Settings and try again.", "Open Settings").then((anwser) => {
-                if (anwser === "Open Settings") {
-                    openFormatterSettings();
-                }
-            })
-            return false;
-        }
-        this.diagnosticCollection.set(document.uri, content.diagnostics);
-        if (this.webviewPanel) {
-            this.profileElements = content.profileElements || this.profileElements;
-            this.profileSettings = content.profileSettings || this.profileSettings;
-            this.lastElement = content.lastElement || this.lastElement;
-            this.settingsVersion = content.settingsVersion;
-            if (content.supportedProfileSettings) {
-                this.webviewPanel.webview.postMessage({
-                    command: "loadProfileSetting",
-                    setting: Array.from(content.supportedProfileSettings.values()),
-                });
-            }
-            await this.updateVSCodeSettings();
-            this.format();
-        }
         return true;
     }
 
@@ -217,65 +177,6 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                         vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
                     }
                 });
-        }
-    }
-
-    private async updateVSCodeSettings(): Promise<void> {
-        const supportedVSCodeSettings = getSupportedVSCodeSettings();
-        for (const setting of supportedVSCodeSettings.values()) {
-            switch (setting.id) {
-                case SupportedSettings.TABULATION_CHAR:
-                    setting.value = (await getVSCodeSetting(VSCodeSettings.INSERT_SPACES, true) === false) ? "tab" : "space";
-                    this.profileSettings.set(setting.id, setting.value);
-                    break;
-                case SupportedSettings.TABULATION_SIZE:
-                    setting.value = String(await getVSCodeSetting(VSCodeSettings.TAB_SIZE, 4));
-                    this.profileSettings.set(setting.id, setting.value);
-                    break;
-                case VSCodeSettings.DETECT_INDENTATION:
-                    setting.value = String(await getVSCodeSetting(VSCodeSettings.DETECT_INDENTATION, true));
-                    break;
-                default:
-                    return;
-            }
-        }
-        this.webviewPanel?.webview.postMessage({
-            command: "loadVSCodeSetting",
-            setting: Array.from(supportedVSCodeSettings.values()),
-        });
-    }
-
-    private async format(): Promise<void> {
-        const content = await vscode.commands.executeCommand<string>("java.execute.workspaceCommand", "java.edit.stringFormatting", Example.getExample(this.exampleKind), JSON.stringify([...this.profileSettings]), this.settingsVersion);
-        if (this.webviewPanel?.webview) {
-            this.webviewPanel.webview.postMessage({
-                command: "formattedContent",
-                content: content,
-            });
-        }
-    }
-
-    private async modifyProfile(id: string, value: string, document: vscode.TextDocument): Promise<void> {
-        const profileElement = this.profileElements.get(id);
-        if (!profileElement) {
-            // add a new setting not exist in the profile
-            if (!this.lastElement) {
-                return;
-            }
-            const cloneElement = this.lastElement.cloneNode() as DOMElement;
-            const originalString: string = new XMLSerializer().serializeToString(cloneElement);
-            cloneElement.setAttribute("id", id);
-            cloneElement.setAttribute("value", value);
-            const edit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
-            edit.insert(document.uri, new vscode.Position(cloneElement.lineNumber - 1, cloneElement.columnNumber - 1 + originalString.length), ((document.eol === vscode.EndOfLine.LF) ? "\n" : "\r\n") + " ".repeat(cloneElement.columnNumber - 1) + new XMLSerializer().serializeToString(cloneElement));
-            await vscode.workspace.applyEdit(edit);
-        } else {
-            // edit a current setting in the profile
-            const originalSetting: string = new XMLSerializer().serializeToString(profileElement);
-            profileElement.setAttribute("value", value);
-            const edit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
-            edit.replace(document.uri, new vscode.Range(new vscode.Position(profileElement.lineNumber - 1, profileElement.columnNumber - 1), new vscode.Position(profileElement.lineNumber - 1, profileElement.columnNumber - 1 + originalSetting.length)), new XMLSerializer().serializeToString(profileElement));
-            await vscode.workspace.applyEdit(edit);
         }
     }
 
