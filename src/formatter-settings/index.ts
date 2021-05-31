@@ -98,7 +98,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     break;
                 case "onWillChangeExampleKind":
                     if (this.exampleKind !== e.exampleKind) {
-                        sendInfo("", { formatterExample: Example.getExampleTitle(e.exampleKind) });
+                        sendInfo("", { formatterExample: e.exampleKind });
                         this.exampleKind = e.exampleKind;
                         this.format();
                     }
