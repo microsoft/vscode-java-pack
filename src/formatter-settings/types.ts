@@ -32,16 +32,16 @@ export enum Category {
 }
 
 export enum ExampleKind {
-    INDENTATION_EXAMPLE,
-    BLANKLINE_EXAMPLE,
-    COMMENT_EXAMPLE,
-    INSERTLINE_EXAMPLE,
-    BRACED_CODE_TYPE_EXAMPLE,
-    BRACED_CODE_RECORD_EXAMPLE,
-    BRACED_CODE_ENUM_EXAMPLE,
-    ANNOTATION_AND_ANONYMOUS_EXAMPLE,
-    WHITESPACE_EXAMPLE,
-    WRAPPING_EXAMPLE,
+    INDENTATION_EXAMPLE = "Indentation",
+    BLANKLINE_EXAMPLE = "Blank line",
+    COMMENT_EXAMPLE = "Comment",
+    INSERTLINE_EXAMPLE = "Insert Line",
+    BRACED_CODE_TYPE_EXAMPLE = "Braced type",
+    BRACED_CODE_RECORD_EXAMPLE = "Braced record",
+    BRACED_CODE_ENUM_EXAMPLE = "Braced enum",
+    ANNOTATION_AND_ANONYMOUS_EXAMPLE = "Annotation and anonymous",
+    WHITESPACE_EXAMPLE = "Whitespace",
+    WRAPPING_EXAMPLE = "Wrapping",
 }
 
 // two extra properties from xmldom package, see https://www.npmjs.com/package/xmldom

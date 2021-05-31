@@ -97,9 +97,11 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                     }
                     break;
                 case "onWillChangeExampleKind":
-                    sendInfo("", { formatterExample: e.exampleKind });
-                    this.exampleKind = e.exampleKind;
-                    this.format();
+                    if (this.exampleKind !== e.exampleKind) {
+                        sendInfo("", { formatterExample: e.exampleKind });
+                        this.exampleKind = e.exampleKind;
+                        this.format();
+                    }
                     break;
                 case "onWillChangeSetting":
                     const settingValue: string | undefined = FormatterConverter.webView2ProfileConvert(e.id, e.value.toString());
