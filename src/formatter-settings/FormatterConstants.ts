@@ -279,6 +279,33 @@ export namespace Example {
                 return "";
         }
     }
+
+    export function getExampleTitle(example: ExampleKind): string {
+        switch (example) {
+            case ExampleKind.INDENTATION_EXAMPLE:
+                return "Indentation";
+            case ExampleKind.BLANKLINE_EXAMPLE:
+                return "Blank line";
+            case ExampleKind.COMMENT_EXAMPLE:
+                return "Comment";
+            case ExampleKind.INSERTLINE_EXAMPLE:
+                return "Insert line";
+            case ExampleKind.BRACED_CODE_TYPE_EXAMPLE:
+                return "Braced type";
+            case ExampleKind.BRACED_CODE_RECORD_EXAMPLE:
+                return "Braced record";
+            case ExampleKind.BRACED_CODE_ENUM_EXAMPLE:
+                return "Braced enum";
+            case ExampleKind.ANNOTATION_AND_ANONYMOUS_EXAMPLE:
+                return "Annotation and anonymous";
+            case ExampleKind.WHITESPACE_EXAMPLE:
+                return "whitespace";
+            case ExampleKind.WRAPPING_EXAMPLE:
+                return "wrapping";
+            default:
+                return "";
+        }
+    }
 }
 
 const supportedVSCodeSettings: Map<string, JavaFormatterSetting> = new Map<string, JavaFormatterSetting>([
