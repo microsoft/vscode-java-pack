@@ -1,11 +1,15 @@
 # Change Log
 
+# 0.16.0
+### Added
+- Add formatter setting editor. [#604](https://github.com/microsoft/vscode-java-pack/issues/604)
+
 ## 0.15.0
 ### Added
-Add setup-focused getting started walkthrough. [#608](https://github.com/microsoft/vscode-java-pack/pull/608)
+- Add setup-focused getting started walkthrough. [#608](https://github.com/microsoft/vscode-java-pack/pull/608)
 
 ### Changed
-Refine wording in webview pages. [#606](https://github.com/microsoft/vscode-java-pack/pull/606) [#619](https://github.com/microsoft/vscode-java-pack/pull/619) [#631](https://github.com/microsoft/vscode-java-pack/pull/631)
+- Refine wording in webview pages. [#606](https://github.com/microsoft/vscode-java-pack/pull/606) [#619](https://github.com/microsoft/vscode-java-pack/pull/619) [#631](https://github.com/microsoft/vscode-java-pack/pull/631)
 
 ## 0.14.0
 ### Added
