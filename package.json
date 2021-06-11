@@ -20,6 +20,9 @@
   ],
   "categories": [
     "Programming Languages",
+    "Linters",
+    "Debuggers",
+    "Formatters",
     "Extension Packs"
   ],
   "repository": {
