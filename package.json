@@ -19,6 +19,11 @@
     "spring"
   ],
   "categories": [
+    "Programming Languages",
+    "Linters",
+    "Debuggers",
+    "Formatters",
+    "Snippets",
     "Extension Packs"
   ],
   "repository": {
