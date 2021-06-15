@@ -7,15 +7,14 @@ import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { showReleaseNotesOnStart, HelpViewType } from "./misc";
-import { initialize as initExp, getExpService } from "./exp";
-import { KEY_SHOW_WHEN_USING_JAVA, OverviewViewSerializer, showOverviewPageOnActivation } from "./overview";
+import { initialize as initExp } from "./exp";
+import { KEY_SHOW_WHEN_USING_JAVA, OverviewViewSerializer } from "./overview";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { JavaGettingStartedViewSerializer } from "./getting-started";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
-import { TreatmentVariables } from "./exp/TreatmentVariables";
 import { MarkdownPreviewSerializer } from "./classpath/markdownPreviewProvider";
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
@@ -73,34 +72,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
-  // Progression rollout EXP for showing welcome page.
-  const presentWelcomePageByDefault: boolean = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.PresentWelcomePageByDefault, true /*checkCache*/) || false;
-  if (presentWelcomePageByDefault) {
-    await showWelcomeWebview(context);
-    return;
-  }
-
-  const config = vscode.workspace.getConfiguration("java.help");
-  const firstView = config.get("firstView");
-  switch (firstView) {
-    case HelpViewType.None:
-      break;
-    case HelpViewType.GettingStarted:
-      await showGettingStartedView(context);
-      break;
-    case HelpViewType.Overview:
-    default:
-      await showOverviewPageOnActivation(context);
-  }
-}
-
-async function showGettingStartedView(context: vscode.ExtensionContext, _isForce: boolean = false) {
-  if (!!context.globalState.get("isGettingStartedPresented")) {
-    return;
-  }
-
-  await vscode.commands.executeCommand("java.gettingStarted");
-  context.globalState.update("isGettingStartedPresented", true);
+  await showWelcomeWebview(context);
 }
 
 function syncState(_context: vscode.ExtensionContext): void {
