@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
-import * as path from "path";
 import { instrumentCommand, webviewCmdLinkHandler } from "../utils";
 import { createMavenProjectCmdHandler, createSpringBootProjectCmdHandler, createQuarkusProjectCmdHandler, createMicroProfileStarterProjectCmdHandler, showExtensionCmdHandler, openUrlCmdHandler, showReleaseNotesHandler, installExtensionCmdHandler } from "./handler";
 import { overviewCmdHandler } from "../overview";
@@ -12,9 +11,6 @@ import { javaExtGuideCmdHandler } from "../ext-guide";
 import { instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
 import { showWelcomeWebview } from "../welcome";
 import { showClasspathConfigurationPage } from "../classpath/classpathConfigurationView";
-import { markdownPreviewProvider } from "../classpath/markdownPreviewProvider";
-import { getExpService } from "../exp";
-import { TreatmentVariables } from "../exp/TreatmentVariables";
 import { javaFormatterSettingsEditorProvider } from "../formatter-settings";
 
 export function initialize(context: vscode.ExtensionContext) {
@@ -34,15 +30,5 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand("java.welcome", instrumentCommand(context, "java.welcome", showWelcomeWebview)));
   context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings", instrumentCommand(context, "java.formatterSettings", () => javaFormatterSettingsEditorProvider.showFormatterSettingsEditor())));
   context.subscriptions.push(vscode.commands.registerCommand("java.formatterSettings.showTextEditor", instrumentCommand(context, "java.formatterSettings.showTextEditor", javaFormatterSettingsEditorProvider.reopenWithTextEditor)));
-  context.subscriptions.push(vscode.commands.registerCommand("java.classpathConfiguration", instrumentCommand(context, "java.classpathConfiguration", async () => {
-    const showCustomizedView: boolean = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.CustomizedClasspathConfigurationView, true /*checkCache*/) || false;
-    if (showCustomizedView) {
-      showClasspathConfigurationPage(context);
-    } else {
-      // To filter the setting in the workspace scope, see: https://github.com/microsoft/vscode/issues/90086#issuecomment-803510704
-      await vscode.commands.executeCommand("workbench.action.openSettings", "java.project.sourcePaths");
-      await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings");
-      markdownPreviewProvider.show(context.asAbsolutePath(path.join("webview-resources", "classpathConfiguration.md")), "Classpath Settings", context);
-    }
-  })));
+  context.subscriptions.push(vscode.commands.registerCommand("java.classpathConfiguration", instrumentCommand(context, "java.classpathConfiguration", showClasspathConfigurationPage)));
 }

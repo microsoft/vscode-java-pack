@@ -55,7 +55,6 @@
     "onWebviewPanel:java.welcome",
     "onCommand:java.classpathConfiguration",
     "onWebviewPanel:java.classpathConfiguration",
-    "onWebviewPanel:java.markdownPreview",
     "onCommand:java.formatterSettings"
   ],
   "contributes": {
