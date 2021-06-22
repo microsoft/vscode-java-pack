@@ -1,7 +1,7 @@
 {
   "name": "vscode-java-pack",
   "displayName": "Java Extension Pack",
-  "description": "Popular extensions for Java development that provides Java linting, intellisense, debugging, testing, project management and more",
+  "description": "Popular extensions for Java development that provides Java intellisense, debugging, testing, Maven support, project management and more",
   "license": "MIT",
   "version": "0.16.0",
   "publisher": "vscjava",
