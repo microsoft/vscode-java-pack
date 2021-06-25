@@ -1,5 +1,11 @@
 # Change Log
 
+# 0.17.0
+### Changed
+- Clean up completed experiments. [#670](https://github.com/microsoft/vscode-java-pack/pull/670) [#672](https://github.com/microsoft/vscode-java-pack/pull/672)
+- Update description and categories in metadata. [#669](https://github.com/microsoft/vscode-java-pack/pull/669) [#677](https://github.com/microsoft/vscode-java-pack/pull/677)
+- Update getting started walkthrough. [#671](https://github.com/microsoft/vscode-java-pack/pull/671)
+
 # 0.16.0
 ### Added
 - Add formatter setting editor. [#604](https://github.com/microsoft/vscode-java-pack/issues/604)
