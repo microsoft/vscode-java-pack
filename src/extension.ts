@@ -17,6 +17,7 @@ import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
+import { CodeActionProvider } from "./providers/CodeActionProvider";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -32,6 +33,8 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initUtils(context);
   initCommands(context);
   initRecommendations(context);
+
+  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({scheme: "file", language: "java", pattern: "**/*.java"}, new CodeActionProvider()));
 
   // webview serializers to restore pages
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.extGuide", new JavaExtGuideViewSerializer()));
