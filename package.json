@@ -168,7 +168,7 @@
       {
         "command": "java.welcome",
         "category": "Java",
-        "title": "Welcome"
+        "title": "Help Center"
       },
       {
         "command": "java.classpathConfiguration",
@@ -230,7 +230,7 @@
             "Automatically pick the first experience view",
             "Present the Java Overview page",
             "Present the Java Getting Started page",
-            "Present the Java Welcome page",
+            "Present the Java Help Center page",
             "Do not show any view"
           ],
           "default": "auto",
