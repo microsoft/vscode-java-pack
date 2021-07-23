@@ -16,7 +16,7 @@ import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
 export default class NavigationPanel extends React.Component {
   private groups = [
     {
-      name: "Configuration",
+      name: "General",
       icon: <Icon className="codicon" icon={gearIcon} />,
       actions: [
         { name: "Configure Java Runtime", command: "java.runtime" },
