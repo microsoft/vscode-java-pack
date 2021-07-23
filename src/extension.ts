@@ -47,17 +47,10 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
 
   const config = vscode.workspace.getConfiguration("java.help");
 
-  if (config.get("firstView") !== HelpViewType.None) {
-    let showWhenUsingJava = context.globalState.get(KEY_SHOW_WHEN_USING_JAVA);
-    if (showWhenUsingJava === undefined) {
-      showWhenUsingJava = vscode.env.uiKind === vscode.UIKind.Desktop;
-    }
-
-    if (showWhenUsingJava) {
-      scheduleAction("showFirstView", true).then(() => {
-        presentFirstView(context);
-      });
-    }
+  if (config.get("firstView") !== HelpViewType.None && context.globalState.get(KEY_SHOW_WHEN_USING_JAVA)) {
+    scheduleAction("showFirstView", true).then(() => {
+      presentFirstView(context);
+    });
   }
 
   if (config.get("showReleaseNotes")) {
