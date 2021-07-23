@@ -164,7 +164,7 @@
           {
             "id": "java.showHelpCenter",
             "title": "Java Help Center",
-            "description": "Find more features and shortcuts in this page.\n[Open Java Help Center](command:java.welcome)",
+            "description": "Discover more shortcuts and features on this page.\n[Open Java Help Center](command:java.welcome)",
             "media": {
               "image": "walkthrough/help-center.png",
               "altText": "Java Help Center"
