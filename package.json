@@ -126,7 +126,7 @@
           {
             "id": "java.showDebugView",
             "title": "Launch and debug your app",
-            "description": "The debugger will automatically find the entry point of your project, launch it and start debugging.\n[Show Run and Debug View](command:workbench.view.debug)",
+            "description": "The debugger will automatically find the entry point of your project, launch it and start debugging.\n[Show Run and Debug View](command:workbench.view.debug)\n[Learn More...](https://code.visualstudio.com/docs/java/java-debugging)",
             "media": {
               "image": "walkthrough/debugger.png",
               "altText": "Running and Debugging"
