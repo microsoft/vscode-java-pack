@@ -2,16 +2,12 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
-
 import * as path from "path";
-
 import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
-import { getExtensionContext } from "../utils";
-import { loadTextFromFile } from "../utils";
+import { getExtensionContext, loadTextFromFile } from "../utils";
+import { KEY_OVERVIEW_LAST_SHOW_TIME, KEY_SHOW_WHEN_USING_JAVA } from "../utils/globalState";
 
 let overviewView: vscode.WebviewPanel | undefined;
-export const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
-const KEY_OVERVIEW_LAST_SHOW_TIME = "overviewLastShowTime";
 
 const toggleOverviewVisibilityOperation = instrumentOperation("toggleOverviewVisibility", (operationId: string, context: vscode.ExtensionContext, visibility: boolean) => {
   sendInfo(operationId, {
