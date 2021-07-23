@@ -2,12 +2,11 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
-
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { instrumentCommand } from "../utils";
 import { isExtensionInstalled, recommendExtension } from "../utils";
+import { KEY_RECOMMENDATION_TIMESTAMP_MAP } from "../utils/globalState";
 
-const KEY_RECOMMENDATION_TIMESTAMP_MAP = "recommendationTimeStampMap";
 
 let handler: (...args: any[]) => any;
 

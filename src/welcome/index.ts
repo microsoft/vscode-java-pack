@@ -5,9 +5,8 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getExtensionContext, loadTextFromFile } from "../utils";
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { KEY_SHOW_WHEN_USING_JAVA, KEY_IS_WELCOME_PAGE_VIEWED } from "../utils/globalState";
 
-const KEY_SHOW_WHEN_USING_JAVA = "showWhenUsingJava";
-const KEY_IS_WELCOME_PAGE_VIEWED = "isWelcomePageViewed";
 let welcomeView: vscode.WebviewPanel | undefined;
 
 export async function showWelcomeWebview(context: vscode.ExtensionContext, _operationId?: string, options?: any) {

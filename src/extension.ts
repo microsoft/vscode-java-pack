@@ -8,7 +8,7 @@ import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { showReleaseNotesOnStart, HelpViewType } from "./misc";
 import { initialize as initExp } from "./exp";
-import { KEY_SHOW_WHEN_USING_JAVA, OverviewViewSerializer } from "./overview";
+import { OverviewViewSerializer } from "./overview";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
@@ -18,6 +18,7 @@ import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfi
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
 import { CodeActionProvider } from "./providers/CodeActionProvider";
+import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
