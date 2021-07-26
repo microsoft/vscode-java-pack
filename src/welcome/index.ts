@@ -6,8 +6,7 @@ import * as path from "path";
 import { getExtensionContext, loadTextFromFile } from "../utils";
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { KEY_SHOW_WHEN_USING_JAVA, KEY_IS_WELCOME_PAGE_VIEWED } from "../utils/globalState";
-import { getExpService } from "../exp";
-import { TreatmentVariables } from "../exp/TreatmentVariables";
+import { isWalkthroughEnabled } from "../utils/walkthrough";
 
 let welcomeView: vscode.WebviewPanel | undefined;
 
@@ -88,7 +87,7 @@ const setFirstTimeRun = (context: vscode.ExtensionContext, firstTimeRun: boolean
 };
 
 const fetchInitProps = (context: vscode.ExtensionContext) => {
-    const walkthrough = getExpService().getTreatmentVariable<boolean>(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaWalkthroughEnabled);
+    const walkthrough = isWalkthroughEnabled();
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
@@ -101,7 +100,7 @@ const fetchInitProps = (context: vscode.ExtensionContext) => {
 };
 
 const showTourPage = (context: vscode.ExtensionContext) => {
-    const walkthrough = getExpService().getTreatmentVariable<boolean>(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaWalkthroughEnabled);
+    const walkthrough = isWalkthroughEnabled();
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
