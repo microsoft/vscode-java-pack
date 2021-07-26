@@ -7,7 +7,7 @@ import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { showReleaseNotesOnStart, HelpViewType } from "./misc";
-import { initialize as initExp } from "./exp";
+import { getExpService, initialize as initExp } from "./exp";
 import { OverviewViewSerializer } from "./overview";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { scheduleAction } from "./utils/scheduler";
@@ -18,7 +18,8 @@ import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfi
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
 import { CodeActionProvider } from "./providers/CodeActionProvider";
-import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
+import { KEY_IS_WELCOME_PAGE_VIEWED, KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
+import { TreatmentVariables } from "./exp/TreatmentVariables";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -47,17 +48,17 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
 
   const config = vscode.workspace.getConfiguration("java.help");
 
-  if (config.get("firstView") !== HelpViewType.None) {
-    let showWhenUsingJava = context.globalState.get(KEY_SHOW_WHEN_USING_JAVA);
-    if (showWhenUsingJava === undefined) {
-      showWhenUsingJava = vscode.env.uiKind === vscode.UIKind.Desktop;
-    }
+  // for control group where walkthrough is not enabled, present first view for once.
+  const walkthroughEnabled = getExpService().getTreatmentVariable<boolean>(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaWalkthroughEnabled);
+  if (walkthroughEnabled === false && !context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED)) {
+    presentFirstView(context);
+    context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, true)
+  }
 
-    if (showWhenUsingJava) {
-      scheduleAction("showFirstView", true).then(() => {
-        presentFirstView(context);
-      });
-    }
+  if (config.get("firstView") !== HelpViewType.None && context.globalState.get(KEY_SHOW_WHEN_USING_JAVA)) {
+    scheduleAction("showFirstView", true).then(() => {
+      presentFirstView(context);
+    });
   }
 
   if (config.get("showReleaseNotes")) {

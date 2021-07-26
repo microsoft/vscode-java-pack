@@ -6,6 +6,8 @@ import * as path from "path";
 import { getExtensionContext, loadTextFromFile } from "../utils";
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { KEY_SHOW_WHEN_USING_JAVA, KEY_IS_WELCOME_PAGE_VIEWED } from "../utils/globalState";
+import { getExpService } from "../exp";
+import { TreatmentVariables } from "../exp/TreatmentVariables";
 
 let welcomeView: vscode.WebviewPanel | undefined;
 
@@ -86,22 +88,26 @@ const setFirstTimeRun = (context: vscode.ExtensionContext, firstTimeRun: boolean
 };
 
 const fetchInitProps = (context: vscode.ExtensionContext) => {
+    const walkthrough = getExpService().getTreatmentVariable<boolean>(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaWalkthroughEnabled);
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
-            firstTimeRun: context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true
+            firstTimeRun: context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true,
+            walkthrough
         }
     });
     setFirstTimeRun(context, false);
 };
 
 const showTourPage = (context: vscode.ExtensionContext) => {
+    const walkthrough = getExpService().getTreatmentVariable<boolean>(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaWalkthroughEnabled);
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
-            firstTimeRun: true
+            firstTimeRun: true,
+            walkthrough
         }
     });
     setFirstTimeRun(context, false);
