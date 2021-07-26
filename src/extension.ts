@@ -7,7 +7,7 @@ import { initialize as initUtils } from "./utils";
 import { initialize as initCommands } from "./commands";
 import { initialize as initRecommendations } from "./recommendation";
 import { showReleaseNotesOnStart, HelpViewType } from "./misc";
-import { getExpService, initialize as initExp } from "./exp";
+import { initialize as initExp } from "./exp";
 import { OverviewViewSerializer } from "./overview";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { scheduleAction } from "./utils/scheduler";
@@ -19,7 +19,6 @@ import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
 import { CodeActionProvider } from "./providers/CodeActionProvider";
 import { KEY_IS_WELCOME_PAGE_VIEWED, KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
-import { TreatmentVariables } from "./exp/TreatmentVariables";
 import { isWalkthroughEnabled } from "./utils/walkthrough";
 
 export async function activate(context: vscode.ExtensionContext) {
