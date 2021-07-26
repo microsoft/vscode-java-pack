@@ -160,6 +160,15 @@
               "image": "walkthrough/tutorials.png",
               "altText": "Tutorials"
             }
+          },
+          {
+            "id": "java.showHelpCenter",
+            "title": "Java Help Center",
+            "description": "Discover more shortcuts and features on this page.\n[Open Java Help Center](command:java.welcome)",
+            "media": {
+              "image": "walkthrough/help-center.png",
+              "altText": "Java Help Center"
+            }
           }
         ]
       }
