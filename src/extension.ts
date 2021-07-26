@@ -20,6 +20,7 @@ import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfilePro
 import { CodeActionProvider } from "./providers/CodeActionProvider";
 import { KEY_IS_WELCOME_PAGE_VIEWED, KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { TreatmentVariables } from "./exp/TreatmentVariables";
+import { isWalkthroughEnabled } from "./utils/walkthrough";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -36,7 +37,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initCommands(context);
   initRecommendations(context);
 
-  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({scheme: "file", language: "java", pattern: "**/*.java"}, new CodeActionProvider()));
+  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: "file", language: "java", pattern: "**/*.java" }, new CodeActionProvider()));
 
   // webview serializers to restore pages
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.extGuide", new JavaExtGuideViewSerializer()));
@@ -49,7 +50,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   const config = vscode.workspace.getConfiguration("java.help");
 
   // for control group where walkthrough is not enabled, present first view for once.
-  const walkthroughEnabled = getExpService().getTreatmentVariable<boolean>(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaWalkthroughEnabled);
+  const walkthroughEnabled = isWalkthroughEnabled();
   if (walkthroughEnabled === false && !context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED)) {
     presentFirstView(context);
     context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, true)
