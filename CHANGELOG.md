@@ -1,5 +1,12 @@
 # Change Log
 
+# 0.18.0
+### Added 
+- Provide code action to configure classpath. [#684](https://github.com/microsoft/vscode-java-pack/pull/684)
+
+### Changed
+- Improve getting started experience with walkthrough. [#692](https://github.com/microsoft/vscode-java-pack/issues/692)
+
 # 0.17.0
 ### Changed
 - Clean up completed experiments. [#670](https://github.com/microsoft/vscode-java-pack/pull/670) [#672](https://github.com/microsoft/vscode-java-pack/pull/672)
