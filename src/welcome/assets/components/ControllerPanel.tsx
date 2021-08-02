@@ -10,9 +10,6 @@ export default class ControllerPanel extends React.Component<{
 }> {
   render() {
     let {showWhenUsingJava} = this.props;
-    if (showWhenUsingJava === undefined) {
-      showWhenUsingJava = true;
-    }
 
     return <Form>
         <Form.Check defaultChecked={showWhenUsingJava} label="Show welcome page when using Java" onChange={toggleVisibility}/>
