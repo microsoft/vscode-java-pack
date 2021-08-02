@@ -1,5 +1,11 @@
 # Change Log
 
+# 0.18.2
+### Fixed
+- Checkbox state was wrong in `Java: Help Center` page. [#712](https://github.com/microsoft/vscode-java-pack/pull/712)
+- Opening "Take a Tour" from `Java: Help Center` page was slow. [#711](https://github.com/microsoft/vscode-java-pack/pull/711)
+- Feature tour page was not shown when activating extension for the first time. [#713](https://github.com/microsoft/vscode-java-pack/pull/713)
+
 # 0.18.1
 ### Changed
 - Rename command `Java: Welcome` to `Java: Help Center`.
