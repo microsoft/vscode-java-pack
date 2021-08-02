@@ -49,7 +49,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   const config = vscode.workspace.getConfiguration("java.help");
 
   // for control group where walkthrough is not enabled, present first view for once.
-  const walkthroughEnabled = isWalkthroughEnabled();
+  const walkthroughEnabled = await isWalkthroughEnabled();
   if (walkthroughEnabled === false && !context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED)) {
     presentFirstView(context);
     context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, true)
