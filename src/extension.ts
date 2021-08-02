@@ -52,7 +52,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   const walkthroughEnabled = await isWalkthroughEnabled();
   if (walkthroughEnabled === false && !context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED)) {
     presentFirstView(context);
-    context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, true)
   }
 
   if (config.get("firstView") !== HelpViewType.None && context.globalState.get(KEY_SHOW_WHEN_USING_JAVA)) {
