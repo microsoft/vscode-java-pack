@@ -86,8 +86,8 @@ const setFirstTimeRun = (context: vscode.ExtensionContext, firstTimeRun: boolean
     context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, !firstTimeRun);
 };
 
-const fetchInitProps = (context: vscode.ExtensionContext) => {
-    const walkthrough = isWalkthroughEnabled();
+const fetchInitProps = async (context: vscode.ExtensionContext) => {
+    const walkthrough = await isWalkthroughEnabled();
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
@@ -99,8 +99,8 @@ const fetchInitProps = (context: vscode.ExtensionContext) => {
     setFirstTimeRun(context, false);
 };
 
-const showTourPage = (context: vscode.ExtensionContext) => {
-    const walkthrough = isWalkthroughEnabled();
+const showTourPage = async (context: vscode.ExtensionContext) => {
+    const walkthrough = await isWalkthroughEnabled();
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
