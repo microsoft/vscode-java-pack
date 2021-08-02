@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.18.1
+### Changed
+- Rename command `Java: Welcome` to `Java: Help Center`.
+
 # 0.18.0
 ### Added 
 - Provide code action to configure classpath. [#684](https://github.com/microsoft/vscode-java-pack/pull/684)
