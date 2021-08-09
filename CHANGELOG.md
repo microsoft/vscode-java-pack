@@ -95,7 +95,7 @@
 - Added *JDK Acquisition Guide* to the overview page [#119](https://github.com/Microsoft/vscode-java-pack/pull/119)
 
 ## 0.6.0
-- Added [Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode) to Java Extension Pack
+- Added [Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode) to Extension Pack for Java
 
 ## 0.4.0
 - Added Overview page to help users get started

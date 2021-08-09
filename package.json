@@ -1,6 +1,6 @@
 {
   "name": "vscode-java-pack",
-  "displayName": "Java Extension Pack",
+  "displayName": "Extension Pack for Java",
   "description": "Popular extensions for Java development that provides Java IntelliSense, debugging, testing, Maven/Gradle support, project management and more",
   "license": "MIT",
   "version": "0.18.2",
@@ -222,7 +222,7 @@
       }
     ],
     "configuration": {
-      "title": "Java Extension Pack",
+      "title": "Extension Pack for Java",
       "properties": {
         "java.help.firstView": {
           "type": [
@@ -249,7 +249,7 @@
         "java.help.showReleaseNotes": {
           "type": "boolean",
           "default": true,
-          "description": "Show Java Extension Pack release notes on startup.",
+          "description": "Show release notes of Extension Pack for Java on startup.",
           "scope": "window"
         }
       }
