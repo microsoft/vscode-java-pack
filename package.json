@@ -3,7 +3,7 @@
   "displayName": "Java Extension Pack",
   "description": "Popular extensions for Java development that provides Java IntelliSense, debugging, testing, Maven/Gradle support, project management and more",
   "license": "MIT",
-  "version": "0.18.2",
+  "version": "0.18.3",
   "publisher": "vscjava",
   "preview": true,
   "engines": {

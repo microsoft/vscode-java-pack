@@ -1,29 +1,34 @@
 # Change Log
 
-# 0.18.2
+## 0.18.3
+
+### Fixed
+- `Java: Help Center` page could open to wrong side. [#723](https://github.com/microsoft/vscode-java-pack/pull/723)
+
+## 0.18.2
 ### Fixed
 - Checkbox state was wrong in `Java: Help Center` page. [#712](https://github.com/microsoft/vscode-java-pack/pull/712)
 - Opening "Take a Tour" from `Java: Help Center` page was slow. [#711](https://github.com/microsoft/vscode-java-pack/pull/711)
 - Feature tour page was not shown when activating extension for the first time. [#713](https://github.com/microsoft/vscode-java-pack/pull/713)
 
-# 0.18.1
+## 0.18.1
 ### Changed
 - Rename command `Java: Welcome` to `Java: Help Center`.
 
-# 0.18.0
+## 0.18.0
 ### Added 
 - Provide code action to configure classpath. [#684](https://github.com/microsoft/vscode-java-pack/pull/684)
 
 ### Changed
 - Improve getting started experience with walkthrough. [#692](https://github.com/microsoft/vscode-java-pack/issues/692)
 
-# 0.17.0
+## 0.17.0
 ### Changed
 - Clean up completed experiments. [#670](https://github.com/microsoft/vscode-java-pack/pull/670) [#672](https://github.com/microsoft/vscode-java-pack/pull/672)
 - Update description and categories in metadata. [#669](https://github.com/microsoft/vscode-java-pack/pull/669) [#677](https://github.com/microsoft/vscode-java-pack/pull/677)
 - Update getting started walkthrough. [#671](https://github.com/microsoft/vscode-java-pack/pull/671)
 
-# 0.16.0
+## 0.16.0
 ### Added
 - Add formatter setting editor. [#604](https://github.com/microsoft/vscode-java-pack/issues/604)
 
