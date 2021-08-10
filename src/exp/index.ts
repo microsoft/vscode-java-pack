@@ -33,7 +33,7 @@ export async function initialize(context: vscode.ExtensionContext) {
   expService = await getExperimentationServiceAsync(
     getExtensionName(),
     getExtensionVersion(),
-    TargetPopulation.Public,
+    TargetPopulation.Insiders,
     new ExperimentationTelemetry(),
     context.globalState
   );
