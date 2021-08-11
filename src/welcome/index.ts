@@ -34,7 +34,6 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, _oper
         welcomeView = vscode.window.createWebviewPanel(
             "java.welcome",
             "Java Help Center",
-            // vscode.ViewColumn.Beside,
             viewColumn,
             {
                 enableScripts: true,
