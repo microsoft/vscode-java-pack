@@ -164,7 +164,7 @@
           {
             "id": "java.showHelpCenter",
             "title": "Java Help Center",
-            "description": "Discover more shortcuts and features on this page.\n[Open Java Help Center](command:java.welcome)",
+            "description": "Discover more shortcuts and features on this page.\n[Open Java Help Center](command:toSide:java.welcome.fromWalkthrough)",
             "media": {
               "image": "walkthrough/help-center.png",
               "altText": "Java Help Center"
@@ -176,6 +176,11 @@
     "commands": [
       {
         "command": "java.welcome",
+        "category": "Java",
+        "title": "Help Center (Welcome)"
+      },
+      {
+        "command": "java.welcome.fromWalkthrough",
         "category": "Java",
         "title": "Help Center (Welcome)"
       },
@@ -258,6 +263,10 @@
       "commandPalette": [
         {
           "command": "java.formatterSettings.showTextEditor",
+          "when": "false"
+        },
+        {
+          "command": "java.welcome.fromWalkthrough",
           "when": "false"
         }
       ],

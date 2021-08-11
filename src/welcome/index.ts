@@ -10,7 +10,18 @@ import { isWalkthroughEnabled } from "../utils/walkthrough";
 
 let welcomeView: vscode.WebviewPanel | undefined;
 
-export async function showWelcomeWebview(context: vscode.ExtensionContext, _operationId?: string, options?: any) {
+// from command palette
+export async function showWelcomeWebviewBeside(context: vscode.ExtensionContext, _operationId?: string, options?: {
+    firstTimeRun?: boolean;
+}) {
+    const newOptions = { openBeside: true, firstTimeRun: options?.firstTimeRun };
+    await showWelcomeWebview(context, _operationId, newOptions);
+}
+
+export async function showWelcomeWebview(context: vscode.ExtensionContext, _operationId?: string, options?: {
+    firstTimeRun?: boolean;
+    openBeside?: boolean;
+}) {
     if (options?.firstTimeRun) {
         setFirstTimeRun(context, true);
     }
@@ -19,10 +30,11 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, _oper
         welcomeView.reveal();
         fetchInitProps(context);
     } else {
+        const viewColumn = options?.openBeside ? vscode.ViewColumn.Beside : vscode.ViewColumn.Active;
         welcomeView = vscode.window.createWebviewPanel(
             "java.welcome",
             "Java Help Center",
-            vscode.ViewColumn.Beside,
+            viewColumn,
             {
                 enableScripts: true,
                 enableCommandUris: true,
