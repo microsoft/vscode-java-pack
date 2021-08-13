@@ -1,10 +1,10 @@
-# Java Extension Pack
+# Extension Pack for Java
 
-Java Extension Pack is a collection of popular extensions that can help write, test and debug Java applications in Visual Studio Code. Check out [Java in VS Code](https://code.visualstudio.com/docs/languages/java) to get started.
+Extension Pack for Java is a collection of popular extensions that can help write, test and debug Java applications in Visual Studio Code. Check out [Java in VS Code](https://code.visualstudio.com/docs/languages/java) to get started.
 
 ## Extensions Included
 
-By installing Java Extension Pack, the following extensions are installed:
+By installing Extension Pack for Java, the following extensions are installed:
 
 - [📦 Language Support for Java™ by Red Hat ](https://marketplace.visualstudio.com/items?itemName=redhat.java)
     - Code Navigation
