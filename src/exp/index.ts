@@ -4,7 +4,7 @@
 import * as vscode from "vscode";
 import { IExperimentationService, IExperimentationTelemetry, TargetPopulation, getExperimentationServiceAsync } from "vscode-tas-client";
 import { addContextProperty, sendInfo } from "vscode-extension-telemetry-wrapper";
-import { getExtensionName, getExtensionVersion } from "../utils";
+import { getExtensionName, getExtensionVersion, isInsiders } from "../utils";
 
 class ExperimentationTelemetry implements IExperimentationTelemetry {
 
@@ -29,11 +29,15 @@ export function getExpService() {
   return expService;
 }
 
+function getTargetPopulation() {
+  return isInsiders() ? TargetPopulation.Insiders : TargetPopulation.Public;
+}
+
 export async function initialize(context: vscode.ExtensionContext) {
   expService = await getExperimentationServiceAsync(
     getExtensionName(),
     getExtensionVersion(),
-    TargetPopulation.Insiders,
+    getTargetPopulation(),
     new ExperimentationTelemetry(),
     context.globalState
   );

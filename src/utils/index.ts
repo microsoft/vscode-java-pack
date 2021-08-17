@@ -65,3 +65,7 @@ export async function webviewCmdLinkHandler(obj: { webview: string, identifier: 
     await vscode.commands.executeCommand(command);
   }
 }
+
+export function isInsiders() {
+  return vscode.env.appName.indexOf('Insider') > 0 || vscode.env.appName.indexOf('OSS') > 0;
+}
