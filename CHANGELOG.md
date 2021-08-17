@@ -1,7 +1,13 @@
 # Change Log
 
-## 0.18.3
+## 0.18.4
+### Changed
+- Rename extension to `Extension Pack for Java`. [#721](https://github.com/microsoft/vscode-java-pack/pull/721)
 
+### Fixed
+- Fix experiment on getting started experience. [#727](https://github.com/microsoft/vscode-java-pack/pull/727)
+
+## 0.18.3
 ### Fixed
 - `Java: Help Center` page could open to wrong side. [#723](https://github.com/microsoft/vscode-java-pack/pull/723)
 
