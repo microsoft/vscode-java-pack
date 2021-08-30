@@ -49,7 +49,7 @@ export async function resolveRequirements(): Promise<any> {
         }
 
         if (javaVersion < REQUIRED_JDK_VERSION) {
-            let message = `Java ${REQUIRED_JDK_VERSION} or more recent is required to run the Java extension.`;
+            let message = `Java ${REQUIRED_JDK_VERSION} or more recent is required by the Java language support (redhat.java).`;
             if (javaHome) {
                 message += `(Current JDK: ${javaHome})`;
             }
