@@ -14,7 +14,7 @@ export async function javaExtGuideCmdHandler(context: vscode.ExtensionContext, o
     return;
   }
 
-  javaExtGuideView = vscode.window.createWebviewPanel("java.extGuide", "Java Extension Guide", {
+  javaExtGuideView = vscode.window.createWebviewPanel("java.extGuide", "Java Extensions Guide", {
     viewColumn: vscode.ViewColumn.One,
   }, {
     enableScripts: true,
