@@ -206,7 +206,7 @@ export async function findJavaRuntimeEntries(): Promise<{
     javaDotHome = runtime.java_home;
     const javaVersion = runtime.java_version;
     if (!javaVersion || javaVersion < 11) {
-      javaHomeError = `Java 11 or more recent is required to run the Java extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
+      javaHomeError = `Java 11 or more recent is required by the Java language support (redhat.java) extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
     }
   } catch (error) {
     javaHomeError = error.message;
