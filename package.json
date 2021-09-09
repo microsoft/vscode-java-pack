@@ -212,7 +212,7 @@
       {
         "command": "java.extGuide",
         "category": "Java",
-        "title": "Extension Guide"
+        "title": "Extensions Guide"
       },
       {
         "command": "java.formatterSettings",
