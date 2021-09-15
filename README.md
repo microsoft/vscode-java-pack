@@ -13,7 +13,7 @@ By installing Extension Pack for Java, the following extensions are installed:
     - Code Snippets
 - [📦 Debugger for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)
     - Debugging
-- [📦 Java Test Runner](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test)
+- [📦 Test Runner for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-test)
     - Run & Debug JUnit/TestNG Test Cases
 - [📦 Maven for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-maven)
     - Project Scaffolding
