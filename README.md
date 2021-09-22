@@ -60,6 +60,10 @@ The [📦 SonarLint](https://marketplace.visualstudio.com/items?itemName=SonarSo
 
 At the same time, [📦 CheckStyle](https://marketplace.visualstudio.com/items?itemName=shengchen.vscode-checkstyle) is also available.
 
+### Gradle
+
+The [📦 Gradle Tasks](https://marketplace.visualstudio.com/items?itemName=richardwillis.vscode-gradle) extension provides a visual interface for your Gradle Build and provides features to list projects and run tasks.
+
 ## Questions & Issues
 
 Each extension mentioned above is a separate open-source project and has its own repository. To make things easier, simply [🙋 open an issue in this repository](https://github.com/Microsoft/vscode-java-pack/issues). The new issue will be triaged and redirected.
