@@ -50,7 +50,10 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
 
   // for control group where walkthrough is not enabled, present first view for once.
   const walkthroughEnabled = await isWalkthroughEnabled();
-  if (walkthroughEnabled === false && !context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED)) {
+  if (walkthroughEnabled === false                            // control group
+    && !context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED)   // first time
+    && vscode.env.uiKind === vscode.UIKind.Desktop            // desktop only (no popups on Codespaces)
+  ) {
     presentFirstView(context);
   }
 
