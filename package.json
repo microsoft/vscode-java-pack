@@ -335,7 +335,7 @@
     "@types/vscode": "1.52.0",
     "@types/winreg": "^1.2.30",
     "@types/xmldom": "^0.1.30",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "arch": "^2.1.2",
     "autoprefixer": "^8.5.1",
     "bootstrap": "^4.5.2",
