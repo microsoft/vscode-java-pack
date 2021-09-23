@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.18.5
+### Fixed
+- Fix broken link: "Check out our blogs to see what's new". [#734](https://github.com/microsoft/vscode-java-pack/issues/734)
+- Fix bug: getting started page was wrongly presented in Codespaces. [#753](https://github.com/microsoft/vscode-java-pack/pull/753)
+- Normalize extension naming. [#738](https://github.com/microsoft/vscode-java-pack/pull/738) [#741](https://github.com/microsoft/vscode-java-pack/pull/741)
+
 ## 0.18.4
 ### Changed
 - Rename extension to `Extension Pack for Java`. [#721](https://github.com/microsoft/vscode-java-pack/pull/721)
