@@ -11,6 +11,7 @@ import { JdkInstallationPanel } from "./jdk.installation";
 import { onWillListRuntimes, requestJdkInfo } from "./vscode.api";
 import bytes = require("bytes");
 import "./style.scss";
+import { AdoptiumAsset } from "../utils/adoptiumApi";
 
 const onInitialize = (event: any) => {
   const { data } = event;
@@ -44,16 +45,21 @@ function showJavaRuntimeEntries(args: any) {
   registerTabSwitchEvents();
 }
 
-function applyJdkInfo(jdkInfo: any) {
-  let binary = jdkInfo.binaries[0];
-  let downloadLink = binary.installer_link || binary.binary_link;
+// now use v3 API
+function applyJdkInfo(jdkInfo?: AdoptiumAsset) {
+  let binary = jdkInfo?.binary?.installer || jdkInfo?.binary?.package;
+  if (jdkInfo === undefined || binary === undefined) {
+    return;
+  }
+
+  let downloadLink = binary.link;
   let encodedLink = `command:java.helper.openUrl?${encodeURIComponent(JSON.stringify(downloadLink))}`;
 
   const jdkData = {
     name: jdkInfo.release_name,
-    os: binary.os,
-    arch: binary.architecture,
-    size: bytes(binary.binary_size, { unitSeparator: " " }),
+    os: jdkInfo.binary.os,
+    arch: jdkInfo.binary.architecture,
+    size: bytes(binary.size, { unitSeparator: " " }),
     downloadLink: encodedLink
   };
 
