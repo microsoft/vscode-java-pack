@@ -38,7 +38,7 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
     return {
       isLoading: _.isEmpty(props && props.jdkData),
       data: props.jdkData
-    };
+   };
   }
 
   handleChange(event: any) {
@@ -72,7 +72,7 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
       <div className="col">
         <ul className="nav nav-tabs mb-3" id="jdkSourceTab" role="tablist">
           <li className="nav-item">
-            <a className="nav-link active" id="adoptOpenJdkTab" data-toggle="tab" href="#adoptOpenJdkPanel" role="tab" aria-controls="adoptOpenJdkPanel" aria-selected="true" title="Reliable source of OpenJDK binaries for all platforms">AdoptOpenJDK</a>
+            <a className="nav-link active" id="adoptOpenJdkTab" data-toggle="tab" href="#adoptOpenJdkPanel" role="tab" aria-controls="adoptOpenJdkPanel" aria-selected="true" title="Reliable source of OpenJDK binaries for all platforms">Adoptium OpenJDK</a>
           </li>
           <li className="nav-item">
             <a className="nav-link" id="otherJdkTab" data-toggle="tab" href="#otherJdkPanel" role="tab" aria-controls="otherJdkPanel" aria-selected="false" title="Other choices">Others<span className="red-dot"></span></a>
@@ -100,15 +100,15 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
                   </label>
                   </div>
                   <div className="form-check">
-                    <input className="form-check-input" type="radio" name="jdkVersion" id="openjdk11Radio" value="openjdk11" defaultChecked />
+                    <input className="form-check-input" type="radio" name="jdkVersion" id="openjdk11Radio" value="openjdk11" />
                     <label className="form-check-label" htmlFor="openjdk11Radio">
                       OpenJDK 11 (LTS)
                   </label>
                   </div>
                   <div className="form-check">
-                    <input className="form-check-input" type="radio" name="jdkVersion" id="openjdk16Radio" value="openjdk16" />
-                    <label className="form-check-label" htmlFor="openjdk16Radio">
-                      OpenJDK 16 (Latest)
+                    <input className="form-check-input" type="radio" name="jdkVersion" id="openjdk17Radio" value="openjdk17" defaultChecked />
+                    <label className="form-check-label" htmlFor="openjdk17Radio">
+                      OpenJDK 17 (LTS)
                   </label>
                   </div>
                 </div>
@@ -117,13 +117,7 @@ export class JdkInstallationPanel extends React.Component<JdkInstallationPanelPr
                   <div className="form-check">
                     <input className="form-check-input" type="radio" name="jvmImpl" id="hotspotRadio" value="hotspot" defaultChecked />
                     <label className="form-check-label" htmlFor="hotspotRadio">
-                      Hotspot (Recommended)
-                  </label>
-                  </div>
-                  <div className="form-check">
-                    <input className="form-check-input" type="radio" name="jvmImpl" id="openj9Radio" value="openj9" />
-                    <label className="form-check-label" htmlFor="openj9Radio">
-                      OpenJ9
+                      Hotspot
                   </label>
                   </div>
                 </div>

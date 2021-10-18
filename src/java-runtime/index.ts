@@ -3,7 +3,6 @@
 
 import * as _ from "lodash";
 import * as path from "path";
-import * as request from "request-promise-native";
 import * as vscode from "vscode";
 import { getExtensionContext, loadTextFromFile } from "../utils";
 import { findJavaHomes, JavaRuntime } from "./utils/findJavaRuntime";
@@ -13,6 +12,7 @@ import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { ProjectType } from "../utils/webview";
 import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
+import { latestAssets } from "./utils/adoptiumApi";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
@@ -299,7 +299,7 @@ async function getRuntimeSpec(projectRootUri: string) {
   };
 }
 
-export async function suggestOpenJdk(jdkVersion: string = "openjdk11", impl: string = "hotspot") {
+export async function suggestOpenJdk(jdkVersion: string = "openjdk17", impl: string = "hotspot") {
   let os: string = process.platform;
   if (os === "win32") {
     os = "windows";
@@ -314,8 +314,7 @@ export async function suggestOpenJdk(jdkVersion: string = "openjdk11", impl: str
     arch = "x32";
   }
 
-  return await request.get({
-    uri: `https://api.adoptopenjdk.net/v2/info/releases/${jdkVersion}?openjdk_impl=${impl}&arch=${arch}&os=${os}&type=jdk&release=latest`,
-    json: true
-  });
+  const majorVersion = jdkVersion.replace(/^openjdk/, "");
+  const assets = await latestAssets(majorVersion, impl);
+  return assets.find(a => a.binary.image_type === "jdk" && a.binary.architecture === arch && a.binary.os === os);
 }
