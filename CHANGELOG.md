@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.18.6
+### Changed
+- Adopt Adoptium API v3 to download JDK 17. [#765](https://github.com/microsoft/vscode-java-pack/pull/765)
+
 ## 0.18.5
 ### Fixed
 - Fix broken link: "Check out our blogs to see what's new". [#734](https://github.com/microsoft/vscode-java-pack/issues/734)
