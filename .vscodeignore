@@ -14,3 +14,4 @@ webpack.config.js
 out/**/*.map
 out/assets/**/*.js
 *.vsix
+scripts
