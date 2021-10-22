@@ -38,6 +38,7 @@ function onDidDisposeWebviewPanel() {
   javaRuntimeView = undefined;
 }
 
+
 async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
   webviewPanel.iconPath = {
     light: vscode.Uri.file(path.join(context.extensionPath, "caption.light.svg")),
@@ -209,7 +210,7 @@ export async function findJavaRuntimeEntries(): Promise<{
       javaHomeError = `Java 11 or more recent is required by the Java language support (redhat.java) extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
     }
   } catch (error) {
-    javaHomeError = error.message;
+    javaHomeError = (error as Error).message;
   }
 
   let projectRuntimes = await getProjectRuntimesFromPM();

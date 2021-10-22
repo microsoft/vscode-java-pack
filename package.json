@@ -348,7 +348,7 @@
     "tslint": "^5.20.1",
     "typescript": "^3.7.5",
     "url-loader": "^4.1.1",
-    "webpack": "^4.44.1",
+    "webpack": "^4.46.0",
     "webpack-cli": "^3.3.12"
   },
   "extensionPack": [
@@ -362,7 +362,10 @@
   "dependencies": {
     "@iconify-icons/codicon": "^1.1.8",
     "@iconify/react": "^1.1.4",
+    "@microsoft/fast-react-wrapper": "^0.1.6",
     "@reduxjs/toolkit": "^1.5.0",
+    "@vscode/codicons": "0.0.25",
+    "@vscode/webview-ui-toolkit": "^0.8.2",
     "arch": "^2.1.2",
     "axios": "^0.21.2",
     "bootstrap": "^4.5.2",
