@@ -124,6 +124,18 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         vscode.commands.executeCommand("vscode.open", vscode.Uri.file(fullPath));
         break;
       }
+      case "onWillBrowseForJDK": {
+        const javaHomeUri: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
+          canSelectFiles: false,
+          canSelectMany: false,
+          canSelectFolders: true,
+          title: "Specify Java Home"
+        });
+        if (javaHomeUri) {
+          await vscode.workspace.getConfiguration("java").update("home", javaHomeUri[0].fsPath, vscode.ConfigurationTarget.Global);
+        }
+        break;
+      }
       default:
         break;
     }

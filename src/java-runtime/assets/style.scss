@@ -31,3 +31,33 @@ select#jdkDropdown {
 
 @import "~@vscode/codicons/dist/codicon.css";
 @import "~@vscode/codicons/dist/codicon.ttf";
+
+div.warning-box {
+    display: flex;
+    border: solid 1px;
+    border-color: var(--vscode-list-warningForeground);
+    background: var(--vscode-inputValidation-warningBackground);
+    padding: 0.5rem;
+
+    .codicon {
+        color: var(--vscode-list-warningForeground);
+        margin-left: 0.2rem;
+        margin-right: 0.2rem;
+    }
+}
+
+div.jdk-action {
+    display: flex;
+    margin-top: 0.5rem;
+    a {
+        text-decoration: none;
+        color: var(--button-primary-foreground);
+    }
+    vscode-button {
+        margin-right: 0.5rem
+    }
+}
+
+.java-home-error {
+    color: var(--vscode-list-warningForeground);
+}
