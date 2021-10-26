@@ -11,8 +11,8 @@ const WinReg = require("winreg-utf8");
 const isWindows: boolean = process.platform.indexOf("win") === 0;
 const isMac: boolean = process.platform.indexOf("darwin") === 0;
 const isLinux: boolean = process.platform.indexOf("linux") === 0;
-const JAVAC_FILENAME = "javac" + (isWindows ? ".exe" : "");
-const JAVA_FILENAME = "java" + (isWindows ? ".exe" : "");
+export const JAVAC_FILENAME = "javac" + (isWindows ? ".exe" : "");
+export const JAVA_FILENAME = "java" + (isWindows ? ".exe" : "");
 
 export interface JavaRuntime {
     home: string;

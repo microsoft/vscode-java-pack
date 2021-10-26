@@ -15,7 +15,6 @@ const onInitialize = (event: any) => {
 };
 
 window.addEventListener("message", onInitialize);
-// renderLoadingPage();
 onWillListRuntimes();
 
 function showJavaRuntimeEntries(args: any) {

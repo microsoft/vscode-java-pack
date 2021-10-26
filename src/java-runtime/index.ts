@@ -5,7 +5,7 @@ import * as _ from "lodash";
 import * as path from "path";
 import * as vscode from "vscode";
 import { getExtensionContext, loadTextFromFile } from "../utils";
-import { findJavaHomes, JavaRuntime } from "./utils/findJavaRuntime";
+import { findJavaHomes, JAVAC_FILENAME, JavaRuntime, verifyJavaHome } from "./utils/findJavaRuntime";
 import architecture = require("arch");
 import { resolveRequirements } from "./utils/upstreamApi";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
@@ -37,7 +37,6 @@ export async function javaRuntimeCmdHandler(context: vscode.ExtensionContext, _o
 function onDidDisposeWebviewPanel() {
   javaRuntimeView = undefined;
 }
-
 
 async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
   webviewPanel.iconPath = {
@@ -132,7 +131,12 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
           title: "Specify Java Home"
         });
         if (javaHomeUri) {
-          await vscode.workspace.getConfiguration("java").update("home", javaHomeUri[0].fsPath, vscode.ConfigurationTarget.Global);
+          const javaHome = javaHomeUri[0].fsPath;
+          if (await verifyJavaHome(javaHome, JAVAC_FILENAME)) {
+            await vscode.workspace.getConfiguration("java").update("home", javaHome, vscode.ConfigurationTarget.Global);
+          } else {
+            await vscode.window.showWarningMessage(`${javaHome} is not a valid JDK home directory.`);
+          }
         }
         break;
       }
