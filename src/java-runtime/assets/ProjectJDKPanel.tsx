@@ -58,8 +58,7 @@ export class ProjectJDKPanel extends React.Component<ProjectJDKPanelProps, Proje
     const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download from adoptium", "java.helper.openUrl", ["https://adoptium.net"]);
     return (
       <div className="container">
-        <h1>Configure Java Runtime</h1>
-        <h2>Projects</h2>
+        <h1>Configure Java Project Runtime</h1>
         <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>
         <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 1fr 1fr">
           <DataRow rowType={DataGridRowTypes.stickyHeader}>
@@ -109,7 +108,6 @@ export class ProjectJDKPanel extends React.Component<ProjectJDKPanelProps, Proje
       }
     }
   }
-
 }
 
 function hasBuildTool(p: ProjectRuntimeEntry) {

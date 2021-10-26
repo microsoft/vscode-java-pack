@@ -26,7 +26,7 @@ export class ToolingJDKPanel extends React.Component<ToolingJDKPanelProps, {isDi
         <h1>Configure Java Runtime</h1>
         <div className="warning-box"><i className="codicon codicon-warning"></i>Langauge server requires a JDK 11+ to launch itself which is not found.</div>
 
-        {javaHomeError !== undefined && (<p className="java-home-error">{javaHomeError}</p>)}
+        {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
 
         <div className="jdk-action">
           <Button onClick={this.onClickBrowseJDKButton}>Locate an Existing JDK</Button>
