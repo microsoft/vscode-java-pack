@@ -26,7 +26,7 @@ select#jdkDropdown {
     font-size: var(--type-ramp-base-font-size);
     line-height: var(--type-ramp-base-line-height);
     min-height: 100%;
-    width: 3rem;
+    width: 100%;
 }
 
 @import "~@vscode/codicons/dist/codicon.css";
@@ -54,6 +54,7 @@ div.jdk-action {
         color: var(--button-primary-foreground);
     }
     vscode-button {
+        width: 100%;
         margin-right: 0.5rem
     }
 }

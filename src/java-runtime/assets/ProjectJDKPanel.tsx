@@ -9,7 +9,7 @@ import { encodeCommandUriWithTelemetry, ProjectType } from "../../utils/webview"
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
 import { DefaultJDKSelector } from "./components/DefaultJDKSelector";
 import { ProjectTypeHint } from "./components/ProjectTypeHint";
-import { openBuildScript } from "./vscode.api";
+import { onWillListRuntimes, openBuildScript } from "./vscode.api";
 
 const { wrap } = provideReactWrapper(React);
 const DataGrid = wrap(webviewUI.VSCodeDataGrid);
@@ -71,14 +71,22 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
       <div className="container">
         <h1>Configure Java Project Runtime</h1>
         <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>
-        <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 1fr 1fr">
-          <DataRow rowType={DataGridRowTypes.stickyHeader}>
-            <DataCell gridColumn="1">Project Name</DataCell>
-            <DataCell gridColumn="2">Type</DataCell>
-            <DataCell gridColumn="3">Java Version</DataCell>
-          </DataRow>
-          {projectEntries}
-        </DataGrid>
+        {
+          projectEntries.length > 0 ?
+            <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 1fr 1fr">
+              <DataRow rowType={DataGridRowTypes.stickyHeader}>
+                <DataCell gridColumn="1">Project Name</DataCell>
+                <DataCell gridColumn="2">Type</DataCell>
+                <DataCell gridColumn="3">Java Version</DataCell>
+              </DataRow>
+              {projectEntries}
+            </DataGrid>
+            :
+            <div>
+              <p>No projects detected yet.</p>
+              <Button onClick={this.refresh}>Refresh<span slot="start" className="codicon codicon-refresh"></span></Button>
+            </div>
+        }
         <ProjectTypeHint projectType={showHintFor} />
       </div>
     );
@@ -101,6 +109,10 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
     this.setState({
       showHintFor: projectType
     });
+  }
+
+  refresh = () => {
+    onWillListRuntimes();
   }
   
 }

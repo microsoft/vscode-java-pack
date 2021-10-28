@@ -28,17 +28,17 @@ export class ToolingJDKPanel extends React.Component<Props, State> {
 
     return (
       <div className="container">
-        <h1>Configure Java Runtime</h1>
-        <div className="warning-box"><i className="codicon codicon-warning"></i>Langauge server requires a JDK 11+ to launch itself which is not found.</div>
+        <h1>Configure Runtime for Language Server</h1>
+        <div className="warning-box"><i className="codicon codicon-warning"></i>Java Langauge Server requires a JDK 11+ to launch itself.</div>
 
         {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
 
         <div className="jdk-action">
-          <Button onClick={this.onClickBrowseJDKButton}>Locate an Existing JDK</Button>
-          {this?.state?.isDirty && <Button><a href="command:workbench.action.reloadWindow">Reload Window</a></Button> }
+          <Button appearance="secondary" onClick={this.onClickBrowseJDKButton}><a href="#">Locate an <b>Existing JDK</b></a></Button>
+          {this?.state?.isDirty && <Button><a href="command:workbench.action.reloadWindow">Reload</a></Button> }
         </div>
         <div className="jdk-action">
-          <Button><a href={downloadJDKCommand}>Install a New JDK</a></Button>
+          <Button appearance="secondary"><a href={downloadJDKCommand}>Install a <b>New JDK</b></a></Button>
         </div>
       </div>
     );
