@@ -7,7 +7,9 @@ import * as webviewUI from "@vscode/webview-ui-toolkit";
 import * as React from "react";
 import { encodeCommandUriWithTelemetry, ProjectType } from "../../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
-import { openBuildScript, setDefaultRuntime } from "./vscode.api";
+import { DefaultJDKSelector } from "./components/DefaultJDKSelector";
+import { ProjectTypeHint } from "./components/ProjectTypeHint";
+import { openBuildScript } from "./vscode.api";
 
 const { wrap } = provideReactWrapper(React);
 const DataGrid = wrap(webviewUI.VSCodeDataGrid);
@@ -15,25 +17,33 @@ const DataRow = wrap(webviewUI.VSCodeDataGridRow);
 const DataCell = wrap(webviewUI.VSCodeDataGridCell);
 const Button = wrap(webviewUI.VSCodeButton);
 
-interface ProjectJDKPanelProps {
+interface Props {
   jdkEntries: JavaRuntimeEntry[];
   projectRuntimes: ProjectRuntimeEntry[];
 };
-interface ProjectJDKPanelState {
+interface State {
+  showHintFor?: "Maven" | "Gradle" | "Others";
 }
 
-export class ProjectJDKPanel extends React.Component<ProjectJDKPanelProps, ProjectJDKPanelState> {
+export class ProjectJDKPanel extends React.Component<Props, State> {
+  constructor(props: any) {
+    super(props);
+    this.state = {
+    };
+  }
   render = () => {
     const { jdkEntries, projectRuntimes } = this.props;
+    const { showHintFor } = this.state;
+    
 
     const projectTypeHint = (projectType: ProjectType) => {
       switch (projectType) {
         case "Maven":
-          return <Button appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. pom.xml)."><span className="codicon codicon-info"></span></Button>
+          return <Button onClick={() => this.showHint("Maven")} appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. pom.xml)."><span className="codicon codicon-info"></span></Button>
         case "Gradle":
-          return <Button appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. build.gradle)."><span className="codicon codicon-info"></span></Button>
+          return <Button onClick={() => this.showHint("Gradle")} appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. build.gradle)."><span className="codicon codicon-info"></span></Button>
         default:
-          return <Button appearance="icon" title="For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used."><span className="codicon codicon-info"></span></Button>
+          return <Button onClick={() => this.showHint("Others")} appearance="icon" title="For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used."><span className="codicon codicon-info"></span></Button>
       }
     }
 
@@ -42,15 +52,16 @@ export class ProjectJDKPanel extends React.Component<ProjectJDKPanelProps, Proje
       .map((p, index) => (
         <DataRow key={index}>
           <DataCell gridColumn="1">{p.name}</DataCell>
-          <DataCell gridColumn="2">{p.projectType}{projectTypeHint(p.projectType)}</DataCell>
+          <DataCell gridColumn="2"><div className="inline-flex">{p.projectType}{projectTypeHint(p.projectType)}</div></DataCell>
           <DataCell gridColumn="3">
-            {hasBuildTool(p) && <span>{p.sourceLevel}</span>}
             {
               hasBuildTool(p) ?
-                <Button appearance="icon" onClick={() => this.onClickType(p)}><span className="codicon codicon-edit"></span></Button>
+                <div className="inline-flex">
+                  <span>{p.sourceLevel}</span>
+                  <Button appearance="icon" onClick={() => this.onClickEdit(p)}><span className="codicon codicon-edit"></span></Button>
+                </div>
                 :
-                this.createJdkDropdown(p, jdkEntries)
-
+                <DefaultJDKSelector projectRuntime={p} jdkEntries={jdkEntries} />
             }
           </DataCell>
         </DataRow>
@@ -68,46 +79,30 @@ export class ProjectJDKPanel extends React.Component<ProjectJDKPanelProps, Proje
           </DataRow>
           {projectEntries}
         </DataGrid>
+        <ProjectTypeHint projectType={showHintFor} />
       </div>
     );
   }
 
-  createJdkDropdown = (p: ProjectRuntimeEntry, jdkEntries: JavaRuntimeEntry[]) => {
+  onClickEdit = (p: ProjectRuntimeEntry) => {
+    let scriptFile;
+    if (p.projectType === ProjectType.Maven) {
+      scriptFile = "pom.xml";
+    } else if (p.projectType === ProjectType.Gradle) {
+      scriptFile = "build.gradle";
+    }
 
-    return (
-      <select className="jdkDropdown" id="jdkDropdown" defaultValue={p.runtimePath} onChange={this.onSelectionChange}>
-        {jdkEntries.map(jdk => (
-          <option key={jdk.name} value={jdk.fspath}>{jdk.majorVersion} - {jdk.name}</option>
-        ))}
-      </select>
-    );
-  }
-
-  onSelectionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const { value } = event.target;
-    const targetJdk = this.props.jdkEntries.find(jdk => jdk.fspath === value);
-    if (targetJdk) {
-      setDefaultRuntime(targetJdk.fspath, targetJdk.majorVersion);
+    if (scriptFile) {
+      openBuildScript(p.rootPath, scriptFile);
     }
   }
 
-  onClickType = (p: ProjectRuntimeEntry) => {
-    if (!hasBuildTool(p)) {
-      // unmanaged folder
-      this.setState({ configuringProject: p.rootPath });
-    } else {
-      let scriptFile;
-      if (p.projectType === ProjectType.Maven) {
-        scriptFile = "pom.xml";
-      } else if (p.projectType === ProjectType.Gradle) {
-        scriptFile = "build.gradle";
-      }
-
-      if (scriptFile) {
-        openBuildScript(p.rootPath, scriptFile);
-      }
-    }
+  showHint = (projectType: any) => {
+    this.setState({
+      showHintFor: projectType
+    });
   }
+  
 }
 
 function hasBuildTool(p: ProjectRuntimeEntry) {

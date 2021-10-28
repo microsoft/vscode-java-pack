@@ -10,13 +10,18 @@ import { onWillBrowseForJDK } from './vscode.api';
 
 const { wrap } = provideReactWrapper(React);
 const Button = wrap(webviewUI.VSCodeButton);
-export interface ToolingJDKPanelProps {
+
+interface Props {
   jdkEntries?: JavaRuntimeEntry[];
   javaDotHome?: string;
   javaHomeError?: any;
 }
 
-export class ToolingJDKPanel extends React.Component<ToolingJDKPanelProps, {isDirty?: boolean}> {
+interface State {
+  isDirty?: boolean;
+}
+
+export class ToolingJDKPanel extends React.Component<Props, State> {
   render = () => {
     const { javaHomeError } = this.props;
     const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "Install a new JDK", "java.helper.openUrl", ["https://adoptium.net"]);
