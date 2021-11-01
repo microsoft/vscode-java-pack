@@ -70,7 +70,7 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
     return (
       <div className="container">
         <h1>Configure Java Project Runtime</h1>
-        <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>
+        {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
         {
           projectEntries.length > 0 ?
             <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 1fr 1fr">
@@ -83,7 +83,7 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
             </DataGrid>
             :
             <div>
-              <p>No projects detected yet.</p>
+              <p>No project detected yet. Please refresh later if Java extension is importing your projects.</p>
               <Button onClick={this.refresh}>Refresh<span slot="start" className="codicon codicon-refresh"></span></Button>
             </div>
         }
