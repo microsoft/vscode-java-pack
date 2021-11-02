@@ -6,8 +6,8 @@ import { initialize as initHandler, extensionRecommendationHandler } from "./han
 import { initialize as initXml } from "./xml";
 import { isExtensionInstalled, getExtensionContext } from "../utils";
 
-export function initialize (context: vscode.ExtensionContext) {
-  initHandler(context);
+export function initialize(context: vscode.ExtensionContext) {
+  initHandler();
   initXml(context);
 }
 
