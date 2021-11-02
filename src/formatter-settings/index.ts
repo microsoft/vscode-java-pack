@@ -12,7 +12,7 @@ import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, 
 import { FormatterConverter } from "./FormatterConverter";
 import { remoteProfileProvider, RemoteProfileProvider } from "./RemoteProfileProvider";
 import { DOMElement, ExampleKind, ProfileContent } from "./types";
-import { addDefaultProfile, downloadFile, getProfilePath, getAbsoluteTargetPath, getVSCodeSetting, isRemote, openFormatterSettings, parseProfile } from "./utils";
+import { addDefaultProfile, downloadFile, getAbsoluteTargetPath, getProfilePath, getVSCodeSetting, isRemote, openFormatterSettings, parseProfile } from "./utils";
 export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEditorProvider {
 
     public static readonly viewType = "java.formatterSettingsEditor";
@@ -63,7 +63,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         vscode.commands.executeCommand("vscode.openWith", filePath, "java.formatterSettingsEditor");
     }
 
-    public reopenWithTextEditor(_context: vscode.ExtensionContext, _operationId: string, uri: any) {
+    public reopenWithTextEditor(uri: any) {
         if (uri instanceof vscode.Uri) {
             vscode.commands.executeCommand("vscode.openWith", uri, "default");
         }

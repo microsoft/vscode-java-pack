@@ -2,16 +2,14 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
-import { sendInfo } from "vscode-extension-telemetry-wrapper";
-import { instrumentCommand } from "../utils";
+import { instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { isExtensionInstalled, recommendExtension } from "../utils";
 import { KEY_RECOMMENDATION_TIMESTAMP_MAP } from "../utils/globalState";
 
-
 let handler: (...args: any[]) => any;
 
-export function initialize(context: vscode.ExtensionContext) {
-  handler = instrumentCommand(context, "recommendExtension", async (_context: vscode.ExtensionContext, operationId: string, extName: string, message: string) => {
+export function initialize() {
+  handler = instrumentOperation("recommendExtension", async (operationId: string, extName: string, message: string) => {
     sendInfo(operationId, {
       extName: extName
     }, {});
