@@ -47,7 +47,6 @@ export async function loadTextFromFile(resourceUri: string) {
   return buffer.toString();
 }
 
-export * from "./command";
 export * from "./release-notes";
 export * from "./extension";
 
