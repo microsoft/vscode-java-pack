@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as vscode from "vscode";
 import * as path from "path";
-import { getExtensionContext, loadTextFromFile } from "../utils";
+import * as vscode from "vscode";
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
-import { KEY_SHOW_WHEN_USING_JAVA, KEY_IS_WELCOME_PAGE_VIEWED } from "../utils/globalState";
-import { isWalkthroughEnabled } from "../utils/walkthrough";
+import { getExtensionContext, loadTextFromFile } from "../utils";
+import { KEY_IS_WELCOME_PAGE_VIEWED, KEY_SHOW_WHEN_USING_JAVA } from "../utils/globalState";
 
 let welcomeView: vscode.WebviewPanel | undefined;
 
@@ -99,26 +98,22 @@ const setFirstTimeRun = (context: vscode.ExtensionContext, firstTimeRun: boolean
 };
 
 const fetchInitProps = async (context: vscode.ExtensionContext) => {
-    const walkthrough = await isWalkthroughEnabled();
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
             firstTimeRun: context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true,
-            walkthrough
         }
     });
     setFirstTimeRun(context, false);
 };
 
 const showTourPage = async (context: vscode.ExtensionContext) => {
-    const walkthrough = await isWalkthroughEnabled();
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
             firstTimeRun: true,
-            walkthrough
         }
     });
     setFirstTimeRun(context, false);
