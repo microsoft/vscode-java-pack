@@ -13,7 +13,6 @@ import TourPage from "./TourPage";
 export class GetStartedPage extends React.Component<{
     showWhenUsingJava: boolean,
     firstTimeRun: boolean,
-    walkthrough?: boolean
 }> {
 
     render() {
@@ -26,7 +25,7 @@ export class GetStartedPage extends React.Component<{
     }
 
     renderWelcomePage() {
-        const {showWhenUsingJava, walkthrough} = this.props;
+        const {showWhenUsingJava} = this.props;
         return (
             <Container fluid className="root">
                 <Row className="mb-4">
@@ -36,7 +35,7 @@ export class GetStartedPage extends React.Component<{
                 </Row>
                 <Row className="mb-4">
                     <Col>
-                        <QuickActionPanel walkthrough={walkthrough}/>
+                        <QuickActionPanel/>
                     </Col>
                 </Row>
                 <Row className="mb-4">
