@@ -1,19 +1,77 @@
-div.container {
+div#content {
     min-width: 550px;
+    padding: 0 24px 0 24px;
 }
 
-sup.newtag {
-    color: var(--vscode-terminal-ansiRed);
+div.container {
+    margin-top: 1.5rem;
+    padding: 0 20px 0 20px;
+}
+
+vscode-data-grid-row.sticky-header vscode-data-grid-cell {
     font-weight: bold;
-    margin-left: 0.2rem;
 }
 
-span.red-dot {
-    height: 0.5rem;
-    width: 0.5rem;
-    background-color: var(--vscode-terminal-ansiRed);
-    border-radius: 50%;
-    display: inline-block;
-    margin-left: 0.2rem;
-    margin-bottom: 0.2rem;
+select#jdkDropdown {
+    background-color: var(--dropdown-background);
+    color: var(--dropdown-foreground);
+
+    align-items: center;
+    box-sizing: border-box;
+    border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
+    border-radius: calc(var(--corner-radius) * 1px);
+    cursor: pointer;
+    display: flex;
+    font-family: inherit;
+    font-size: var(--type-ramp-base-font-size);
+    line-height: var(--type-ramp-base-line-height);
+    min-height: 100%;
+    width: 100%;
+}
+
+@import "~@vscode/codicons/dist/codicon.css";
+@import "~@vscode/codicons/dist/codicon.ttf";
+
+div.warning-box {
+    display: flex;
+    border: solid 1px;
+    border-color: var(--vscode-list-warningForeground);
+    background: var(--vscode-inputValidation-warningBackground);
+    padding: 0.5rem;
+
+    .codicon {
+        color: var(--vscode-list-warningForeground);
+        margin-left: 0.2rem;
+        margin-right: 0.2rem;
+    }
+}
+
+div.jdk-action {
+    display: flex;
+    margin-top: 0.5rem;
+    a {
+        text-decoration: none;
+        color: var(--button-primary-foreground);
+    }
+    vscode-button {
+        width: 100%;
+        margin-right: 0.5rem
+    }
+}
+
+.java-home-error {
+    color: var(--vscode-list-warningForeground);
+}
+
+div.inline-flex {
+  display: inline-flex;
+}
+
+div.hintPanel {
+    margin-top: 2rem;
+    margin: 0 7px 0 5px;
+    padding: 0 16px 0 10px;
+    border-left: 5px solid;
+    border-color: rgba(0, 122, 204, 0.5);
+    background: rgba(127, 127, 127, 0.1);
 }

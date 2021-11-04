@@ -11,8 +11,8 @@ const WinReg = require("winreg-utf8");
 const isWindows: boolean = process.platform.indexOf("win") === 0;
 const isMac: boolean = process.platform.indexOf("darwin") === 0;
 const isLinux: boolean = process.platform.indexOf("linux") === 0;
-const JAVAC_FILENAME = "javac" + (isWindows ? ".exe" : "");
-const JAVA_FILENAME = "java" + (isWindows ? ".exe" : "");
+export const JAVAC_FILENAME = "javac" + (isWindows ? ".exe" : "");
+export const JAVA_FILENAME = "java" + (isWindows ? ".exe" : "");
 
 export interface JavaRuntime {
     home: string;
@@ -218,7 +218,13 @@ async function fromCommonPlaces(): Promise<string[]> {
             process.env.ProgramW6432 && path.join(process.env.ProgramW6432, "Java"), // Oracle JDK per machine
             process.env.ProgramFiles && path.join(process.env.ProgramFiles, "AdoptOpenJDK"), // AdoptOpenJDK per machine
             process.env.ProgramW6432 && path.join(process.env.ProgramW6432, "AdoptOpenJDK"), // AdoptOpenJDK per machine
+            process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Eclipse Foundation"), // AdoptOpenJDK (Eclipse Foundation) per machine
+            process.env.ProgramW6432 && path.join(process.env.ProgramW6432, "Eclipse Foundation"), // AdoptOpenJDK (Eclipse Foundation) per machine
+            process.env.ProgramFiles && path.join(process.env.ProgramFiles, "Eclipse Adoptium"), // AdoptOpenJDK (Eclipse Adoptium) per machine
+            process.env.ProgramW6432 && path.join(process.env.ProgramW6432, "Eclipse Adoptium"), // AdoptOpenJDK (Eclipse Adoptium) per machine
             path.join(localAppDataFolder, "Programs", "AdoptOpenJDK"), // AdoptOpenJDK per user
+            path.join(localAppDataFolder, "Programs", "Eclipse Foundation"), // AdoptOpenJDK per user (After joining Eclipse Foundation)
+            path.join(localAppDataFolder, "Programs", "Eclipse Adoptium"), // AdoptOpenJDK per user (After joining Eclipse Adoptium)
         ].filter(Boolean) as string[];
         const jvmStores = _.uniq(possibleLocations);
         for (const jvmStore of jvmStores) {

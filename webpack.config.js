@@ -52,10 +52,9 @@ module.exports = function (env, argv) {
           loader: 'css-loader'
         }]
       }, {
-        test: /\.woff2$/,
+        test: /\.(woff2|ttf)$/,
         loader: 'url-loader',
-      },
-      ]
+      }]
     },
     output: {
       filename: 'assets/[name]/index.js',

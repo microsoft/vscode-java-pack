@@ -48,3 +48,9 @@ export function onWillListRuntimes() {
     command: "onWillListRuntimes"
   });
 }
+
+export function onWillBrowseForJDK() {
+  vscode.postMessage({
+    command: "onWillBrowseForJDK"
+  });
+}

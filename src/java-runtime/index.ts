@@ -5,7 +5,7 @@ import * as _ from "lodash";
 import * as path from "path";
 import * as vscode from "vscode";
 import { getExtensionContext, loadTextFromFile } from "../utils";
-import { findJavaHomes, JavaRuntime } from "./utils/findJavaRuntime";
+import { findJavaHomes, JAVAC_FILENAME, JavaRuntime, verifyJavaHome } from "./utils/findJavaRuntime";
 import architecture = require("arch");
 import { resolveRequirements } from "./utils/upstreamApi";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
@@ -123,6 +123,23 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         vscode.commands.executeCommand("vscode.open", vscode.Uri.file(fullPath));
         break;
       }
+      case "onWillBrowseForJDK": {
+        const javaHomeUri: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
+          canSelectFiles: false,
+          canSelectMany: false,
+          canSelectFolders: true,
+          title: "Specify Java Home"
+        });
+        if (javaHomeUri) {
+          const javaHome = javaHomeUri[0].fsPath;
+          if (await verifyJavaHome(javaHome, JAVAC_FILENAME)) {
+            await vscode.workspace.getConfiguration("java").update("home", javaHome, vscode.ConfigurationTarget.Global);
+          } else {
+            await vscode.window.showWarningMessage(`${javaHome} is not a valid JDK home directory.`);
+          }
+        }
+        break;
+      }
       default:
         break;
     }
@@ -209,7 +226,7 @@ export async function findJavaRuntimeEntries(): Promise<{
       javaHomeError = `Java 11 or more recent is required by the Java language support (redhat.java) extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
     }
   } catch (error) {
-    javaHomeError = error.message;
+    javaHomeError = (error as Error).message;
   }
 
   let projectRuntimes = await getProjectRuntimesFromPM();

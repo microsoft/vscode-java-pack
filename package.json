@@ -348,7 +348,7 @@
     "tslint": "^5.20.1",
     "typescript": "^3.7.5",
     "url-loader": "^4.1.1",
-    "webpack": "^4.44.1",
+    "webpack": "^4.46.0",
     "webpack-cli": "^3.3.12"
   },
   "extensionPack": [
@@ -362,7 +362,10 @@
   "dependencies": {
     "@iconify-icons/codicon": "^1.1.8",
     "@iconify/react": "^1.1.4",
+    "@microsoft/fast-react-wrapper": "^0.1.8",
     "@reduxjs/toolkit": "^1.5.0",
+    "@vscode/codicons": "0.0.25",
+    "@vscode/webview-ui-toolkit": "^0.8.2",
     "arch": "^2.1.2",
     "axios": "^0.21.2",
     "bootstrap": "^4.5.2",
@@ -375,9 +378,9 @@
     "jquery": "^3.5.1",
     "lodash": "^4.17.21",
     "minimatch": "^3.0.4",
-    "react": "^17.0.1",
+    "react": "^16.9.0",
     "react-bootstrap": "^1.4.3",
-    "react-dom": "^17.0.1",
+    "react-dom": "^16.9.0",
     "react-redux": "^7.2.2",
     "request": "^2.88.2",
     "request-promise-native": "^1.0.9",
