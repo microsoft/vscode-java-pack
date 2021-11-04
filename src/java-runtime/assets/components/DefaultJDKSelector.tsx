@@ -41,7 +41,7 @@ export class DefaultJDKSelector extends React.Component<Props, State> {
           : 
           <span>{p.sourceLevel}</span>
         }
-        <Button appearance="icon" onClick={() => this.onClickEdit()}><span className="codicon codicon-edit"></span></Button>
+        <Button appearance="icon" onClick={() => this.onClickEdit()} title="Edit"><span className="codicon codicon-edit"></span></Button>
       </div>
     );
   }

@@ -58,7 +58,7 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
               hasBuildTool(p) ?
                 <div className="inline-flex">
                   <span>{p.sourceLevel}</span>
-                  <Button appearance="icon" onClick={() => this.onClickEdit(p)}><span className="codicon codicon-edit"></span></Button>
+                  <Button appearance="icon" onClick={() => this.onClickEdit(p)} title="Edit"><span className="codicon codicon-edit"></span></Button>
                 </div>
                 :
                 <DefaultJDKSelector projectRuntime={p} jdkEntries={jdkEntries} />
