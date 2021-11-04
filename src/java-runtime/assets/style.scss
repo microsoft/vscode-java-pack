@@ -29,8 +29,8 @@ select#jdkDropdown {
     width: 100%;
 }
 
-@import "~@vscode/codicons/dist/codicon.css";
-@import "~@vscode/codicons/dist/codicon.ttf";
+@import "../../../node_modules/@vscode/codicons/dist/codicon.css";
+@import "../../../node_modules/@vscode/codicons/dist/codicon.ttf";
 
 div.warning-box {
     display: flex;

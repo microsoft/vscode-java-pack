@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const path = require('path');
 
 module.exports = function (env, argv) {
@@ -30,17 +31,25 @@ module.exports = function (env, argv) {
         }, {
           loader: 'postcss-loader',
           options: {
-            plugins: function () {
-              return [require('autoprefixer')];
-            }
+            postcssOptions: {
+              plugins: [
+                [
+                  "autoprefixer",
+                  {
+                    // Options
+                  },
+                ],
+              ],
+            },
           }
         }, {
           loader: 'sass-loader'
         }]
       }, {
         test: /\.(jpg|png|svg|ico|icns)$/,
-        loader: 'url-loader?limit=200000',
+        loader: 'url-loader',
         options: {
+          limit: 200000,
           esModule: false
         }
       }, {
@@ -52,7 +61,7 @@ module.exports = function (env, argv) {
         }]
       }, {
         test: /\.(woff2|ttf)$/,
-        loader: 'url-loader',
+        type: 'asset/inline',
       }]
     },
     output: {
@@ -61,6 +70,11 @@ module.exports = function (env, argv) {
       publicPath: '/',
       devtoolModuleFilenameTemplate: "../[resource-path]"
     },
+    plugins: [
+      new webpack.ProvidePlugin({
+        process: 'process/browser',
+      }),
+    ],
     devtool: 'source-map',
     resolve: {
       extensions: ['.js', '.ts', '.tsx']

@@ -18,8 +18,8 @@
                 ],
                 "background": {
                     "activeOnStart": true,
-                    "beginsPattern": "Compilation \\w+ starting…",
-                    "endsPattern": "Compilation\\s+finished"
+                    "beginsPattern": "\\w+",
+                    "endsPattern": "webpack .* compiled"
                 }
             },
             "isBackground": true,
