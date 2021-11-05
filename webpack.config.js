@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
+const webpack = require('webpack');
 const path = require('path');
 
 module.exports = function (env, argv) {
@@ -107,6 +108,9 @@ module.exports = function (env, argv) {
         chunks: ['formatter-settings']
       }),
       new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/\.(js)$/]),
+      new webpack.ProvidePlugin({
+        process: 'process/browser',
+      }),
     ],
     devtool: 'source-map',
     resolve: {
