@@ -1,5 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
+const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const path = require('path');
 
 module.exports = function (env, argv) {
@@ -31,17 +31,25 @@ module.exports = function (env, argv) {
         }, {
           loader: 'postcss-loader',
           options: {
-            plugins: function () {
-              return [require('autoprefixer')];
-            }
-          }
+            postcssOptions: {
+              plugins: [
+                [
+                  "autoprefixer",
+                  {
+                    // Options
+                  },
+                ],
+              ],
+            },
+          },
         }, {
           loader: 'sass-loader'
         }]
       }, {
         test: /\.(jpg|png|svg|ico|icns)$/,
-        loader: 'url-loader?limit=200000',
+        loader: 'url-loader',
         options: {
+          limit: 200000,
           esModule: false
         }
       }, {
@@ -66,46 +74,39 @@ module.exports = function (env, argv) {
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/overview/index.html'),
         template: 'src/overview/assets/index.html',
-        inlineSource: '.(js|css)$',
         chunks: ['overview']
       }),
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/java-runtime/index.html'),
         template: 'src/java-runtime/assets/index.html',
-        inlineSource: '.(js|css)$',
         chunks: ['java-runtime']
       }),
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/getting-started/index.html'),
         template: 'src/getting-started/assets/index.html',
-        inlineSource: '.(js|css)$',
         chunks: ['getting-started']
       }),
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/ext-guide/index.html'),
         template: 'src/ext-guide/assets/index.html',
-        inlineSource: '.(js|css)$',
         chunks: ['ext-guide']
       }),
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/welcome/index.html'),
         template: 'src/welcome/assets/index.html',
-        inlineSource: '.(js|css)$',
         chunks: ['welcome']
       }),
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/classpath/index.html'),
         template: 'src/classpath/assets/index.html',
-        inlineSource: '.(js|css)$',
         chunks: ['classpath']
       }),
       new HtmlWebpackPlugin({
         filename: path.resolve(__dirname, 'out/assets/formatter-settings/index.html'),
         template: 'src/formatter-settings/assets/index.html',
-        inlineSource: '.(js|css)$',
         chunks: ['formatter-settings']
       }),
-      new HtmlWebpackInlineSourcePlugin(),
+      new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/\.(js)$/]),
     ],
     devtool: 'source-map',
     resolve: {
