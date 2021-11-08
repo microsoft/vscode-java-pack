@@ -29,7 +29,7 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.webview.runCommand", webviewCmdLinkHandler));
   registerCommandHandler(context, "java.welcome", showWelcomeWebviewBeside);
   registerCommandHandler(context, "java.welcome.fromWalkthrough", showWelcomeWebview);
-  context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.formatterSettings", javaFormatterSettingsEditorProvider.showFormatterSettingsEditor));
+  context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.formatterSettings", javaFormatterSettingsEditorProvider.showFormatterSettingsEditor, javaFormatterSettingsEditorProvider));
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.formatterSettings.showTextEditor", javaFormatterSettingsEditorProvider.reopenWithTextEditor));
   registerCommandHandler(context, "java.classpathConfiguration", showClasspathConfigurationPage);
 }
