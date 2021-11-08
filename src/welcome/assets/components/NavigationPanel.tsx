@@ -21,7 +21,8 @@ export default class NavigationPanel extends React.Component {
       actions: [
         { name: "Configure Java Runtime", command: "java.runtime" },
         { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] },
-        { name: "Install Extensions...", command: "java.extGuide" }
+        { name: "Install Extensions...", command: "java.extGuide" },
+        { name: "Configure Java Formatter Settings", command: "java.formatterSettings" }
       ]
     },
     {
