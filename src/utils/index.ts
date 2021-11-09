@@ -65,6 +65,15 @@ export async function webviewCmdLinkHandler(obj: { webview: string, identifier: 
   }
 }
 
+export async function openExternalLinkFromWebview(webview: string, identifier: string, url: string) {
+  await webviewCmdLinkHandler({
+    webview,
+    identifier,
+    command: "java.helper.openUrl",
+    args: [url]
+  });
+}
+
 export function isInsiders() {
   return vscode.env.appName.indexOf('Insider') > 0 || vscode.env.appName.indexOf('OSS') > 0;
 }

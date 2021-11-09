@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as request from "request-promise-native";
+import architecture = require("arch");
 
 /**
  * 
@@ -30,7 +31,8 @@ export async function availableReleases(): Promise<AdoptiumReleaseInfo> {
     const uri = "https://api.adoptium.net/v3/info/available_releases";
     const response = await request.get({
         uri,
-        json: true
+        json: true,
+        rejectUnauthorized: false 
     })
     return response;
 }
@@ -98,11 +100,28 @@ export async function latestAssets(featureVersion: string, jvmImpl: string): Pro
     return response;
 }
 
+export async function latestCompatibleAsset(featureVersion: string, jvmImpl: string): Promise<AdoptiumAsset | undefined> {
+    const assets = await latestAssets(featureVersion, jvmImpl);
+    let os: string = process.platform;
+    if (os === "win32") {
+        os = "windows";
+    } else if (os === "darwin") {
+        os = "mac";
+    } else {
+        os = "linux";
+    }
 
+    let arch = architecture();
+    if (arch === "x86") {
+        arch = "x32";
+    }
+    return assets.find(a => a.binary.image_type === "jdk" && a.binary.architecture === arch && a.binary.os === os);
+}
 
-interface AdoptiumReleaseInfo {
+export interface AdoptiumReleaseInfo {
     available_lts_releases: number[];
     available_releases: number[];
+    most_recent_lts: number;
 };
 
 export interface AdoptiumAsset {
@@ -113,6 +132,9 @@ export interface AdoptiumAsset {
         image_type: string;
         installer?: AdoptiumFileMetadata;
         package?: AdoptiumFileMetadata;
+    };
+    version: {
+        major: number;
     }
 }
 

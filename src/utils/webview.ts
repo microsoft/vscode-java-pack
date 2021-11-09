@@ -22,6 +22,9 @@ export function encodeCommandUriWithTelemetry(webview: string, identifier: strin
   return `command:${helperCommand}?${encodeURIComponent(JSON.stringify(wrappedArgs))}`;
 }
 
+export function encodeExternalLinkWithTelemetry(webview: string, name: string, url: string) {
+  return encodeCommandUriWithTelemetry(webview, name, "java.helper.openUrl", [url]);
+}
 
 /**
  * Check if navigator.platform matches os.

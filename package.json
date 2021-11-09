@@ -175,6 +175,11 @@
     ],
     "commands": [
       {
+        "command": "java.installJdk",
+        "category": "Java",
+        "title": "Install New JDK"
+      },
+      {
         "command": "java.welcome",
         "category": "Java",
         "title": "Help Center (Welcome)"

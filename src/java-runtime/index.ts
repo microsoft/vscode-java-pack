@@ -12,7 +12,7 @@ import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { ProjectType } from "../utils/webview";
 import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
-import { latestAssets } from "./utils/adoptiumApi";
+import { latestAssets } from "../utils/adoptiumApi";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
