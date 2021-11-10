@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
 
 import { Orientation } from '@microsoft/fast-web-utilities';
 import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
@@ -119,4 +121,5 @@ interface IMessage {
     payload?: AdoptiumReleaseInfo | AdoptiumAsset;
   }
 }
+
 export default AdoptiumJDKPanel;

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 #root {
     display: flex;
     justify-content: center;
@@ -21,6 +24,10 @@ div.btn-download {
     div.asset-info {
         font-size: small;
     }
+}
+
+.footer .troubleshoot-link {
+    margin: 0 0.5rem;
 }
 
 @import "~@vscode/codicons/dist/codicon.css";

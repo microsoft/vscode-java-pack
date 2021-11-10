@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { openExternalLinkFromWebview, webviewCmdLinkHandler } from '../utils';
@@ -26,9 +29,10 @@ class InstallJdkPage {
 
 	public static createOrShow(extensionPath: string, webviewPanel?: vscode.WebviewPanel) {
 		// "smart" Beside
-		const column = vscode.window.activeTextEditor?.viewColumn !== vscode.ViewColumn.One ?
-			vscode.ViewColumn.One :
-			vscode.ViewColumn.Two;
+		const ate = vscode.window.activeTextEditor;
+		const column = (ate === undefined || ate.viewColumn === vscode.ViewColumn.One) ?
+			vscode.ViewColumn.Two :
+			vscode.ViewColumn.One;
 
 		if (InstallJdkPage.instance) {
 			InstallJdkPage.instance._panel.reveal();

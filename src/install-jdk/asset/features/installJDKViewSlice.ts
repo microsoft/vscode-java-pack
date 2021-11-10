@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { AdoptiumAsset, AdoptiumReleaseInfo } from '../../../utils/adoptiumApi'
 
@@ -10,7 +13,7 @@ interface State {
 
 // Define the initial state using that type
 const initialState: State = {
-}
+};
 
 export const slice = createSlice({
   name: 'jdks',
@@ -35,4 +38,4 @@ export const {
     showAsset
 } = slice.actions
 
-export default slice.reducer
+export default slice.reducer;

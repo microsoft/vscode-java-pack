@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
 import * as webviewUI from "@vscode/webview-ui-toolkit";
 import React from 'react';
@@ -38,11 +41,10 @@ export default function InstallJDKView() {
                 <p>After you finish JDK installation, please reload Visual Studio Code to make it effective.</p>
                 <div>
                     <Button appearance='secondary' onClick={onWillReloadWindow}>Reload Window</Button>
-                    <Link href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, "Having trouble?", helpLink)}>Having trouble?</Link>
+                    <Link className='troubleshoot-link' href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, "Having trouble?", helpLink)}>Having trouble?</Link>
                 </div>
 
             </div>
         </div>
     );
 }
-
