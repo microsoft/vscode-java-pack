@@ -50,17 +50,9 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     switch (e.command) {
       case "onWillListRuntimes": {
-        suggestOpenJdk().then(jdkInfo => {
-          applyJdkInfo(jdkInfo);
-        });
         findJavaRuntimeEntries().then(data => {
           showJavaRuntimeEntries(data);
         });
-        break;
-      }
-      case "requestJdkInfo": {
-        let jdkInfo = await suggestOpenJdk(e.jdkVersion, e.jvmImpl);
-        applyJdkInfo(jdkInfo);
         break;
       }
       case "updateJavaHome": {
@@ -144,13 +136,6 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         break;
     }
   }));
-
-  function applyJdkInfo(jdkInfo: any) {
-    webviewPanel.webview.postMessage({
-      command: "applyJdkInfo",
-      jdkInfo: jdkInfo
-    });
-  }
 
   function showJavaRuntimeEntries(args: any) {
     webviewPanel.webview.postMessage({

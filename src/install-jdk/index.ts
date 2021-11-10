@@ -23,7 +23,7 @@ export class InstallJdkViewSerializer implements vscode.WebviewPanelSerializer {
 class InstallJdkPage {
 	public static instance: InstallJdkPage | undefined;
 	private static readonly viewType = WEBVIEW_ID;
-	private readonly _panel: vscode.WebviewPanel;
+	private _panel: vscode.WebviewPanel | undefined;
 	private readonly _extensionPath: string;
 	private _disposables: vscode.Disposable[] = [];
 
@@ -35,7 +35,7 @@ class InstallJdkPage {
 			vscode.ViewColumn.One;
 
 		if (InstallJdkPage.instance) {
-			InstallJdkPage.instance._panel.reveal();
+			InstallJdkPage.instance._panel?.reveal();
 		} else {
 			InstallJdkPage.instance = webviewPanel ?
 				new InstallJdkPage(extensionPath, webviewPanel) :
@@ -86,12 +86,12 @@ class InstallJdkPage {
 
 	private async doFetchAvailableReleases() {
 		const releases = await availableReleases();
-		this._panel.webview.postMessage({ command: "onDidFetchAvailableReleases", payload: releases });
+		this._panel?.webview.postMessage({ command: "onDidFetchAvailableReleases", payload: releases });
 	}
 
 	private async doFetchAsset(payload: { majorVersion: number }) {
 		const asset = await latestCompatibleAsset(payload?.majorVersion?.toString(), "hotspot");
-		this._panel.webview.postMessage({ command: "onDidFetchAsset", payload: asset });
+		this._panel?.webview.postMessage({ command: "onDidFetchAsset", payload: asset });
 	}
 
 	private async doDownloadTemurinJDK(payload: { url: string }) {
@@ -109,7 +109,8 @@ class InstallJdkPage {
 	public dispose() {
 		InstallJdkPage.instance = undefined;
 
-		this._panel.dispose();
+		this._panel?.dispose();
+		this._panel = undefined;
 
 		while (this._disposables.length) {
 			const x = this._disposables.pop();
