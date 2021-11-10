@@ -12,7 +12,7 @@ import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { ProjectType } from "../utils/webview";
 import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
-import { latestAssets } from "./utils/adoptiumApi";
+import { latestAssets } from "../utils/adoptiumApi";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
@@ -50,17 +50,9 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     switch (e.command) {
       case "onWillListRuntimes": {
-        suggestOpenJdk().then(jdkInfo => {
-          applyJdkInfo(jdkInfo);
-        });
         findJavaRuntimeEntries().then(data => {
           showJavaRuntimeEntries(data);
         });
-        break;
-      }
-      case "requestJdkInfo": {
-        let jdkInfo = await suggestOpenJdk(e.jdkVersion, e.jvmImpl);
-        applyJdkInfo(jdkInfo);
         break;
       }
       case "updateJavaHome": {
@@ -144,13 +136,6 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         break;
     }
   }));
-
-  function applyJdkInfo(jdkInfo: any) {
-    webviewPanel.webview.postMessage({
-      command: "applyJdkInfo",
-      jdkInfo: jdkInfo
-    });
-  }
 
   function showJavaRuntimeEntries(args: any) {
     webviewPanel.webview.postMessage({

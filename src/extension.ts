@@ -10,6 +10,7 @@ import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
 import { JavaGettingStartedViewSerializer } from "./getting-started";
+import { InstallJdkViewSerializer } from "./install-jdk";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { HelpViewType, showReleaseNotesOnStart } from "./misc";
 import { OverviewViewSerializer } from "./overview";
@@ -44,6 +45,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.welcome", new WelcomeViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.classpathConfiguration", new ClassPathConfigurationViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.installJdk", new InstallJdkViewSerializer(context)));
 
   const config = vscode.workspace.getConfiguration("java.help");
 
