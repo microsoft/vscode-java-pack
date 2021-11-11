@@ -24,7 +24,7 @@ interface State {
 export class ToolingJDKPanel extends React.Component<Props, State> {
   render = () => {
     const { javaHomeError } = this.props;
-    const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "Install a new JDK", "java.helper.openUrl", ["https://adoptium.net"]);
+    const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download", "java.installJdk");
 
     return (
       <div className="container">

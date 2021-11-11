@@ -66,7 +66,7 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
           </DataCell>
         </DataRow>
       ));
-    const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download from adoptium", "java.helper.openUrl", ["https://adoptium.net"]);
+    const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download", "java.installJdk");
     return (
       <div className="container">
         <h1>Configure Java Project Runtime</h1>
