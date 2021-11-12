@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as request from "request-promise-native";
-import architecture = require("arch");
 
 /**
  * 
@@ -111,9 +110,9 @@ export async function latestCompatibleAsset(featureVersion: string, jvmImpl: str
         os = "linux";
     }
 
-    let arch = architecture();
-    if (arch === "x86") {
-        arch = "x32";
+    let arch = process.arch;
+    if (arch === "arm64") {
+        arch = "aarch64";
     }
     return assets.find(a => a.binary.image_type === "jdk" && a.binary.architecture === arch && a.binary.os === os);
 }
