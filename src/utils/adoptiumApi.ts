@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
+import axios from "axios";
+import * as https from "https";
 
-import * as request from "request-promise-native";
+// workaround: certificate expired, will be fixed when vscode adopts Electron v15.1.0
+// see: https://github.com/node-fetch/node-fetch/issues/568#issuecomment-932435180
+https.globalAgent.options.rejectUnauthorized = false;
 
 /**
  * 
@@ -28,12 +32,8 @@ import * as request from "request-promise-native";
  */
 export async function availableReleases(): Promise<AdoptiumReleaseInfo> {
     const uri = "https://api.adoptium.net/v3/info/available_releases";
-    const response = await request.get({
-        uri,
-        json: true,
-        rejectUnauthorized: false 
-    })
-    return response;
+    const response = await axios.get(uri);
+    return response.data;
 }
 
 
@@ -89,14 +89,8 @@ export async function availableReleases(): Promise<AdoptiumReleaseInfo> {
  */
 export async function latestAssets(featureVersion: string, jvmImpl: string): Promise<AdoptiumAsset[]> {
     let uri = `https://api.adoptium.net/v3/assets/latest/${featureVersion}/${jvmImpl}`;
-    const response = await request.get({
-        uri,
-        json: true,
-        // workaround: certificate expired, fixed in Electron v15.1.0
-        // see: https://github.com/node-fetch/node-fetch/issues/568#issuecomment-932435180
-        rejectUnauthorized: false 
-    })
-    return response;
+    const response = await axios.get(uri);
+    return response.data;
 }
 
 export async function latestCompatibleAsset(featureVersion: string, jvmImpl: string): Promise<AdoptiumAsset | undefined> {
