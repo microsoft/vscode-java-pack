@@ -10,10 +10,6 @@ export async function getProjectType(fsPath: string): Promise<ProjectType> {
     if (isDefaultProject(fsPath)) {
         return ProjectType.Default;
     }
-    const dotProjectFile = path.join(fsPath, ".project");
-    if (!await fse.pathExists(dotProjectFile)) { // for invisible projects, .project file is located in workspace storage.
-      return ProjectType.UnmanagedFolder;
-    }
     const buildDotGradleFile = path.join(fsPath, "build.gradle");
     if (await fse.pathExists(buildDotGradleFile)) {
       return ProjectType.Gradle;
@@ -21,6 +17,10 @@ export async function getProjectType(fsPath: string): Promise<ProjectType> {
     const pomDotXmlFile = path.join(fsPath, "pom.xml");
     if (await fse.pathExists(pomDotXmlFile)) {
       return ProjectType.Maven;
+    }
+    const dotProjectFile = path.join(fsPath, ".project");
+    if (!await fse.pathExists(dotProjectFile)) { // for invisible projects, .project file is located in workspace storage.
+      return ProjectType.UnmanagedFolder;
     }
     return ProjectType.Others;
 }
