@@ -15,7 +15,7 @@ export async function javaGettingStartedCmdHandler(context: vscode.ExtensionCont
     return;
   }
 
-  javaGettingStartedView = vscode.window.createWebviewPanel("java.gettingStarted", "Java Getting Started", {
+  javaGettingStartedView = vscode.window.createWebviewPanel("java.gettingStarted", "Java Beginner Tips", {
     viewColumn: vscode.ViewColumn.One,
   }, {
     enableScripts: true,

@@ -212,7 +212,7 @@
       {
         "command": "java.gettingStarted",
         "category": "Java",
-        "title": "Getting Started"
+        "title": "Beginner Tips"
       },
       {
         "command": "java.extGuide",
@@ -248,7 +248,7 @@
           "enumDescriptions": [
             "Automatically pick the first experience view",
             "Present the Java Overview page",
-            "Present the Java Getting Started page",
+            "Present the Java Beginner Tips page",
             "Present the Java Help Center page",
             "Do not show any view"
           ],
