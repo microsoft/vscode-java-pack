@@ -45,7 +45,8 @@ const entries = Object.keys(packageJSON.dependencies).map((name, idx) => {
     
 });
 
-const depsWithLicense = entries.filter(e => e.name !== undefined && e.license !== undefined);
+const thirdPartyDeps = entries.filter(e => !e.url?.match(/microsoft/i));
+const depsWithLicense = thirdPartyDeps.filter(e => e.name !== undefined && e.license !== undefined);
 
 const toc = depsWithLicense.map((dep, idx) => {
     return `${idx + 1}. ${dep.name} (${dep.url})`;
