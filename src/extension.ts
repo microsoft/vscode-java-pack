@@ -3,23 +3,22 @@
 
 import * as vscode from "vscode";
 import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } from "vscode-extension-telemetry-wrapper";
-import { initialize as initUtils } from "./utils";
-import { initialize as initCommands } from "./commands";
-import { initialize as initRecommendations } from "./recommendation";
-import { showReleaseNotesOnStart, HelpViewType } from "./misc";
-import { initialize as initExp } from "./exp";
-import { OverviewViewSerializer } from "./overview";
-import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
-import { scheduleAction } from "./utils/scheduler";
-import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
-import { JavaGettingStartedViewSerializer } from "./getting-started";
-import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
+import { initialize as initCommands } from "./commands";
+import { initialize as initExp } from "./exp";
+import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
+import { JavaGettingStartedViewSerializer } from "./getting-started";
+import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
+import { HelpViewType, showReleaseNotesOnStart } from "./misc";
+import { OverviewViewSerializer } from "./overview";
 import { CodeActionProvider } from "./providers/CodeActionProvider";
-import { KEY_IS_WELCOME_PAGE_VIEWED, KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
-import { isWalkthroughEnabled } from "./utils/walkthrough";
+import { initialize as initRecommendations } from "./recommendation";
+import { initialize as initUtils } from "./utils";
+import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
+import { scheduleAction } from "./utils/scheduler";
+import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -47,15 +46,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.classpathConfiguration", new ClassPathConfigurationViewSerializer()));
 
   const config = vscode.workspace.getConfiguration("java.help");
-
-  // for control group where walkthrough is not enabled, present first view for once.
-  const walkthroughEnabled = await isWalkthroughEnabled();
-  if (walkthroughEnabled === false                            // control group
-    && !context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED)   // first time
-    && vscode.env.uiKind === vscode.UIKind.Desktop            // desktop only (no popups on Codespaces)
-  ) {
-    presentFirstView(context);
-  }
 
   if (config.get("firstView") !== HelpViewType.None && context.globalState.get(KEY_SHOW_WHEN_USING_JAVA)) {
     scheduleAction("showFirstView", true).then(() => {

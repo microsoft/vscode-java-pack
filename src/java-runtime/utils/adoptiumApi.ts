@@ -98,8 +98,6 @@ export async function latestAssets(featureVersion: string, jvmImpl: string): Pro
     return response;
 }
 
-
-
 interface AdoptiumReleaseInfo {
     available_lts_releases: number[];
     available_releases: number[];

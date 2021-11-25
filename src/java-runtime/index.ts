@@ -309,9 +309,9 @@ export async function suggestOpenJdk(jdkVersion: string = "openjdk17", impl: str
     os = "linux";
   }
 
-  let arch = architecture();
-  if (arch === "x86") {
-    arch = "x32";
+  let arch = process.arch;
+  if (arch === "arm64") {
+    arch = "aarch64";
   }
 
   const majorVersion = jdkVersion.replace(/^openjdk/, "");
