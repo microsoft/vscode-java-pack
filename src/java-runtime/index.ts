@@ -6,13 +6,11 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { getExtensionContext, loadTextFromFile } from "../utils";
 import { findJavaHomes, JAVAC_FILENAME, JavaRuntime, verifyJavaHome } from "./utils/findJavaRuntime";
-import architecture = require("arch");
 import { resolveRequirements } from "./utils/upstreamApi";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { ProjectType } from "../utils/webview";
 import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
-import { latestAssets } from "../utils/adoptiumApi";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: JavaRuntime[];
@@ -299,24 +297,4 @@ async function getRuntimeSpec(projectRootUri: string) {
     runtimePath,
     sourceLevel
   };
-}
-
-export async function suggestOpenJdk(jdkVersion: string = "openjdk17", impl: string = "hotspot") {
-  let os: string = process.platform;
-  if (os === "win32") {
-    os = "windows";
-  } else if (os === "darwin") {
-    os = "mac";
-  } else {
-    os = "linux";
-  }
-
-  let arch = architecture();
-  if (arch === "x86") {
-    arch = "x32";
-  }
-
-  const majorVersion = jdkVersion.replace(/^openjdk/, "");
-  const assets = await latestAssets(majorVersion, impl);
-  return assets.find(a => a.binary.image_type === "jdk" && a.binary.architecture === arch && a.binary.os === os);
 }
