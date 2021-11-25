@@ -1,6 +1,11 @@
 # Change Log
 
 ## 0.18.6
+### Fixed
+- Support to detect macOS with ARM chips.
+- Get correct project type.
+
+## 0.18.6
 ### Changed
 - Adopt Adoptium API v3 to download JDK 17. [#765](https://github.com/microsoft/vscode-java-pack/pull/765)
 
