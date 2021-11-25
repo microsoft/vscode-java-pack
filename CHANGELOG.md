@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.18.6
+## 0.18.7
 ### Fixed
 - Support to detect macOS with ARM chips.
 - Get correct project type.
