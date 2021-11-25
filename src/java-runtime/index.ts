@@ -6,7 +6,6 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { getExtensionContext, loadTextFromFile } from "../utils";
 import { findJavaHomes, JavaRuntime } from "./utils/findJavaRuntime";
-import architecture = require("arch");
 import { resolveRequirements } from "./utils/upstreamApi";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
