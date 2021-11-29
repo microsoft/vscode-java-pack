@@ -7,7 +7,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 import { XMLSerializer } from "xmldom";
-import { loadTextFromFile } from "../utils";
+import { getNonce } from "../utils";
 import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
 import { remoteProfileProvider, RemoteProfileProvider } from "./RemoteProfileProvider";
@@ -87,8 +87,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         this.webviewPanel.onDidDispose(() => {
             this.webviewPanel = undefined;
         });
-        const resourceUri = this.context.asAbsolutePath("./out/assets/formatter-settings/index.html");
-        this.webviewPanel.webview.html = await loadTextFromFile(resourceUri);
+        this.webviewPanel.webview.html = this.getHtmlForWebview(path.join(this.context.extensionPath, "out", "assets", "formatter-settings", "index.js"));;
         this.webviewPanel.webview.onDidReceiveMessage(async (e) => {
             switch (e.command) {
                 case "onWillInitialize":
@@ -148,6 +147,27 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         await this.checkRequirement();
     }
 
+    private getHtmlForWebview(scriptPath: string) {
+        const scriptPathOnDisk = vscode.Uri.file(scriptPath);
+        const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
+        // Use a nonce to whitelist which scripts can be run
+        const nonce = getNonce();
+        return `<!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+            <meta name="theme-color" content="#000000">
+            <title>Java Formatter Settings</title>
+          </head>
+          <body>
+            <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
+            <noscript>You need to enable JavaScript to run this app.</noscript>
+            <div id="formatterPanel"></div>
+          </body>
+          </html>`;
+    }
+
     private async checkRequirement(): Promise<boolean> {
         if (this.checkedRequirement) {
             return true;
@@ -192,7 +212,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 if (anwser === "Open Settings") {
                     openFormatterSettings();
                 }
-            })
+            });
             return false;
         }
         this.diagnosticCollection.set(document.uri, content.diagnostics);

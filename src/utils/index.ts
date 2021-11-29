@@ -77,3 +77,12 @@ export async function openExternalLinkFromWebview(webview: string, identifier: s
 export function isInsiders() {
   return vscode.env.appName.indexOf('Insider') > 0 || vscode.env.appName.indexOf('OSS') > 0;
 }
+
+export function getNonce() {
+  let text = "";
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
