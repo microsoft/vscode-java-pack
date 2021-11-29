@@ -4,7 +4,7 @@
 import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
 import * as webviewUI from "@vscode/webview-ui-toolkit";
 import React from 'react';
-import { WEBVIEW_ID } from '../../../install-jdk/constants';
+import { WEBVIEW_ID } from '../../constants';
 import { encodeExternalLinkWithTelemetry } from '../../../utils/webview';
 import { onWillReloadWindow } from '../vscode.api';
 import AdoptiumJDKPanel from './components/AdoptiumJDKPanel';

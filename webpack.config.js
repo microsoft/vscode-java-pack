@@ -10,12 +10,12 @@ module.exports = function (env, argv) {
     entry: {
       overview: './src/overview/assets/index.ts',
       'java-runtime': './src/java-runtime/assets/index.ts',
-      'getting-started': './src/getting-started/assets/index.ts',
+      'beginner-tips': './src/beginner-tips/assets/index.tsx',
       'ext-guide': './src/ext-guide/assets/index.ts',
       welcome: './src/welcome/assets/index.ts',
       classpath: './src/classpath/assets/index.tsx',
       'formatter-settings': './src/formatter-settings/assets/index.tsx',
-      'install-jdk': './src/install-jdk/asset/index.tsx'
+      'install-jdk': './src/install-jdk/assets/index.tsx'
     },
     module: {
       rules: [{
