@@ -9,7 +9,7 @@ import { initialize as initExp } from "./exp";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
-import { JavaGettingStartedViewSerializer } from "./getting-started";
+import { BeginnerTipsViewSerializer } from "./beginner-tips";
 import { InstallJdkViewSerializer } from "./install-jdk";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { HelpViewType, showReleaseNotesOnStart } from "./misc";
@@ -42,7 +42,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.extGuide", new JavaExtGuideViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.overview", new OverviewViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
-  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new JavaGettingStartedViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new BeginnerTipsViewSerializer(context)));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.welcome", new WelcomeViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.classpathConfiguration", new ClassPathConfigurationViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.installJdk", new InstallJdkViewSerializer(context)));
