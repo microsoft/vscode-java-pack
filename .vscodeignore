@@ -12,7 +12,5 @@ tslint.json
 webpack.config.ext.js
 webpack.config.js
 out/**/*.map
-out/assets/**/*.js
-!out/assets/install-jdk/index.js
 *.vsix
 scripts

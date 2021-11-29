@@ -3,7 +3,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { getExtensionContext, loadTextFromFile } from "../utils";
+import { getExtensionContext, getNonce } from "../utils";
 import * as fse from "fs-extra";
 import { ProjectInfo, ClasspathComponent, ClasspathViewException } from "./types";
 import _ from "lodash";
@@ -93,10 +93,31 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
         }
     })));
 
-    const resourceUri = context.asAbsolutePath("./out/assets/classpath/index.html");
-    classpathConfigurationPanel.webview.html = await loadTextFromFile(resourceUri);
+    classpathConfigurationPanel.webview.html = getHtmlForWebview(context.asAbsolutePath("./out/assets/classpath/index.js"));
 
     await checkRequirement();
+}
+
+function getHtmlForWebview(scriptPath: string) {
+    const scriptPathOnDisk = vscode.Uri.file(scriptPath);
+    const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
+    // Use a nonce to whitelist which scripts can be run
+    const nonce = getNonce();
+    return `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+        <meta name="theme-color" content="#000000">
+        <title>Classpath Configuration</title>
+    </head>
+    <body>
+        <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
+        <div id="content"></div>
+    </body>
+    
+    </html>
+    `;
 }
 
 async function checkRequirement(): Promise<boolean> {

@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { openExternalLinkFromWebview, webviewCmdLinkHandler } from '../utils';
+import { getNonce, openExternalLinkFromWebview, webviewCmdLinkHandler } from '../utils';
 import { availableReleases, latestCompatibleAsset } from '../utils/adoptiumApi';
 import { WEBVIEW_ID } from './constants';
 
@@ -145,13 +145,4 @@ class InstallJdkPage {
 			</body>
 			</html>`;
 	}
-}
-
-function getNonce() {
-	let text = "";
-	const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for (let i = 0; i < 32; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
 }

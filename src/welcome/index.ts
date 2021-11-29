@@ -4,7 +4,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
-import { getExtensionContext, loadTextFromFile } from "../utils";
+import { getExtensionContext, getNonce } from "../utils";
 import { KEY_IS_WELCOME_PAGE_VIEWED, KEY_SHOW_WHEN_USING_JAVA } from "../utils/globalState";
 
 let welcomeView: vscode.WebviewPanel | undefined;
@@ -66,8 +66,7 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
         light: vscode.Uri.file(path.join(context.extensionPath, "caption.light.svg")),
         dark: vscode.Uri.file(path.join(context.extensionPath, "caption.dark.svg"))
     };
-    const resourceUri = context.asAbsolutePath("./out/assets/welcome/index.html");
-    webviewPanel.webview.html = await loadTextFromFile(resourceUri);
+    webviewPanel.webview.html = getHtmlForWebview(context.asAbsolutePath("./out/assets/welcome/index.js"));
     context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
     context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage((message => {
         switch (message.command) {
@@ -87,6 +86,26 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
                 break;
         }
     })));
+}
+
+function getHtmlForWebview(scriptPath: string) {
+    const scriptPathOnDisk = vscode.Uri.file(scriptPath);
+    const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
+    // Use a nonce to whitelist which scripts can be run
+    const nonce = getNonce();
+    return `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+        <meta name="theme-color" content="#000000">
+        <title>Java Help Center</title>
+    </head>
+    <body>
+        <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
+        <div id="content"></div>
+    </body>
+    </html>`;
 }
 
 const setWelcomeVisibility = instrumentSimpleOperation("setWelcomeVisibility", (context: vscode.ExtensionContext, visibility: boolean) => {
