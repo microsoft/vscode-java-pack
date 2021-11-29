@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import React from 'react';
 
 const isMac: boolean = navigator.platform.toLowerCase().indexOf("darwin") === 0;

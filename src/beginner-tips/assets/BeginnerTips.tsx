@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import "./style.scss";
 import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
 import * as webviewUI from "@vscode/webview-ui-toolkit";
