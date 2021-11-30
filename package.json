@@ -350,7 +350,6 @@
     "ts-loader": "^9.2.6",
     "tslint": "^5.20.1",
     "typescript": "^3.7.5",
-    "url-loader": "^4.1.1",
     "webpack": "^5.64.4",
     "webpack-cli": "^4.9.1"
   },

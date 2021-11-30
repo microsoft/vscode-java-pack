@@ -47,11 +47,12 @@ module.exports = function (env, argv) {
         }]
       }, {
         test: /\.(jpg|png|svg|ico|icns)$/,
-        loader: 'url-loader',
-        options: {
-          limit: 200000,
-          esModule: false
-        }
+        type: 'asset',
+        parser: {
+          dataUrlCondition: {
+            maxSize: 200000,
+          },
+        },
       }, {
         test: /\.(css)$/,
         use: [{
