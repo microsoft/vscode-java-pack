@@ -69,46 +69,16 @@
         "steps": [
           {
             "id": "java.runtime",
-            "title": "Get your Java runtime ready",
-            "description": "The built-in configurator makes it easy to set up your preferred Java runtime.\n[Configure Java Runtime](command:toSide:java.runtime)",
+            "title": "Get your runtime ready",
+            "description": "%walkthrough.java.runtime%",
             "media": {
-              "image": "walkthrough/runtime.png",
-              "altText": "Configure Java Runtime with tabs for Project SDKs"
+              "markdown": "walkthrough/runtime.md"
             }
-          },
-          {
-            "id": "java.extGuide",
-            "title": "Support additional tools and frameworks",
-            "description": "Got additional support for major tool chains, frameworks and application servers.\n[Recommended Java Extensions](command:toSide:java.extGuide)",
-            "media": {
-              "image": "walkthrough/extGuide.png",
-              "altText": "Open Project Folder"
-            }
-          },
-          {
-            "id": "java.openProjectFolder",
-            "title": "Open project folder",
-            "description": "Open an existing folder that contains your Java project, or create a new folder.\n[Open Folder...](command:workbench.action.files.openFolder)\n[Create New Project...](command:java.project.create)",
-            "media": {
-              "image": "walkthrough/open-project.png",
-              "altText": "Open Project Folder"
-            },
-            "when": "!isMac && workspaceFolderCount == 0"
-          },
-          {
-            "id": "java.openProjectFolder.mac",
-            "title": "Open project folder",
-            "description": "Open an existing folder that contains your Java project, or create a new folder.\n[Open Folder...](command:workbench.action.files.openFileFolder)\n[Create New Project...](command:java.project.create)",
-            "media": {
-              "image": "walkthrough/open-project.png",
-              "altText": "Open Project Folder"
-            },
-            "when": "isMac && workspaceFolderCount == 0"
           },
           {
             "id": "java.showProjectExplorer",
-            "title": "Explore your project",
-            "description": "View classpaths and dependencies, and create new projects, packages and classes.\n[Show Java Projects](command:javaProjectExplorer.focus)",
+            "title": "Explore your projects",
+            "description": "%walkthrough.java.projects%",
             "media": {
               "image": "walkthrough/project-manager.png",
               "altText": "Project Explorer"
@@ -116,9 +86,9 @@
             "when": "java:projectManagerActivated"
           },
           {
-            "id": "java.showProjectExplorer.notActivated",
+            "id": "java.showProjectExplorer.inactive",
             "title": "Explore your project",
-            "description": "View classpaths and dependencies, and create new projects, packages and classes.",
+            "description": "%walkthrough.java.projects.inactive%",
             "media": {
               "image": "walkthrough/project-manager.png",
               "altText": "Project Explorer"
@@ -126,50 +96,30 @@
             "when": "!java:projectManagerActivated"
           },
           {
-            "id": "java.showDebugView",
-            "title": "Launch and debug your app",
-            "description": "The debugger will automatically find the entry point of your project, launch it and start debugging.\n[Show Run and Debug View](command:workbench.view.debug)\n[Learn More...](https://code.visualstudio.com/docs/java/java-debugging)",
+            "id": "java.debugAndTest",
+            "title": "Launch, debug and test",
+            "description": "%walkthrough.java.debugAndTest%",
             "media": {
-              "image": "walkthrough/debugger.png",
-              "altText": "Running and Debugging"
+              "image": "walkthrough/debugAndTest.png",
+              "altText": "Launch, debug and test"
             }
           },
           {
-            "id": "java.showTesting",
-            "title": "Run and debug tests",
-            "description": "The place to show all the test cases in your project. You can also run/debug your test cases from here.\n[Show Testing View](command:testExplorer.focus)",
+            "id": "java.extensions",
+            "title": "Additional tools and frameworks",
+            "description": "%walkthrough.java.extensions%",
             "media": {
-              "image": "walkthrough/testing.png",
-              "altText": "Testing"
-            },
-            "when": "java:testRunnerActivated"
-          },
-          {
-            "id": "java.showTesting.notActivated",
-            "title": "Run and debug tests",
-            "description": "The place to show all the test cases in your project. You can also run/debug your test cases from here.",
-            "media": {
-              "image": "walkthrough/testing.png",
-              "altText": "Testing"
-            },
-            "when": "!java:testRunnerActivated"
-          },
-          {
-            "id": "java.tutorial",
-            "title": "Quick start with Java",
-            "description": "Just starting with Java? Get hands on with these tutorials to learn the fundamentals of Java editing & debugging.\n[Open Tutorials](command:toSide:java.gettingStarted)",
-            "media": {
-              "image": "walkthrough/tutorials.png",
-              "altText": "Tutorials"
+              "svg": "walkthrough/extensions.svg",
+              "altText": "Extensions"
             }
           },
           {
-            "id": "java.showHelpCenter",
-            "title": "Java Help Center",
-            "description": "Discover more shortcuts and features on this page.\n[Open Java Help Center](command:toSide:java.welcome.fromWalkthrough)",
+            "id": "java.more",
+            "title": "Explore more Java resources",
+            "description": "%walkthrough.java.more%",
             "media": {
-              "image": "walkthrough/help-center.png",
-              "altText": "Java Help Center"
+              "image": "walkthrough/more.png",
+              "altText": "Explore more Java resources"
             }
           }
         ]
@@ -178,6 +128,11 @@
     "commands": [
       {
         "command": "java.installJdk",
+        "category": "Java",
+        "title": "Install New JDK"
+      },
+      {
+        "command": "java.installJdk.fromWalkthrough",
         "category": "Java",
         "title": "Install New JDK"
       },
@@ -274,6 +229,10 @@
         },
         {
           "command": "java.welcome.fromWalkthrough",
+          "when": "false"
+        },
+        {
+          "command": "java.installJdk.fromWalkthrough",
           "when": "false"
         }
       ],
