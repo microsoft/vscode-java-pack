@@ -44,7 +44,7 @@ export enum ExampleKind {
     WRAPPING_EXAMPLE = "Wrapping",
 }
 
-// two extra properties from xmldom package, see https://www.npmjs.com/package/xmldom
+// two extra properties from @xmldom/xmldom package, see https://www.npmjs.com/package/@xmldom/xmldom
 export interface DOMElement extends Element {
     lineNumber: number;
     columnNumber: number;

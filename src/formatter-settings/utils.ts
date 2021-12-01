@@ -4,10 +4,10 @@
 import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
-import axios from 'axios';
+import axios from "axios";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { DOMAttr, DOMElement, ProfileContent } from "./types";
-import { DOMParser, XMLSerializer } from "xmldom";
+import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { getDefaultValue, getSupportedProfileSettings, JavaConstants } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
 
