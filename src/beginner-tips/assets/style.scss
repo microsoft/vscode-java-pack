@@ -1,0 +1,48 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
+#root {
+    display: flex;
+    justify-content: center;
+
+    div.container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        max-width: 680px;
+    }
+} 
+
+blockquote.card-body {
+    margin-top: 2rem;
+    margin: 0 7px 0 5px;
+    padding: 2px 10px 2px 10px;
+    border-left: 5px solid;
+    border-color: rgba(0, 122, 204, 0.5);
+    background: rgba(127, 127, 127, 0.1);
+}
+
+.font-weight-bold {
+    font-weight: bold;
+}
+
+.font-weight-light {
+    font-weight: lighter;
+}
+
+a {
+    text-decoration: none;
+}
+
+h5 {
+    font-size: 1rem;
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+code {
+    font-family: var(--vscode-editor-font-family);
+}
+
+@import "../../../node_modules/@vscode/codicons/dist/codicon.css";
+@import "../../../node_modules/@vscode/codicons/dist/codicon.ttf";

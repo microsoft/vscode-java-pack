@@ -7,7 +7,7 @@ import { instrumentOperation, instrumentOperationAsVsCodeCommand } from "vscode-
 import { showClasspathConfigurationPage } from "../classpath/classpathConfigurationView";
 import { javaExtGuideCmdHandler } from "../ext-guide";
 import { javaFormatterSettingsEditorProvider } from "../formatter-settings";
-import { javaGettingStartedCmdHandler } from "../getting-started";
+import { javaGettingStartedCmdHandler } from "../beginner-tips";
 import { javaRuntimeCmdHandler } from "../java-runtime";
 import { overviewCmdHandler } from "../overview";
 import { webviewCmdLinkHandler } from "../utils";
