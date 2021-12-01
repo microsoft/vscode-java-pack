@@ -6,7 +6,7 @@ import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
-import { XMLSerializer } from "xmldom";
+import { XMLSerializer } from "@xmldom/xmldom";
 import { getNonce } from "../utils";
 import { Example, getSupportedVSCodeSettings, JavaConstants, SupportedSettings, VSCodeSettings } from "./FormatterConstants";
 import { FormatterConverter } from "./FormatterConverter";
@@ -87,7 +87,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         this.webviewPanel.onDidDispose(() => {
             this.webviewPanel = undefined;
         });
-        this.webviewPanel.webview.html = this.getHtmlForWebview(path.join(this.context.extensionPath, "out", "assets", "formatter-settings", "index.js"));;
+        this.webviewPanel.webview.html = this.getHtmlForWebview(path.join(this.context.extensionPath, "out", "assets", "formatter-settings", "index.js"));
         this.webviewPanel.webview.onDidReceiveMessage(async (e) => {
             switch (e.command) {
                 case "onWillInitialize":
