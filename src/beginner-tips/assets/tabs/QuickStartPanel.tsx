@@ -27,7 +27,7 @@ export default function QuickStartPanel() {
       </p>
       <h2 className="font-weight-light">Setup the Workspace</h2>
       <p>
-        VS Code Java works directly with <strong>folders</strong> that have source code. To setup the workspace, simply open a folder using File {">"}
+        VS Code Java works directly with <strong>folders</strong> that have source code. To setup the workspace, simply open a folder using File {">"}&nbsp;
         {openFolderLink}
       </p>
       <h2 className="font-weight-light">Create a Class</h2>
