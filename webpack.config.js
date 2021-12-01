@@ -97,7 +97,8 @@ module.exports = function (env, argv) {
     resolve: {
       modules: ['node_modules', path.resolve(__dirname, 'src')],
       mainFiles: ['index'],
-      extensions: ['.js', '.ts', '.json']
+      extensions: ['.js', '.ts', '.json'],
+      preferRelative: true
     },
     output: {
       filename: '[name].js',
