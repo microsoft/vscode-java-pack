@@ -21,7 +21,7 @@ export default function BeginnerTips() {
   return (
     <div className="container mt-5 mb-5">
       <div className="header">
-          <h1 className="font-weight-light">Coding and Debugging Tips for Beginners</h1>
+          <h1 className="font-weight-light">Tips for Beginners</h1>
       </div>
       <div className="row">
         <Panels activeid="tab-1">

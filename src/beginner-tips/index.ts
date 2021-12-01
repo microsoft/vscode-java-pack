@@ -7,7 +7,7 @@ import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { webviewCmdLinkHandler } from "../utils";
 
 const WEBVIEW_ID = "java.gettingStarted";
-const WEBVIEW_TITLE = "Java Beginner Tips";
+const WEBVIEW_TITLE = "Tips for Beginners";
 
 export async function javaGettingStartedCmdHandler(context: vscode.ExtensionContext, _operationId: string) {
   BeginnerTipsPage.createOrShow(context.extensionPath);
@@ -118,7 +118,7 @@ class BeginnerTipsPage {
 				<meta charset="utf-8">
 				<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
 				<meta name="theme-color" content="#000000">
-				<title>React App</title>
+				<title>${WEBVIEW_TITLE}</title>
 			</head>
 			<body>
 				<noscript>You need to enable JavaScript to run this app.</noscript>
