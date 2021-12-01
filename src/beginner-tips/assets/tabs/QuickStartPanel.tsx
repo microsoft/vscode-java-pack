@@ -9,7 +9,7 @@ export default function QuickStartPanel() {
   const codeSample = (
     <code>
       <span>{"class QuickStart {"}</span><br />
-      <span>&nbsp;&nbsp;&nbsp;&nbsp;{"public static void main(String[] args) {"}</span><br />
+      <span>&nbsp;&nbsp;&nbsp;&nbsp;{"public static void main (String[] args) {"}</span><br />
       <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{"System.out.println(\"Hello, World.\");"}</span><br />
       <span>&nbsp;&nbsp;&nbsp;&nbsp;{"}"}</span><br />
       <span>{"}"}</span><br />
