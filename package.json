@@ -367,7 +367,7 @@
     "@microsoft/fast-react-wrapper": "^0.1.17",
     "@reduxjs/toolkit": "^1.5.0",
     "@vscode/codicons": "0.0.25",
-    "@vscode/webview-ui-toolkit": "^0.8.4",
+    "@vscode/webview-ui-toolkit": "0.8.2",
     "@xmldom/xmldom": "^0.7.5",
     "axios": "^0.21.4",
     "bootstrap": "^4.6.1",
