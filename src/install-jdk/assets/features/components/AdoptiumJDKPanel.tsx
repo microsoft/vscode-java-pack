@@ -79,13 +79,20 @@ const AdoptiumJDKPanel = () => {
             Download
           </div>
           <div className='asset-info'>
-            <span> 
-              {asset.release_name}
-            </span>
-            <span> | </span>
-            <span>
-              {bytes(asset.binary.package?.size || 0, { unitSeparator: " " })}
-            </span>
+            <div>
+              <span>
+                {asset.binary.os}-{asset.binary.architecture}
+              </span>
+            </div>
+            <div>
+              <span>
+                {asset.release_name}
+              </span>
+              <span> | </span>
+              <span>
+                {bytes(asset.binary.package?.size || 0, { unitSeparator: " " })}
+              </span>
+            </div>
           </div>
         </div>
       </Button>

@@ -53,9 +53,12 @@
     "onWebviewPanel:java.extGuide",
     "onCommand:java.welcome",
     "onWebviewPanel:java.welcome",
+    "onCommand:java.installJdk",
+    "onWebviewPanel:java.installJdk",
     "onCommand:java.classpathConfiguration",
     "onWebviewPanel:java.classpathConfiguration",
-    "onCommand:java.formatterSettings"
+    "onCommand:java.formatterSettings",
+    "onWalkthrough:javaWelcome"
   ],
   "contributes": {
     "walkthroughs": [
