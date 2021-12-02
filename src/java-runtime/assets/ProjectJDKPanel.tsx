@@ -69,7 +69,7 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
     const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download", "java.installJdk");
     return (
       <div className="container">
-        <h1>Configure Java Project Runtime</h1>
+        <h1>Configure Runtime for Projects</h1>
         {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
         {
           projectEntries.length > 0 ?
