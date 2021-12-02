@@ -330,7 +330,7 @@
     "@types/expand-tilde": "^2.0.0",
     "@types/fs-extra": "^9.0.1",
     "@types/lodash": "^4.14.161",
-    "@types/minimatch": "^3.0.3",
+    "@types/minimatch": "^3.0.5",
     "@types/node": "^16.11.6",
     "@types/path-exists": "^3.0.0",
     "@types/react": "^17.0.0",
@@ -365,7 +365,7 @@
     "VisualStudioExptTeam.vscodeintellicode"
   ],
   "dependencies": {
-    "@iconify-icons/codicon": "^1.1.8",
+    "@iconify-icons/codicon": "^1.1.25",
     "@iconify/react": "^1.1.4",
     "@microsoft/fast-react-wrapper": "^0.1.8",
     "@reduxjs/toolkit": "^1.5.0",
