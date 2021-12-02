@@ -1,7 +1,7 @@
 {
     "walkthrough.java.runtime": "Make sure you have at least on Java runtime installed.\n[Install New JDK](command:toSide:java.installJdk.fromWalkthrough)",
 
-    "walkthrough.java.projects": "In Java Projects explorer, you can browse your projects, view classpaths and dependencies. \n[View Java Projects](command:javaProjectExplorer.focus)",
+    "walkthrough.java.projects": "Java Project Explorer helps you to manage your projects and dependencies. It also helps you to create new Java project, classes and packages. \n[View Java Projects](command:javaProjectExplorer.focus)",
 
     "walkthrough.java.projects.inactive": "In Java Projects explorer, you can browse your projects, view classpaths and dependencies. To get full feautures, you should create or open a folder containing Java projects.\n[Open Command Palette](command:workbench.action.showCommands)\n__Try searching for 'Create Java Project' or 'Open Folder'__",
 
