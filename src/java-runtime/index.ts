@@ -1,19 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { findRuntimes, IJavaRuntime } from "jdk-utils";
 import * as _ from "lodash";
 import * as path from "path";
 import * as vscode from "vscode";
 import { getExtensionContext, getNonce } from "../utils";
-import { findJavaHomes, JAVAC_FILENAME, JavaRuntime, verifyJavaHome } from "./utils/findJavaRuntime";
-import { resolveRequirements } from "./utils/upstreamApi";
-import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
-import { sourceLevelDisplayName } from "./utils/misc";
-import { ProjectType } from "../utils/webview";
 import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
+import { ProjectType } from "../utils/webview";
+import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
+import { JAVAC_FILENAME, verifyJavaHome } from "./utils/findJavaRuntime";
+import { sourceLevelDisplayName } from "./utils/misc";
+import { resolveRequirements } from "./utils/upstreamApi";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
-let javaHomes: JavaRuntime[];
+let javaHomes: IJavaRuntime[];
 
 export async function javaRuntimeCmdHandler(context: vscode.ExtensionContext, _operationId: string) {
   if (javaRuntimeView) {
@@ -211,13 +212,14 @@ export async function findJavaRuntimeEntries(): Promise<{
   javaHomeError?: string;
 }> {
   if (!javaHomes) {
-    javaHomes = await findJavaHomes();
+    const runtimes: IJavaRuntime[] = await findRuntimes({checkJavac: true, withVersion: true});
+    javaHomes = runtimes.filter(r => r.hasJavac);
   }
   const javaRuntimes: JavaRuntimeEntry[] = javaHomes.map(elem => ({
-    name: elem.home,
-    fspath: elem.home,
-    majorVersion: elem.version,
-    type: elem.sources.join(","),
+    name: elem.homedir,
+    fspath: elem.homedir,
+    majorVersion: elem.version?.major || 0,
+    type: "from jdk-utils"
   })).sort((a, b) => b.majorVersion - a.majorVersion);
 
   let javaDotHome;
