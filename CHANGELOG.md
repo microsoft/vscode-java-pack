@@ -1,5 +1,23 @@
 # Change Log
 
+## 0.19.0
+### Added
+- New command to `Install New JDK`. [#803](https://github.com/microsoft/vscode-java-pack/pull/803)
+
+### Changed
+- New UX of `Configure Java Runtime` page. [#791](https://github.com/microsoft/vscode-java-pack/pull/791)
+- Refine `Java: Getting Started` page
+  - Renamed as `Java: Tips for Beginners` to avoid confusion. [#809](https://github.com/microsoft/vscode-java-pack/issues/809)
+  - Adopted same styling with VS Code. [#831](https://github.com/microsoft/vscode-java-pack/pull/831)
+
+### Fixed
+- Cover more paths when searching for installed Java runtimes. [#596](https://github.com/microsoft/vscode-java-pack/issues/596)
+
+## 0.18.7
+### Fixed
+- Support to detect macOS with ARM chips.
+- Get correct project type.
+
 ## 0.18.6
 ### Changed
 - Adopt Adoptium API v3 to download JDK 17. [#765](https://github.com/microsoft/vscode-java-pack/pull/765)
