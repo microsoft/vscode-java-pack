@@ -106,7 +106,7 @@
           },
           {
             "id": "java.extensions",
-            "title": "Additional tools and frameworks",
+            "title": "Extensions for additional tools and frameworks",
             "description": "%walkthrough.java.extensions%",
             "media": {
               "svg": "walkthrough/extensions.svg",

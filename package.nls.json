@@ -1,5 +1,5 @@
 {
-    "walkthrough.java.runtime": "The extension pack for Java requires at least one Java runtime to be installed.\n[Install JDK](command:toSide:java.installJdk.fromWalkthrough)",
+    "walkthrough.java.runtime": "The Extension Pack for Java requires at least one Java runtime to be installed.\n[Install JDK](command:toSide:java.installJdk.fromWalkthrough)",
 
     "walkthrough.java.projects": "Java Project Explorer helps you to manage your projects and dependencies. It also helps you to create new Java project, classes and packages. \n[View Java Projects](command:javaProjectExplorer.focus)",
 
@@ -9,5 +9,5 @@
 
     "walkthrough.java.extensions": "Install extensions to support additional frameworks such as Spring Boot, Application Servers, Keymaps and so on.\n[Browse Recommended Extensions](command:toSide:java.extGuide)",
 
-    "walkthrough.java.more": "- if you want to run your project with a specific runtime, you can [Configure Java Runtime](command:toSide:java.runtime).\n\n- 🎉 Visit [Dev Blogs](https://devblogs.microsoft.com/?s=Java+on+Visual+Studio+Code) to keep up-to-date with our latest product updates and announcements.\n\n- ✨ Discover more shortcuts and features in [Help Center](command:toSide:java.welcome.fromWalkthrough) or check Documentation for tips and troubleshooting.\n\n- Report issues and feedback at our [Github repository](https://github.com/microsoft/vscode-java-pack/issues/new/choose)"
+    "walkthrough.java.more": "- If you want to run your project with a specific runtime, you can [Configure Java Runtime](command:toSide:java.runtime).\n\n- 🎉 Visit [Dev Blogs](https://devblogs.microsoft.com/?s=Java+on+Visual+Studio+Code) to keep up-to-date with our latest product updates and announcements.\n\n- ✨ Discover more shortcuts and features in [Help Center](command:toSide:java.welcome.fromWalkthrough) or check Documentation for tips and troubleshooting.\n\n- Report issues and feedback at our [Github repository](https://github.com/microsoft/vscode-java-pack/issues/new/choose)."
 }
