@@ -64,8 +64,8 @@
     "walkthroughs": [
       {
         "id": "javaWelcome",
-        "title": "Dive into Java Development",
-        "description": "Your first steps to set up powerful Java tools in a lightweight, performant editor!",
+        "title": "%walkthrough.title%",
+        "description": "%walkthrough.description%",
         "steps": [
           {
             "id": "java.runtime",
