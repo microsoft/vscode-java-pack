@@ -1,13 +1,13 @@
 {
-    "walkthrough.java.runtime": "Make sure you have at least on Java runtime installed.\n[Install New JDK](command:toSide:java.installJdk.fromWalkthrough)",
+    "walkthrough.java.runtime": "The extension pack for Java requires at least one Java runtime to be installed.\n[Install JDK](command:toSide:java.installJdk.fromWalkthrough)",
 
     "walkthrough.java.projects": "Java Project Explorer helps you to manage your projects and dependencies. It also helps you to create new Java project, classes and packages. \n[View Java Projects](command:javaProjectExplorer.focus)",
 
-    "walkthrough.java.projects.inactive": "In Java Projects explorer, you can browse your projects, view classpaths and dependencies. To get full feautures, you should create or open a folder containing Java projects.\n[Open Command Palette](command:workbench.action.showCommands)\n__Try searching for 'Create Java Project' or 'Open Folder'__",
+    "walkthrough.java.projects.inactive": "Java Project Explorer helps you to manage your projects and dependencies. Create a new project or open an existing folder to see the full features.\n[Open Command Palette](command:workbench.action.showCommands)\n__Try searching for 'Create Java Project' or 'Open Folder'__",
 
     "walkthrough.java.debugAndTest":"The debugger will automatically find the entry point of your project, launch it and start debugging. [Learn More...](https://code.visualstudio.com/docs/java/java-debugging)\nThe [Testing View](command:testExplorer.focus) show all the test cases in your project. You can also run/debug your test cases from here. [Learn More...](https://code.visualstudio.com/docs/java/java-testing)\n[Show Run and Debug View](command:workbench.view.debug)",
 
-    "walkthrough.java.extensions": "Additional support for major toolchains, frameworks and application servers.\n[Browse Recommended Extensions](command:toSide:java.extGuide)",
+    "walkthrough.java.extensions": "Install extensions to support additional frameworks such as Spring Boot, Application Servers, Keymaps and so on.\n[Browse Recommended Extensions](command:toSide:java.extGuide)",
 
-    "walkthrough.java.more": "- Particularly if you want to run your project with a specific runtime, you can [Configure Java Runtime](command:toSide:java.runtime).\n\n- 🎉 Take a look at our [devblogs](akamsLinkToBlogs) for detailed release notes.\n\n- ✨ Discover more shortcuts and features in [Help Center](command:toSide:java.welcome.fromWalkthrough) or check Documentation for tips and troubleshooting."
+    "walkthrough.java.more": "- if you want to run your project with a specific runtime, you can [Configure Java Runtime](command:toSide:java.runtime).\n\n- 🎉 Visit [Dev Blogs](https://devblogs.microsoft.com/?s=Java+on+Visual+Studio+Code) to keep up-to-date with our latest product updates and announcements.\n\n- ✨ Discover more shortcuts and features in [Help Center](command:toSide:java.welcome.fromWalkthrough) or check Documentation for tips and troubleshooting.\n\n- Report issues and feedback at our [Github repository](https://github.com/microsoft/vscode-java-pack/issues/new/choose)"
 }
