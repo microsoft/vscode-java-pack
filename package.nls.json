@@ -5,7 +5,7 @@
 
     "walkthrough.java.projects": "Java Project Explorer helps you to manage your projects and dependencies. It also helps you to create new Java project, classes and packages. \n[View Java Projects](command:javaProjectExplorer.focus)",
 
-    "walkthrough.java.projects.inactive": "Java Project Explorer helps you to manage your projects and dependencies. Create a new project or open an existing folder to see the full features.\n[Open Command Palette](command:workbench.action.showCommands)\n__Try searching for 'Create Java Project' or 'Open Folder'__",
+    "walkthrough.java.projects.inactive": "Java Project Explorer helps you to manage your projects and dependencies. Create a new project or open an existing folder to see the full features.\n[Open Command Palette](command:workbench.action.quickOpen?%22>java%22)\n__Try searching for 'Create Java Project' or 'Open Folder'__",
 
     "walkthrough.java.debugAndTest":"Run and debug your application using the debugger. [Learn More...](https://code.visualstudio.com/docs/java/java-debugging)\nThe [Testing Explorer](command:testExplorer.focus) allows you to view, run and manage all test cases in your project. [Learn More...](https://code.visualstudio.com/docs/java/java-testing)\n[Show Run and Debug View](command:workbench.view.debug)",
 

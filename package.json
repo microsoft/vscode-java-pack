@@ -83,7 +83,7 @@
               "image": "walkthrough/project-manager.png",
               "altText": "Project Explorer"
             },
-            "when": "java:projectManagerActivated"
+            "when": "java:projectManagerActivated && workspaceFolderCount > 0"
           },
           {
             "id": "java.showProjectExplorer.inactive",
@@ -93,7 +93,7 @@
               "image": "walkthrough/project-manager.png",
               "altText": "Project Explorer"
             },
-            "when": "!java:projectManagerActivated"
+            "when": "!java:projectManagerActivated || workspaceFolderCount == 0"
           },
           {
             "id": "java.debugAndTest",
