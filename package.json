@@ -118,7 +118,7 @@
             "title": "Explore more Java resources",
             "description": "%walkthrough.java.more%",
             "media": {
-              "image": "walkthrough/more.png",
+              "svg": "walkthrough/ok.svg",
               "altText": "Explore more Java resources"
             }
           }
