@@ -80,7 +80,7 @@
             "title": "Explore your projects",
             "description": "%walkthrough.java.projects%",
             "media": {
-              "image": "walkthrough/project-manager.png",
+              "svg": "walkthrough/projects.svg",
               "altText": "Project Explorer"
             },
             "when": "java:projectManagerActivated && workspaceFolderCount > 0"
@@ -90,7 +90,7 @@
             "title": "Explore your project",
             "description": "%walkthrough.java.projects.inactive%",
             "media": {
-              "image": "walkthrough/project-manager.png",
+              "svg": "walkthrough/projects.svg",
               "altText": "Project Explorer"
             },
             "when": "!java:projectManagerActivated || workspaceFolderCount == 0"
@@ -100,7 +100,7 @@
             "title": "Launch, debug and test",
             "description": "%walkthrough.java.debugAndTest%",
             "media": {
-              "image": "walkthrough/debugAndTest.png",
+              "svg": "walkthrough/debugAndTest.svg",
               "altText": "Launch, debug and test"
             }
           },
