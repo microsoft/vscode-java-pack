@@ -77,7 +77,13 @@ export async function resolveRequirements(): Promise<{
                 } else if (javaHome = (await findDefaultRuntimeFromSettings() ?? "")) {
                     javaVersion = await getMajorVersion(javaHome);
                 } else {
-                    invalidJavaHome(reject, "Please download and install a JDK to compile your project. You can configure your projects with different JDKs by the setting ['java.configuration.runtimes'](https://github.com/redhat-developer/vscode-java/wiki/JDK-Requirements#java.configuration.runtimes)");
+                    /**
+                     * Originally it was:
+                     * invalidJavaHome(reject, "Please download and install a JDK to compile your project. You can configure your projects with different JDKs by the setting ['java.configuration.runtimes'](https://github.com/redhat-developer/vscode-java/wiki/JDK-Requirements#java.configuration.runtimes)");
+                     * 
+                     * here we focus on tooling jre, so we swallow the error.
+                     * 
+                     */
                 }
             }
         }
