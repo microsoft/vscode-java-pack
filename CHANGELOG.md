@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.20.0
+### Changed
+- Simplify steps of getting started walkthrough. [#679](https://github.com/microsoft/vscode-java-pack/issues/679)
+- Update mechanism to validate required Java runtimes. [#851](https://github.com/microsoft/vscode-java-pack/pull/851)
+
 ## 0.19.0
 ### Added
 - New command to `Install New JDK`. [#803](https://github.com/microsoft/vscode-java-pack/pull/803)
