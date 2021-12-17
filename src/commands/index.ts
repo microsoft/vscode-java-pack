@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { installJDKCmdHandler } from "../install-jdk";
+import { showInstallJdkWebview, showInstallJdkWebviewBeside } from "../install-jdk";
 import * as vscode from "vscode";
 import { instrumentOperation, instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
 import { showClasspathConfigurationPage } from "../classpath/classpathConfigurationView";
@@ -33,7 +33,8 @@ export function initialize(context: vscode.ExtensionContext) {
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.formatterSettings", javaFormatterSettingsEditorProvider.showFormatterSettingsEditor, javaFormatterSettingsEditorProvider));
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.formatterSettings.showTextEditor", javaFormatterSettingsEditorProvider.reopenWithTextEditor));
   registerCommandHandler(context, "java.classpathConfiguration", showClasspathConfigurationPage);
-  registerCommandHandler(context, "java.installJdk", installJDKCmdHandler);
+  registerCommandHandler(context, "java.installJdk", showInstallJdkWebviewBeside);
+  registerCommandHandler(context, "java.installJdk.fromWalkthrough", showInstallJdkWebview);
 }
 
 type CommandHandler = (context: vscode.ExtensionContext, operationId: string, ...args: any[]) => any;

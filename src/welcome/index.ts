@@ -29,11 +29,19 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, _oper
         welcomeView.reveal();
         fetchInitProps(context);
     } else {
-        const viewColumn = options?.openBeside ? vscode.ViewColumn.Beside : vscode.ViewColumn.Active;
+		let column = vscode.ViewColumn.Active;
+		if (options?.openBeside) {
+			// "smart" Beside
+			const ate = vscode.window.activeTextEditor;
+			column = (ate === undefined || ate.viewColumn === vscode.ViewColumn.One) ?
+				vscode.ViewColumn.Two :
+				vscode.ViewColumn.One;
+		}
+
         welcomeView = vscode.window.createWebviewPanel(
             "java.welcome",
             "Java Help Center",
-            viewColumn,
+            column,
             {
                 enableScripts: true,
                 enableCommandUris: true,

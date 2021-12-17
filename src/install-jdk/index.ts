@@ -8,14 +8,20 @@ import { availableReleases, latestCompatibleAsset } from '../utils/adoptiumApi';
 import { WEBVIEW_ID } from './constants';
 
 
-export function installJDKCmdHandler(context: vscode.ExtensionContext, _operationId?: string) {
+export function showInstallJdkWebview(context: vscode.ExtensionContext, _operationId?: string) {
 	InstallJdkPage.createOrShow(context.extensionPath);
+}
+
+export function showInstallJdkWebviewBeside(context: vscode.ExtensionContext, _operationId?: string) {
+	InstallJdkPage.createOrShow(context.extensionPath, {
+		beside: true
+	});
 }
 
 export class InstallJdkViewSerializer implements vscode.WebviewPanelSerializer {
 	constructor(private context: vscode.ExtensionContext) { }
 	async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, _state: unknown) {
-		InstallJdkPage.createOrShow(this.context.extensionPath, webviewPanel);
+		InstallJdkPage.createOrShow(this.context.extensionPath, {webviewPanel});
 	}
 
 }
@@ -27,18 +33,25 @@ class InstallJdkPage {
 	private readonly _extensionPath: string;
 	private _disposables: vscode.Disposable[] = [];
 
-	public static createOrShow(extensionPath: string, webviewPanel?: vscode.WebviewPanel) {
-		// "smart" Beside
-		const ate = vscode.window.activeTextEditor;
-		const column = (ate === undefined || ate.viewColumn === vscode.ViewColumn.One) ?
-			vscode.ViewColumn.Two :
-			vscode.ViewColumn.One;
+	public static createOrShow(extensionPath: string, options?: {
+		webviewPanel?: vscode.WebviewPanel;
+		beside?: boolean;
+	}) {
+		
+		let column = vscode.ViewColumn.Active;
+		if (options?.beside) {
+			// "smart" Beside
+			const ate = vscode.window.activeTextEditor;
+			column = (ate === undefined || ate.viewColumn === vscode.ViewColumn.One) ?
+				vscode.ViewColumn.Two :
+				vscode.ViewColumn.One;
+		}
 
 		if (InstallJdkPage.instance) {
 			InstallJdkPage.instance._panel?.reveal();
 		} else {
-			InstallJdkPage.instance = webviewPanel ?
-				new InstallJdkPage(extensionPath, webviewPanel) :
+			InstallJdkPage.instance = options?.webviewPanel ?
+				new InstallJdkPage(extensionPath, options.webviewPanel) :
 				new InstallJdkPage(extensionPath, column);
 		}
 	}
@@ -60,6 +73,10 @@ class InstallJdkPage {
 			});
 		}
 
+		this._panel.iconPath = {
+			light: vscode.Uri.file(path.join(extensionPath, "caption.light.svg")),
+			dark: vscode.Uri.file(path.join(extensionPath, "caption.dark.svg"))
+		};
 		this._panel.webview.html = this._getHtmlForWebview();
 
 		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);

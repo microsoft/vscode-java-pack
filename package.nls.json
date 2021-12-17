@@ -1,0 +1,15 @@
+{
+    "walkthrough.title": "Get Started with Java Development",
+    "walkthrough.description": "Your first steps to set up powerful Java tools in a lightweight, performant editor!",
+    "walkthrough.java.runtime": "The Extension Pack for Java requires at least one Java runtime to be installed.\n[Install JDK](command:toSide:java.installJdk.fromWalkthrough)",
+
+    "walkthrough.java.projects": "Java Project Explorer helps you to manage your projects and dependencies. It also helps you to create new Java project, classes and packages. \n[View Java Projects](command:javaProjectExplorer.focus)",
+
+    "walkthrough.java.projects.inactive": "Java Project Explorer helps you to manage your projects and dependencies. Create a new project or open an existing folder to see the full features.\n[Open Command Palette](command:workbench.action.quickOpen?%22>java%22)\n__Try searching for 'Create Java Project' or 'Open Folder'__",
+
+    "walkthrough.java.debugAndTest":"Run and debug your application using the debugger. [Learn More...](https://aka.ms/java-walkthrough-debug)\nThe [Testing Explorer](command:testExplorer.focus) allows you to view, run and manage all test cases in your project. [Learn More...](https://aka.ms/java-walkthrough-test)\n[Show Run and Debug View](command:workbench.view.debug)",
+
+    "walkthrough.java.extensions": "Install extensions to support additional frameworks such as Spring Boot, Application Servers, key mappings and so on.\n[Browse Recommended Extensions](command:toSide:java.extGuide)",
+
+    "walkthrough.java.more": "- 🎉 If you want to run your project with a specific runtime, you can [Configure Java Runtime](command:toSide:java.runtime).\n\n- 🎉 Visit [Dev Blogs](https://aka.ms/java-walkthrough-devblogs) to keep up-to-date with our latest product updates and announcements.\n\n- ✨ Discover more shortcuts and features in [Help Center](command:toSide:java.welcome.fromWalkthrough) or check documentation for tips and troubleshooting.\n\n- ✨ Report issues and feedback at our [Github repository](https://aka.ms/java-walkthrough-issue)."
+}
