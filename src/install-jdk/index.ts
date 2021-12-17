@@ -73,6 +73,10 @@ class InstallJdkPage {
 			});
 		}
 
+		this._panel.iconPath = {
+			light: vscode.Uri.file(path.join(extensionPath, "caption.light.svg")),
+			dark: vscode.Uri.file(path.join(extensionPath, "caption.dark.svg"))
+		};
 		this._panel.webview.html = this._getHtmlForWebview();
 
 		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);

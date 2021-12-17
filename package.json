@@ -139,12 +139,12 @@
       {
         "command": "java.welcome",
         "category": "Java",
-        "title": "Help Center (Welcome)"
+        "title": "Help Center"
       },
       {
         "command": "java.welcome.fromWalkthrough",
         "category": "Java",
-        "title": "Help Center (Welcome)"
+        "title": "Help Center"
       },
       {
         "command": "java.classpathConfiguration",
