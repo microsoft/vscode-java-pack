@@ -196,7 +196,7 @@ export async function validateJavaRuntime() {
   // * option b) use the same way to check java_home as vscode-java
   try {
     const runtime = await resolveRequirements();
-    if (runtime.java_version >=11 && runtime.java_home) {
+    if (runtime.tooling_jre_version >=11 && runtime.tooling_jre) {
       return true;
     }
   } catch (error) {
@@ -226,8 +226,8 @@ export async function findJavaRuntimeEntries(): Promise<{
   let javaHomeError;
   try {
     const runtime = await resolveRequirements();
-    javaDotHome = runtime.java_home;
-    const javaVersion = runtime.java_version;
+    javaDotHome = runtime.tooling_jre;
+    const javaVersion = runtime.tooling_jre_version;
     if (!javaVersion || javaVersion < 11) {
       javaHomeError = `Java 11 or more recent is required by the Java language support (redhat.java) extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
     }

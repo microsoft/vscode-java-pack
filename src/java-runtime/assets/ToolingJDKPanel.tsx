@@ -29,7 +29,7 @@ export class ToolingJDKPanel extends React.Component<Props, State> {
     return (
       <div className="container">
         <h1>Configure Runtime for Language Server</h1>
-        <div className="warning-box"><i className="codicon codicon-warning"></i>Java Langauge Server requires a JDK 11+ to launch itself.</div>
+        <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK 11+ to launch itself.</div>
 
         {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
 
