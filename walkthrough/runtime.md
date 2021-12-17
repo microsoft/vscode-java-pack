@@ -11,7 +11,9 @@ java -version
 You should see something similar to the following:
 
 ```
-openjdk version "11.0.11" 2021-04-20
+java version "1.8.0_311"
+Java(TM) SE Runtime Environment (build 1.8.0_311-b11)
+Java HotSpot(TM) 64-Bit Server VM (build 25.311-b11, mixed mode)
 ```
 
-The detailed output will be based on the JDK you install
+The detailed output will be based on the JDK you install.
