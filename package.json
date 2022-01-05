@@ -302,7 +302,6 @@
     "bytes": "^3.1.1",
     "css-loader": "^6.5.1",
     "file-loader": "^6.2.0",
-    "node-sass": "^6.0.1",
     "postcss": "^8.4.5",
     "postcss-loader": "^6.2.1",
     "process": "0.11.10",
