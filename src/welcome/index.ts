@@ -124,12 +124,13 @@ const setFirstTimeRun = (context: vscode.ExtensionContext, firstTimeRun: boolean
     context.globalState.update(KEY_IS_WELCOME_PAGE_VIEWED, !firstTimeRun);
 };
 
-const fetchInitProps = async (context: vscode.ExtensionContext) => {
+export const fetchInitProps = async (context: vscode.ExtensionContext) => {
     welcomeView?.webview.postMessage({
         command: "onDidFetchInitProps",
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
             firstTimeRun: context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true,
+            isAwtDisabled: isAwtDisabled(),
         }
     });
     setFirstTimeRun(context, false);
@@ -141,7 +142,15 @@ const showTourPage = async (context: vscode.ExtensionContext) => {
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
             firstTimeRun: true,
+            isAwtDisabled: isAwtDisabled(),
         }
     });
     setFirstTimeRun(context, false);
 };
+
+function isAwtDisabled(): boolean {
+    const filteredTypes: string[] = vscode.workspace.getConfiguration("java.completion").get<string[]>("filteredTypes") || [];
+    return filteredTypes.some((type: string) => {
+        return type.startsWith("java.awt.");
+    });
+}

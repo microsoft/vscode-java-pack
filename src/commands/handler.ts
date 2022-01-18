@@ -7,6 +7,7 @@ import { validateAndRecommendExtension } from "../recommendation";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getReleaseNotesEntries, findLatestReleaseNotes } from "../utils";
 import { gt, eq } from "semver";
+import { fetchInitProps } from "../welcome/index";
 
 export async function createMavenProjectCmdHandler(_context: vscode.ExtensionContext) {
   if (!await validateAndRecommendExtension("vscjava.vscode-maven", "Maven extension is recommended to help create Java projects and work with custom goals.", true)) {
@@ -103,4 +104,26 @@ export async function showReleaseNotesHandler(context: vscode.ExtensionContext, 
   });
 
   return await showReleaseNotes(context, operationId, version);
+}
+
+export async function toggleAwtDevelopmentHandler(context: vscode.ExtensionContext, _operationId: string, enable: boolean) {
+  const workspaceConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration("java.completion");
+  const disabledList: string[] = workspaceConfig.get<string[]>("filteredTypes") || [];
+  const filteredTypes: string[] = disabledList.filter((type) => {
+    return !type.startsWith("java.awt.");
+  });
+
+  if (!enable) {
+    filteredTypes.push("java.awt.*");
+  }
+
+  try {
+    await workspaceConfig.update("filteredTypes", filteredTypes, vscode.ConfigurationTarget.Workspace);
+  } catch (e) {
+    vscode.window.showErrorMessage((e as Error).message);
+    return;
+  }
+
+  fetchInitProps(context);
+  vscode.window.showInformationMessage(`Java AWT development is ${enable ? "enabled" : "disabled"}.`);
 }
