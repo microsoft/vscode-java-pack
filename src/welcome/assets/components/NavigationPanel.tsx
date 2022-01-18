@@ -23,7 +23,7 @@ export default class NavigationPanel extends React.Component<{
       icon: <Icon className="codicon" icon={gearIcon} />,
       actions: [
         { name: "Configure Java Runtime", command: "java.runtime" },
-        { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] as any[] },
+        { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] },
         { name: "Install Extensions...", command: "java.extGuide" },
         { name: "Configure Formatter Settings", command: "java.formatterSettings" }
       ]
@@ -45,7 +45,8 @@ export default class NavigationPanel extends React.Component<{
         { name: "Tutorial: Running and Debugging", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-debugging"] },
         { name: "Tutorial: Testing", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] },
         { name: "Configure Sources, Dependencies, Output Folder...", command: "java.classpathConfiguration" },
-        { name: "Quick Start: Jupyter Notebook for Java", command: "java.helper.openUrl", args: ["https://github.com/microsoft/vscode-java-pack/wiki/Quick-Start:-Jupyter-Notebook-for-Java"] }
+        { name: "Quick Start: Jupyter Notebook for Java", command: "java.helper.openUrl", args: ["https://github.com/microsoft/vscode-java-pack/wiki/Quick-Start:-Jupyter-Notebook-for-Java"] },
+        { name: "Enable AWT Development", command: "java.toggleAwtDevelopment", args: [true] },
       ]
     },
   ];
@@ -56,18 +57,11 @@ export default class NavigationPanel extends React.Component<{
     const {isAwtDisabled} = this.props;
     const studentSection = _.find(this.groups, {name: "Student"});
     if (studentSection) {
-      studentSection.actions = studentSection.actions.filter((action) => {
-        return action.command !== "java.toggleAwtDevelopment";
-      });
-  
-      if (isAwtDisabled) {
-        studentSection.actions.push({
-          name: "Enable AWT Development", command: "java.toggleAwtDevelopment", args: [true]
-        });
-      } else {
-        studentSection.actions.push({
-          name: "Disable AWT Development", command: "java.toggleAwtDevelopment", args: [false]
-        });
+      for (const action of studentSection.actions) {
+        if (action.command === "java.toggleAwtDevelopment") {
+          action.name = `${isAwtDisabled ? "Enable" : "Disable"} AWT Development`;
+          action.args = [isAwtDisabled];
+        }
       }
     }
 
