@@ -12,7 +12,7 @@ import { javaRuntimeCmdHandler } from "../java-runtime";
 import { overviewCmdHandler } from "../overview";
 import { webviewCmdLinkHandler } from "../utils";
 import { showWelcomeWebview, showWelcomeWebviewBeside } from "../welcome";
-import { createMavenProjectCmdHandler, createMicroProfileStarterProjectCmdHandler, createQuarkusProjectCmdHandler, createSpringBootProjectCmdHandler, installExtensionCmdHandler, openUrlCmdHandler, showExtensionCmdHandler, showReleaseNotesHandler } from "./handler";
+import { createMavenProjectCmdHandler, createMicroProfileStarterProjectCmdHandler, createQuarkusProjectCmdHandler, createSpringBootProjectCmdHandler, installExtensionCmdHandler, openUrlCmdHandler, showExtensionCmdHandler, showReleaseNotesHandler, toggleAwtDevelopmentHandler } from "./handler";
 
 export function initialize(context: vscode.ExtensionContext) {
   registerCommandHandler(context, "java.overview", overviewCmdHandler);
@@ -35,6 +35,7 @@ export function initialize(context: vscode.ExtensionContext) {
   registerCommandHandler(context, "java.classpathConfiguration", showClasspathConfigurationPage);
   registerCommandHandler(context, "java.installJdk", showInstallJdkWebviewBeside);
   registerCommandHandler(context, "java.installJdk.fromWalkthrough", showInstallJdkWebview);
+  registerCommandHandler(context, "java.toggleAwtDevelopment", toggleAwtDevelopmentHandler);
 }
 
 type CommandHandler = (context: vscode.ExtensionContext, operationId: string, ...args: any[]) => any;

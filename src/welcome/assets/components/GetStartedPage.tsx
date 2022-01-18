@@ -13,6 +13,7 @@ import TourPage from "./TourPage";
 export class GetStartedPage extends React.Component<{
     showWhenUsingJava: boolean,
     firstTimeRun: boolean,
+    isAwtDisabled: boolean,
 }> {
 
     render() {
@@ -25,7 +26,7 @@ export class GetStartedPage extends React.Component<{
     }
 
     renderWelcomePage() {
-        const {showWhenUsingJava} = this.props;
+        const {showWhenUsingJava, isAwtDisabled} = this.props;
         return (
             <Container fluid className="root">
                 <Row className="mb-4">
@@ -40,7 +41,7 @@ export class GetStartedPage extends React.Component<{
                 </Row>
                 <Row className="mb-4">
                     <Col>
-                        <NavigationPanel />
+                        <NavigationPanel isAwtDisabled={isAwtDisabled}/>
                     </Col>
                 </Row>
                 <Row className="mb-4 footer">

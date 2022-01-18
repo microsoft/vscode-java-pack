@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as _ from "lodash";
 import Tabs from "react-bootstrap/Tabs";
 import Tab from "react-bootstrap/Tab";
 import React from "react";
@@ -13,14 +14,16 @@ import { ListGroup } from "react-bootstrap";
 import { reportTabSwitch, WEBVIEW_ID } from "../utils";
 import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
 
-export default class NavigationPanel extends React.Component {
+export default class NavigationPanel extends React.Component<{
+  isAwtDisabled: boolean;
+}> {
   private groups = [
     {
       name: "General",
       icon: <Icon className="codicon" icon={gearIcon} />,
       actions: [
         { name: "Configure Java Runtime", command: "java.runtime" },
-        { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] },
+        { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] as any[] },
         { name: "Install Extensions...", command: "java.extGuide" },
         { name: "Configure Formatter Settings", command: "java.formatterSettings" }
       ]
@@ -50,6 +53,24 @@ export default class NavigationPanel extends React.Component {
   private currentTab: string = this.groups[0].name;
 
   render() {
+    const {isAwtDisabled} = this.props;
+    const studentSection = _.find(this.groups, {name: "Student"});
+    if (studentSection) {
+      studentSection.actions = studentSection.actions.filter((action) => {
+        return action.command !== "java.toggleAwtDevelopment";
+      });
+  
+      if (isAwtDisabled) {
+        studentSection.actions.push({
+          name: "Enable AWT Development", command: "java.toggleAwtDevelopment", args: [true]
+        });
+      } else {
+        studentSection.actions.push({
+          name: "Disable AWT Development", command: "java.toggleAwtDevelopment", args: [false]
+        });
+      }
+    }
+
     const itemIcon = <Icon className="codicon" icon={rocketIcon} />;
     const tabItems = this.groups.map(group => {
       const actionItems = group.actions.map(action => (
