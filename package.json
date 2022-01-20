@@ -346,7 +346,7 @@
     "react-dom": "^16.14.0",
     "react-redux": "^7.2.6",
     "semver": "^5.7.1",
-    "vscode-extension-telemetry-wrapper": "^0.11.0",
+    "vscode-extension-telemetry-wrapper": "^0.11.1",
     "vscode-tas-client": "^0.1.27",
     "winreg-utf8": "^0.1.1"
   }
