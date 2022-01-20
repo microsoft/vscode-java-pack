@@ -94,6 +94,11 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
                 break;
         }
     })));
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration("java.completion.filteredTypes")) {
+            fetchInitProps(context);
+        }
+    }));
 }
 
 function getHtmlForWebview(scriptPath: string) {
