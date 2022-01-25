@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { findRuntimes, IJavaRuntime } from "jdk-utils";
+import { findRuntimes, getRuntime, IJavaRuntime } from "jdk-utils";
 import * as _ from "lodash";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -9,7 +9,6 @@ import { getExtensionContext, getNonce } from "../utils";
 import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
 import { ProjectType } from "../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
-import { JAVAC_FILENAME, verifyJavaHome } from "./utils/findJavaRuntime";
 import { sourceLevelDisplayName } from "./utils/misc";
 import { resolveRequirements } from "./utils/upstreamApi";
 
@@ -118,14 +117,14 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
           canSelectFiles: false,
           canSelectMany: false,
           canSelectFolders: true,
-          title: "Specify Java Home"
+          title: "Specify Java runtime to launch Language Server"
         });
         if (javaHomeUri) {
           const javaHome = javaHomeUri[0].fsPath;
-          if (await verifyJavaHome(javaHome, JAVAC_FILENAME)) {
-            await vscode.workspace.getConfiguration("java").update("home", javaHome, vscode.ConfigurationTarget.Global);
+          if (await getRuntime(javaHome)) {
+            await vscode.workspace.getConfiguration("java").update("jdt.ls.java.home", javaHome, vscode.ConfigurationTarget.Global);
           } else {
-            await vscode.window.showWarningMessage(`${javaHome} is not a valid JDK home directory.`);
+            await vscode.window.showWarningMessage(`${javaHome} is not a valid Java runtime home directory.`);
           }
         }
         break;
@@ -160,7 +159,7 @@ function getHtmlForWebview(scriptPath: string) {
   const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
   // Use a nonce to whitelist which scripts can be run
   const nonce = getNonce();
-  
+
   return `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -196,7 +195,7 @@ export async function validateJavaRuntime() {
   // * option b) use the same way to check java_home as vscode-java
   try {
     const runtime = await resolveRequirements();
-    if (runtime.tooling_jre_version >=11 && runtime.tooling_jre) {
+    if (runtime.tooling_jre_version >= 11 && runtime.tooling_jre) {
       return true;
     }
   } catch (error) {
@@ -212,7 +211,7 @@ export async function findJavaRuntimeEntries(): Promise<{
   javaHomeError?: string;
 }> {
   if (!javaHomes) {
-    const runtimes: IJavaRuntime[] = await findRuntimes({checkJavac: true, withVersion: true});
+    const runtimes: IJavaRuntime[] = await findRuntimes({ checkJavac: true, withVersion: true });
     javaHomes = runtimes.filter(r => r.hasJavac);
   }
   const javaRuntimes: JavaRuntimeEntry[] = javaHomes.map(elem => ({

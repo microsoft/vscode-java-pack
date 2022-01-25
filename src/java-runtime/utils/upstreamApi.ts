@@ -25,7 +25,7 @@ export async function resolveRequirements(): Promise<{
         let source: string;
         let javaVersion: number = 0;
         let javaHome = checkJavaPreferences();
-        if (!toolingJre && javaHome) { // "java.home" setting is only used for the universal version.
+        if (javaHome) { // java.jdt.ls.java.home or java.home setting has highest priority.
             source = `java.home variable defined in ${env.appName} settings`;
             javaHome = expandHomeDir(javaHome);
             if (!await fse.pathExists(javaHome)) {
@@ -42,51 +42,52 @@ export async function resolveRequirements(): Promise<{
             javaVersion = await getMajorVersion(javaHome);
             toolingJre = javaHome;
             toolingJreVersion = javaVersion;
-        } else {
-            // java.home not specified, search valid JDKs from env.JAVA_HOME, env.PATH, SDKMAN, jEnv, jabba, Common directories
-            const javaRuntimes = await findRuntimes({checkJavac: true, withVersion: true, withTags: true});
-            if (!toolingJre) { // universal version
-                // as latest version as possible.
-                sortJdksByVersion(javaRuntimes);
-                const validJdks = javaRuntimes.filter(r => r.version && r.version.major >= REQUIRED_JDK_VERSION);
-                if (validJdks.length > 0) {
-                    sortJdksBySource(validJdks);
-                    javaHome = validJdks[0].homedir;
-                    javaVersion = validJdks[0].version?.major ?? 0;
-                    toolingJre = javaHome;
-                    toolingJreVersion = javaVersion;
+        }
+
+        // java.home not specified, search valid JDKs from env.JAVA_HOME, env.PATH, SDKMAN, jEnv, jabba, Common directories
+        const javaRuntimes = await findRuntimes({checkJavac: true, withVersion: true, withTags: true});
+        if (!toolingJre) { // universal version
+            // as latest version as possible.
+            sortJdksByVersion(javaRuntimes);
+            const validJdks = javaRuntimes.filter(r => r.version && r.version.major >= REQUIRED_JDK_VERSION);
+            if (validJdks.length > 0) {
+                sortJdksBySource(validJdks);
+                javaHome = validJdks[0].homedir;
+                javaVersion = validJdks[0].version?.major ?? 0;
+                toolingJre = javaHome;
+                toolingJreVersion = javaVersion;
+            }
+        } else { // pick a default project JDK/JRE
+            /**
+             * For legacy users, we implicitly following the order below to
+             * set a default project JDK during initialization:
+             * java.home > env.JDK_HOME > env.JAVA_HOME > env.PATH
+             *
+             * We'll keep it for compatibility.
+             */
+            if (javaHome && (await getRuntime(javaHome) !== undefined)) {
+                const runtime = await getRuntime(javaHome, {withVersion: true});
+                if (runtime) {
+                    javaHome = runtime.homedir;
+                    javaVersion = runtime.version?.major ?? 0;
                 }
-            } else { // pick a default project JDK/JRE
+            } else if (javaRuntimes.length) {
+                sortJdksBySource(javaRuntimes);
+                javaHome = javaRuntimes[0].homedir;
+                javaVersion = javaRuntimes[0].version?.major ?? 0;
+            } else if (javaHome = (await findDefaultRuntimeFromSettings() ?? "")) {
+                javaVersion = await getMajorVersion(javaHome);
+            } else {
                 /**
-                 * For legacy users, we implicitly following the order below to
-                 * set a default project JDK during initialization:
-                 * java.home > env.JDK_HOME > env.JAVA_HOME > env.PATH
-                 *
-                 * We'll keep it for compatibility.
+                 * Originally it was:
+                 * invalidJavaHome(reject, "Please download and install a JDK to compile your project. You can configure your projects with different JDKs by the setting ['java.configuration.runtimes'](https://github.com/redhat-developer/vscode-java/wiki/JDK-Requirements#java.configuration.runtimes)");
+                 * 
+                 * here we focus on tooling jre, so we swallow the error.
+                 * 
                  */
-                if (javaHome && (await getRuntime(javaHome) !== undefined)) {
-                    const runtime = await getRuntime(javaHome, {withVersion: true});
-                    if (runtime) {
-                        javaHome = runtime.homedir;
-                        javaVersion = runtime.version?.major ?? 0;
-                    }
-                } else if (javaRuntimes.length) {
-                    sortJdksBySource(javaRuntimes);
-                    javaHome = javaRuntimes[0].homedir;
-                    javaVersion = javaRuntimes[0].version?.major ?? 0;
-                } else if (javaHome = (await findDefaultRuntimeFromSettings() ?? "")) {
-                    javaVersion = await getMajorVersion(javaHome);
-                } else {
-                    /**
-                     * Originally it was:
-                     * invalidJavaHome(reject, "Please download and install a JDK to compile your project. You can configure your projects with different JDKs by the setting ['java.configuration.runtimes'](https://github.com/redhat-developer/vscode-java/wiki/JDK-Requirements#java.configuration.runtimes)");
-                     * 
-                     * here we focus on tooling jre, so we swallow the error.
-                     * 
-                     */
-                }
             }
         }
+        
 
         if (!toolingJre || toolingJreVersion < REQUIRED_JDK_VERSION) {
             // For universal version, we still require users to install a qualified JDK to run Java extension.
@@ -167,7 +168,7 @@ function sortJdksByVersion(jdks: IJavaRuntime[]) {
 
 
 function checkJavaPreferences(){
-    return vscode.workspace.getConfiguration("java").get<string>("home") ?? "";
+    return vscode.workspace.getConfiguration("java").get<string>("jdt.ls.java.home") ?? vscode.workspace.getConfiguration("java").get<string>("home") ?? "";
 }
 
 function invalidJavaHome(reject: any, reason: string) {
