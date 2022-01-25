@@ -23,16 +23,18 @@ export async function resolveRequirements(): Promise<{
     let toolingJreVersion: number = await getMajorVersion(toolingJre);
     return new Promise(async (resolve, reject) => {
         let source: string;
+        const javaPreferences = checkJavaPreferences();
+        let preferenceName = javaPreferences.preference;
         let javaVersion: number = 0;
-        let javaHome = checkJavaPreferences();
+        let javaHome = javaPreferences.javaHome;
         if (javaHome) { // java.jdt.ls.java.home or java.home setting has highest priority.
             source = `java.home variable defined in ${env.appName} settings`;
             javaHome = expandHomeDir(javaHome);
-            if (!await fse.pathExists(javaHome)) {
+            if (!await fse.pathExists(javaHome!)) {
                 invalidJavaHome(reject, `The ${source} points to a missing or inaccessible folder (${javaHome})`);
-            } else if (!await fse.pathExists(path.resolve(javaHome, 'bin', JAVAC_FILENAME))) {
+            } else if (!await fse.pathExists(path.resolve(javaHome!, 'bin', JAVAC_FILENAME))) {
                 let msg: string;
-                if (await fse.pathExists(path.resolve(javaHome, JAVAC_FILENAME))) {
+                if (await fse.pathExists(path.resolve(javaHome!, JAVAC_FILENAME))) {
                     msg = `'bin' should be removed from the ${source} (${javaHome})`;
                 } else {
                     msg = `The ${source} (${javaHome}) does not point to a JDK.`;
@@ -40,8 +42,10 @@ export async function resolveRequirements(): Promise<{
                 invalidJavaHome(reject, msg);
             }
             javaVersion = await getMajorVersion(javaHome);
-            toolingJre = javaHome;
-            toolingJreVersion = javaVersion;
+            if (preferenceName === "java.jdt.ls.java.home" || !toolingJre) {
+                toolingJre = javaHome;
+                toolingJreVersion = javaVersion;
+            }
         }
 
         // java.home not specified, search valid JDKs from env.JAVA_HOME, env.PATH, SDKMAN, jEnv, jabba, Common directories
@@ -168,7 +172,16 @@ function sortJdksByVersion(jdks: IJavaRuntime[]) {
 
 
 function checkJavaPreferences(){
-    return vscode.workspace.getConfiguration("java").get<string>("jdt.ls.java.home") ?? vscode.workspace.getConfiguration("java").get<string>("home") ?? "";
+    let preference: string = 'java.jdt.ls.java.home';
+    let javaHome = workspace.getConfiguration().get<string>('java.jdt.ls.java.home');
+    if (!javaHome) { // Read java.home from the deprecated "java.home" setting.
+        preference = 'java.home';
+        javaHome = workspace.getConfiguration().get<string>('java.home');
+    }
+    return {
+        javaHome,
+		preference
+	};
 }
 
 function invalidJavaHome(reject: any, reason: string) {
