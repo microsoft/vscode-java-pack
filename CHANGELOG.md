@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.21.0
+### Added
+- Support toggling AWT development in help center. [#886](https://github.com/microsoft/vscode-java-pack/pull/886)
+
+### Fixed
+- Update dependencies to fix vulnerabilities. [#867](https://github.com/microsoft/vscode-java-pack/pull/867) [#873](https://github.com/microsoft/vscode-java-pack/pull/873) [#884](https://github.com/microsoft/vscode-java-pack/pull/884) [#892](https://github.com/microsoft/vscode-java-pack/pull/892)
+
 ## 0.20.0
 ### Changed
 - Simplify steps of getting started walkthrough. [#679](https://github.com/microsoft/vscode-java-pack/issues/679)
