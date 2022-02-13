@@ -7,8 +7,8 @@ import * as os from "os";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
+import { sendError } from "vscode-extension-telemetry-wrapper";
 import { LogWatcher } from "./logWatcher";
-
 
 const execFile = promisify(cp.execFile);
 const delay = promisify(setTimeout);
@@ -19,13 +19,18 @@ interface IJdtlsMetadata {
    workspace?: string;
 }
 
+let logWatcher: LogWatcher;
 export async function initDaemon(context: vscode.ExtensionContext) {
+   logWatcher = new LogWatcher(context);
+   logWatcher.start();
+
    const jdtlsMetadata = await getJdtlsMetadata(context);
    console.log(jdtlsMetadata);
-   const uptime = await getUpTime(jdtlsMetadata?.jreHome!, jdtlsMetadata?.pid!);
-   console.log("javaExt activated:", uptime);
-
-   new LogWatcher(context).start();
+   if (jdtlsMetadata?.jreHome && jdtlsMetadata?.pid) {
+      const uptime = await getUpTime(jdtlsMetadata?.jreHome!, jdtlsMetadata?.pid!);
+      console.log("javaExt activated:", uptime);
+      logWatcher.sendStartupMetadata();
+   }
 }
 
 async function getJdtlsMetadata(context: vscode.ExtensionContext): Promise<IJdtlsMetadata | undefined> {
@@ -50,12 +55,18 @@ async function getJdtlsMetadata(context: vscode.ExtensionContext): Promise<IJdtl
    }
 
    // wait javaExt to activate
-   const timeout = 10000;
+   const timeout = 30 * 60 * 1000; // wait 30 min at most
    let count = 0;
    while(!javaExt.isActive && count < timeout) {
       await delay(1000);
       console.log("waiting");
       count += 1000;
+   }
+
+   if (!javaExt.isActive) {
+      sendError(new Error("redhat.java extension not activated within 30 min"));
+      logWatcher.sendStartupMetadata();
+      return undefined;
    }
 
    // on ServiceReady
@@ -64,6 +75,7 @@ async function getJdtlsMetadata(context: vscode.ExtensionContext): Promise<IJdtl
       if (mode === "Standard") {
          const serviceReadyTime = await getUpTime(jreHome!, pid!);
          console.log("serviceReady:", serviceReadyTime)
+         logWatcher.sendStartupMetadata();
       }
    });
 
