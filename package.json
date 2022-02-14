@@ -127,6 +127,11 @@
     ],
     "commands": [
       {
+        "command": "java.testDaemon",
+        "category": "Java",
+        "title": "Test Daemon: Error"
+      },
+      {
         "command": "java.installJdk",
         "category": "Java",
         "title": "Install New JDK"

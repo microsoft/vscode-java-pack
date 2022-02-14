@@ -54,12 +54,13 @@ export class LogWatcher {
     /**
      * metadata
      */
-    public async sendStartupMetadata() {
+    public async sendStartupMetadata(remark?: string) {
         if (this.serverLogUri){
            const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
            const metadata = sessionMetadata(logs);
             sendInfo("", {
                 name: "jdtls-startup-metadata",
+                remark: remark!,
                 javaVersion: metadata.javaVersion!,
                 javaVendor: metadata.javaVendor!,
                 initializeAt: toElapsed(metadata.startAt, metadata.initializeAt)!,
