@@ -298,7 +298,7 @@
     "@types/vscode": "1.52.0",
     "@types/winreg": "^1.2.31",
     "@types/xmldom": "^0.1.31",
-    "autoprefixer": "^8.5.1",
+    "autoprefixer": "^10.4.2",
     "bytes": "^3.1.2",
     "css-loader": "^6.6.0",
     "file-loader": "^6.2.0",
