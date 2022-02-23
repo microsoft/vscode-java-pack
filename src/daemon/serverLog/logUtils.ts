@@ -101,14 +101,23 @@ export function sessionMetadata(log: string): SessionMetadata {
     return meta;
 }
 
-export function collectErrors(log: string): LogEntry[] {
+export function collectErrors(log: string, options?: { includingStack?: boolean }): LogEntry[] {
+    const STACK_INDICATOR = `${EOL}!STACK `;
     const entries = log.split(`${EOL}${EOL}`);
-    const errors = entries.filter(e => e.includes(`${EOL}!STACK `));
+    let errors = entries.filter(e => e.includes(STACK_INDICATOR));
+    if (!options?.includingStack) {
+        // only keep first line as message
+        errors = errors.map(e => {
+            const msg_start = e.indexOf("!MESSAGE");
+            const msg_end = e.indexOf(EOL, msg_start);
+            return e.slice(0, msg_end);
+        });
+    }
     return errors.map(parseTimestamp);
 }
 
-export function collectErrorsSince(log: string, timestamp: number): LogEntry[] {
-    return collectErrors(log).filter((e) => e.timestamp && e.timestamp > timestamp);
+export function collectErrorsSince(log: string, timestamp: number, options?: { includingStack?: boolean }): LogEntry[] {
+    return collectErrors(log, options).filter((e) => e.timestamp && e.timestamp > timestamp);
 }
 
 export function parseTimestamp(entry: string): LogEntry {

@@ -4,24 +4,19 @@
 import { promisify } from "util";
 import * as vscode from "vscode";
 import { sendError } from "vscode-extension-telemetry-wrapper";
-import { LogWatcher } from "./logWatcher";
-import { ProcessWatcher } from "./processWatcher";
+import { LSDaemon } from "./daemon";
 
 const delay = promisify(setTimeout);
 
-let logWatcher: LogWatcher;
-let jdtlsWatcher: ProcessWatcher;
+let daemon: LSDaemon;
 export async function initDaemon(context: vscode.ExtensionContext) {
    registerTestCommands(context);
-   jdtlsWatcher = new ProcessWatcher(context);
-
-
-   logWatcher = new LogWatcher(context);
-   logWatcher.start();
+   daemon = new LSDaemon(context);
+   await daemon.initialize()
 
    const activated = await checkJavaExtActivated(context);
    if (activated) {
-      logWatcher.sendStartupMetadata("redhat.java activated");
+      daemon.logWatcher.sendStartupMetadata("redhat.java activated");
    }
 }
 
@@ -42,21 +37,20 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
 
    if (!javaExt.isActive) {
       sendError(new Error("redhat.java extension not activated within 30 min"));
-      logWatcher.sendStartupMetadata("redhat.java activation timeout");
+      daemon.logWatcher.sendStartupMetadata("redhat.java activation timeout");
       return false;
    }
 
    // on ServiceReady
    javaExt.exports.onDidServerModeChange(async (mode: string) => {
-      console.log(mode);
       if (mode === "Standard") {
-         logWatcher.sendStartupMetadata("jdtls standard server ready");
+         daemon.logWatcher.sendStartupMetadata("jdtls standard server ready");
 
-
-         if (await jdtlsWatcher.start()) {
-            jdtlsWatcher.monitor();
+         // watchdog
+         if (await daemon.processWatcher.start()) {
+            daemon.processWatcher.monitor();
          } else {
-            console.log("jdtls Watcher not started.");
+            console.log("jdtls watchdog not started.");
          }
       }
    });

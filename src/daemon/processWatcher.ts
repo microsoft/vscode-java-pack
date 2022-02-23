@@ -4,6 +4,8 @@ import * as os from "os";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
+import { LSDaemon } from "./daemon";
 const execFile = promisify(cp.execFile);
 
 interface IJdtlsMetadata {
@@ -17,7 +19,11 @@ export class ProcessWatcher {
    private workspace?: string;
    private pid?: string;
    private jreHome?: string;
-   constructor(private context: vscode.ExtensionContext) { }
+   private lastHeartbeat?: string;
+   private context: vscode.ExtensionContext
+   constructor(private daemon: LSDaemon) {
+      this.context = daemon.context;
+   }
 
    public async start(): Promise<boolean> {
       const javaExt = vscode.extensions.getExtension("redhat.java");
@@ -44,14 +50,20 @@ export class ProcessWatcher {
       this.pid = jdtlsmeta.pid;
       this.workspace = jdtlsmeta.workspace;
 
+      console.log(jdtlsmeta);
       return (this.pid !== undefined && this.workspace !== undefined);
    }
 
    public monitor() {
-      setInterval(async () => {
-         console.log(await this.upTime());
-         console.log(await this.heapSize());
+      const id = setInterval(() => {
+         this.upTime().then(seconds => {
+            this.lastHeartbeat = seconds;
+         }).catch(_e => {
+            clearInterval(id);
+            this.onDidJdtlsCrash(this.lastHeartbeat);
+         });
       }, 5000);
+      // TBD: e.g. constantly monitor heap size and uptime
    }
 
    public async upTime(): Promise<string | undefined> {
@@ -77,6 +89,20 @@ export class ProcessWatcher {
       const o = execRes.stdout.match(rold)?.toString();
       return [y, o].join(os.EOL);
    }
+
+   private onDidJdtlsCrash(lastHeartbeat?: string) {
+      sendInfo("", {
+         name: "jdtls-last-heartbeat",
+         message: lastHeartbeat!
+      });
+      vscode.window.showInformationMessage("Java Language Server is crashed. Do you want to share error logs with us for diagnostic purpose?", "Yes").then(choice => {
+         if (choice) {
+            this.daemon.logWatcher.sendErrorAndStackOnCrash();
+
+         }
+      });
+
+}
 }
 
 

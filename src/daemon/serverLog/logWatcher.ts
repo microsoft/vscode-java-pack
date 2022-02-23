@@ -2,17 +2,20 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
-import { collectErrorsSince, logsForLatestSession, sessionMetadata } from "./logUtils";
+import { LSDaemon } from "../daemon";
+import { collectErrors, collectErrorsSince, logsForLatestSession, sessionMetadata } from "./logUtils";
 import { toElapsed } from "./utils";
 
 export class LogWatcher {
     private serverLogUri: vscode.Uri | undefined;
     private logProcessedTimestamp: number = Date.now();
-    constructor(context: vscode.ExtensionContext) {
-        if (context.storageUri) {
-            const javaExtStoragePath: string = path.join(context.storageUri.fsPath, "..", "redhat.java");
+    private context: vscode.ExtensionContext;
+    constructor(daemon: LSDaemon) {
+        this.context = daemon.context;
+        if (this.context.storageUri) {
+            const javaExtStoragePath: string = path.join(this.context.storageUri.fsPath, "..", "redhat.java");
             const serverLogPath: string = path.join(javaExtStoragePath, "jdt_ws", ".metadata");
-            this.serverLogUri = context.storageUri.with({path: serverLogPath});
+            this.serverLogUri = this.context.storageUri.with({path: serverLogPath});
         }
     }
 
@@ -42,7 +45,7 @@ export class LogWatcher {
                     sendInfo("", {
                         name: "jdtls-error",
                         error: e.entry,
-                        timestamp: e.timestamp!
+                        timestamp: e.timestamp!.toString()
                     });
                 })
             }
@@ -70,6 +73,22 @@ export class LogWatcher {
                 initJobFinishedAt: toElapsed(metadata.startAt, metadata.initJobFinishedAt)!,
                 buildJobsFinishedAt: toElapsed(metadata.startAt, metadata.buildJobsFinishedAt)!,
             });
+        }
+    }
+
+    public async sendErrorAndStackOnCrash() {
+        if (this.serverLogUri){
+           const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
+            const errors = collectErrors(logs, {includingStack: true});
+            if (errors) {
+                errors.forEach(e => {
+                    sendInfo("", {
+                        name: "jdtls-error-in-crashed-session",
+                        error: e.entry,
+                        timestamp: e.timestamp!
+                    });
+                })
+            }
         }
     }
 }
