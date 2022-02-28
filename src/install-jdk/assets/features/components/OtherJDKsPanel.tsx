@@ -14,6 +14,7 @@ class OtherJDKsPanel extends React.Component {
   public render() {
     const jdkList = [
       { name: "Amazon Corretto", url: "https://aws.amazon.com/corretto" },
+      { name: "Azul Zulu", url: "https://www.azul.com/downloads/?package=jdk" },
       { name: "Eclipse Adoptium's Temurin", url: "https://adoptium.net/" },
       { name: "Microsoft Build of OpenJDK", url: "https://www.microsoft.com/openjdk" },
       { name: "Oracle Java SE", url: "https://www.oracle.com/java/technologies/javase-downloads.html" },
