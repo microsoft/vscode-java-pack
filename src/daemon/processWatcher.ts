@@ -50,7 +50,6 @@ export class ProcessWatcher {
       this.pid = jdtlsmeta.pid;
       this.workspace = jdtlsmeta.workspace;
 
-      console.log(jdtlsmeta);
       return (this.pid !== undefined && this.workspace !== undefined);
    }
 

@@ -31,7 +31,6 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
    let count = 0;
    while(!javaExt.isActive && count < timeout) {
       await delay(1000);
-      console.log("waiting");
       count += 1000;
    }
 
@@ -50,7 +49,7 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
          if (await daemon.processWatcher.start()) {
             daemon.processWatcher.monitor();
          } else {
-            console.log("jdtls watchdog not started.");
+            sendError(new Error("jdtls watchdog is not started"));
          }
       }
    });

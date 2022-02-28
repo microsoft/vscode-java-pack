@@ -51,7 +51,6 @@ export class LogWatcher {
             }
             this.logProcessedTimestamp = Date.now();
         });
-
     }
 
     /**
