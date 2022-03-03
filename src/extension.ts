@@ -20,6 +20,7 @@ import { initialize as initUtils } from "./utils";
 import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
+import { initDaemon } from "./daemon";
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -35,6 +36,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initUtils(context);
   initCommands(context);
   initRecommendations(context);
+  initDaemon(context);
 
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: "file", language: "java", pattern: "**/*.java" }, new CodeActionProvider()));
 
@@ -81,7 +83,7 @@ function initializeTelemetry(_context: vscode.ExtensionContext) {
   const packageInfo = ext ? ext.packageJSON : undefined;
   if (packageInfo) {
     if (packageInfo.aiKey) {
-      initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey, { firstParty: true });
+      initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey, { firstParty: true});
     }
   }
 }

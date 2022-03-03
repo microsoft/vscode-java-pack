@@ -7,7 +7,7 @@
   "publisher": "vscjava",
   "preview": true,
   "engines": {
-    "vscode": "^1.52.0"
+    "vscode": "^1.64.0"
   },
   "aiKey": "b4a8a622-6ac7-4cf8-83aa-f325e1890795",
   "icon": "logo.png",
@@ -218,6 +218,12 @@
           "default": true,
           "description": "Show release notes of Extension Pack for Java on startup.",
           "scope": "window"
+        },
+        "java.help.shareDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to send back detailed information from error logs for diagnostic purpose.",
+          "scope": "window"
         }
       }
     },
@@ -295,7 +301,7 @@
     "@types/react-dom": "^16.9.14",
     "@types/react-redux": "^7.1.22",
     "@types/semver": "^5.5.0",
-    "@types/vscode": "1.52.0",
+    "@types/vscode": "1.64.0",
     "@types/winreg": "^1.2.31",
     "@types/xmldom": "^0.1.31",
     "autoprefixer": "^10.4.2",
