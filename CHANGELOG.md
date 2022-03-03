@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.22.0
+### Added
+- Add new setting `java.help.shareDiagnostics` control whether to collect detailed diagnostic information.
+
+### Fixed
+- Fix vulnerabilities. [#907](https://github.com/microsoft/vscode-java-pack/pull/907) [#912](https://github.com/microsoft/vscode-java-pack/pull/912)
+
+
 ## 0.21.0
 ### Added
 - Support toggling AWT development in help center. [#886](https://github.com/microsoft/vscode-java-pack/pull/886)
