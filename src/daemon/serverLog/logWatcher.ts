@@ -40,11 +40,16 @@ export class LogWatcher {
             if (Date.now() - this.logProcessedTimestamp < 1000) {return;} // reduce frequency of log file I/O.
             const logs = await logsForLatestSession(e.fsPath);
             const errors = collectErrorsSince(logs, this.logProcessedTimestamp);
+            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.shareDiagnostics");
             if (errors) {
                 errors.forEach(e => {
-                    sendInfo("", {
+                    consentToCollectLogs ? sendInfo("", {
                         name: "jdtls-error",
-                        error: e.entry,
+                        error: e.message,
+                        stack: e.stack!,
+                        timestamp: e.timestamp!.toString()
+                    }) : sendInfo("", {
+                        name: "jdtls-error",
                         timestamp: e.timestamp!.toString()
                     });
                 })
@@ -78,13 +83,14 @@ export class LogWatcher {
     public async sendErrorAndStackOnCrash() {
         if (this.serverLogUri){
            const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
-            const errors = collectErrors(logs, {includingStack: true});
+            const errors = collectErrors(logs);
             if (errors) {
                 errors.forEach(e => {
                     sendInfo("", {
                         name: "jdtls-error-in-crashed-session",
-                        error: e.entry,
-                        timestamp: e.timestamp!
+                        error: e.message,
+                        stack: e.stack!,
+                        timestamp: e.timestamp!.toString()
                     });
                 })
             }

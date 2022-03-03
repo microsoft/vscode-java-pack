@@ -3,7 +3,8 @@ import { EOL } from "os";
 
 interface LogEntry {
     timestamp?: number;
-    entry: string;
+    message: string;
+    stack?: string;
 }
 
 interface SessionMetadata {
@@ -14,8 +15,8 @@ interface SessionMetadata {
     initializeAt?: number;
     initializedAt?: number;
     buildJobsFinishedAt?: number;
-    javaVersion?:string;
-    javaVendor?:string;
+    javaVersion?: string;
+    javaVendor?: string;
 }
 
 const TIME_REGEX = /\d+-\d+-\d+ \d+:\d+:\d+\.\d+/;
@@ -32,6 +33,9 @@ const MESSAGE_IMPORT_GRADLE_PROJECTS = "!MESSAGE Importing Gradle project(s)";
 const MESSAGE_IMPORT_MAVEN_PROJECTS = "!MESSAGE Importing Maven project(s)";
 const MESSAGE_INIT_JOB_FINISHED = "!MESSAGE >> initialization job finished";
 const MESSAGE_BUILD_JOBS_FINISHED = "!MESSAGE >> build jobs finished";
+
+const STACK_INDICATOR = `${EOL}!STACK `;
+const MESSAGE_INDICATOR = `${EOL}!MESSAGE `;
 
 export async function logsForLatestSession(logFilepath: string): Promise<string> {
     const content = await fs.promises.readFile(logFilepath, { encoding: 'utf-8' });
@@ -50,14 +54,14 @@ export async function logsForLatestSession(logFilepath: string): Promise<string>
 
 
 export function sessionMetadata(log: string): SessionMetadata {
-    const meta: SessionMetadata= {};
+    const meta: SessionMetadata = {};
     const entries = log.split(LOG_ENTRY_SEPARATOR);
 
     const sessionStartEntry = entries.find(e => e.startsWith(MESSAGE_SESSION_START));
     if (sessionStartEntry) {
         const logEntry = parseTimestamp(sessionStartEntry);
         meta.startAt = logEntry.timestamp;
-        for (const line of logEntry.entry.split(EOL)) {
+        for (const line of sessionStartEntry.split(EOL)) {
             if (line.startsWith(JAVA_VERSION_INDICATOR)) {
                 meta.javaVersion = line.slice(JAVA_VERSION_INDICATOR.length);
             }
@@ -67,7 +71,7 @@ export function sessionMetadata(log: string): SessionMetadata {
             }
         }
     }
-    
+
     const initializeEntry = entries.find(e => e.includes(MESSAGE_INITIALIZE));
     if (initializeEntry) {
         meta.initializeAt = parseTimestamp(initializeEntry).timestamp;
@@ -101,34 +105,43 @@ export function sessionMetadata(log: string): SessionMetadata {
     return meta;
 }
 
-export function collectErrors(log: string, options?: { includingStack?: boolean }): LogEntry[] {
-    const STACK_INDICATOR = `${EOL}!STACK `;
+export function collectErrors(log: string): LogEntry[] {
     const entries = log.split(`${EOL}${EOL}`);
     let errors = entries.filter(e => e.includes(STACK_INDICATOR));
-    if (!options?.includingStack) {
-        // only keep first line as message
-        errors = errors.map(e => {
-            const msg_start = e.indexOf("!MESSAGE");
-            const msg_end = e.indexOf(EOL, msg_start);
-            return e.slice(0, msg_end);
-        });
-    }
     return errors.map(parseTimestamp);
 }
 
-export function collectErrorsSince(log: string, timestamp: number, options?: { includingStack?: boolean }): LogEntry[] {
-    return collectErrors(log, options).filter((e) => e.timestamp && e.timestamp > timestamp);
+export function collectErrorsSince(log: string, timestamp: number): LogEntry[] {
+    return collectErrors(log).filter((e) => e.timestamp && e.timestamp > timestamp);
 }
 
 export function parseTimestamp(entry: string): LogEntry {
     let timestamp = undefined;
-    const m = entry.match(TIME_REGEX);
-    if(m) {
+    let m = entry.match(TIME_REGEX);
+    if (m) {
         timestamp = (new Date(m.toString())).getTime();
     }
+
+    const message = getMessage(entry);
+    const stack = getStack(entry);
+
     return {
         timestamp,
-        entry
+        message,
+        stack
     }
+}
 
+function getMessage(entry: string) {
+    const start = entry.indexOf(MESSAGE_INDICATOR);
+    if (start < 0) { return ""; }
+    const end = entry.indexOf(EOL, start + MESSAGE_INDICATOR.length);
+    return entry.slice(start + MESSAGE_INDICATOR.length, end);
+}
+
+function getStack(entry: string) {
+    const start = entry.indexOf(STACK_INDICATOR);
+    if (start < 0) { return ""; }
+    const end = entry.indexOf(EOL + EOL + "!ENTRY", start + STACK_INDICATOR.length);
+    return entry.slice(start + STACK_INDICATOR.length, end);
 }

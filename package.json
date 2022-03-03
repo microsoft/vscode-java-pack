@@ -223,6 +223,12 @@
           "default": true,
           "description": "Show release notes of Extension Pack for Java on startup.",
           "scope": "window"
+        },
+        "java.help.shareDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to send back detailed information from error logs for diagnostic purpose.",
+          "scope": "window"
         }
       }
     },

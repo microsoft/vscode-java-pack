@@ -94,14 +94,16 @@ export class ProcessWatcher {
          name: "jdtls-last-heartbeat",
          message: lastHeartbeat!
       });
-      vscode.window.showInformationMessage("Java Language Server is crashed. Do you want to share error logs with us for diagnostic purpose?", "Yes").then(choice => {
-         if (choice) {
-            this.daemon.logWatcher.sendErrorAndStackOnCrash();
-
-         }
-      });
-
-}
+      const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.shareDiagnostics");
+      if (!consentToCollectLogs) {
+         vscode.window.showInformationMessage("Java Language Server is crashed. Do you want to share error logs with us for diagnostic purpose?", "Yes").then(choice => {
+            if (choice) {
+               vscode.workspace.getConfiguration("java").update("help.shareDiagnostics", true);
+               this.daemon.logWatcher.sendErrorAndStackOnCrash();
+            }
+         });
+      }
+   }
 }
 
 
