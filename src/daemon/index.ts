@@ -10,7 +10,6 @@ const delay = promisify(setTimeout);
 
 let daemon: LSDaemon;
 export async function initDaemon(context: vscode.ExtensionContext) {
-   registerTestCommands(context);
    daemon = new LSDaemon(context);
    await daemon.initialize()
 
@@ -56,14 +55,3 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
 
    return true;
 }
-
-function registerTestCommands(context: vscode.ExtensionContext) {
-   context.subscriptions.push(vscode.commands.registerCommand("java.testDaemon", async () => {
-      const cmd = await vscode.window.showInputBox({
-         placeHolder: "delegate command name",
-         value: "java.maven.searchArtifact"
-      });
-      vscode.commands.executeCommand("java.execute.workspaceCommand", cmd);
-   }))
-}
-
