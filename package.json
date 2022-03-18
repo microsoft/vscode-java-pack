@@ -343,7 +343,7 @@
     "expand-tilde": "^2.0.2",
     "fs-extra": "^9.1.0",
     "highlight.js": "10.5.0",
-    "jdk-utils": "^0.4.2",
+    "jdk-utils": "^0.4.3",
     "jquery": "^3.6.0",
     "lodash": "^4.17.21",
     "minimatch": "^3.1.2",
@@ -353,7 +353,6 @@
     "react-redux": "^7.2.6",
     "semver": "^5.7.1",
     "vscode-extension-telemetry-wrapper": "^0.12.0",
-    "vscode-tas-client": "^0.1.31",
-    "winreg-utf8": "^0.1.1"
+    "vscode-tas-client": "^0.1.31"
   }
 }
