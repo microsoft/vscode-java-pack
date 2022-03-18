@@ -343,7 +343,7 @@
     "expand-tilde": "^2.0.2",
     "fs-extra": "^9.1.0",
     "highlight.js": "10.5.0",
-    "jdk-utils": "^0.4.2",
+    "jdk-utils": "^0.4.3",
     "jquery": "^3.6.0",
     "lodash": "^4.17.21",
     "minimatch": "^3.1.2",
