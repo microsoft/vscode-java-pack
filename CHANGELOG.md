@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.22.1
+### Added
+- Can detect JDKs installed by asdf-vm in `Configure Java Runtime` page.
+
 ## 0.22.0
 ### Added
 - Add new setting `java.help.shareDiagnostics` control whether to collect detailed diagnostic information.
