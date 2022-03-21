@@ -87,12 +87,16 @@ export class LogWatcher {
         if (this.serverLogUri){
            const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
             const errors = collectErrors(logs);
+            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.shareDiagnostics");
             if (errors) {
                 errors.forEach(e => {
-                    sendInfo("", {
+                    consentToCollectLogs ? sendInfo("", {
                         name: "jdtls-error-in-crashed-session",
                         error: e.message,
                         stack: e.stack!,
+                        timestamp: e.timestamp!.toString()
+                    }) : sendInfo("", {
+                        name: "jdtls-error-in-crashed-session",
                         timestamp: e.timestamp!.toString()
                     });
                 })
