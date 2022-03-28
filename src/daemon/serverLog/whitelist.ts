@@ -3,6 +3,7 @@
 
 const TAGS: string[] = [
     "buildship",
+    "m2e",
     "gradle",
     "maven",
     "bundle"
