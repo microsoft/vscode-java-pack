@@ -22,6 +22,7 @@ const MESSAGE_WHITELIST: string[] = [
     "Failed to detect project changes",
     "Failed to update qualified index.",
     "Failed to launch debuggee in terminal. Reason: java.util.concurrent.TimeoutException: timeout",
+    "Failed to save JDT index",
     "failed to send diagnostics",
     "FrameworkEvent ERROR",
     "Initialization failed",
