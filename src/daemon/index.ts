@@ -44,6 +44,8 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
       if (mode === "Standard") {
          daemon.logWatcher.sendStartupMetadata("jdtls standard server ready");
 
+         daemon.logWatcher.stop(); // Only focus on errors occurred during startup.
+
          // watchdog
          if (await daemon.processWatcher.start()) {
             daemon.processWatcher.monitor();

@@ -8,17 +8,19 @@ import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "../daemon";
 import { collectErrors, collectErrorsSince, logsForLatestSession, sessionMetadata } from "./logUtils";
 import { toElapsed } from "./utils";
+import { redact } from "./whitelist";
 
 export class LogWatcher {
     private serverLogUri: vscode.Uri | undefined;
     private logProcessedTimestamp: number = Date.now();
     private context: vscode.ExtensionContext;
+    private watcher: vscode.FileSystemWatcher | undefined;
     constructor(daemon: LSDaemon) {
         this.context = daemon.context;
         if (this.context.storageUri) {
             const javaExtStoragePath: string = path.join(this.context.storageUri.fsPath, "..", "redhat.java");
             const serverLogPath: string = path.join(javaExtStoragePath, "jdt_ws", ".metadata");
-            this.serverLogUri = this.context.storageUri.with({path: serverLogPath});
+            this.serverLogUri = this.context.storageUri.with({ path: serverLogPath });
         }
     }
 
@@ -27,20 +29,20 @@ export class LogWatcher {
      */
     public async start() {
         if (!this.serverLogUri) {
-            sendInfo("", {name: "no-server-log"});
+            sendInfo("", { name: "no-server-log" });
             return;
-        } 
+        }
 
         try {
             await fs.promises.access(this.serverLogUri.fsPath);
         } catch (error) {
-            sendInfo("", {name: "no-server-log"});
+            sendInfo("", { name: "no-server-log" });
             return;
         }
 
-        const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(this.serverLogUri, "*.log"));
-        watcher.onDidChange(async (e)=> {
-            if (Date.now() - this.logProcessedTimestamp < 1000) {return;} // reduce frequency of log file I/O.
+        this.watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(this.serverLogUri, "*.log"));
+        this.watcher.onDidChange(async (e) => {
+            if (Date.now() - this.logProcessedTimestamp < 1000) { return; } // reduce frequency of log file I/O.
             const logs = await logsForLatestSession(e.fsPath);
             const errors = collectErrorsSince(logs, this.logProcessedTimestamp);
             const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.shareDiagnostics");
@@ -53,6 +55,7 @@ export class LogWatcher {
                         timestamp: e.timestamp!.toString()
                     }) : sendInfo("", {
                         name: "jdtls-error",
+                        error: redact(e.message),
                         timestamp: e.timestamp!.toString()
                     });
                 })
@@ -61,13 +64,20 @@ export class LogWatcher {
         });
     }
 
+    public stop() {
+        if (this.watcher) {
+            this.watcher.dispose()
+            this.watcher = undefined;
+        }
+    }
+
     /**
      * metadata
      */
     public async sendStartupMetadata(remark?: string) {
-        if (this.serverLogUri){
-           const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
-           const metadata = sessionMetadata(logs);
+        if (this.serverLogUri) {
+            const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
+            const metadata = sessionMetadata(logs);
             sendInfo("", {
                 name: "jdtls-startup-metadata",
                 remark: remark!,
@@ -84,8 +94,8 @@ export class LogWatcher {
     }
 
     public async sendErrorAndStackOnCrash() {
-        if (this.serverLogUri){
-           const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
+        if (this.serverLogUri) {
+            const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
             const errors = collectErrors(logs);
             const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.shareDiagnostics");
             if (errors) {
@@ -97,6 +107,7 @@ export class LogWatcher {
                         timestamp: e.timestamp!.toString()
                     }) : sendInfo("", {
                         name: "jdtls-error-in-crashed-session",
+                        error: redact(e.message),
                         timestamp: e.timestamp!.toString()
                     });
                 })
