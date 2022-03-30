@@ -25,7 +25,7 @@ export class ClientLogWatcher {
             const jdkLog = logs.find(log => log.message.startsWith("Use the JDK from"));
             info.defaultProjectJdk = jdkLog?.message.replace("Use the JDK from '", "").replace("' as the initial default project JDK.", "");
 
-            const startupLog = logs.find(log => log.message.startsWith("Starting Java server with:"));
+            const startupLog = logs.find(log => log.message.startsWith("Starting Java server with:") && log.message.endsWith("jdt_ws") /* limit to standard server */);
             if (startupLog) {
                 info.xmx = startupLog.message.match(/-Xmx[0-9kmgKMG]+/g)?.[0];
                 info.xms = startupLog.message.match(/-Xms[0-9kmgKMG]+/g)?.[0];
