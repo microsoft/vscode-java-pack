@@ -10,7 +10,6 @@ export class ClientLogWatcher {
     private logProcessedTimestamp: number = Date.now();
 
     constructor(daemon: LSDaemon) {
-        console.log(new Date(this.logProcessedTimestamp));
         this.context = daemon.context;
         if (this.context.storageUri) {
             this.javaExtensionRoot = vscode.Uri.joinPath(this.context.storageUri, "..", "redhat.java");
