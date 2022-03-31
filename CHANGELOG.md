@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.22.2
+### Fixed
+- Improve colletion of diagnostic information.
+
 ## 0.22.1
 ### Added
 - Can detect JDKs installed by asdf-vm in `Configure Java Runtime` page.
