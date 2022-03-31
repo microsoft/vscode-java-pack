@@ -11,7 +11,7 @@ const delay = promisify(setTimeout);
 let daemon: LSDaemon;
 export async function initDaemon(context: vscode.ExtensionContext) {
    daemon = new LSDaemon(context);
-   await daemon.initialize()
+   await daemon.initialize();
 
    const activated = await checkJavaExtActivated(context);
    if (activated) {
