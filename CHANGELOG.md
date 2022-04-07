@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.22.3
+### Changed
+- Use new setting `java.help.collectErrorLog` to control whether to collect detailed diagnostic information.
+
 ## 0.22.2
 ### Fixed
 - Improve colletion of diagnostic information.

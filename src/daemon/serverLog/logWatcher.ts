@@ -45,7 +45,7 @@ export class LogWatcher {
             if (Date.now() - this.logProcessedTimestamp < 1000) { return; } // reduce frequency of log file I/O.
             const logs = await logsForLatestSession(e.fsPath);
             const errors = collectErrorsSince(logs, this.logProcessedTimestamp);
-            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.shareDiagnostics");
+            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.collectErrorLog");
             if (errors) {
                 errors.forEach(e => {
                     consentToCollectLogs ? sendInfo("", {
@@ -97,7 +97,7 @@ export class LogWatcher {
         if (this.serverLogUri) {
             const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
             const errors = collectErrors(logs);
-            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.shareDiagnostics");
+            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.collectErrorLog");
             if (errors) {
                 errors.forEach(e => {
                     consentToCollectLogs ? sendInfo("", {
