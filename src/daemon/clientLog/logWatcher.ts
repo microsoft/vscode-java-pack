@@ -21,10 +21,10 @@ export class ClientLogWatcher {
         if (logs) {
             const info: any = {};
 
-            const jdkLog = logs.find(log => log.message.startsWith("Use the JDK from"));
+            const jdkLog = logs.find(log => log.message?.startsWith("Use the JDK from"));
             info.defaultProjectJdk = jdkLog?.message.replace("Use the JDK from '", "").replace("' as the initial default project JDK.", "");
 
-            const startupLog = logs.find(log => log.message.startsWith("Starting Java server with:") && log.message.endsWith("jdt_ws") /* limit to standard server */);
+            const startupLog = logs.find(log => log.message?.startsWith("Starting Java server with:") && log.message.endsWith("jdt_ws") /* limit to standard server */);
             if (startupLog) {
                 info.xmx = startupLog.message.match(/-Xmx[0-9kmgKMG]+/g)?.[0];
                 info.xms = startupLog.message.match(/-Xms[0-9kmgKMG]+/g)?.[0];
@@ -36,11 +36,11 @@ export class ClientLogWatcher {
             info.error = errorLog ? "true" : undefined;
 
             const missingJar = "Error opening zip file or JAR manifest missing"; // lombok especially
-            if (logs.find(log => log.message.startsWith(missingJar))) {
+            if (logs.find(log => log.message?.startsWith(missingJar))) {
                 info.error = missingJar;
             }
 
-            const crashLog = logs.find(log => log.message.startsWith("The Language Support for Java server crashed and will restart."));
+            const crashLog = logs.find(log => log.message?.startsWith("The Language Support for Java server crashed and will restart."));
             info.crash = crashLog ? "true" : undefined;
 
             sendInfo("", {
