@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 import * as vscode from "vscode";
+import * as path from "path";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "../daemon";
 
@@ -62,6 +63,13 @@ export class ClientLogWatcher {
     }
 
     private async readLatestLogFile() {
+        if (!this.javaExtensionRoot) {
+            try {
+                this.javaExtensionRoot = vscode.Uri.file(path.dirname(await vscode.commands.executeCommand("_java.workspace.path")));
+            } catch (error) {
+            }
+        }
+
         if (this.javaExtensionRoot) {
             const files = await vscode.workspace.fs.readDirectory(this.javaExtensionRoot);
             const logFiles = files.filter(elem => elem[0].startsWith("client.log")).sort((a, b) => compare_file(a[0], b[0]));
