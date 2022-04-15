@@ -29,6 +29,14 @@ export class LogWatcher {
      */
     public async start() {
         if (!this.serverLogUri) {
+            try {
+                const jdtWsPath: string = await vscode.commands.executeCommand("_java.workspace.path");
+                this.serverLogUri= vscode.Uri.file(path.join(jdtWsPath, ".metadata"));
+            } catch (error) {
+            }
+        }
+
+        if (!this.serverLogUri) {
             sendInfo("", { name: "no-server-log" });
             return;
         }
