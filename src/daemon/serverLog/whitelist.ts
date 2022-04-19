@@ -18,6 +18,7 @@ const MESSAGE_WHITELIST: string[] = [
     "Error in JDT Core during AST creation",
     "Error occurred while deleting",
     "Error filtering index locations based on qualifier.",
+    "Failed to configure project",
     "Failed to publish diagnostics for",
     "Failed to detect project changes",
     "Failed to update qualified index.",
