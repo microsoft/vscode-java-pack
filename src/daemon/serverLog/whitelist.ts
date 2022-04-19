@@ -18,6 +18,7 @@ const MESSAGE_WHITELIST: string[] = [
     "Error in JDT Core during AST creation",
     "Error occurred while deleting",
     "Error filtering index locations based on qualifier.",
+    "Failed to configure project",
     "Failed to publish diagnostics for",
     "Failed to detect project changes",
     "Failed to update qualified index.",
@@ -39,7 +40,6 @@ const MESSAGE_WHITELIST: string[] = [
     "Synchronize Gradle projects with workspace failed due to an error in the referenced Gradle build.",
     "Unable to read JavaModelManager nonChainingJarsCache file",
     "Workspace restored, but some problems occurred.",
-    "Failed to configure project"
 ];
 
 export function redact(rawMessage: string): string {
