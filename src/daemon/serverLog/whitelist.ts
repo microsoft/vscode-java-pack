@@ -39,6 +39,7 @@ const MESSAGE_WHITELIST: string[] = [
     "Synchronize Gradle projects with workspace failed due to an error in the referenced Gradle build.",
     "Unable to read JavaModelManager nonChainingJarsCache file",
     "Workspace restored, but some problems occurred.",
+    "Failed to configure project"
 ];
 
 export function redact(rawMessage: string): string {
