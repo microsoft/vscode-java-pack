@@ -17,12 +17,7 @@ export class GetStartedPage extends React.Component<{
 }> {
 
     render() {
-        const {firstTimeRun} = this.props;
-        if (firstTimeRun) {
-            return this.renderTourPage();
-        } else {
-            return this.renderWelcomePage();
-        }
+        return this.renderWelcomePage();
     }
 
     renderWelcomePage() {
@@ -62,6 +57,9 @@ export class GetStartedPage extends React.Component<{
         );
     }
 
+    /**
+     * @deprecated 
+     */
     renderTourPage() {
         return <TourPage></TourPage>;
     }

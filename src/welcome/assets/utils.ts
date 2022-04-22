@@ -44,12 +44,3 @@ export function onWillFetchInitProps() {
     command: "onWillFetchInitProps"
   });
 }
-
-/**
- * Request main process to initialize a tour page.
- */
-export function onWillShowTourPage() {
-  vscode.postMessage({
-    command: "onWillShowTourPage"
-  });
-}

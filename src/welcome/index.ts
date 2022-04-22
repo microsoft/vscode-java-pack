@@ -81,9 +81,6 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
             case "onWillFetchInitProps":
                 fetchInitProps(context);
                 break;
-            case "onWillShowTourPage":
-                showTourPage(context);
-                break;
             case "setWelcomeVisibility":
                 setWelcomeVisibility(context, message.visibility);
                 break;
@@ -135,18 +132,6 @@ export const fetchInitProps = async (context: vscode.ExtensionContext) => {
         props: {
             showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
             firstTimeRun: context.globalState.get(KEY_IS_WELCOME_PAGE_VIEWED) !== true,
-            isAwtDisabled: isAwtDisabled(),
-        }
-    });
-    setFirstTimeRun(context, false);
-};
-
-const showTourPage = async (context: vscode.ExtensionContext) => {
-    welcomeView?.webview.postMessage({
-        command: "onDidFetchInitProps",
-        props: {
-            showWhenUsingJava: context.globalState.get(KEY_SHOW_WHEN_USING_JAVA),
-            firstTimeRun: true,
             isAwtDisabled: isAwtDisabled(),
         }
     });
