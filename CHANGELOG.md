@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.22.4
+### Fixed
+- Fix: Cannot read properties of undefined (reading 'startsWith') [#968](https://github.com/microsoft/vscode-java-pack/pull/968)
+- Retire outdated tour page. [#978](https://github.com/microsoft/vscode-java-pack/pull/978)
+
 ## 0.22.3
 ### Changed
 - Use new setting `java.help.collectErrorLog` to control whether to collect detailed diagnostic information.
