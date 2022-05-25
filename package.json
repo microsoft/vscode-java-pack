@@ -118,9 +118,20 @@
             "title": "Explore more Java resources",
             "description": "%walkthrough.java.more%",
             "media": {
-              "svg": "walkthrough/ok.svg",
+              "svg": "walkthrough/helpCenter.svg",
               "altText": "Explore more Java resources"
-            }
+            },
+            "when": "!isMac"
+          },
+          {
+            "id": "java.moreForMac",
+            "title": "Explore more Java resources",
+            "description": "%walkthrough.java.more%",
+            "media": {
+              "svg": "walkthrough/helpCenterMac.svg",
+              "altText": "Explore more Java resources"
+            },
+            "when": "isMac"
           }
         ]
       }
@@ -279,6 +290,12 @@
           }
         ],
         "priority": "option"
+      }
+    ],
+    "keybindings":[
+      {
+        "command": "java.welcome",
+        "key": "shift+f1"
       }
     ]
   },
