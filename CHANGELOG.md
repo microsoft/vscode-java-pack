@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.23.0
+### Changed
+- Polish "Explore more Java resources" step in walkthrough. [#1002](https://github.com/microsoft/vscode-java-pack/pull/1002)
+
 ## 0.22.4
 ### Fixed
 - Fix: Cannot read properties of undefined (reading 'startsWith') [#968](https://github.com/microsoft/vscode-java-pack/pull/968)
