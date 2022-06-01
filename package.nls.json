@@ -11,5 +11,5 @@
 
     "walkthrough.java.extensions": "Install extensions to support additional frameworks such as Spring Boot, Application Servers, key mappings and so on.\n[Browse Recommended Extensions](command:toSide:java.extGuide)",
 
-    "walkthrough.java.more": "✨ Help Center provides tips, resources and links to help you get answers to the most common questions to learn Java on VS Code.\n[Open Help Center](command:java.welcome.fromWalkthrough)"
+    "walkthrough.java.more": "✨ Help Center provides tips, resources and links to help you get answers to the most common questions to learn Java on VS Code.\n[Open Help Center](command:java.welcome)"
 }

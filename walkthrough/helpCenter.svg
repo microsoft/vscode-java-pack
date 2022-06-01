@@ -1,6 +1,6 @@
 <svg width="512" height="270" viewBox="0 0 512 270" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g>
-  <a xlink:href="command:java.welcome.fromWalkthrough" xlink:title="Open Help Center">
+  <a xlink:href="command:java.welcome" xlink:title="Open Help Center">
     <g filter="url(#filter0_d_2526_366671)">
       <rect x="11" y="14" width="449" height="215" fill="var(--vscode-breadcrumb-background, #1E1E1E)" />
       <g>
