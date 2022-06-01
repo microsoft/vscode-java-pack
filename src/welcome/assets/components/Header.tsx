@@ -4,7 +4,6 @@
 import * as React from "react";
 import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
 import { WEBVIEW_ID } from "../utils";
-const logo = require("../../../../logo.svg");
 
 const DEV_BLOG_LINK = "https://devblogs.microsoft.com/?s=Java+on+Visual+Studio+Code";
 export default class Header extends React.Component {
@@ -15,7 +14,6 @@ export default class Header extends React.Component {
     const subtitle = <span>Check our {blogsLink} to see what's new</span>;
     return (
       <div className="header mt-4">
-        <img alt="logo" src={logo} className="logo"></img>
         <div>
           {title}
           {subtitle}
