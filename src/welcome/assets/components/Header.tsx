@@ -4,7 +4,6 @@
 import * as React from "react";
 import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
 import { WEBVIEW_ID } from "../utils";
-const logo = require("../../../../logo.svg");
 
 const DEV_BLOG_LINK = "https://devblogs.microsoft.com/?s=Java+on+Visual+Studio+Code";
 export default class Header extends React.Component {
