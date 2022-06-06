@@ -33,6 +33,9 @@ verifier:
 #### Test Runner for Java
 verifier: 
 
+#### Spring Boot Dashboard
+verifier: 
+
 ## Verification follow-ups
 - [ ] Extension Pack
 - [ ] Project Manager for Java
@@ -40,6 +43,7 @@ verifier:
 - [ ] Maven for Java
 - [ ] Gradle for Java
 - [ ] Test Runner for Java
+- [ ] Spring Boot Dashboard
 
 ## Release
 - [ ] Extension Pack
@@ -48,6 +52,6 @@ verifier:
 - [ ] Maven for Java
 - [ ] Gradle for Java
 - [ ] Test Runner for Java
-
+- [ ] Spring Boot Dashboard
  
 ## External Contributions 
