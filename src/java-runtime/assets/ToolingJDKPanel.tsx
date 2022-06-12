@@ -8,6 +8,7 @@ import { encodeCommandUriWithTelemetry } from '../../utils/webview';
 import { JavaRuntimeEntry } from "../types";
 import { onWillBrowseForJDK } from './vscode.api';
 
+const REQUIRED_JDK_VERSION = 17;
 const { wrap } = provideReactWrapper(React);
 const Button = wrap(webviewUI.VSCodeButton);
 
@@ -29,7 +30,7 @@ export class ToolingJDKPanel extends React.Component<Props, State> {
     return (
       <div className="container">
         <h1>Configure Runtime for Language Server</h1>
-        <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK 11+ to launch itself.</div>
+        <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK {REQUIRED_JDK_VERSION}+ to launch itself.</div>
 
         {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
 

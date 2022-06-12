@@ -10,7 +10,7 @@ import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
 import { ProjectType } from "../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
-import { resolveRequirements } from "./utils/upstreamApi";
+import { REQUIRED_JDK_VERSION, resolveRequirements } from "./utils/upstreamApi";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: IJavaRuntime[];
@@ -195,7 +195,7 @@ export async function validateJavaRuntime() {
   // * option b) use the same way to check java_home as vscode-java
   try {
     const runtime = await resolveRequirements();
-    if (runtime.tooling_jre_version >= 11 && runtime.tooling_jre) {
+    if (runtime.tooling_jre_version >= REQUIRED_JDK_VERSION && runtime.tooling_jre) {
       return true;
     }
   } catch (error) {
@@ -227,8 +227,8 @@ export async function findJavaRuntimeEntries(): Promise<{
     const runtime = await resolveRequirements();
     javaDotHome = runtime.tooling_jre;
     const javaVersion = runtime.tooling_jre_version;
-    if (!javaVersion || javaVersion < 11) {
-      javaHomeError = `Java 11 or more recent is required by the Java language support (redhat.java) extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
+    if (!javaVersion || javaVersion < REQUIRED_JDK_VERSION) {
+      javaHomeError = `Java ${REQUIRED_JDK_VERSION} or more recent is required by the Java language support (redhat.java) extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
     }
   } catch (error) {
     javaHomeError = (error as Error).message;
