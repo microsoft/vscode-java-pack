@@ -6,7 +6,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "../daemon";
-import { collectErrors, collectErrorsSince, logsForLatestSession, sessionMetadata } from "./logUtils";
+import { collectErrors, collectErrorsSince, containsCorruptedException, logsForLatestSession, sessionMetadata } from "./logUtils";
 import { toElapsed } from "./utils";
 import { redact } from "./whitelist";
 
@@ -121,5 +121,14 @@ export class LogWatcher {
                 })
             }
         }
+    }
+
+    public async checkIfWorkspaceCorrupted(): Promise<boolean> {
+        if (this.serverLogUri) {
+            const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
+            return containsCorruptedException(logs);
+        }
+
+        return false;
     }
 }

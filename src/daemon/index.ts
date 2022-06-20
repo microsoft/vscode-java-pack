@@ -3,7 +3,7 @@
 
 import { promisify } from "util";
 import * as vscode from "vscode";
-import { sendError } from "vscode-extension-telemetry-wrapper";
+import { sendError, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "./daemon";
 
 const delay = promisify(setTimeout);
@@ -25,12 +25,19 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
       return false;
    }
 
+   vscode.workspace.onDidGrantWorkspaceTrust(() => {
+      checkIfJavaServerCrashed(30 * 1000 /*ms*/);
+   });
+
    // wait javaExt to activate
    const timeout = 30 * 60 * 1000; // wait 30 min at most
    let count = 0;
    while(!javaExt.isActive && count < timeout) {
       await delay(1000);
       count += 1000;
+      if (count % 10000 === 0) {
+         checkIfJavaServerCrashed();
+      }
    }
 
    if (!javaExt.isActive) {
@@ -41,6 +48,10 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
 
    // on ServiceReady
    javaExt.exports.onDidServerModeChange(async (mode: string) => {
+      if (mode === "Hybrid") { // begin to start standard language server
+         checkIfJavaServerCrashed(30 * 1000 /*ms*/);
+      }
+
       if (mode === "Standard") {
          daemon.logWatcher.sendStartupMetadata("jdtls standard server ready");
 
@@ -56,4 +67,38 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
    });
 
    return true;
+}
+
+let corruptedCacheDetected: boolean = false;
+async function checkIfJavaServerCrashed(wait: number = 0/*ms*/) {
+   if (corruptedCacheDetected) {
+      return;
+   }
+
+   // wait Java Language Server to start
+   let count = 0;
+   while(count < wait) {
+      await delay(1000);
+      count += 1000;
+   }
+
+   const corruptedCache = !await daemon.processWatcher.start() && await daemon.logWatcher.checkIfWorkspaceCorrupted();
+   if (!corruptedCacheDetected && corruptedCache) {
+      corruptedCacheDetected = true;
+      sendInfo("", {
+         name: "corrupted-cache",
+      });
+      const ans = await vscode.window.showErrorMessage("A corrupted Java extension cache has been detected, please try to \"Clean Workspace\".",
+                     "Clean and Restart", "Do It Later");
+      if (ans === "Clean and Restart") {
+         sendInfo("", {
+            name: "clean-cache-action",
+         });
+         vscode.commands.executeCommand("java.clean.workspace", true);
+      } else {
+         sendInfo("", {
+            name: "clean-cache-cancel-action",
+         });
+      }
+   }
 }

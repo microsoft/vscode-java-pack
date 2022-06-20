@@ -39,6 +39,7 @@ const MESSAGE_BUILD_JOBS_FINISHED = "!MESSAGE >> build jobs finished";
 
 const STACK_INDICATOR = `${EOL}!STACK `;
 const MESSAGE_INDICATOR = `${EOL}!MESSAGE `;
+const CORRUPTED_WORKSPACE_INDICATOR = "Caused by: org.eclipse.core.internal.dtree.ObjectNotFoundException:";
 
 export async function logsForLatestSession(logFilepath: string): Promise<string> {
     const content = await fs.promises.readFile(logFilepath, { encoding: 'utf-8' });
@@ -133,6 +134,12 @@ export function parseTimestamp(entry: string): LogEntry {
         message,
         stack
     }
+}
+
+export function containsCorruptedException(log: string): boolean {
+    const lines = log.split(`${EOL}`);
+    const find = lines.find(line => line.startsWith(CORRUPTED_WORKSPACE_INDICATOR));
+    return !!find;
 }
 
 function getMessage(entry: string) {
