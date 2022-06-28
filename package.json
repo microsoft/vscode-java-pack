@@ -369,7 +369,7 @@
     "react-dom": "^16.14.0",
     "react-redux": "^7.2.8",
     "semver": "^5.7.1",
-    "vscode-extension-telemetry-wrapper": "^0.12.0",
+    "vscode-extension-telemetry-wrapper": "^0.13.1",
     "vscode-tas-client": "^0.1.47"
   }
 }
