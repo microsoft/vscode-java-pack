@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.24.0
+### Added
+- Notify to clean cache if a corrupted workspace cache is detected. [#1011](https://github.com/microsoft/vscode-java-pack/pull/1011)
+
+### Changed
+- Update required tooling JRE to 17. [#1009](https://github.com/microsoft/vscode-java-pack/pull/1009)
+
 ## 0.23.0
 ### Changed
 - Polish "Explore more Java resources" step in walkthrough. [#1002](https://github.com/microsoft/vscode-java-pack/pull/1002)
