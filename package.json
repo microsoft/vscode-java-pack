@@ -312,12 +312,12 @@
     "@types/fs-extra": "^9.0.13",
     "@types/lodash": "^4.14.182",
     "@types/minimatch": "^3.0.5",
-    "@types/node": "^16.11.38",
+    "@types/node": "^16.11.43",
     "@types/path-exists": "^3.0.0",
-    "@types/react": "^17.0.45",
+    "@types/react": "^17.0.47",
     "@types/react-dom": "^16.9.16",
     "@types/react-redux": "^7.1.24",
-    "@types/semver": "^5.5.0",
+    "@types/semver": "^7.3.10",
     "@types/vscode": "1.64.0",
     "@types/winreg": "^1.2.31",
     "@types/xmldom": "^0.1.31",
@@ -328,14 +328,14 @@
     "postcss": "^8.4.14",
     "postcss-loader": "^6.2.1",
     "process": "0.11.10",
-    "sass": "^1.52.2",
+    "sass": "^1.53.0",
     "sass-loader": "^12.6.0",
     "style-loader": "^3.3.1",
-    "ts-loader": "^9.3.0",
+    "ts-loader": "^9.3.1",
     "tslint": "^5.20.1",
     "typescript": "^3.9.10",
     "webpack": "^5.73.0",
-    "webpack-cli": "^4.9.2"
+    "webpack-cli": "^4.10.0"
   },
   "extensionPack": [
     "redhat.java",
@@ -346,10 +346,10 @@
     "VisualStudioExptTeam.vscodeintellicode"
   ],
   "dependencies": {
-    "@iconify-icons/codicon": "^1.2.8",
+    "@iconify-icons/codicon": "1.2.8",
     "@iconify/react": "^1.1.4",
     "@microsoft/fast-react-wrapper": "0.1.18",
-    "@reduxjs/toolkit": "^1.8.2",
+    "@reduxjs/toolkit": "^1.8.3",
     "@vscode/codicons": "0.0.25",
     "@vscode/webview-ui-toolkit": "0.8.2",
     "@xmldom/xmldom": "^0.7.5",
@@ -368,7 +368,7 @@
     "react-bootstrap": "^1.6.5",
     "react-dom": "^16.14.0",
     "react-redux": "^7.2.8",
-    "semver": "^5.7.1",
+    "semver": "^7.3.7",
     "vscode-extension-telemetry-wrapper": "^0.13.1",
     "vscode-tas-client": "^0.1.47"
   }
