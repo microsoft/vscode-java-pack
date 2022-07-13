@@ -87,7 +87,7 @@ async function checkIfJavaServerCrashed(wait: number = 0/*ms*/) {
          name: "corrupted-cache",
       });
       const ans = await vscode.window.showErrorMessage("Java extension cannot start due to corrupted workspace cache, please try to clean the workspace.",
-                     "Clean and Restart", "Later");
+                     "Clean and Restart");
       if (ans === "Clean and Restart") {
          sendInfo("", {
             name: "clean-cache-action",
