@@ -42,13 +42,15 @@ const MESSAGE_WHITELIST: string[] = [
     "Workspace restored, but some problems occurred.",
 ];
 
-export function redact(rawMessage: string): string {
-    const matchedMessage = MESSAGE_WHITELIST.find(msg => rawMessage.includes(msg));
-    if (matchedMessage) {
-        return matchedMessage;
-    } else {
-        const lower = rawMessage.toLocaleLowerCase();
-        const tags = TAGS.filter(tag => lower.includes(tag));
-        return tags.length > 0 ? `Tags:${tags.join(",")}` : "";
+export function redact(rawMessage: string): {
+    message: string;
+    tags: string[];
+} {
+    const message = MESSAGE_WHITELIST.find(msg => rawMessage.includes(msg)) ?? "";
+    const tags = TAGS.filter(tag => rawMessage.toLocaleLowerCase().includes(tag));
+
+    return {
+        message,
+        tags
     }
 }
