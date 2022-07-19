@@ -56,16 +56,22 @@ export class LogWatcher {
             const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.collectErrorLog");
             if (errors) {
                 errors.forEach(e => {
-                    consentToCollectLogs ? sendInfo("", {
-                        name: "jdtls-error",
-                        error: e.message,
-                        stack: e.stack!,
-                        timestamp: e.timestamp!.toString()
-                    }) : sendInfo("", {
-                        name: "jdtls-error",
-                        error: redact(e.message),
-                        timestamp: e.timestamp!.toString()
-                    });
+                    if (consentToCollectLogs) {
+                        sendInfo("", {
+                            name: "jdtls-error",
+                            error: e.message,
+                            stack: e.stack!,
+                            timestamp: e.timestamp!.toString()
+                        });
+                    } else {
+                        const {message, tags} = redact(e.message);
+                        sendInfo("", {
+                            name: "jdtls-error",
+                            error: message,
+                            tags: tags.join(","),
+                            timestamp: e.timestamp!.toString()
+                        })
+                    }
                 })
             }
             this.logProcessedTimestamp = Date.now();
@@ -108,16 +114,23 @@ export class LogWatcher {
             const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.collectErrorLog");
             if (errors) {
                 errors.forEach(e => {
-                    consentToCollectLogs ? sendInfo("", {
-                        name: "jdtls-error-in-crashed-session",
-                        error: e.message,
-                        stack: e.stack!,
-                        timestamp: e.timestamp!.toString()
-                    }) : sendInfo("", {
-                        name: "jdtls-error-in-crashed-session",
-                        error: redact(e.message),
-                        timestamp: e.timestamp!.toString()
-                    });
+                    if (consentToCollectLogs) {
+                        sendInfo("", {
+                            name: "jdtls-error-in-crashed-session",
+                            error: e.message,
+                            stack: e.stack!,
+                            timestamp: e.timestamp!.toString()
+                        })
+                    } else {
+                        const { message, tags } = redact(e.message);
+                        sendInfo("", {
+                            name: "jdtls-error-in-crashed-session",
+                            error: message,
+                            tags: tags.join(","),
+                            timestamp: e.timestamp!.toString()
+                        })
+                    }
+
                 })
             }
         }
