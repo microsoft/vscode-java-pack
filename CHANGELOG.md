@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.0
+### Changed
+- Simplify the "clean cache" notification buttons. [#1025](https://github.com/microsoft/vscode-java-pack/pull/1025)
+
 ## 0.24.0
 ### Added
 - Notify to clean cache if a corrupted workspace cache is detected. [#1011](https://github.com/microsoft/vscode-java-pack/pull/1011)
