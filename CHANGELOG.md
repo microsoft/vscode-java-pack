@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.1
+### Changed
+- Update activation events. [#1036](https://github.com/microsoft/vscode-java-pack/pull/1036)
+
 ## 0.25.0
 ### Changed
 - Simplify the "clean cache" notification buttons. [#1025](https://github.com/microsoft/vscode-java-pack/pull/1025)
@@ -102,7 +106,7 @@
 - Rename command `Java: Welcome` to `Java: Help Center`.
 
 ## 0.18.0
-### Added 
+### Added
 - Provide code action to configure classpath. [#684](https://github.com/microsoft/vscode-java-pack/pull/684)
 
 ### Changed
