@@ -42,7 +42,7 @@ export class ProcessWatcher {
             jreHome = path.join(jreFolder, jreDistros[0]);
          }
       } catch (error) {
-         console.error(error);
+         // do nothing when jre is not embedded, to avoid spamming logs
       }
       if (!jreHome) {
          return false;
