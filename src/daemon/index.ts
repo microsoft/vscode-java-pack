@@ -80,6 +80,8 @@ async function checkIfJavaServerCrashed(wait: number = 0/*ms*/) {
       await delay(wait);
    }
 
+   // TODO: not to call start() repeatedly. @testforstephen
+   // daemon.processWatcher.start() can return false when there is no embedded jre, where you cannot judge whether the process is started or not.
    const corruptedCache = !await daemon.processWatcher.start() && await daemon.logWatcher.checkIfWorkspaceCorrupted();
    if (!corruptedCacheDetected && corruptedCache) {
       corruptedCacheDetected = true;
