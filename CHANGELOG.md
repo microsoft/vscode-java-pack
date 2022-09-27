@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.25.2
+- Stop spamming the console with useless error messages. [#1063](https://github.com/microsoft/vscode-java-pack/pull/1063)
+
 ## 0.25.1
 ### Changed
 - Update activation events. [#1036](https://github.com/microsoft/vscode-java-pack/pull/1036)
