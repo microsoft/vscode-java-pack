@@ -129,6 +129,11 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         }
         break;
       }
+      case "onWillRunCommandFromWebview": {
+        const { wrappedArgs } = e;
+        vscode.commands.executeCommand("java.webview.runCommand", wrappedArgs);
+        break;
+      }
       default:
         break;
     }

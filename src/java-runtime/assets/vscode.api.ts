@@ -46,3 +46,15 @@ export function onWillBrowseForJDK() {
     command: "onWillBrowseForJDK"
   });
 }
+
+export function onWillRunCommandFromWebview(webview: string, identifier: string, command: string, args?: any[]) {
+  vscode.postMessage({
+    command: "onWillRunCommandFromWebview",
+    wrappedArgs: {
+      webview,
+      identifier,
+      command,
+      args
+    }
+  });
+}
