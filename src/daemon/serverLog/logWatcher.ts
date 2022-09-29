@@ -53,25 +53,21 @@ export class LogWatcher {
             if (Date.now() - this.logProcessedTimestamp < 1000) { return; } // reduce frequency of log file I/O.
             const logs = await logsForLatestSession(e.fsPath);
             const errors = collectErrorsSince(logs, this.logProcessedTimestamp);
-            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.collectErrorLog");
+            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.collectErrorLog") ?? false;
             if (errors) {
                 errors.forEach(e => {
-                    if (consentToCollectLogs) {
-                        sendInfo("", {
-                            name: "jdtls-error",
-                            error: e.message,
-                            stack: e.stack!,
-                            timestamp: e.timestamp!.toString()
-                        });
-                    } else {
-                        const {message, tags} = redact(e.message);
-                        sendInfo("", {
-                            name: "jdtls-error",
-                            error: message,
-                            tags: tags.join(","),
-                            timestamp: e.timestamp!.toString()
-                        })
+                    const {message, tags, hash} = redact(e.message, consentToCollectLogs);
+                    const infoBody: {[key: string]: any} = {
+                        name: "jdtls-error",
+                        error: message,
+                        tags: tags.join(","),
+                        hash: hash,
+                        timestamp: e.timestamp!.toString()
+                    };
+                    if (consentToCollectLogs && e.stack) {
+                        infoBody.stack = e.stack;
                     }
+                    sendInfo("", infoBody);
                 })
             }
             this.logProcessedTimestamp = Date.now();
@@ -111,26 +107,21 @@ export class LogWatcher {
         if (this.serverLogUri) {
             const logs = await logsForLatestSession(path.join(this.serverLogUri?.fsPath, ".log"));
             const errors = collectErrors(logs);
-            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.collectErrorLog");
+            const consentToCollectLogs = vscode.workspace.getConfiguration("java").get<boolean>("help.collectErrorLog") ?? false;
             if (errors) {
                 errors.forEach(e => {
-                    if (consentToCollectLogs) {
-                        sendInfo("", {
-                            name: "jdtls-error-in-crashed-session",
-                            error: e.message,
-                            stack: e.stack!,
-                            timestamp: e.timestamp!.toString()
-                        })
-                    } else {
-                        const { message, tags } = redact(e.message);
-                        sendInfo("", {
-                            name: "jdtls-error-in-crashed-session",
-                            error: message,
-                            tags: tags.join(","),
-                            timestamp: e.timestamp!.toString()
-                        })
+                    const {message, tags, hash} = redact(e.message, consentToCollectLogs);
+                    const infoBody: {[key: string]: any} = {
+                        name: "jdtls-error-in-crashed-session",
+                        error: message,
+                        tags: tags.join(","),
+                        hash: hash,
+                        timestamp: e.timestamp!.toString()
+                    };
+                    if (consentToCollectLogs && e.stack) {
+                        infoBody.stack = e.stack;
                     }
-
+                    sendInfo("", infoBody);
                 })
             }
         }
