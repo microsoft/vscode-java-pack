@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
+import { createHash } from "crypto";
 
 const TAGS: string[] = [
     "buildship",
@@ -42,15 +43,25 @@ const MESSAGE_WHITELIST: string[] = [
     "Workspace restored, but some problems occurred.",
 ];
 
-export function redact(rawMessage: string): {
+export function redact(rawMessage: string, consentToCollectLogs: boolean): {
     message: string;
     tags: string[];
+    hash: string;
 } {
-    const message = MESSAGE_WHITELIST.find(msg => rawMessage.includes(msg)) ?? "";
+    const matchedMessage = MESSAGE_WHITELIST.find(msg => rawMessage.includes(msg));
+    const message = matchedMessage ?? (consentToCollectLogs ? rawMessage : "");
+    const hash = sha1(matchedMessage ?? rawMessage);
     const tags = TAGS.filter(tag => rawMessage.toLocaleLowerCase().includes(tag));
 
     return {
         message,
-        tags
+        tags,
+        hash
     }
+}
+
+function sha1(content: string): string {
+    const hash = createHash("sha1");
+    hash.update(content);
+    return hash.digest('hex');
 }
