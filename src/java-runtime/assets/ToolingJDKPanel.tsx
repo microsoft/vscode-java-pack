@@ -4,9 +4,8 @@
 import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
 import * as webviewUI from "@vscode/webview-ui-toolkit";
 import * as React from "react";
-import { encodeCommandUriWithTelemetry } from '../../utils/webview';
 import { JavaRuntimeEntry } from "../types";
-import { onWillBrowseForJDK } from './vscode.api';
+import { onWillBrowseForJDK, onWillRunCommandFromWebview } from './vscode.api';
 
 const REQUIRED_JDK_VERSION = 17;
 const { wrap } = provideReactWrapper(React);
@@ -25,8 +24,7 @@ interface State {
 export class ToolingJDKPanel extends React.Component<Props, State> {
   render = () => {
     const { javaHomeError } = this.props;
-    const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download", "java.installJdk");
-
+    
     return (
       <div className="container">
         <h1>Configure Runtime for Language Server</h1>
@@ -39,7 +37,7 @@ export class ToolingJDKPanel extends React.Component<Props, State> {
           {this?.state?.isDirty && <Button><a href="command:workbench.action.reloadWindow">Reload</a></Button> }
         </div>
         <div className="jdk-action">
-          <Button appearance="secondary"><a href={downloadJDKCommand}>Install a <b>New JDK</b></a></Button>
+          <Button appearance="secondary" onClick={this.onClickInstallButton}><a href="#">Install a <b>New JDK</b></a></Button>
         </div>
       </div>
     );
@@ -48,5 +46,9 @@ export class ToolingJDKPanel extends React.Component<Props, State> {
   onClickBrowseJDKButton = () => {
     onWillBrowseForJDK();
     this.setState({ isDirty: true });
+  }
+
+  onClickInstallButton = () => {
+    onWillRunCommandFromWebview("java.runtime", "download", "java.installJdk");
   }
 }
