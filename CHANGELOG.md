@@ -1,6 +1,11 @@
 # Change Log
 
+## 0.25.3
+### Fixed
+- Bug: No response on clicking button `install A New JDK`. [#1068](https://github.com/microsoft/vscode-java-pack/pull/1068)
+
 ## 0.25.2
+### Fixed
 - Stop spamming the console with useless error messages. [#1063](https://github.com/microsoft/vscode-java-pack/pull/1063)
 
 ## 0.25.1
