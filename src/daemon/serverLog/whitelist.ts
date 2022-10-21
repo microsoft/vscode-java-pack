@@ -41,6 +41,13 @@ const MESSAGE_WHITELIST: string[] = [
     "Synchronize Gradle projects with workspace failed due to an error in the referenced Gradle build.",
     "Unable to read JavaModelManager nonChainingJarsCache file",
     "Workspace restored, but some problems occurred.",
+
+    // While loading class "xxxx", thread "Thread[Worker-1: Loading available Gradle versions,5,main]" timed out waiting (300xxms) for thread "Thread[Worker-0: Synchronizing projects,5,main]" to finish starting bundle "org.eclipse.buildship.core_3.1.6.v20220511-1359 [16]". To avoid deadlock, thread "Thread[Worker-1: Loading available Gradle versions,5,main]" is proceeding but "xxxx" may not be fully initialized.
+    // xxxx stands for below:
+    // org.eclipse.buildship.core.internal.preferences.PersistentModelConverter
+    // org.eclipse.buildship.core.internal.util.gradle.PublishedGradleVersions$LookupStrategy
+    // ...
+    "While loading class \"org.eclipse.buildship.core.internal." 
 ];
 
 export function redact(rawMessage: string, consentToCollectLogs: boolean): {
