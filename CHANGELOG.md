@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.4
+### Fixed
+- Engineering: Aggregate typical buildship warnings. [#1092](https://github.com/microsoft/vscode-java-pack/pull/1092)
+
 ## 0.25.3
 ### Fixed
 - Bug: No response on clicking button `install A New JDK`. [#1068](https://github.com/microsoft/vscode-java-pack/pull/1068)
