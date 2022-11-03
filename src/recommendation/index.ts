@@ -3,12 +3,10 @@
 
 import * as vscode from "vscode";
 import { initialize as initHandler, extensionRecommendationHandler } from "./handler";
-import { initialize as initXml } from "./xml";
 import { isExtensionInstalled, getExtensionContext } from "../utils";
 
-export function initialize(context: vscode.ExtensionContext) {
+export function initialize(_context: vscode.ExtensionContext) {
   initHandler();
-  initXml(context);
 }
 
 export async function validateAndRecommendExtension(extName: string, message: string, isForce: boolean = false) {
