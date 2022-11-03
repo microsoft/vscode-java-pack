@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.6
+### Fixed
+- Webviews are not correctly rendered with VS Code 1.73.0. [#1102](https://github.com/microsoft/vscode-java-pack/issues/1102)
+
 ## 0.25.5
 ### Fixed
 - Fix vulnerabilities in dependencies.
