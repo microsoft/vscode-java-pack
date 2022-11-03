@@ -105,9 +105,7 @@ class BeginnerTipsPage {
 
 	private _getHtmlForWebview() {
 		const scriptPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, 'out', "assets", "beginner-tips", "index.js"));
-
-		// const scriptUri = this._panel.webview.asWebviewUri(scriptPathOnDisk);
-		const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
+		const scriptUri = this._panel?.webview.asWebviewUri(scriptPathOnDisk);
 
 		// Use a nonce to whitelist which scripts can be run
 		const nonce = getNonce();
@@ -123,7 +121,7 @@ class BeginnerTipsPage {
 			<body>
 				<noscript>You need to enable JavaScript to run this app.</noscript>
 				<div id="root"></div>
-				
+
 				<script nonce="${nonce}" src="${scriptUri}" type="module"></script>
 			</body>
 			</html>`;

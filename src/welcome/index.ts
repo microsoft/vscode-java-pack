@@ -74,7 +74,7 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
         light: vscode.Uri.file(path.join(context.extensionPath, "caption.light.svg")),
         dark: vscode.Uri.file(path.join(context.extensionPath, "caption.dark.svg"))
     };
-    webviewPanel.webview.html = getHtmlForWebview(context.asAbsolutePath("./out/assets/welcome/index.js"));
+    webviewPanel.webview.html = getHtmlForWebview(webviewPanel, context.asAbsolutePath("./out/assets/welcome/index.js"));
     context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
     context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage((message => {
         switch (message.command) {
@@ -98,9 +98,10 @@ async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPa
     }));
 }
 
-function getHtmlForWebview(scriptPath: string) {
+function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string) {
     const scriptPathOnDisk = vscode.Uri.file(scriptPath);
-    const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
+    const scriptUri = webviewPanel.webview.asWebviewUri(scriptPathOnDisk);
+
     // Use a nonce to whitelist which scripts can be run
     const nonce = getNonce();
     return `<!DOCTYPE html>

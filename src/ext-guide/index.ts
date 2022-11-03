@@ -35,7 +35,7 @@ async function initializeJavaExtGuideView(context: vscode.ExtensionContext, webv
     dark: vscode.Uri.file(path.join(context.extensionPath, "caption.dark.svg"))
   };
 
-  webviewPanel.webview.html = getHtmlForWebview(context.asAbsolutePath("./out/assets/ext-guide/index.js"));
+  webviewPanel.webview.html = getHtmlForWebview(webviewPanel, context.asAbsolutePath("./out/assets/ext-guide/index.js"));
 
   context.subscriptions.push(webviewPanel.onDidDispose(onDisposeCallback));
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
@@ -68,9 +68,10 @@ async function initializeJavaExtGuideView(context: vscode.ExtensionContext, webv
   syncExtensionStatus();
 }
 
-function getHtmlForWebview(scriptPath: string) {
+function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string) {
   const scriptPathOnDisk = vscode.Uri.file(scriptPath);
-  const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
+  const scriptUri = webviewPanel.webview.asWebviewUri(scriptPathOnDisk);
+
   // Use a nonce to whitelist which scripts can be run
   const nonce = getNonce();
   return `<!DOCTYPE html>
@@ -113,7 +114,7 @@ function getHtmlForWebview(scriptPath: string) {
                 </div>
                 <div class="col-5">
                   <div class="tab-content">
-  
+
                     <!-- Basics -->
                     <div class="tab-pane fade show active" id="panel-basics" role="tabpanel" aria-labelledby="tab-basics">
                       <table class="table table-borderless table-hover table-sm">
@@ -125,7 +126,7 @@ function getHtmlForWebview(scriptPath: string) {
                                 <label class="form-check-label" for="chk.redhat.java">
                                   Language Support for Java by Red Hat
                                 </label>
-  
+
                               </div>
                             </td>
                           </tr>
@@ -182,7 +183,7 @@ function getHtmlForWebview(scriptPath: string) {
                         </tbody>
                       </table>
                     </div>
-  
+
                     <!-- Frameworks -->
                     <div class="tab-pane fade" id="panel-frameworks" role="tabpanel" aria-labelledby="tab-frameworks">
                       <table class="table table-borderless table-hover table-sm">
@@ -220,7 +221,7 @@ function getHtmlForWebview(scriptPath: string) {
                         </tbody>
                       </table>
                     </div>
-  
+
                     <!-- Application Servers -->
                     <div class="tab-pane fade" id="panel-app-servers" role="tabpanel" aria-labelledby="tab-app-servers">
                       <table class="table table-borderless table-hover table-sm">
@@ -238,7 +239,7 @@ function getHtmlForWebview(scriptPath: string) {
                         </tbody>
                       </table>
                     </div>
-  
+
                     <!-- Keymaps -->
                     <div class="tab-pane fade" id="panel-keymaps" role="tabpanel" aria-labelledby="tab-keymaps">
                       <table class="table table-borderless table-hover table-sm">
@@ -266,7 +267,7 @@ function getHtmlForWebview(scriptPath: string) {
                         </tbody>
                       </table>
                     </div>
-  
+
                   </div>
                 </div>
                 <div class="col-4">
@@ -324,7 +325,7 @@ function getHtmlForWebview(scriptPath: string) {
       </div>
     </div>
   </body>
-  
+
   </html>
   `;
 }

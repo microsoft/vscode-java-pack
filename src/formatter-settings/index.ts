@@ -149,7 +149,8 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
 
     private getHtmlForWebview(scriptPath: string) {
         const scriptPathOnDisk = vscode.Uri.file(scriptPath);
-        const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
+        const scriptUri = this.webviewPanel?.webview.asWebviewUri(scriptPathOnDisk);
+
         // Use a nonce to whitelist which scripts can be run
         const nonce = getNonce();
         return `<!DOCTYPE html>
