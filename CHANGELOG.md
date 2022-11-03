@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.5
+### Fixed
+- Fix vulnerabilities in dependencies.
+
 ## 0.25.4
 ### Fixed
 - Engineering: Aggregate typical buildship warnings. [#1092](https://github.com/microsoft/vscode-java-pack/pull/1092)
