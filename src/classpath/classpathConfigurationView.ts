@@ -93,14 +93,15 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
         }
     })));
 
-    classpathConfigurationPanel.webview.html = getHtmlForWebview(context.asAbsolutePath("./out/assets/classpath/index.js"));
+    classpathConfigurationPanel.webview.html = getHtmlForWebview(classpathConfigurationPanel.webview, context.asAbsolutePath("./out/assets/classpath/index.js"));
 
     await checkRequirement();
 }
 
-function getHtmlForWebview(scriptPath: string) {
+function getHtmlForWebview(webview: vscode.Webview, scriptPath: string) {
     const scriptPathOnDisk = vscode.Uri.file(scriptPath);
-    const scriptUri = (scriptPathOnDisk).with({ scheme: "vscode-resource" });
+    const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
+
     // Use a nonce to whitelist which scripts can be run
     const nonce = getNonce();
     return `<!DOCTYPE html>
@@ -115,7 +116,7 @@ function getHtmlForWebview(scriptPath: string) {
         <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
         <div id="content"></div>
     </body>
-    
+
     </html>
     `;
 }
@@ -148,7 +149,7 @@ async function checkRequirement(): Promise<boolean> {
         return false;
     }
 
-    await javaExt.activate(); 
+    await javaExt.activate();
     lsApi = javaExt.exports;
 
     if (lsApi) {
