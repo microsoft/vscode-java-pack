@@ -2,14 +2,13 @@
 // Licensed under the MIT license.
 
 import { GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import * as webviewUI from "@vscode/webview-ui-toolkit/react";
 import React from 'react';
 const isMac: boolean = navigator.platform.toLowerCase().indexOf("darwin") === 0;
-const { wrap } = provideReactWrapper(React);
-const DataGrid = wrap(webviewUI.VSCodeDataGrid);
-const DataRow = wrap(webviewUI.VSCodeDataGridRow);
-const DataCell = wrap(webviewUI.VSCodeDataGridCell);
+
+const DataGrid = (webviewUI.VSCodeDataGrid);
+const DataRow = (webviewUI.VSCodeDataGridRow);
+const DataCell = (webviewUI.VSCodeDataGridCell);
 
 export default function DebuggingPanel() {
     const cF5 = !isMac ? <kbd data-os="win">Ctrl + F5</kbd> : <kbd data-os="mac">⌃ F5</kbd>;

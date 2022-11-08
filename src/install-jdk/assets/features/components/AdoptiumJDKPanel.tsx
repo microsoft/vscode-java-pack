@@ -2,20 +2,18 @@
 // Licensed under the MIT license.
 
 import { Orientation } from '@microsoft/fast-web-utilities';
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import * as webviewUI from "@vscode/webview-ui-toolkit/react";
 import { AdoptiumAsset, AdoptiumReleaseInfo } from '../../../../utils/adoptiumApi';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { listReleases, selectVersion, showAsset } from '../installJDKViewSlice';
 import { onWillDownloadTemurinJDK, onWillFetchAsset, onWillFetchAvailableReleases } from '../../vscode.api';
 import React, { useEffect } from 'react';
-import bytes = require("bytes");
+import bytes from "bytes";
 
-const { wrap } = provideReactWrapper(React);
-const RadioGroup = wrap(webviewUI.VSCodeRadioGroup);
-const Radio = wrap(webviewUI.VSCodeRadio);
-const Button = wrap(webviewUI.VSCodeButton);
-const ProgressRing = wrap(webviewUI.VSCodeProgressRing);
+const RadioGroup = webviewUI.VSCodeRadioGroup;
+const Radio = (webviewUI.VSCodeRadio);
+const Button = (webviewUI.VSCodeButton);
+const ProgressRing = (webviewUI.VSCodeProgressRing);
 
 const AdoptiumJDKPanel = () => {
   const releases = useAppSelector(state => state.jdks.availableReleases);
@@ -24,7 +22,7 @@ const AdoptiumJDKPanel = () => {
   const isLoading = releases === undefined || asset === undefined;
 
   const dispatch = useAppDispatch();
-  
+
   const handleVersionChange = (version: number) => {
     if (!isLoading && currentVersion !== version) {
       dispatch(selectVersion(version));
@@ -75,7 +73,7 @@ const AdoptiumJDKPanel = () => {
     <div>
       <Button onClick={() => downloadJDK(asset)}>
         <div className='btn-download'>
-          <div> 
+          <div>
             Download
           </div>
           <div className='asset-info'>
@@ -97,12 +95,12 @@ const AdoptiumJDKPanel = () => {
         </div>
       </Button>
     </div>
-    : 
+    :
     <ProgressRing />;
 
   return (
     <div>
-      <RadioGroup orientation={Orientation.vertical} readOnly={asset===undefined}>
+      <RadioGroup orientation={Orientation.horizontal} readOnly={asset===undefined}>
         <label slot="label">Version</label>
         {versionElements}
       </RadioGroup>

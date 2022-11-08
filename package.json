@@ -358,10 +358,9 @@
   "dependencies": {
     "@iconify-icons/codicon": "1.2.8",
     "@iconify/react": "^1.1.4",
-    "@microsoft/fast-react-wrapper": "0.1.18",
-    "@reduxjs/toolkit": "^1.8.6",
+    "@reduxjs/toolkit": "1.8.6",
     "@vscode/codicons": "0.0.25",
-    "@vscode/webview-ui-toolkit": "0.8.2",
+    "@vscode/webview-ui-toolkit": "1.1.0",
     "@xmldom/xmldom": "^0.8.3",
     "axios": "^0.21.4",
     "bootstrap": "^4.6.2",

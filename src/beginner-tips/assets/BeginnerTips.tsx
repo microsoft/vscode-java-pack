@@ -2,19 +2,16 @@
 // Licensed under the MIT license.
 
 import "./style.scss";
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import { VSCodePanels, VSCodePanelTab, VSCodePanelView } from "@vscode/webview-ui-toolkit/react";
 import React from 'react';
 import CodeEditingPanel from "./tabs/CodeEditingPanel";
 import DebuggingPanel from "./tabs/DebuggingPanel";
 import FaqPanel from "./tabs/FaqPanel";
 import QuickStartPanel from "./tabs/QuickStartPanel";
 
-const { wrap } = provideReactWrapper(React);
-
-const PanelTab = wrap(webviewUI.VSCodePanelTab);
-const Panels = wrap(webviewUI.VSCodePanels);
-const PanelView = wrap(webviewUI.VSCodePanelView);
+const PanelTab = VSCodePanelTab;
+const Panels = VSCodePanels;
+const PanelView = VSCodePanelView;
 
 export default function BeginnerTips() {
 

@@ -2,14 +2,12 @@
 // Licensed under the MIT license.
 
 import { GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import { VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
 import React from 'react';
 const isMac: boolean = navigator.platform.toLowerCase().indexOf("darwin") === 0;
-const { wrap } = provideReactWrapper(React);
-const DataGrid = wrap(webviewUI.VSCodeDataGrid);
-const DataRow = wrap(webviewUI.VSCodeDataGridRow);
-const DataCell = wrap(webviewUI.VSCodeDataGridCell);
+const DataGrid = VSCodeDataGrid;
+const DataRow = VSCodeDataGridRow;
+const DataCell = VSCodeDataGridCell;
 
 export default function CodeEditingPanel() {
   const controlKey = !isMac ? <kbd data-os="win">Ctrl</kbd> : <kbd data-os="mac">⌘</kbd>;

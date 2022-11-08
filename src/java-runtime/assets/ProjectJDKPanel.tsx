@@ -2,8 +2,7 @@
 // Licensed under the MIT license.
 
 import { DataGridRowTypes, GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import * as webviewUI from "@vscode/webview-ui-toolkit/react";
 import * as React from "react";
 import { encodeCommandUriWithTelemetry, ProjectType } from "../../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
@@ -11,11 +10,10 @@ import { DefaultJDKSelector } from "./components/DefaultJDKSelector";
 import { ProjectTypeHint } from "./components/ProjectTypeHint";
 import { onWillListRuntimes, openBuildScript } from "./vscode.api";
 
-const { wrap } = provideReactWrapper(React);
-const DataGrid = wrap(webviewUI.VSCodeDataGrid);
-const DataRow = wrap(webviewUI.VSCodeDataGridRow);
-const DataCell = wrap(webviewUI.VSCodeDataGridCell);
-const Button = wrap(webviewUI.VSCodeButton);
+const DataGrid = webviewUI.VSCodeDataGrid;
+const DataRow = webviewUI.VSCodeDataGridRow;
+const DataCell = webviewUI.VSCodeDataGridCell;
+const Button = webviewUI.VSCodeButton;
 
 interface Props {
   jdkEntries: JavaRuntimeEntry[];
@@ -34,7 +32,7 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
   render = () => {
     const { jdkEntries, projectRuntimes } = this.props;
     const { showHintFor } = this.state;
-    
+
 
     const projectTypeHint = (projectType: ProjectType) => {
       switch (projectType) {
@@ -114,7 +112,7 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
   refresh = () => {
     onWillListRuntimes();
   }
-  
+
 }
 
 function hasBuildTool(p: ProjectRuntimeEntry) {

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import * as webviewUI from "@vscode/webview-ui-toolkit/react";
 import React from 'react';
 import { WEBVIEW_ID } from '../../constants';
 import { encodeExternalLinkWithTelemetry } from '../../../utils/webview';
@@ -10,14 +9,11 @@ import { onWillReloadWindow } from '../vscode.api';
 import AdoptiumJDKPanel from './components/AdoptiumJDKPanel';
 import OtherJDKsPanel from './components/OtherJDKsPanel';
 
-const { wrap } = provideReactWrapper(React);
-
-
-const PanelTab = wrap(webviewUI.VSCodePanelTab);
-const Panels = wrap(webviewUI.VSCodePanels);
-const PanelView = wrap(webviewUI.VSCodePanelView);
-const Button = wrap(webviewUI.VSCodeButton);
-const Link = wrap(webviewUI.VSCodeLink);
+const PanelTab = (webviewUI.VSCodePanelTab);
+const Panels = (webviewUI.VSCodePanels);
+const PanelView = (webviewUI.VSCodePanelView);
+const Button = (webviewUI.VSCodeButton);
+const Link = (webviewUI.VSCodeLink);
 
 export default function InstallJDKView() {
     const helpLink = "https://github.com/redhat-developer/vscode-java#setting-the-jdk";

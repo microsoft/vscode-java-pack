@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import * as webviewUI from "@vscode/webview-ui-toolkit/react";
 import * as React from "react";
 import { JavaRuntimeEntry } from "../types";
 import { onWillBrowseForJDK, onWillRunCommandFromWebview } from './vscode.api';
 
 const REQUIRED_JDK_VERSION = 17;
-const { wrap } = provideReactWrapper(React);
-const Button = wrap(webviewUI.VSCodeButton);
+const Button = webviewUI.VSCodeButton;
 
 interface Props {
   jdkEntries?: JavaRuntimeEntry[];
@@ -24,7 +22,7 @@ interface State {
 export class ToolingJDKPanel extends React.Component<Props, State> {
   render = () => {
     const { javaHomeError } = this.props;
-    
+
     return (
       <div className="container">
         <h1>Configure Runtime for Language Server</h1>
