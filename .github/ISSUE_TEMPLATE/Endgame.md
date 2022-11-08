@@ -15,26 +15,26 @@ Mark | Description
 
 
 ## Verification items
-#### Extension Pack  
-verifier: 
+#### Extension Pack
+verifier:
 
-#### Project Manager for Java 
-verifier: 
+#### Project Manager for Java
+verifier:
 
 #### Debugger for Java
-verifier: 
+verifier:
 
 #### Maven for Java
-verifier: 
+verifier:
 
 #### Gradle for Java
-verifier: 
+verifier:
 
 #### Test Runner for Java
-verifier: 
+verifier:
 
 #### Spring Boot Dashboard
-verifier: 
+verifier:
 
 ## Verification follow-ups
 - [ ] Extension Pack
@@ -53,5 +53,16 @@ verifier:
 - [ ] Gradle for Java
 - [ ] Test Runner for Java
 - [ ] Spring Boot Dashboard
- 
-## External Contributions 
+
+## External Contributions
+
+## Post-Release Tasks
+Please update dependencies for each project to avoid vulnerabilities. For any reason not to update, create and track corresponding issues in each repo.
+- [ ] Extension Pack @Eskibear
+- [ ] Project Manager for Java @jdneo
+- [ ] Debugger for Java @testforstephen
+- [ ] Maven for Java @Eskibear
+- [ ] Gradle for Java @CsCherrYY
+- [ ] Test Runner for Java @jdneo
+- [ ] LSIF Java indexer @CsCherrYY
+- [ ] Spring Extensions @Eskibear
