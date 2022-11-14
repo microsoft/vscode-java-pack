@@ -16,6 +16,7 @@ class OtherJDKsPanel extends React.Component {
       { name: "Amazon Corretto", url: "https://aws.amazon.com/corretto" },
       { name: "Azul Zulu", url: "https://www.azul.com/downloads/?package=jdk" },
       { name: "Eclipse Adoptium's Temurin", url: "https://adoptium.net/" },
+      { name: "IBM Semeru Runtimes", url: "https://developer.ibm.com/languages/java/semeru-runtimes/"},
       { name: "Microsoft Build of OpenJDK", url: "https://www.microsoft.com/openjdk" },
       { name: "Oracle Java SE", url: "https://www.oracle.com/java/technologies/javase-downloads.html" },
       { name: "Red Hat build of OpenJDK", url: "https://developers.redhat.com/products/openjdk/download" },
