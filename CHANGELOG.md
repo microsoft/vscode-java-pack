@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.7
+### Added
+- Add IBM Semeru Runtimes to Other JDKs list. [#1113](https://github.com/microsoft/vscode-java-pack/pull/1092)
+
 ## 0.25.6
 ### Fixed
 - Webviews are not correctly rendered with VS Code 1.73.0. [#1102](https://github.com/microsoft/vscode-java-pack/issues/1102)
