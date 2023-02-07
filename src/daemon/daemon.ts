@@ -21,7 +21,7 @@ export class LSDaemon {
     public async initialize() {
         await this.logWatcher.start();
         setTimeout(() => {
-            this.clientLogWatcher.collectStartupInfo();
+            this.clientLogWatcher.collectInfoFromLog();
         }, 10 * 1000); // wait a while when JDTLS has been launched
     }
 

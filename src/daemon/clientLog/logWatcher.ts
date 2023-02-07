@@ -9,45 +9,66 @@ export class ClientLogWatcher {
     private context: vscode.ExtensionContext;
     private javaExtensionRoot: vscode.Uri | undefined;
     private logProcessedTimestamp: number = Date.now();
+    private interestedLspRequests: string[] = ["textDocument\\/completion"];
+    private lspTracePatterns: Map<string, RegExp> = new Map();
 
     constructor(daemon: LSDaemon) {
         this.context = daemon.context;
         if (this.context.storageUri) {
             this.javaExtensionRoot = vscode.Uri.joinPath(this.context.storageUri, "..", "redhat.java");
         }
+        if (this.interestedLspRequests.length > 0) {
+            for (const request of this.interestedLspRequests) {
+                this.lspTracePatterns.set(request, new RegExp(`\\[Trace.*\\] Received response \'${request}.*\' in (\\d+)ms`));
+            }
+        }
     }
 
-    public async collectStartupInfo() {
+    public async collectInfoFromLog() {
         const logs = await this.getLogs();
         if (logs) {
-            const info: any = {};
+            for (const log of logs) {
+                if (log.message?.startsWith("Use the JDK from") && Date.parse(log.timestamp) > this.logProcessedTimestamp) {
+                    const info: any = {};
+                    info.defaultProjectJdk = log?.message.replace("Use the JDK from '", "").replace("' as the initial default project JDK.", "");
 
-            const jdkLog = logs.find(log => log.message?.startsWith("Use the JDK from"));
-            info.defaultProjectJdk = jdkLog?.message.replace("Use the JDK from '", "").replace("' as the initial default project JDK.", "");
+                    const startupLog = logs.find(log => log.message?.startsWith("Starting Java server with:") && log.message.endsWith("jdt_ws") /* limit to standard server */);
+                    if (startupLog) {
+                        info.xmx = startupLog.message.match(/-Xmx[0-9kmgKMG]+/g)?.[0];
+                        info.xms = startupLog.message.match(/-Xms[0-9kmgKMG]+/g)?.[0];
+                        info.lombok = startupLog.message.includes("lombok.jar") ? "true" : undefined;
+                        info.workspaceType = startupLog.message.match(/-XX:HeapDumpPath=.*(vscodesws)/) ? "vscodesws": "folder";
+                    }
 
-            const startupLog = logs.find(log => log.message?.startsWith("Starting Java server with:") && log.message.endsWith("jdt_ws") /* limit to standard server */);
-            if (startupLog) {
-                info.xmx = startupLog.message.match(/-Xmx[0-9kmgKMG]+/g)?.[0];
-                info.xms = startupLog.message.match(/-Xms[0-9kmgKMG]+/g)?.[0];
-                info.lombok = startupLog.message.includes("lombok.jar") ? "true" : undefined;
-                info.workspaceType = startupLog.message.match(/-XX:HeapDumpPath=.*(vscodesws)/) ? "vscodesws": "folder";
+                    const errorLog = logs.find(log => log.level === "error");
+                    info.error = errorLog ? "true" : undefined;
+
+                    const missingJar = "Error opening zip file or JAR manifest missing"; // lombok especially
+                    if (logs.find(log => log.message?.startsWith(missingJar))) {
+                        info.error = missingJar;
+                    }
+
+                    const crashLog = logs.find(log => log.message?.startsWith("The Language Support for Java server crashed and will restart."));
+                    info.crash = crashLog ? "true" : undefined;
+
+                    sendInfo("", {
+                        name: "client-log-startup-metadata",
+                        ...info
+                    });
+                } else {
+                    for (const key of this.lspTracePatterns.keys()) {
+                        const regexp: RegExp = this.lspTracePatterns.get(key)!;
+                        const match = log.message?.match(regexp);
+                        if (match?.length === 2) {
+                            sendInfo("", {
+                                name: "perf-trace",
+                                kind: key.replace("\\", ""),
+                                time: match[1],
+                            });
+                        }
+                    }
+                }
             }
-
-            const errorLog = logs.find(log => log.level === "error");
-            info.error = errorLog ? "true" : undefined;
-
-            const missingJar = "Error opening zip file or JAR manifest missing"; // lombok especially
-            if (logs.find(log => log.message?.startsWith(missingJar))) {
-                info.error = missingJar;
-            }
-
-            const crashLog = logs.find(log => log.message?.startsWith("The Language Support for Java server crashed and will restart."));
-            info.crash = crashLog ? "true" : undefined;
-
-            sendInfo("", {
-                name: "client-log-startup-metadata",
-                ...info
-            });
         }
     }
 
@@ -55,8 +76,7 @@ export class ClientLogWatcher {
         const rawBytes = await this.readLatestLogFile();
         if (rawBytes) {
             const content = rawBytes.toString();
-            const entries = parse(content);
-            return entries.filter(elem => Date.parse(elem["timestamp"]) > this.logProcessedTimestamp);
+            return parse(content);
         } else {
             return undefined;
         }
