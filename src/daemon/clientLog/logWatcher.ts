@@ -25,10 +25,20 @@ export class ClientLogWatcher {
     }
 
     public async collectInfoFromLog() {
-        const logs = await this.getLogs();
+        let logs = await this.getLogs();
         if (logs) {
+            logs = logs.reverse();
+            let sessionCount = 0;
             for (const log of logs) {
-                if (log.message?.startsWith("Use the JDK from") && Date.parse(log.timestamp) > this.logProcessedTimestamp) {
+                if (log.message?.startsWith("Use the JDK from")) {
+                    if (++sessionCount > 1) {
+                        // only the lsp traces from last session should be collected.
+                        break;
+                    }
+
+                    if (Date.parse(log.timestamp) < this.logProcessedTimestamp) {
+                        continue;
+                    }
                     const info: any = {};
                     info.defaultProjectJdk = log?.message.replace("Use the JDK from '", "").replace("' as the initial default project JDK.", "");
 
