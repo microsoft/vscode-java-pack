@@ -62,7 +62,7 @@ export class ClientLogWatcher {
                         if (match?.length === 2) {
                             sendInfo("", {
                                 name: "perf-trace",
-                                kind: key.replace("\\", ""),
+                                kind: escapeLspRequestName(key),
                                 time: match[1],
                             });
                         }
@@ -145,4 +145,11 @@ function parse(rawLog: string) {
         }
     }
     return ret;
+}
+
+/**
+ * To avoid the LSP request name get redacted.
+ */
+function escapeLspRequestName(name: string) {
+    return name.replace("\\/", "-");
 }
