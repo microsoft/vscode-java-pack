@@ -27,10 +27,20 @@ export class ClientLogWatcher {
     }
 
     public async collectInfoFromLog() {
-        const logs = await this.getLogs();
+        let logs = await this.getLogs();
         if (logs) {
+            logs = logs.reverse();
+            let sessionCount = 0;
             for (const log of logs) {
-                if (log.message?.startsWith("Use the JDK from") && Date.parse(log.timestamp) > this.logProcessedTimestamp) {
+                if (log.message?.startsWith("Use the JDK from")) {
+                    if (++sessionCount > 1) {
+                        // only the lsp traces from last session should be collected.
+                        break;
+                    }
+
+                    if (Date.parse(log.timestamp) < this.logProcessedTimestamp) {
+                        continue;
+                    }
                     const info: any = {};
                     info.defaultProjectJdk = log?.message.replace("Use the JDK from '", "").replace("' as the initial default project JDK.", "");
 
@@ -68,7 +78,7 @@ export class ClientLogWatcher {
                         if (match?.length === 2) {
                             sendInfo("", {
                                 name: "perf-trace",
-                                kind: key.replace("\\", ""),
+                                kind: escapeLspRequestName(key),
                                 time: match[1],
                             });
                         }
@@ -151,4 +161,11 @@ function parse(rawLog: string) {
         }
     }
     return ret;
+}
+
+/**
+ * To avoid the LSP request name get redacted.
+ */
+function escapeLspRequestName(name: string) {
+    return name.replace("\\/", "-");
 }
