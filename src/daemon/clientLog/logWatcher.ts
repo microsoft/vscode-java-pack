@@ -5,6 +5,8 @@ import * as path from "path";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "../daemon";
 
+const lombokJarRegex = /lombok-\d+.*\.jar/;
+
 export class ClientLogWatcher {
     private context: vscode.ExtensionContext;
     private javaExtensionRoot: vscode.Uri | undefined;
@@ -36,7 +38,11 @@ export class ClientLogWatcher {
                     if (startupLog) {
                         info.xmx = startupLog.message.match(/-Xmx[0-9kmgKMG]+/g)?.[0];
                         info.xms = startupLog.message.match(/-Xms[0-9kmgKMG]+/g)?.[0];
-                        info.lombok = startupLog.message.includes("lombok.jar") ? "true" : undefined;
+                        if (startupLog.message.includes("lombok.jar")) {
+                            info.lombok = "true"; // using old version of 3rd party lombok extension
+                        } else if (startupLog.message.match(lombokJarRegex)) {
+                            info.lombok = "embedded"; // lombok projects, loading embedded lombok.jar
+                        }
                         info.workspaceType = startupLog.message.match(/-XX:HeapDumpPath=.*(vscodesws)/) ? "vscodesws": "folder";
                     }
 
@@ -103,7 +109,7 @@ export class ClientLogWatcher {
     }
 }
 /**
- * filename: client.log.yyyy-mm-dd.r 
+ * filename: client.log.yyyy-mm-dd.r
  */
 function compare_file(a: string, b: string) {
     const dateA = a.slice(11, 21), dateB = b.slice(11, 21);
