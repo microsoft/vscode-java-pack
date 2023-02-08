@@ -2,7 +2,9 @@
 name: Feature request
 about: Suggest an idea for this project
 title: Feature request
-label: backlog
+labels: ''
+assignees: ''
+
 ---
 
 ## Suggestion

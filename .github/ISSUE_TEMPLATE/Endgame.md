@@ -1,8 +1,10 @@
 ---
 name: Endgame
 about: Monthly endgame issue template
-title: <Month> 2022 Endgame
-label: endgame
+title: "<Month> 2022 Endgame"
+labels: endgame
+assignees: Eskibear, jdneo, testforstephen, CsCherrYY
+
 ---
 
 Legends of status:
