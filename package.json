@@ -1,7 +1,7 @@
 {
   "name": "vscode-java-pack",
   "displayName": "Extension Pack for Java",
-  "description": "Popular extensions for Java development that provides Java IntelliSense, debugging, testing, Maven/Gradle support, project management and more",
+  "description": "Popular extension for Java development that provides Java IntelliSense, debugging, testing, Maven/Gradle support, project management and more",
   "license": "MIT",
   "version": "0.25.7",
   "publisher": "vscjava",
