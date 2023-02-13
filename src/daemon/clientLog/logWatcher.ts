@@ -13,6 +13,8 @@ export class ClientLogWatcher {
     private logProcessedTimestamp: number = Date.now();
     private interestedLspRequests: string[] = ["textDocument\\/completion"];
     private lspTracePatterns: Map<string, RegExp> = new Map();
+    // statistics of the interested lsp requests. 
+    private perfTraces: Map<string, {time: number; count: number}> = new Map();
 
     constructor(daemon: LSDaemon) {
         this.context = daemon.context;
@@ -76,16 +78,28 @@ export class ClientLogWatcher {
                         const regexp: RegExp = this.lspTracePatterns.get(key)!;
                         const match = log.message?.match(regexp);
                         if (match?.length === 2) {
-                            sendInfo("", {
-                                name: "perf-trace",
-                                kind: escapeLspRequestName(key),
-                                time: match[1],
-                            });
+                            const time = parseInt(match[1]);
+                            if (Number.isNaN(time)) {
+                                continue;
+                            }
+                            let statistics: { time: number; count: number; } | undefined = this.perfTraces.get(key);
+                            if (!statistics) {
+                                statistics = {
+                                    time,
+                                    count: 1,
+                                };
+                            } else {
+                                statistics.time += time;
+                                statistics.count++;
+                            }
+                            this.perfTraces.set(key, statistics);
                         }
                     }
                 }
             }
         }
+
+        this.sendPerfStatistics();
     }
 
     public async getLogs() {
@@ -116,6 +130,17 @@ export class ClientLogWatcher {
             }
         }
         return undefined;
+    }
+
+    private sendPerfStatistics() {
+        for (let [key, value] of this.perfTraces) {
+            sendInfo("", {
+                name: "perf-trace",
+                kind: escapeLspRequestName(key),
+                time: value.time,
+                count: value.count,
+            });
+        }
     }
 }
 /**
