@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          gh issue list --limit 1000 --search "is:issue is:open sort:reactions-+1-desc" --json number,url,reactionGroups,title,labels > $GITHUB_REPOSITORY.$(date +"%Y-%m-%d").json
+          gh issue list --limit 1000 --search "is:issue is:open sort:reactions-+1-desc" --json number,url,reactionGroups,title,labels > $(echo $GITHUB_REPOSITORY | tr / _).$(date +"%Y-%m-%d").json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v3
