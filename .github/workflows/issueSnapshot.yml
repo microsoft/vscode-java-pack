@@ -1,0 +1,17 @@
+name: Take snapshot of open issues
+on: 
+  schedule: 
+    # Daily at 8:20 UTC
+    - cron: '0 8 1 * *'
+jobs:
+  track_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          gh issue list --limit 1000 --search "is:issue is:open sort:reactions-+1-desc" --json number,url,reactionGroups,title,labels > $GITHUB_REPOSITORY.$(date +"%Y-%m-%d").json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./*.json
+          retention-days: 1
