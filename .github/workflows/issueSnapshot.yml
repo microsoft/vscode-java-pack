@@ -1,8 +1,8 @@
 name: Take snapshot of open issues
 on: 
   schedule: 
-    # Daily at 8:20 UTC
     - cron: '0 8 1 * *'
+  workflow_dispatch:
 jobs:
   track_pr:
     runs-on: ubuntu-latest
