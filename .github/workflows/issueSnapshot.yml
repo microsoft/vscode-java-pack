@@ -8,9 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          gh issue list --limit 1000 --search "is:issue is:open sort:reactions-+1-desc" --json number,url,reactionGroups,title,labels > $(echo $GITHUB_REPOSITORY | tr / _).$(date +"%Y-%m-%d").json
+          gh issue list -F owner=$OWNER -F name=$REPO --limit 1000 --search "is:issue is:open sort:reactions-+1-desc" --json number,url,reactionGroups,title,labels > $REPO.$(date +"%Y-%m-%d").json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
       - uses: actions/upload-artifact@v3
         with:
           path: ./*.json
