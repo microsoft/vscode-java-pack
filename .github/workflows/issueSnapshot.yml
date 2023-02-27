@@ -11,6 +11,7 @@ jobs:
         run: |
           gh issue list -R $GITHUB_REPOSITORY --limit 1000 --search "is:issue is:open sort:reactions-+1-desc" --json number,url,reactionGroups,title,labels > $REPO.$(date +"%Y-%m-%d").json
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.repository.name }}
       - name: Save artifacts
         uses: actions/upload-artifact@v3
