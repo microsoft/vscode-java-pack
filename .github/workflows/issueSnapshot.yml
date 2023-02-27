@@ -26,4 +26,4 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az storage blob upload-batch --account-name ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }} --auth-mode key -d ${{ vars.AZURE_STORAGE_CONTAINER_NAME }} -s ./*.json
+            az storage blob upload-batch --account-name ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }} --auth-mode key -d ${{ vars.AZURE_STORAGE_CONTAINER_NAME }} -s .
