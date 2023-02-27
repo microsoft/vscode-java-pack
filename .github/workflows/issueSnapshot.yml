@@ -4,15 +4,25 @@ on:
     - cron: '0 8 1 * *'
   workflow_dispatch:
 jobs:
-  track_pr:
+  dump_issues:
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Take issue snapshot
+        run: |
           gh issue list -R $GITHUB_REPOSITORY --limit 1000 --search "is:issue is:open sort:reactions-+1-desc" --json number,url,reactionGroups,title,labels > $REPO.$(date +"%Y-%m-%d").json
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.repository.name }}
-      - uses: actions/upload-artifact@v3
+      - name: Save artifacts
+        uses: actions/upload-artifact@v3
         with:
           path: ./*.json
           retention-days: 1
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDS }}
+      - name: Upload to Azure
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload-batch --account-name ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }} --auth-mode key -d ${{ vars.AZURE_STORAGE_CONTAINER_NAME }} -s ./*.json
