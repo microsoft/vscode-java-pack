@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.25.8
+### Fixed
+- Fix statitics for lombok support and completion performance.
+- Fix vulnerabilities in dependencies.
+
 ## 0.25.7
 ### Added
 - Add IBM Semeru Runtimes to Other JDKs list. [#1113](https://github.com/microsoft/vscode-java-pack/pull/1092)
