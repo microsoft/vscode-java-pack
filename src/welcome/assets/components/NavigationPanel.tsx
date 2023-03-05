@@ -34,7 +34,7 @@ export default class NavigationPanel extends React.Component<{
       actions: [
         { name: "Spring Boot with VS Code", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-spring-boot"] },
         { name: "Spring PetClinic Sample Application", command: "java.helper.openUrl", args: ["https://github.com/spring-projects/spring-petclinic"] },
-        { name: "Install Spring Boot Extension Pack ...", command: "java.helper.installExtension", args: ["pivotal.vscode-boot-dev-pack", "Spring Boot Extension Pack"] }
+        { name: "Install Spring Boot Extension Pack ...", command: "java.helper.installExtension", args: ["vmware.vscode-boot-dev-pack", "Spring Boot Extension Pack"] }
       ]
     },
     {
