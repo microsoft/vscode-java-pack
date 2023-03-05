@@ -191,8 +191,8 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
                           <tr>
                             <td>
                               <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="pivotal.vscode-boot-dev-pack" id="chk.pivotal.vscode-boot-dev-pack">
-                                <label class="form-check-label" for="chk.pivotal.vscode-boot-dev-pack">
+                                <input class="form-check-input" type="checkbox" value="vmware.vscode-boot-dev-pack" id="chk.vmware.vscode-boot-dev-pack">
+                                <label class="form-check-label" for="chk.vmware.vscode-boot-dev-pack">
                                   Spring Boot Extension Pack
                                 </label>
                               </div>
