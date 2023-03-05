@@ -205,7 +205,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
               <div>
                 <a href="command:java.helper.openUrl?%22https%3A%2F%2Fgithub.com%2Fspring-projects%2Fspring-petclinic%22" title="Run PetClinic sample app in VS Code">Spring PetClinic Sample Application</a>
               </div>
-              <div ext="pivotal.vscode-boot-dev-pack" displayName="Spring Boot Extension Pack">
+              <div ext="vmware.vscode-boot-dev-pack" displayName="Spring Boot Extension Pack">
                 <a href="#" title="Install Spring Boot Extension Pack...">Install Spring Boot Extension Pack</a>
               </div>
             </div>
