@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as fs from "fs";
+import * as path from "path";
 import * as vscode from "vscode";
-import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation } from "vscode-extension-telemetry-wrapper";
+import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { BeginnerTipsViewSerializer } from "./beginner-tips";
 import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
 import { initialize as initCommands } from "./commands";
+import { initDaemon } from "./daemon";
 import { initialize as initExp } from "./exp";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
-import { BeginnerTipsViewSerializer } from "./beginner-tips";
 import { InstallJdkViewSerializer } from "./install-jdk";
 import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
 import { HelpViewType, showReleaseNotesOnStart } from "./misc";
@@ -20,7 +23,8 @@ import { initialize as initUtils } from "./utils";
 import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
-import { initDaemon } from "./daemon";
+
+let cleanJavaWorkspaceIndicator: string;
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -37,6 +41,11 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initCommands(context);
   initRecommendations(context);
   initDaemon(context);
+
+  if(context.storageUri) {
+    const javaWorkspaceStoragePath = path.join(context.storageUri.fsPath, "..", "redhat.java");
+    cleanJavaWorkspaceIndicator = path.join(javaWorkspaceStoragePath, "jdt_ws", ".cleanWorkspace");
+  }
 
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: "file", language: "java", pattern: "**/*.java" }, new CodeActionProvider()));
 
@@ -89,5 +98,11 @@ function initializeTelemetry(_context: vscode.ExtensionContext) {
 }
 
 export async function deactivate() {
+  if (cleanJavaWorkspaceIndicator && fs.existsSync(cleanJavaWorkspaceIndicator)) {
+    sendInfo("", {
+      name: "cleanJavaLSWorkspace",
+      timestamp: Date.now().toString()
+    });
+  }
   await disposeTelemetryWrapper();
 }
