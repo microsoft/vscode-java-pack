@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.9
+### Fixed
+Change outdated publisher `pivotal` to `vmware` in related links. [#1161](https://github.com/microsoft/vscode-java-pack/pull/1161)
+
 ## 0.25.8
 ### Fixed
 - Fix statitics for lombok support and completion performance.
