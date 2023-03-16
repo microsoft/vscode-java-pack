@@ -6,6 +6,10 @@ import * as vscode from "vscode";
 import { sendError, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "./daemon";
 
+const INTERESTED_REQUESTS: Set<string> = new Set([
+   "initialize",
+   "textDocument/completion",
+]);
 const delay = promisify(setTimeout);
 
 let daemon: LSDaemon;
@@ -45,6 +49,17 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
       daemon.logWatcher.sendStartupMetadata("redhat.java activation timeout");
       return false;
    }
+
+   // Trace the interested LSP requests performance
+   javaExt.exports?.onDidRequestEnd((traceEvent: any) => {
+      if (INTERESTED_REQUESTS.has(traceEvent.type)) {
+         sendInfo("", {
+            name: "lsp",
+            kind: traceEvent.type,
+            duration: Math.trunc(traceEvent.duration),
+         });
+      }
+   });
 
    // on ServiceReady
    javaExt.exports.onDidServerModeChange(async (mode: string) => {
