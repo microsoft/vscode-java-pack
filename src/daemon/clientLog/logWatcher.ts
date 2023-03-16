@@ -11,20 +11,11 @@ export class ClientLogWatcher {
     private context: vscode.ExtensionContext;
     private javaExtensionRoot: vscode.Uri | undefined;
     private logProcessedTimestamp: number = Date.now();
-    private interestedLspRequests: string[] = ["textDocument\\/completion"];
-    private lspTracePatterns: Map<string, RegExp> = new Map();
-    // statistics of the interested lsp requests. 
-    private perfTraces: Map<string, {time: number; count: number}> = new Map();
 
     constructor(daemon: LSDaemon) {
         this.context = daemon.context;
         if (this.context.storageUri) {
             this.javaExtensionRoot = vscode.Uri.joinPath(this.context.storageUri, "..", "redhat.java");
-        }
-        if (this.interestedLspRequests.length > 0) {
-            for (const request of this.interestedLspRequests) {
-                this.lspTracePatterns.set(request, new RegExp(`\\[Trace.*\\] Received response \'${request}.*\' in (\\d+)ms`));
-            }
         }
     }
 
@@ -73,33 +64,9 @@ export class ClientLogWatcher {
                         name: "client-log-startup-metadata",
                         ...info
                     });
-                } else {
-                    for (const key of this.lspTracePatterns.keys()) {
-                        const regexp: RegExp = this.lspTracePatterns.get(key)!;
-                        const match = log.message?.match(regexp);
-                        if (match?.length === 2) {
-                            const time = parseInt(match[1]);
-                            if (Number.isNaN(time)) {
-                                continue;
-                            }
-                            let statistics: { time: number; count: number; } | undefined = this.perfTraces.get(key);
-                            if (!statistics) {
-                                statistics = {
-                                    time,
-                                    count: 1,
-                                };
-                            } else {
-                                statistics.time += time;
-                                statistics.count++;
-                            }
-                            this.perfTraces.set(key, statistics);
-                        }
-                    }
                 }
             }
         }
-
-        this.sendPerfStatistics();
     }
 
     public async getLogs() {
@@ -130,17 +97,6 @@ export class ClientLogWatcher {
             }
         }
         return undefined;
-    }
-
-    private sendPerfStatistics() {
-        for (let [key, value] of this.perfTraces) {
-            sendInfo("", {
-                name: "perf-trace",
-                kind: escapeLspRequestName(key),
-                time: value.time,
-                count: value.count,
-            });
-        }
     }
 }
 /**
@@ -186,11 +142,4 @@ function parse(rawLog: string) {
         }
     }
     return ret;
-}
-
-/**
- * To avoid the LSP request name get redacted.
- */
-function escapeLspRequestName(name: string) {
-    return name.replace("\\/", "-");
 }
