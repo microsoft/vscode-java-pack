@@ -25,6 +25,7 @@ import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 
 let cleanJavaWorkspaceIndicator: string;
+let activatedTimestamp: number;
 
 export async function activate(context: vscode.ExtensionContext) {
   syncState(context);
@@ -45,6 +46,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   if(context.storageUri) {
     const javaWorkspaceStoragePath = path.join(context.storageUri.fsPath, "..", "redhat.java");
     cleanJavaWorkspaceIndicator = path.join(javaWorkspaceStoragePath, "jdt_ws", ".cleanWorkspace");
+    activatedTimestamp = Date.now();
   }
 
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: "file", language: "java", pattern: "**/*.java" }, new CodeActionProvider()));
@@ -99,9 +101,12 @@ function initializeTelemetry(_context: vscode.ExtensionContext) {
 
 export async function deactivate() {
   if (cleanJavaWorkspaceIndicator && fs.existsSync(cleanJavaWorkspaceIndicator)) {
+    const now = Date.now();
+
     sendInfo("", {
       name: "cleanJavaLSWorkspace",
-      timestamp: Date.now().toString()
+      timestamp: now.toString(),
+      time: now - activatedTimestamp
     });
   }
   await disposeTelemetryWrapper();
