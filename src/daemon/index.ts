@@ -55,7 +55,7 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
       if (INTERESTED_REQUESTS.has(traceEvent.type)) {
          sendInfo("", {
             name: "lsp",
-            kind: traceEvent.type,
+            kind: escapeLspRequestName(traceEvent.type),
             duration: Math.trunc(traceEvent.duration),
          });
       }
@@ -116,4 +116,11 @@ async function checkIfJavaServerCrashed(wait: number = 0/*ms*/) {
          });
       }
    }
+}
+
+/**
+ * To avoid the LSP request name get redacted.
+ */
+function escapeLspRequestName(name: string) {
+   return name.replaceAll("/", "-");
 }
