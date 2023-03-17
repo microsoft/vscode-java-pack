@@ -122,5 +122,5 @@ async function checkIfJavaServerCrashed(wait: number = 0/*ms*/) {
  * To avoid the LSP request name get redacted.
  */
 function escapeLspRequestName(name: string) {
-   return name.replaceAll("/", "-");
+   return name.replace(/\//g, "-")
 }
