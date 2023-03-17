@@ -52,12 +52,29 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
 
    // Trace the interested LSP requests performance
    javaExt.exports?.onDidRequestEnd((traceEvent: any) => {
+      let code: number = 0;
+      let errorMessage: string = "";
+      if (traceEvent.error) {
+         code = traceEvent.error?.code || 0;
+         errorMessage = traceEvent.error?.message || String(traceEvent.error);
+      }
+
       if (INTERESTED_REQUESTS.has(traceEvent.type)) {
-         sendInfo("", {
-            name: "lsp",
-            kind: escapeLspRequestName(traceEvent.type),
-            duration: Math.trunc(traceEvent.duration),
-         });
+         if (errorMessage) {
+            sendInfo("", {
+               name: "lsp",
+               kind: escapeLspRequestName(traceEvent.type),
+               duration: Math.trunc(traceEvent.duration),
+               code,
+               message: errorMessage,
+            });
+         } else {
+            sendInfo("", {
+               name: "lsp",
+               kind: escapeLspRequestName(traceEvent.type),
+               duration: Math.trunc(traceEvent.duration),
+            });
+         }
       }
    });
 
