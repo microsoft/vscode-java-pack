@@ -68,13 +68,21 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
                code,
                message: errorMessage,
             });
-         } else {
-            sendInfo("", {
-               name: "lsp",
-               kind: escapeLspRequestName(traceEvent.type),
-               duration: Math.trunc(traceEvent.duration),
-            });
+            return;
          }
+
+         // See https://github.com/redhat-developer/vscode-java/pull/3010
+         // to exclude the invalid completion requests.
+         if (!traceEvent.resultLength && traceEvent.type === "textDocument/completion") {
+            return;
+         }
+
+         sendInfo("", {
+            name: "lsp",
+            kind: escapeLspRequestName(traceEvent.type),
+            duration: Math.trunc(traceEvent.duration),
+            resultLength: traceEvent.resultLength,
+         });
       }
    });
 
