@@ -5,11 +5,9 @@ import { promisify } from "util";
 import * as vscode from "vscode";
 import { sendError, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "./daemon";
+import { getExpService } from "../exp";
+import { TreatmentVariables } from "../exp/TreatmentVariables";
 
-const INTERESTED_REQUESTS: Set<string> = new Set([
-   "initialize",
-   "textDocument/completion",
-]);
 const delay = promisify(setTimeout);
 
 let daemon: LSDaemon;
@@ -50,41 +48,7 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
       return false;
    }
 
-   // Trace the interested LSP requests performance
-   javaExt.exports?.onDidRequestEnd((traceEvent: any) => {
-      let code: number = 0;
-      let errorMessage: string = "";
-      if (traceEvent.error) {
-         code = traceEvent.error?.code || 0;
-         errorMessage = traceEvent.error?.message || String(traceEvent.error);
-      }
-
-      if (INTERESTED_REQUESTS.has(traceEvent.type)) {
-         if (errorMessage) {
-            sendInfo("", {
-               name: "lsp",
-               kind: escapeLspRequestName(traceEvent.type),
-               duration: Math.trunc(traceEvent.duration),
-               code,
-               message: errorMessage,
-            });
-            return;
-         }
-
-         // See https://github.com/redhat-developer/vscode-java/pull/3010
-         // to exclude the invalid completion requests.
-         if (!traceEvent.resultLength && traceEvent.type === "textDocument/completion") {
-            return;
-         }
-
-         sendInfo("", {
-            name: "lsp",
-            kind: escapeLspRequestName(traceEvent.type),
-            duration: Math.trunc(traceEvent.duration),
-            resultLength: traceEvent.resultLength,
-         });
-      }
-   });
+   traceLSPPerformance(javaExt);
 
    // on ServiceReady
    javaExt.exports.onDidServerModeChange(async (mode: string) => {
@@ -107,6 +71,65 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
    });
 
    return true;
+}
+
+const INTERESTED_REQUESTS: Set<string> = new Set([
+   "initialize",
+   "textDocument/completion",
+]);
+async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
+   const javaExtVersion = javaExt.packageJSON?.version;
+   const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
+   const isTreatment = !isPreReleaseVersion && 
+      (await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCompletionSampling, true /*checkCache*/) || false);
+   const sampling: string = isPreReleaseVersion ? "pre-release" : (isTreatment ? "sampling" : "");
+   // Trace the interested LSP requests performance
+   javaExt.exports?.onDidRequestEnd((traceEvent: any) => {
+      if (!traceEvent.error && !isPreReleaseVersion && !isTreatment) {
+         return;
+      }
+
+      if (INTERESTED_REQUESTS.has(traceEvent.type)) {
+         // See https://github.com/redhat-developer/vscode-java/pull/3010
+         // to exclude the invalid completion requests.
+         if (!traceEvent.error && !traceEvent.resultLength && traceEvent.type === "textDocument/completion") {
+            return;
+         }
+
+         sendTrace(traceEvent, javaExtVersion, sampling);
+         return;
+      }
+   });
+}
+
+function sendTrace(traceEvent: any, javaExtVersion: any, sampling: string) {
+   let code: number = 0;
+   let errorMessage: string = "";
+   if (traceEvent.error) {
+      code = traceEvent.error?.code || 0;
+      errorMessage = traceEvent.error?.message || String(traceEvent.error);
+   }
+
+   if (errorMessage) {
+      sendInfo("", {
+         name: "lsp",
+         kind: escapeLspRequestName(traceEvent.type),
+         duration: Math.trunc(traceEvent.duration),
+         code,
+         message: errorMessage,
+         javaversion: javaExtVersion,
+      });
+      return;
+   }
+
+   sendInfo("", {
+      name: "lsp",
+      kind: escapeLspRequestName(traceEvent.type),
+      duration: Math.trunc(traceEvent.duration),
+      resultLength: traceEvent.resultLength,
+      javaversion: javaExtVersion,
+      remark: sampling,
+   });
 }
 
 let corruptedCacheDetected: boolean = false;
