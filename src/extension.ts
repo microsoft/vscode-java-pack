@@ -43,10 +43,10 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initRecommendations(context);
   initDaemon(context);
 
+  activatedTimestamp = Date.now();
   if(context.storageUri) {
     const javaWorkspaceStoragePath = path.join(context.storageUri.fsPath, "..", "redhat.java");
     cleanJavaWorkspaceIndicator = path.join(javaWorkspaceStoragePath, "jdt_ws", ".cleanWorkspace");
-    activatedTimestamp = Date.now();
   }
 
   context.subscriptions.push(vscode.languages.registerCodeActionsProvider({ scheme: "file", language: "java", pattern: "**/*.java" }, new CodeActionProvider()));
@@ -100,14 +100,15 @@ function initializeTelemetry(_context: vscode.ExtensionContext) {
 }
 
 export async function deactivate() {
-  if (cleanJavaWorkspaceIndicator && fs.existsSync(cleanJavaWorkspaceIndicator)) {
-    const now = Date.now();
-
-    sendInfo("", {
-      name: "cleanJavaLSWorkspace",
-      timestamp: now.toString(),
-      time: now - activatedTimestamp
-    });
+  const now = Date.now();
+  const data = {
+    name: "sessionStatus",
+    timestamp: now.toString(),
+    time: now - activatedTimestamp
   }
+  if (cleanJavaWorkspaceIndicator && fs.existsSync(cleanJavaWorkspaceIndicator)) {
+    data.name = "cleanJavaLSWorkspace";
+  }
+  sendInfo("", data);
   await disposeTelemetryWrapper();
 }
