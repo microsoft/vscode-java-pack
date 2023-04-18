@@ -77,6 +77,8 @@ const INTERESTED_REQUESTS: Set<string> = new Set([
    "initialize",
    "textDocument/completion",
 ]);
+const CANCELLATION_CODE: number = -32800; // report such error if the request is cancelled.
+const CONTENT_MODIFIED_CODE: number = -32801; // report such error if semantic token request is outdated while content modified.
 async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    const javaExtVersion = javaExt.packageJSON?.version;
    const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
@@ -85,50 +87,46 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    const sampling: string = isPreReleaseVersion ? "pre-release" : (isTreatment ? "sampling" : "");
    // Trace the interested LSP requests performance
    javaExt.exports?.onDidRequestEnd((traceEvent: any) => {
-      if (!traceEvent.error && !isPreReleaseVersion && !isTreatment) {
+      if (!isPreReleaseVersion && !isTreatment) {
+         return;
+      }
+
+      if (traceEvent.error) {
+         let code: number = traceEvent.error?.code || 0;
+         let errorMessage: string = traceEvent.error?.message || String(traceEvent.error);
+         if (code === CANCELLATION_CODE || code === CONTENT_MODIFIED_CODE) {
+            return;
+         }
+
+         sendInfo("", {
+            name: "lsp",
+            kind: escapeLspRequestName(traceEvent.type),
+            duration: Math.trunc(traceEvent.duration),
+            code,
+            message: errorMessage,
+            javaversion: javaExtVersion,
+            remark: sampling,
+         });
          return;
       }
 
       if (INTERESTED_REQUESTS.has(traceEvent.type)) {
          // See https://github.com/redhat-developer/vscode-java/pull/3010
          // to exclude the invalid completion requests.
-         if (!traceEvent.error && !traceEvent.resultLength && traceEvent.type === "textDocument/completion") {
+         if (!traceEvent.resultLength && traceEvent.type === "textDocument/completion") {
             return;
          }
 
-         sendTrace(traceEvent, javaExtVersion, sampling);
+         sendInfo("", {
+            name: "lsp",
+            kind: escapeLspRequestName(traceEvent.type),
+            duration: Math.trunc(traceEvent.duration),
+            resultLength: traceEvent.resultLength,
+            javaversion: javaExtVersion,
+            remark: sampling,
+         });
          return;
       }
-   });
-}
-
-function sendTrace(traceEvent: any, javaExtVersion: any, sampling: string) {
-   let code: number = 0;
-   let errorMessage: string = "";
-   if (traceEvent.error) {
-      code = traceEvent.error?.code || 0;
-      errorMessage = traceEvent.error?.message || String(traceEvent.error);
-   }
-
-   if (errorMessage) {
-      sendInfo("", {
-         name: "lsp",
-         kind: escapeLspRequestName(traceEvent.type),
-         duration: Math.trunc(traceEvent.duration),
-         code,
-         message: errorMessage,
-         javaversion: javaExtVersion,
-      });
-      return;
-   }
-
-   sendInfo("", {
-      name: "lsp",
-      kind: escapeLspRequestName(traceEvent.type),
-      duration: Math.trunc(traceEvent.duration),
-      resultLength: traceEvent.resultLength,
-      javaversion: javaExtVersion,
-      remark: sampling,
    });
 }
 
