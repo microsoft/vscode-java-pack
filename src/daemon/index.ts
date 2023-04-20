@@ -79,6 +79,7 @@ const INTERESTED_REQUESTS: Set<string> = new Set([
 ]);
 const CANCELLATION_CODE: number = -32800; // report such error if the request is cancelled.
 const CONTENT_MODIFIED_CODE: number = -32801; // report such error if semantic token request is outdated while content modified.
+const INTERNAL_ERROR_CODE: number = -32603; // Internal Error.
 async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    const javaExtVersion = javaExt.packageJSON?.version;
    const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
@@ -96,6 +97,14 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
          let errorMessage: string = traceEvent.error?.message || String(traceEvent.error);
          if (code === CANCELLATION_CODE || code === CONTENT_MODIFIED_CODE) {
             return;
+         }
+
+         // See https://github.com/eclipse-lsp4j/lsp4j/commit/bf22871f4e669a2d7fd97ce046cb50903aa68120#diff-3b3e5d6517a47e0459195078645a0837aafa4d4520fe79b1cb1922a749074748
+         // lsp4j will wrap the error message as "Internal error."
+         // when it encounters an uncaught exception from jdt language server.
+         if (code === INTERNAL_ERROR_CODE) {
+            const actualCause = resolveActualCause(traceEvent.error.data);
+            errorMessage = actualCause ? errorMessage + " " + actualCause : errorMessage;
          }
 
          sendInfo("", {
@@ -169,4 +178,21 @@ async function checkIfJavaServerCrashed(wait: number = 0/*ms*/) {
  */
 function escapeLspRequestName(name: string) {
    return name.replace(/\//g, "-")
+}
+
+function resolveActualCause(callstack: any): string | undefined {
+   if (!callstack) {
+      return;
+   }
+
+   const callstacks = callstack.split(/\r?\n/);
+   if (callstacks?.length) {
+      for (let i = callstacks.length - 1; i >= 0; i--) {
+         if (callstacks[i]?.startsWith("Caused by:")) {
+            return callstacks[i];
+         }
+      }
+   }
+
+   return;
 }
