@@ -1,9 +1,9 @@
 ---
 name: Endgame
 about: Monthly endgame issue template
-title: "<Month> 2022 Endgame"
+title: "<Month> 2023 Endgame"
 labels: endgame
-assignees: Eskibear, jdneo, testforstephen, CsCherrYY
+assignees: jdneo, testforstephen
 
 ---
 
@@ -60,11 +60,11 @@ verifier:
 
 ## Post-Release Tasks
 Please update dependencies for each project to avoid vulnerabilities. For any reason not to update, create and track corresponding issues in each repo.
-- [ ] Extension Pack @Eskibear
+- [ ] Extension Pack @testforstephen
 - [ ] Project Manager for Java @jdneo
 - [ ] Debugger for Java @testforstephen
-- [ ] Maven for Java @Eskibear
-- [ ] Gradle for Java @CsCherrYY
+- [ ] Maven for Java @testforstephen
+- [ ] Gradle for Java @jdneo
 - [ ] Test Runner for Java @jdneo
-- [ ] LSIF Java indexer @CsCherrYY
-- [ ] Spring Extensions @Eskibear
+- [ ] LSIF Java indexer @jdneo
+- [ ] Spring Extensions @testforstephen
