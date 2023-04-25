@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.11
+### Fixed
+- Fix the statistics of session duration and lsp error responses.
+
 ## 0.25.10
 ### Fixed
 - Fix vulnerabilities in dependencies.
