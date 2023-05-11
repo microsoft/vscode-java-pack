@@ -57,6 +57,10 @@ typings/
 # dotenv environment variables file
 .env
 
+# java compiled output
+target/
+server/*.jar
+
 out/
 
 .DS_Store

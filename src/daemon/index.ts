@@ -196,3 +196,10 @@ function resolveActualCause(callstack: any): string | undefined {
 
    return;
 }
+
+export function sendJvmReport(report: any) {
+   sendInfo("", {
+      name: "jvmReport",
+      ...report,
+   });
+}
