@@ -26,8 +26,10 @@ import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
+export let activatingTimestamp: number;
 
 export async function activate(context: vscode.ExtensionContext) {
+  activatingTimestamp = performance.now();
   syncState(context);
   initializeTelemetry(context);
   // initialize exp service ahead of activation operation to make sure exp context properties are set.
