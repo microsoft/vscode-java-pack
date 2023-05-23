@@ -9,6 +9,7 @@ import { promisify } from "util";
 import * as vscode from "vscode";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "./daemon";
+import { activatingTimestamp } from "../extension";
 const execFile = promisify(cp.execFile);
 
 interface IJdtlsMetadata {
@@ -59,6 +60,9 @@ export class ProcessWatcher {
    public monitor() {
       const id = setInterval(() => {
          this.upTime().then(seconds => {
+            if (!this.lastHeartbeat && seconds) {
+               this.sendClientInitializeTime(seconds);
+            }
             this.lastHeartbeat = seconds;
          }).catch(_e => {
             clearInterval(id);
@@ -98,6 +102,23 @@ export class ProcessWatcher {
          message: lastHeartbeat!
       });
       this.daemon.logWatcher.sendErrorAndStackOnCrash();
+   }
+
+   /**
+    * Send the time the client takes to initialize. This is the time between the
+    * activation and the JVM process is launched.
+    */
+   private sendClientInitializeTime(seconds: string) {
+      const upTime = seconds.match(/\d+\.\d+/)?.toString();
+      if (upTime) {
+         let interval = Math.round(
+            performance.now() - activatingTimestamp - parseFloat(upTime) * 1000
+         );
+         sendInfo("", {
+            name: "client-initialize-time",
+            message: interval.toString()
+         });
+      }
    }
 }
 
