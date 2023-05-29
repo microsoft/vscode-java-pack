@@ -23,13 +23,15 @@ import { initialize as initUtils } from "./utils";
 import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
+import { promisify } from "util";
 
 let cleanJavaWorkspaceIndicator: string;
-let activatedTimestamp: number;
 export let activatingTimestamp: number;
 
 export async function activate(context: vscode.ExtensionContext) {
   activatingTimestamp = performance.now();
+  // monitor the startup time at very beginning in case we miss the activation of java extension.
+  recordStartupTime();
   syncState(context);
   initializeTelemetry(context);
   // initialize exp service ahead of activation operation to make sure exp context properties are set.
@@ -45,7 +47,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initRecommendations(context);
   initDaemon(context);
 
-  activatedTimestamp = performance.now();
   if(context.storageUri) {
     const javaWorkspaceStoragePath = path.join(context.storageUri.fsPath, "..", "redhat.java");
     cleanJavaWorkspaceIndicator = path.join(javaWorkspaceStoragePath, "jdt_ws", ".cleanWorkspace");
@@ -105,11 +106,36 @@ export async function deactivate() {
   const now = performance.now();
   const data = {
     name: "sessionStatus",
-    time: Math.round(now - activatedTimestamp)
+    time: Math.round(now - activatingTimestamp)
   }
   if (cleanJavaWorkspaceIndicator && fs.existsSync(cleanJavaWorkspaceIndicator)) {
     data.name = "cleanJavaLSWorkspace";
   }
   sendInfo("", data);
   await disposeTelemetryWrapper();
+}
+
+async function recordStartupTime() {
+  const javaExt = vscode.extensions.getExtension("redhat.java");
+  // only count the e2e time when java extension is not activated at the moment.
+  // if it's already activated, we are not clear if it is activated with pack at
+  // the same moment.
+  if (javaExt && !javaExt.isActive) {
+    const delay = promisify(setTimeout);
+    const timeout = 1 * 60 * 1000; // wait 1 min at most
+    let count = 0;
+    while(!javaExt.isActive && count < timeout) {
+      await delay(1000);
+      count += 1000;
+    }
+    if (javaExt.isActive && javaExt.exports?.serverReady) {
+      javaExt.exports.serverReady().then(() => {
+        const message = Math.round(performance.now() - activatingTimestamp).toString();
+        sendInfo("", {
+          name: "e2e-startup-time",
+          message,
+        });
+      });
+    }
+  }
 }
