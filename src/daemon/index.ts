@@ -48,6 +48,7 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
       return false;
    }
 
+   traceJavaExtension(javaExt);
    traceLSPPerformance(javaExt);
 
    // on ServiceReady
@@ -87,7 +88,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
       (await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCompletionSampling, true /*checkCache*/) || false);
    const sampling: string = isPreReleaseVersion ? "pre-release" : (isTreatment ? "sampling" : "");
    // Trace the interested LSP requests performance
-   javaExt.exports?.onDidRequestEnd((traceEvent: any) => {
+   javaExt.exports?.onDidRequestEnd?.((traceEvent: any) => {
       if (!isPreReleaseVersion && !isTreatment) {
          return;
       }
@@ -136,6 +137,29 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
          });
          return;
       }
+   });
+}
+
+async function traceJavaExtension(javaExt: vscode.Extension<any>) {
+   const javaExtVersion = javaExt.packageJSON?.version;
+   const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
+   javaExt.exports?.trackEvent?.((event: any) => {
+      const metrics: any = {
+         name: "javaext-trace",
+         kind: event.name,
+         javaversion: javaExtVersion,
+         remark: isPreReleaseVersion ? "pre-release" : "stable",
+      };
+
+      for (const key of Object.keys(event?.properties || {})) {
+         const val = event.properties[key];
+         if(typeof val == "object" || typeof val == "function") { // non-primitive value
+            metrics[key] = JSON.stringify(val);
+         } else { // primitive value
+            metrics[key] = val;
+         }
+      }
+      sendInfo("", metrics);
    });
 }
 
