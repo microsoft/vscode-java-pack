@@ -96,6 +96,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
       if (traceEvent.error) {
          let code: number = traceEvent.error?.code || 0;
          let errorMessage: string = traceEvent.error?.message || String(traceEvent.error);
+         let exception: string = "";
          if (code === CANCELLATION_CODE || code === CONTENT_MODIFIED_CODE) {
             return;
          }
@@ -104,8 +105,11 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
          // lsp4j will wrap the error message as "Internal error."
          // when it encounters an uncaught exception from jdt language server.
          if (code === INTERNAL_ERROR_CODE) {
-            const actualCause = resolveActualCause(traceEvent.error.data);
-            errorMessage = actualCause ? errorMessage + " " + actualCause : errorMessage;
+            const originalException = resolveActualCause(traceEvent.error.data);
+            if (originalException) {
+               errorMessage = errorMessage + " " + originalException.message;
+               exception = originalException.stack.join("\n");
+            }
          }
 
          sendInfo("", {
@@ -114,6 +118,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             duration: Math.trunc(traceEvent.duration),
             code,
             message: errorMessage,
+            exception,
             javaversion: javaExtVersion,
             remark: sampling,
          });
@@ -204,7 +209,12 @@ function escapeLspRequestName(name: string) {
    return name.replace(/\//g, "-")
 }
 
-function resolveActualCause(callstack: any): string | undefined {
+interface Exception {
+   message: string;
+   stack: string[];
+}
+
+function resolveActualCause(callstack: any): Exception | undefined {
    if (!callstack) {
       return;
    }
@@ -213,7 +223,10 @@ function resolveActualCause(callstack: any): string | undefined {
    if (callstacks?.length) {
       for (let i = callstacks.length - 1; i >= 0; i--) {
          if (callstacks[i]?.startsWith("Caused by:")) {
-            return callstacks[i];
+            return {
+               message: callstacks[i],
+               stack: callstacks.slice(i),
+            };
          }
       }
    }
