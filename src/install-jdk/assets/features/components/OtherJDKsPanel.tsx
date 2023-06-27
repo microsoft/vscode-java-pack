@@ -18,6 +18,7 @@ class OtherJDKsPanel extends React.Component {
       { name: "Eclipse Adoptium's Temurin", url: "https://adoptium.net/" },
       { name: "IBM Semeru Runtimes", url: "https://developer.ibm.com/languages/java/semeru-runtimes/"},
       { name: "Microsoft Build of OpenJDK", url: "https://www.microsoft.com/openjdk" },
+      { name: "Oracle GraalVM", url: "https://www.graalvm.org/downloads/" },
       { name: "Oracle Java SE", url: "https://www.oracle.com/java/technologies/javase-downloads.html" },
       { name: "Red Hat build of OpenJDK", url: "https://developers.redhat.com/products/openjdk/download" },
       { name: "SapMachine", url: "https://sapmachine.io" }
