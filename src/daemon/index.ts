@@ -48,6 +48,7 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
       return false;
    }
 
+   traceSessionStatus(javaExt);
    traceJavaExtension(javaExt);
    traceLSPPerformance(javaExt);
 
@@ -165,6 +166,26 @@ async function traceJavaExtension(javaExt: vscode.Extension<any>) {
          }
       }
       sendInfo("", metrics);
+   });
+}
+
+function traceSessionStatus(javaExt: vscode.Extension<any>) {
+   let initHandled: boolean = false;
+   javaExt.exports?.onDidRequestEnd?.((traceEvent: any) => {
+      if (initHandled) {
+         return;
+      }
+
+      if (traceEvent?.type === "initialize") {
+         initHandled = true;
+         daemon.logWatcher.checkIfUnsavedWorkspace().then((unsaved) => {
+            if (unsaved) {
+               sendInfo("", {
+                  name: "unsaved-workspace",
+               });
+            }
+         });
+      }
    });
 }
 

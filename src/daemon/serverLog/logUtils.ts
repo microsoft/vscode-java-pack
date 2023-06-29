@@ -40,6 +40,8 @@ const MESSAGE_BUILD_JOBS_FINISHED = "!MESSAGE >> build jobs finished";
 const STACK_INDICATOR = `${EOL}!STACK `;
 const MESSAGE_INDICATOR = `${EOL}!MESSAGE `;
 const CORRUPTED_WORKSPACE_INDICATOR = "Caused by: org.eclipse.core.internal.dtree.ObjectNotFoundException:";
+const ENTRY_RESOURCE_PLUGIN = "!ENTRY org.eclipse.core.resources";
+const MESSAGE_UNSAVED_WORKSPACE = "!MESSAGE The workspace exited with unsaved changes in the previous session; refreshing workspace to recover changes.";
 
 export async function logsForLatestSession(logFilepath: string): Promise<string> {
     const content = await fs.promises.readFile(logFilepath, { encoding: 'utf-8' });
@@ -140,6 +142,12 @@ export function containsCorruptedException(log: string): boolean {
     const lines = log.split(`${EOL}`);
     const find = lines.find(line => line.startsWith(CORRUPTED_WORKSPACE_INDICATOR));
     return !!find;
+}
+
+export function isUnsavedWorkspace(log: string): boolean {
+    const entries = log.split(LOG_ENTRY_SEPARATOR);
+    const resourcePluginStartEntry = entries.find(e => e.startsWith(ENTRY_RESOURCE_PLUGIN));
+    return !!resourcePluginStartEntry?.includes(MESSAGE_UNSAVED_WORKSPACE);
 }
 
 function getMessage(entry: string) {
