@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.25.12
+### Added
+- Add Oracle GraalVM to the list of Install New JDK. [#1208](https://github.com/microsoft/vscode-java-pack/issues/1208).
+- Add the error and exception statistics for the Java extension.
+
 ## 0.25.11
 ### Fixed
 - Fix the statistics of session duration and lsp error responses.
