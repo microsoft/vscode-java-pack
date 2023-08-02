@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.13
+### Changed
+- Remove marketplace preview flag.
+
 ## 0.25.12
 ### Added
 - Add Oracle GraalVM to the list of Install New JDK. [#1208](https://github.com/microsoft/vscode-java-pack/issues/1208).
