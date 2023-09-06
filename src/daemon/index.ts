@@ -7,6 +7,7 @@ import { sendError, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { LSDaemon } from "./daemon";
 import { getExpService } from "../exp";
 import { TreatmentVariables } from "../exp/TreatmentVariables";
+import { workspace } from "vscode";
 
 const delay = promisify(setTimeout);
 
@@ -85,8 +86,9 @@ const INTERNAL_ERROR_CODE: number = -32603; // Internal Error.
 async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    const javaExtVersion = javaExt.packageJSON?.version;
    const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
-   const isTreatment = !isPreReleaseVersion && 
-      (await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCompletionSampling, true /*checkCache*/) || false);
+   const redHatTelemetryEnabled = workspace.getConfiguration('redhat.telemetry').get('enabled', false);
+   const isTreatment = !isPreReleaseVersion &&
+      (redHatTelemetryEnabled || await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCompletionSampling, true /*checkCache*/));
    const sampling: string = isPreReleaseVersion ? "pre-release" : (isTreatment ? "sampling" : "");
    // Trace the interested LSP requests performance
    javaExt.exports?.onDidRequestEnd?.((traceEvent: any) => {
@@ -122,6 +124,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             exception,
             javaversion: javaExtVersion,
             remark: sampling,
+            data: redactDataProperties(traceEvent.data),
          });
          return;
       }
@@ -129,7 +132,8 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
       if (INTERESTED_REQUESTS.has(traceEvent.type)) {
          // See https://github.com/redhat-developer/vscode-java/pull/3010
          // to exclude the invalid completion requests.
-         if (!traceEvent.resultLength && traceEvent.type === "textDocument/completion") {
+         if (!traceEvent.resultLength && traceEvent.type === "textDocument/completion"
+            && (!traceEvent.data?.triggerKind || traceEvent.data?.triggerCharacter === ' ')) {
             return;
          }
 
@@ -137,13 +141,25 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             name: "lsp",
             kind: escapeLspRequestName(traceEvent.type),
             duration: Math.trunc(traceEvent.duration),
-            resultLength: traceEvent.resultLength,
+            resultsize: traceEvent.resultLength === undefined ? "" : String(traceEvent.resultLength),
             javaversion: javaExtVersion,
             remark: sampling,
+            data: redactDataProperties(traceEvent.data),
          });
          return;
       }
    });
+}
+
+function redactDataProperties(data: any): string {
+   if (data?.triggerKind) {
+      return JSON.stringify({
+         triggerKind: data.triggerKind,
+         triggerCharacter: data.triggerCharacter,
+      });
+   }
+
+   return "";
 }
 
 async function traceJavaExtension(javaExt: vscode.Extension<any>) {
