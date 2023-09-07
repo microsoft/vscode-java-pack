@@ -76,6 +76,14 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
    return true;
 }
 
+const RESPONSIVE_REQUESTS: Set<string> = new Set([
+   "textDocument/completion",
+   "completionItem/resolve",
+   "textDocument/signatureHelp",
+   "textDocument/definition",
+   "textDocument/hover",
+   "workspace/executeCommand/java.edit.handlePasteEvent",
+]);
 const INTERESTED_REQUESTS: Set<string> = new Set([
    "initialize",
    "textDocument/completion",
@@ -94,6 +102,18 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    javaExt.exports?.onDidRequestEnd?.((traceEvent: any) => {
       if (!isPreReleaseVersion && !isTreatment) {
          return;
+      }
+
+      // Trace the timeout requests
+      if (traceEvent.duration > 5000
+         || (traceEvent.duration > 1000 && RESPONSIVE_REQUESTS.has(traceEvent.type))) {
+         sendInfo("", {
+            name: "lsp.timeout",
+            kind: escapeLspRequestName(traceEvent.type),
+            duration: Math.trunc(traceEvent.duration),
+            javaversion: javaExtVersion,
+            remark: sampling,
+         });
       }
 
       if (traceEvent.error) {
