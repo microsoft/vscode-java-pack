@@ -59,23 +59,6 @@ export class ClientLogWatcher {
 
                     const crashLog = logs.find(log => log.message?.startsWith("The Language Support for Java server crashed and will restart."));
                     info.crash = crashLog ? "true" : undefined;
-                    // try to infer a more concrete crash error message
-                    if (crashLog) {
-                        let message = "";
-                        for (let i = 0; i < logs.length - 1; i++) {
-                            if (Date.parse(log.timestamp) < this.logProcessedTimestamp) {
-                                break;
-                            }
-                            if (logs[i].message?.startsWith("The Language Support for Java server crashed and will restart.")) {
-                                const nextLog = logs[i + 1];
-                                if (nextLog?.level === "info" && nextLog?.message && !nextLog.message?.startsWith("[")
-                                    && (!message || nextLog.message.length > message.length)) {
-                                    message = nextLog.message;
-                                }
-                            }
-                        }
-                        info.message = message;
-                    }
 
                     sendInfo("", {
                         name: "client-log-startup-metadata",
