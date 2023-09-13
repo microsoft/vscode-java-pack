@@ -19,6 +19,13 @@
             "preLaunchTask": "npm: watch"
         },
         {
+            "type": "java",
+            "name": "Attach to Plugin",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 1044
+        },
+        {
             "name": "Extension Tests",
             "type": "extensionHost",
             "request": "launch",

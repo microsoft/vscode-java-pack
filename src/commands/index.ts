@@ -13,6 +13,7 @@ import { overviewCmdHandler } from "../overview";
 import { webviewCmdLinkHandler } from "../utils";
 import { showWelcomeWebview, showWelcomeWebviewBeside } from "../welcome";
 import { createMavenProjectCmdHandler, createMicroProfileStarterProjectCmdHandler, createQuarkusProjectCmdHandler, createSpringBootProjectCmdHandler, installExtensionCmdHandler, openUrlCmdHandler, showExtensionCmdHandler, showReleaseNotesHandler, toggleAwtDevelopmentHandler } from "./handler";
+import { sendJvmReport } from "../daemon";
 
 export function initialize(context: vscode.ExtensionContext) {
   registerCommandHandler(context, "java.overview", overviewCmdHandler);
@@ -36,6 +37,7 @@ export function initialize(context: vscode.ExtensionContext) {
   registerCommandHandler(context, "java.installJdk", showInstallJdkWebviewBeside);
   registerCommandHandler(context, "java.installJdk.fromWalkthrough", showInstallJdkWebview);
   registerCommandHandler(context, "java.toggleAwtDevelopment", toggleAwtDevelopmentHandler);
+  vscode.commands.registerCommand("_jdtls.daemon.jvmReport", sendJvmReport);
 }
 
 type CommandHandler = (context: vscode.ExtensionContext, operationId: string, ...args: any[]) => any;

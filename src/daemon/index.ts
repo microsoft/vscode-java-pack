@@ -290,3 +290,10 @@ function resolveActualCause(callstack: any): Exception | undefined {
 
    return;
 }
+
+export function sendJvmReport(report: any) {
+   sendInfo("", {
+      name: "jvmReport",
+      ...report,
+   });
+}

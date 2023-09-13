@@ -71,6 +71,9 @@
     "onWalkthrough:javaWelcome"
   ],
   "contributes": {
+    "javaExtensions": [
+      "./server/com.microsoft.jdtls.daemon.core-0.1.0.jar"
+    ],
     "walkthroughs": [
       {
         "id": "javaWelcome",
@@ -314,7 +317,8 @@
     "compile": "webpack --config webpack.config.js",
     "watch": "webpack --config webpack.config.js --watch",
     "build": "webpack --config webpack.config.js --mode=\"production\"",
-    "update-tpn": "node scripts/update-third-party-notice.js"
+    "update-tpn": "node scripts/update-third-party-notice.js",
+    "build-server": "node scripts/buildBundle.js"
   },
   "devDependencies": {
     "@types/bytes": "^3.1.1",
