@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.14
+### Changed
+- Optimize statistics on empty results and timeouts for LSP requests.
+
 ## 0.25.13
 ### Changed
 - Remove marketplace preview flag.
