@@ -331,7 +331,7 @@ class LSPUsageStats {
       if (Object.keys(this.totalRequests).length) {
          const data: any = {};
          for (const key of Object.keys(this.totalRequests)) {
-            const simpleKey = this.getSimpleKey(key);
+            const simpleKey = escapeLspRequestName(this.getSimpleKey(key));
             data[simpleKey] = [this.totalRequests[key],
                         this.timeoutRequests[key] || 0,
                         this.errorRequests[key] || 0,
