@@ -153,7 +153,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
          // See https://github.com/redhat-developer/vscode-java/pull/3010
          // to exclude the invalid completion requests.
          if (!traceEvent.resultLength && traceEvent.type === "textDocument/completion"
-            && (!traceEvent.data?.triggerKind || traceEvent.data?.triggerCharacter === ' ')) {
+            && (traceEvent.data?.triggerKind === undefined || traceEvent.data?.triggerCharacter === ' ')) {
             return;
          }
 
@@ -172,11 +172,8 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
 }
 
 function redactDataProperties(data: any): string {
-   if (data?.triggerKind) {
-      return JSON.stringify({
-         triggerKind: data.triggerKind,
-         triggerCharacter: data.triggerCharacter,
-      });
+   if (data?.triggerKind !== undefined) {
+      return JSON.stringify(data);
    }
 
    return "";
