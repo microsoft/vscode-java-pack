@@ -8,7 +8,7 @@ import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation, se
 import { BeginnerTipsViewSerializer } from "./beginner-tips";
 import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
 import { initialize as initCommands } from "./commands";
-import { initDaemon } from "./daemon";
+import { initDaemon, sendLSPUsageStats } from "./daemon";
 import { initialize as initExp } from "./exp";
 import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
@@ -111,5 +111,6 @@ export async function deactivate() {
     data.name = "cleanJavaLSWorkspace";
   }
   sendInfo("", data);
+  sendLSPUsageStats();
   await disposeTelemetryWrapper();
 }

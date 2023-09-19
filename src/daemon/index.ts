@@ -91,6 +91,7 @@ const INTERESTED_REQUESTS: Set<string> = new Set([
 const CANCELLATION_CODE: number = -32800; // report such error if the request is cancelled.
 const CONTENT_MODIFIED_CODE: number = -32801; // report such error if semantic token request is outdated while content modified.
 const INTERNAL_ERROR_CODE: number = -32603; // Internal Error.
+let lspUsageStats: LSPUsageStats;
 async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    const javaExtVersion = javaExt.packageJSON?.version;
    const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
@@ -98,15 +99,18 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    const isTreatment = !isPreReleaseVersion &&
       (redHatTelemetryEnabled || await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCompletionSampling, true /*checkCache*/));
    const sampling: string = isPreReleaseVersion ? "pre-release" : (isTreatment ? "sampling" : "");
+   if (!isPreReleaseVersion && !isTreatment) {
+      return;
+   }
+
+   lspUsageStats = new LSPUsageStats(javaExtVersion, sampling);
    // Trace the interested LSP requests performance
    javaExt.exports?.onDidRequestEnd?.((traceEvent: any) => {
-      if (!isPreReleaseVersion && !isTreatment) {
-         return;
-      }
-
+      lspUsageStats.addRequest(traceEvent.type);
       // Trace the timeout requests
       if (traceEvent.duration > 5000
          || (traceEvent.duration > 1000 && RESPONSIVE_REQUESTS.has(traceEvent.type))) {
+         lspUsageStats.addTimeoutRequest(traceEvent.type);
          sendInfo("", {
             name: "lsp.timeout",
             kind: escapeLspRequestName(traceEvent.type),
@@ -124,6 +128,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             return;
          }
 
+         lspUsageStats.addErrorRequest(traceEvent.type);
          // See https://github.com/eclipse-lsp4j/lsp4j/commit/bf22871f4e669a2d7fd97ce046cb50903aa68120#diff-3b3e5d6517a47e0459195078645a0837aafa4d4520fe79b1cb1922a749074748
          // lsp4j will wrap the error message as "Internal error."
          // when it encounters an uncaught exception from jdt language server.
@@ -166,7 +171,10 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             remark: sampling,
             data: redactDataProperties(traceEvent.data),
          });
-         return;
+      }
+
+      if (traceEvent.resultLength === 0) {
+         lspUsageStats.addNoResultRequest(traceEvent.type);
       }
    });
 }
@@ -286,4 +294,65 @@ function resolveActualCause(callstack: any): Exception | undefined {
    }
 
    return;
+}
+
+export function sendLSPUsageStats() {
+   if (lspUsageStats) {
+      lspUsageStats.sendStats();
+   }
+}
+
+class LSPUsageStats {
+   private totalRequests: any = {};
+   private timeoutRequests: any = {};
+   private errorRequests: any = {};
+   private noResultRequests: any = {};
+
+   public constructor(readonly javaExtVersion: string, readonly sampling: string) {
+   }
+
+   public addRequest(type: string) {
+      this.totalRequests[type] = (this.totalRequests[type] || 0) + 1;
+   }
+
+   public addTimeoutRequest(type: string) {
+      this.timeoutRequests[type] = (this.timeoutRequests[type] || 0) + 1;
+   }
+
+   public addErrorRequest(type: string) {
+      this.errorRequests[type] = (this.errorRequests[type] || 0) + 1;
+   }
+
+   public addNoResultRequest(type: string) {
+      this.noResultRequests[type] = (this.noResultRequests[type] || 0) + 1;
+   }
+
+   public sendStats() {
+      if (Object.keys(this.totalRequests).length) {
+         const data: any = {};
+         for (const key of Object.keys(this.totalRequests)) {
+            const simpleKey = this.getSimpleKey(key);
+            data[simpleKey] = [this.totalRequests[key],
+                        this.timeoutRequests[key] || 0,
+                        this.errorRequests[key] || 0,
+                        this.noResultRequests[key] || 0];
+         }
+         sendInfo("", {
+            name: "lsp.aggregate",
+            javaversion: this.javaExtVersion,
+            remark: this.sampling,
+            data: JSON.stringify(data),
+         });
+      }
+   }
+
+   private getSimpleKey(key: string): string {
+      if (key.startsWith("workspace/executeCommand/")) {
+         return key.replace("workspace/executeCommand/", "we/");
+      }
+      if (key.startsWith("textDocument/")) {
+         return key.replace("textDocument/", "td/");
+      }
+      return key;
+   }
 }
