@@ -8,6 +8,7 @@ import { LSDaemon } from "./daemon";
 import { getExpService } from "../exp";
 import { TreatmentVariables } from "../exp/TreatmentVariables";
 import { workspace } from "vscode";
+import * as hdr from "hdr-histogram-js";
 
 const delay = promisify(setTimeout);
 
@@ -76,14 +77,6 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
    return true;
 }
 
-const RESPONSIVE_REQUESTS: Set<string> = new Set([
-   "textDocument/completion",
-   "completionItem/resolve",
-   "textDocument/signatureHelp",
-   "textDocument/definition",
-   "textDocument/hover",
-   "workspace/executeCommand/java.edit.handlePasteEvent",
-]);
 const INTERESTED_REQUESTS: Set<string> = new Set([
    "initialize",
    "textDocument/completion",
@@ -103,21 +96,45 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
       return;
    }
 
-   lspUsageStats = new LSPUsageStats(javaExtVersion, sampling);
+   // Enable it since redhat.java@1.23.0
+   if (javaExt.exports?.onWillRequestStart) {
+      lspUsageStats = new LSPUsageStats(javaExtVersion, sampling);
+      try {
+         // Load HdrHistogramJS WASM module
+         if (vscode.env.uiKind === vscode.UIKind.Desktop) {
+            hdr.initWebAssemblySync();
+         } else if (vscode.env.uiKind === vscode.UIKind.Web) {
+            await hdr.initWebAssembly();
+         }
+      } catch (error) {
+         sendError({
+            name: "hdr-assembly-load-error",
+            message: "hdr-wasm-load-error: " + (<any> error)?.message,
+            stack: (<any> error)?.stack,
+         });
+      }
+   }
+   // Trace the request start
+   javaExt.exports?.onWillRequestStart?.((traceEvent: any) => {
+      lspUsageStats?.recordRequestStart(traceEvent.type);
+   });
    // Trace the interested LSP requests performance
    javaExt.exports?.onDidRequestEnd?.((traceEvent: any) => {
-      lspUsageStats.addRequest(traceEvent.type);
+      const duration = Math.trunc(traceEvent.duration);
+      lspUsageStats?.recordRequestEnd(traceEvent.type);
+      lspUsageStats?.recordDuration(traceEvent.type, duration);
       // Trace the timeout requests
-      if (traceEvent.duration > 5000
-         || (traceEvent.duration > 1000 && RESPONSIVE_REQUESTS.has(traceEvent.type))) {
-         lspUsageStats.addTimeoutRequest(traceEvent.type);
+      if (traceEvent.duration > 5000) {
          sendInfo("", {
             name: "lsp.timeout",
             kind: escapeLspRequestName(traceEvent.type),
-            duration: Math.trunc(traceEvent.duration),
+            duration,
             javaversion: javaExtVersion,
             remark: sampling,
          });
+         lspUsageStats?.record5STimeoutRequest(traceEvent.type);
+      } else if (traceEvent.duration > 1000) {
+         lspUsageStats?.record1STimeoutRequest(traceEvent.type);
       }
 
       if (traceEvent.error) {
@@ -128,7 +145,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             return;
          }
 
-         lspUsageStats.addErrorRequest(traceEvent.type);
+         lspUsageStats?.recordErrorRequest(traceEvent.type);
          // See https://github.com/eclipse-lsp4j/lsp4j/commit/bf22871f4e669a2d7fd97ce046cb50903aa68120#diff-3b3e5d6517a47e0459195078645a0837aafa4d4520fe79b1cb1922a749074748
          // lsp4j will wrap the error message as "Internal error."
          // when it encounters an uncaught exception from jdt language server.
@@ -143,7 +160,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
          sendInfo("", {
             name: "lsp",
             kind: escapeLspRequestName(traceEvent.type),
-            duration: Math.trunc(traceEvent.duration),
+            duration,
             code,
             message: errorMessage,
             exception,
@@ -165,7 +182,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
          sendInfo("", {
             name: "lsp",
             kind: escapeLspRequestName(traceEvent.type),
-            duration: Math.trunc(traceEvent.duration),
+            duration,
             resultsize: traceEvent.resultLength === undefined ? "" : String(traceEvent.resultLength),
             javaversion: javaExtVersion,
             remark: sampling,
@@ -174,7 +191,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
       }
 
       if (traceEvent.resultLength === 0) {
-         lspUsageStats.addNoResultRequest(traceEvent.type);
+         lspUsageStats?.recordNoResultRequest(traceEvent.type);
       }
    });
 }
@@ -303,45 +320,74 @@ export function sendLSPUsageStats() {
 }
 
 class LSPUsageStats {
-   private totalRequests: any = {};
-   private timeoutRequests: any = {};
-   private errorRequests: any = {};
-   private noResultRequests: any = {};
-
+   private requestStarts: { [key: string]: number } = {};
+   private requestEnds: { [key: string]: number } = {};
+   private s1TimeoutRequests: { [key: string]: number } = {};
+   private s5TimeoutRequests: { [key: string]: number } = {};
+   private errorRequests: { [key: string]: number } = {};
+   private noResultRequests: { [key: string]: number } = {};
+   private hdrs: { [key: string]: HDR } = {};
    public constructor(readonly javaExtVersion: string, readonly sampling: string) {
    }
 
-   public addRequest(type: string) {
-      this.totalRequests[type] = (this.totalRequests[type] || 0) + 1;
+   public recordRequestStart(type: string) {
+      this.requestStarts[type] = (this.requestStarts[type] || 0) + 1;
    }
 
-   public addTimeoutRequest(type: string) {
-      this.timeoutRequests[type] = (this.timeoutRequests[type] || 0) + 1;
+   public recordRequestEnd(type: string) {
+      this.requestEnds[type] = (this.requestEnds[type] || 0) + 1;
    }
 
-   public addErrorRequest(type: string) {
+   public recordDuration(type: string, duration: number) {
+      this.hdrs[type] = this.hdrs[type] || new HDR();
+      this.hdrs[type].record(duration);
+   }
+
+   public record1STimeoutRequest(type: string) {
+      this.s1TimeoutRequests[type] = (this.s1TimeoutRequests[type] || 0) + 1;
+   }
+
+   public record5STimeoutRequest(type: string) {
+      this.s5TimeoutRequests[type] = (this.s5TimeoutRequests[type] || 0) + 1;
+   }
+
+   public recordErrorRequest(type: string) {
       this.errorRequests[type] = (this.errorRequests[type] || 0) + 1;
    }
 
-   public addNoResultRequest(type: string) {
+   public recordNoResultRequest(type: string) {
       this.noResultRequests[type] = (this.noResultRequests[type] || 0) + 1;
    }
 
    public sendStats() {
-      if (Object.keys(this.totalRequests).length) {
+      const startAt = Date.now();
+      if (Object.keys(this.requestStarts).length) {
          const data: any = {};
-         for (const key of Object.keys(this.totalRequests)) {
+         for (const key of Object.keys(this.requestStarts)) {
             const simpleKey = escapeLspRequestName(this.getSimpleKey(key));
-            data[simpleKey] = [this.totalRequests[key],
-                        this.timeoutRequests[key] || 0,
-                        this.errorRequests[key] || 0,
-                        this.noResultRequests[key] || 0];
+            const hdrObj = this.hdrs[key];
+            data[simpleKey] = [
+                        this.requestStarts[key] - (this.requestEnds[key] || 0), // the number of requests that are not ended.
+                        this.requestEnds[key] || 0, // the number of requests that are ended.
+                        this.s1TimeoutRequests[key] || 0, // the number of requests that are ended more than 1s.
+                        this.s5TimeoutRequests[key] || 0, // the number of requests that are ended more than 5s.
+                        this.errorRequests[key] || 0, // the number of requests that are ended with error.
+                        this.noResultRequests[key] || 0, // the number of requests that are ended with empty result.
+                        hdrObj?.getPercentile(50) || 0, // the 50th percentile of the request duration.
+                        hdrObj?.getPercentile(75) || 0, // the 75th percentile of the request duration.
+                        hdrObj?.getPercentile(90) || 0, // the 90th percentile of the request duration.
+                        hdrObj?.getPercentile(95) || 0, // the 95th percentile of the request duration.
+                        hdrObj?.getPercentile(99) || 0, // the 99th percentile of the request duration.
+            ];
+            hdrObj?.destroy();
          }
+         const duration = Date.now() - startAt;
          sendInfo("", {
-            name: "lsp.aggregate",
+            name: "lsp.aggregate.v1",
             javaversion: this.javaExtVersion,
             remark: this.sampling,
             data: JSON.stringify(data),
+            duration,
          });
       }
    }
@@ -354,5 +400,36 @@ class LSPUsageStats {
          return key.replace("textDocument/", "td/");
       }
       return key;
+   }
+}
+
+class HDR {
+   private histogram: hdr.Histogram | undefined;
+
+   public constructor() {
+      try {
+         this.histogram = hdr.build({
+            bitBucketSize: "packed",          // may be 8, 16, 32, 64 or 'packed'
+            autoResize: true,                 // default value is true
+            lowestDiscernibleValue: 1,        // default value is also 1
+            highestTrackableValue: 2,         // can increase up to Number.MAX_SAFE_INTEGER
+            numberOfSignificantValueDigits: 3, // Number between 1 and 5 (inclusive)
+            useWebAssembly: true,             // default value is false, see WebAssembly section for details
+         });
+      } catch (error) {
+         // skip
+      }
+   }
+
+   public record(value: number) {
+      this.histogram?.recordValue(value);
+   }
+
+   public getPercentile(percentile: number): number {
+      return this.histogram?.getValueAtPercentile(percentile) || 0;
+   }
+
+   public destroy() {
+      this.histogram?.destroy();
    }
 }
