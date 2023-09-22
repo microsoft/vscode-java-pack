@@ -106,11 +106,11 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
          } else if (vscode.env.uiKind === vscode.UIKind.Web) {
             await hdr.initWebAssembly();
          }
-      } catch (error: any) {
+      } catch (error) {
          sendError({
             name: "hdr-assembly-load-error",
-            message: "hdr-wasm-load-error: " + error?.message,
-            stack: error?.stack,
+            message: "hdr-wasm-load-error: " + (<any> error)?.message,
+            stack: (<any> error)?.stack,
          });
       }
    }
