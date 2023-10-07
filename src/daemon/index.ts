@@ -330,8 +330,10 @@ class HybridLSPStats {
 
    public constructor(readonly javaExtVersion: string, readonly sampling: string) {
       this.lspStats = new LSPUsageStats(javaExtVersion, sampling, false);
+      // TODO:
       // These pre-release versions include the fromSyntaxServer property in the requestEnd event,
-      // but not in the requestStart event.
+      // but not in the requestStart event. Once these pre-release versions are no longer used,
+      // it's safe to remove the following pre-release check logic.
       const ignoreVersions = [
          "1.24.2023100604",
          "1.24.2023100504",
