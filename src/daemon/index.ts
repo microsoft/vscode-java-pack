@@ -84,7 +84,7 @@ const INTERESTED_REQUESTS: Set<string> = new Set([
 const CANCELLATION_CODE: number = -32800; // report such error if the request is cancelled.
 const CONTENT_MODIFIED_CODE: number = -32801; // report such error if semantic token request is outdated while content modified.
 const INTERNAL_ERROR_CODE: number = -32603; // Internal Error.
-let lspUsageStats: LSPUsageStats;
+let lspUsageStats: HybridLSPStats;
 async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    const javaExtVersion = javaExt.packageJSON?.version;
    const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
@@ -98,7 +98,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
 
    // Enable it since redhat.java@1.23.0
    if (javaExt.exports?.onWillRequestStart) {
-      lspUsageStats = new LSPUsageStats(javaExtVersion, sampling);
+      lspUsageStats = new HybridLSPStats(javaExtVersion, sampling);
       try {
          // Load HdrHistogramJS WASM module
          if (vscode.env.uiKind === vscode.UIKind.Desktop) {
@@ -116,13 +116,15 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    }
    // Trace the request start
    javaExt.exports?.onWillRequestStart?.((traceEvent: any) => {
-      lspUsageStats?.recordRequestStart(traceEvent.type);
+      lspUsageStats?.recordRequestStart(traceEvent.type, traceEvent.fromSyntaxServer);
    });
    // Trace the interested LSP requests performance
    javaExt.exports?.onDidRequestEnd?.((traceEvent: any) => {
       const duration = Math.trunc(traceEvent.duration);
-      lspUsageStats?.recordRequestEnd(traceEvent.type);
-      lspUsageStats?.recordDuration(traceEvent.type, duration);
+      const fromSyntaxServer = (traceEvent.fromSyntaxServer === undefined) ?
+            "" : String(traceEvent.fromSyntaxServer);
+      lspUsageStats?.recordRequestEnd(traceEvent.type, traceEvent.fromSyntaxServer);
+      lspUsageStats?.recordDuration(traceEvent.type, duration, traceEvent.fromSyntaxServer);
       // Trace the timeout requests
       if (traceEvent.duration > 5000) {
          sendInfo("", {
@@ -131,10 +133,11 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             duration,
             javaversion: javaExtVersion,
             remark: sampling,
+            fromSyntaxServer,
          });
-         lspUsageStats?.record5STimeoutRequest(traceEvent.type);
+         lspUsageStats?.record5STimeoutRequest(traceEvent.type, traceEvent.fromSyntaxServer);
       } else if (traceEvent.duration > 1000) {
-         lspUsageStats?.record1STimeoutRequest(traceEvent.type);
+         lspUsageStats?.record1STimeoutRequest(traceEvent.type, traceEvent.fromSyntaxServer);
       }
 
       if (traceEvent.error) {
@@ -145,7 +148,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             return;
          }
 
-         lspUsageStats?.recordErrorRequest(traceEvent.type);
+         lspUsageStats?.recordErrorRequest(traceEvent.type, traceEvent.fromSyntaxServer);
          // See https://github.com/eclipse-lsp4j/lsp4j/commit/bf22871f4e669a2d7fd97ce046cb50903aa68120#diff-3b3e5d6517a47e0459195078645a0837aafa4d4520fe79b1cb1922a749074748
          // lsp4j will wrap the error message as "Internal error."
          // when it encounters an uncaught exception from jdt language server.
@@ -167,6 +170,7 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             javaversion: javaExtVersion,
             remark: sampling,
             data: redactDataProperties(traceEvent.data),
+            fromSyntaxServer,
          });
          return;
       }
@@ -187,11 +191,12 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             javaversion: javaExtVersion,
             remark: sampling,
             data: redactDataProperties(traceEvent.data),
+            fromSyntaxServer,
          });
       }
 
       if (traceEvent.resultLength === 0) {
-         lspUsageStats?.recordNoResultRequest(traceEvent.type);
+         lspUsageStats?.recordNoResultRequest(traceEvent.type, traceEvent.fromSyntaxServer);
       }
    });
 }
@@ -319,6 +324,86 @@ export function sendLSPUsageStats() {
    }
 }
 
+class HybridLSPStats {
+   private lspStats: LSPUsageStats; // standard lsp stats
+   private ssLspStats: LSPUsageStats | undefined; // syntax server lsp stats
+
+   public constructor(readonly javaExtVersion: string, readonly sampling: string) {
+      this.lspStats = new LSPUsageStats(javaExtVersion, sampling, false);
+      // These pre-release versions include the fromSyntaxServer property in the requestEnd event,
+      // but not in the requestStart event.
+      const ignoreVersions = [
+         "1.24.2023100604",
+         "1.24.2023100504",
+         "1.24.2023100404",
+      ];
+      if (sampling !== "pre-release" || !ignoreVersions.includes(javaExtVersion)) {
+         this.ssLspStats = new LSPUsageStats(javaExtVersion, sampling, true);
+      }
+   }
+
+   public recordRequestStart(type: string, fromSyntaxServer?: boolean) {
+      if (this.ssLspStats && fromSyntaxServer) {
+         this.ssLspStats.recordRequestStart(type);
+      } else {
+         this.lspStats.recordRequestStart(type);
+      }
+   }
+
+   public recordRequestEnd(type: string, fromSyntaxServer?: boolean) {
+      if (this.ssLspStats && fromSyntaxServer) {
+         this.ssLspStats.recordRequestEnd(type);
+      } else {
+         this.lspStats.recordRequestEnd(type);
+      }
+   }
+
+   public recordDuration(type: string, duration: number, fromSyntaxServer?: boolean) {
+      if (this.ssLspStats && fromSyntaxServer) {
+         this.ssLspStats.recordDuration(type, duration);
+      } else {
+         this.lspStats.recordDuration(type, duration);
+      }
+   }
+
+   public record1STimeoutRequest(type: string, fromSyntaxServer?: boolean) {
+      if (this.ssLspStats && fromSyntaxServer) {
+         this.ssLspStats.record1STimeoutRequest(type);
+      } else {
+         this.lspStats.record1STimeoutRequest(type);
+      }
+   }
+
+   public record5STimeoutRequest(type: string, fromSyntaxServer?: boolean) {
+      if (this.ssLspStats && fromSyntaxServer) {
+         this.ssLspStats.record5STimeoutRequest(type);
+      } else {
+         this.lspStats.record5STimeoutRequest(type);
+      }
+   }
+
+   public recordErrorRequest(type: string, fromSyntaxServer?: boolean) {
+      if (this.ssLspStats && fromSyntaxServer) {
+         this.ssLspStats.recordErrorRequest(type);
+      } else {
+         this.lspStats.recordErrorRequest(type);
+      }
+   }
+
+   public recordNoResultRequest(type: string, fromSyntaxServer?: boolean) {
+      if (this.ssLspStats && fromSyntaxServer) {
+         this.ssLspStats.recordNoResultRequest(type);
+      } else {
+         this.lspStats.recordNoResultRequest(type);
+      }
+   }
+
+   public sendStats() {
+      this.lspStats.sendStats();
+      this.ssLspStats?.sendStats();
+   }
+}
+
 class LSPUsageStats {
    private requestStarts: { [key: string]: number } = {};
    private requestEnds: { [key: string]: number } = {};
@@ -327,7 +412,7 @@ class LSPUsageStats {
    private errorRequests: { [key: string]: number } = {};
    private noResultRequests: { [key: string]: number } = {};
    private hdrs: { [key: string]: HDR } = {};
-   public constructor(readonly javaExtVersion: string, readonly sampling: string) {
+   public constructor(readonly javaExtVersion: string, readonly sampling: string, readonly fromSyntaxServer: boolean = false) {
    }
 
    public recordRequestStart(type: string) {
@@ -383,7 +468,7 @@ class LSPUsageStats {
          }
          const duration = Date.now() - startAt;
          sendInfo("", {
-            name: "lsp.aggregate.v1",
+            name: this.fromSyntaxServer ? "lsp.ss.aggregate.v1" : "lsp.aggregate.v1",
             javaversion: this.javaExtVersion,
             remark: this.sampling,
             data: JSON.stringify(data),
