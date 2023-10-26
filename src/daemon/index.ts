@@ -326,26 +326,15 @@ export function sendLSPUsageStats() {
 
 class HybridLSPStats {
    private lspStats: LSPUsageStats; // standard lsp stats
-   private ssLspStats: LSPUsageStats | undefined; // syntax server lsp stats
+   private ssLspStats: LSPUsageStats; // syntax server lsp stats
 
    public constructor(readonly javaExtVersion: string, readonly sampling: string) {
       this.lspStats = new LSPUsageStats(javaExtVersion, sampling, false);
-      // TODO:
-      // These pre-release versions include the fromSyntaxServer property in the requestEnd event,
-      // but not in the requestStart event. Once these pre-release versions are no longer used,
-      // it's safe to remove the following pre-release check logic.
-      const ignoreVersions = [
-         "1.24.2023100604",
-         "1.24.2023100504",
-         "1.24.2023100404",
-      ];
-      if (sampling !== "pre-release" || !ignoreVersions.includes(javaExtVersion)) {
-         this.ssLspStats = new LSPUsageStats(javaExtVersion, sampling, true);
-      }
+      this.ssLspStats = new LSPUsageStats(javaExtVersion, sampling, true);
    }
 
    public recordRequestStart(type: string, fromSyntaxServer?: boolean) {
-      if (this.ssLspStats && fromSyntaxServer) {
+      if (fromSyntaxServer) {
          this.ssLspStats.recordRequestStart(type);
       } else {
          this.lspStats.recordRequestStart(type);
@@ -353,7 +342,7 @@ class HybridLSPStats {
    }
 
    public recordRequestEnd(type: string, fromSyntaxServer?: boolean) {
-      if (this.ssLspStats && fromSyntaxServer) {
+      if (fromSyntaxServer) {
          this.ssLspStats.recordRequestEnd(type);
       } else {
          this.lspStats.recordRequestEnd(type);
@@ -361,7 +350,7 @@ class HybridLSPStats {
    }
 
    public recordDuration(type: string, duration: number, fromSyntaxServer?: boolean) {
-      if (this.ssLspStats && fromSyntaxServer) {
+      if (fromSyntaxServer) {
          this.ssLspStats.recordDuration(type, duration);
       } else {
          this.lspStats.recordDuration(type, duration);
@@ -369,7 +358,7 @@ class HybridLSPStats {
    }
 
    public record1STimeoutRequest(type: string, fromSyntaxServer?: boolean) {
-      if (this.ssLspStats && fromSyntaxServer) {
+      if (fromSyntaxServer) {
          this.ssLspStats.record1STimeoutRequest(type);
       } else {
          this.lspStats.record1STimeoutRequest(type);
@@ -377,7 +366,7 @@ class HybridLSPStats {
    }
 
    public record5STimeoutRequest(type: string, fromSyntaxServer?: boolean) {
-      if (this.ssLspStats && fromSyntaxServer) {
+      if (fromSyntaxServer) {
          this.ssLspStats.record5STimeoutRequest(type);
       } else {
          this.lspStats.record5STimeoutRequest(type);
@@ -385,7 +374,7 @@ class HybridLSPStats {
    }
 
    public recordErrorRequest(type: string, fromSyntaxServer?: boolean) {
-      if (this.ssLspStats && fromSyntaxServer) {
+      if (fromSyntaxServer) {
          this.ssLspStats.recordErrorRequest(type);
       } else {
          this.lspStats.recordErrorRequest(type);
@@ -393,7 +382,7 @@ class HybridLSPStats {
    }
 
    public recordNoResultRequest(type: string, fromSyntaxServer?: boolean) {
-      if (this.ssLspStats && fromSyntaxServer) {
+      if (fromSyntaxServer) {
          this.ssLspStats.recordNoResultRequest(type);
       } else {
          this.lspStats.recordNoResultRequest(type);
