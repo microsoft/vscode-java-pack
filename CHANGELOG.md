@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.15
+### Added
+- Add statistics for the aggregated reliability and performance data of the language server protocol requests on extension exit.
+
 ## 0.25.14
 ### Changed
 - Optimize statistics on empty results and timeouts for LSP requests.
