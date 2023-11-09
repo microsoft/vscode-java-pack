@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import * as React from "react";
 import { JavaRuntimeEntry } from "../types";
 import { onWillBrowseForJDK, onWillRunCommandFromWebview } from './vscode.api';
 
 const REQUIRED_JDK_VERSION = 17;
-const { wrap } = provideReactWrapper(React);
-const Button = wrap(webviewUI.VSCodeButton);
 
 interface Props {
   jdkEntries?: JavaRuntimeEntry[];
@@ -33,11 +30,11 @@ export class ToolingJDKPanel extends React.Component<Props, State> {
         {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
 
         <div className="jdk-action">
-          <Button appearance="secondary" onClick={this.onClickBrowseJDKButton}><a href="#">Locate an <b>Existing JDK</b></a></Button>
-          {this?.state?.isDirty && <Button><a href="command:workbench.action.reloadWindow">Reload</a></Button> }
+          <VSCodeButton appearance="secondary" onClick={this.onClickBrowseJDKButton}><a href="#">Locate an <b>Existing JDK</b></a></VSCodeButton>
+          {this?.state?.isDirty && <VSCodeButton><a href="command:workbench.action.reloadWindow">Reload</a></VSCodeButton> }
         </div>
         <div className="jdk-action">
-          <Button appearance="secondary" onClick={this.onClickInstallButton}><a href="#">Install a <b>New JDK</b></a></Button>
+          <VSCodeButton appearance="secondary" onClick={this.onClickInstallButton}><a href="#">Install a <b>New JDK</b></a></VSCodeButton>
         </div>
       </div>
     );

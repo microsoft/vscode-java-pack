@@ -1,14 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import { VSCodeLink } from "@vscode/webview-ui-toolkit/react";
 import * as React from 'react';
 import { encodeExternalLinkWithTelemetry } from '../../../../utils/webview';
 import { WEBVIEW_ID } from '../../../constants';
-const { wrap } = provideReactWrapper(React);
-
-const Link = wrap(webviewUI.VSCodeLink);
 
 class OtherJDKsPanel extends React.Component {
   public render() {
@@ -27,7 +23,7 @@ class OtherJDKsPanel extends React.Component {
       <div>
         <ul className='jdk-distros'>
           {
-            jdkList.map((jdk, idx) => <li key={idx}><Link href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, jdk.name, jdk.url)} title={jdk.name}>{jdk.name}</Link></li>)
+            jdkList.map((jdk, idx) => <li key={idx}><VSCodeLink href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, jdk.name, jdk.url)} title={jdk.name}>{jdk.name}</VSCodeLink></li>)
           }
         </ul>
 

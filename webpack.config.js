@@ -78,7 +78,11 @@ module.exports = function (env, argv) {
     ],
     devtool: 'source-map',
     resolve: {
-      extensions: ['.js', '.ts', '.tsx']
+      extensions: ['.js', '.ts', '.tsx'],
+      // https://github.com/react-dnd/react-dnd/issues/3425#issuecomment-1214554950
+      fallback: {
+        'process/browser': require.resolve('process/browser'),
+      }
     }
   }, {
     name: 'extension',
