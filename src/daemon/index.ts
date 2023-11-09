@@ -23,7 +23,7 @@ export async function initDaemon(context: vscode.ExtensionContext) {
    }
 }
 
-async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise<boolean> {
+async function checkJavaExtActivated(context: vscode.ExtensionContext): Promise<boolean> {
    const javaExt = vscode.extensions.getExtension("redhat.java");
    if (!javaExt) {
       return false;
@@ -51,6 +51,7 @@ async function checkJavaExtActivated(_context: vscode.ExtensionContext): Promise
    }
 
    traceSessionStatus(javaExt);
+   traceJavaSettingUsage(context, javaExt);
    traceJavaExtension(javaExt);
    traceLSPPerformance(javaExt);
 
@@ -230,6 +231,39 @@ async function traceJavaExtension(javaExt: vscode.Extension<any>) {
       }
       sendInfo("", metrics);
    });
+}
+
+function traceJavaSettingUsage(context: vscode.ExtensionContext, javaExt: vscode.Extension<any>) {
+   const javaExtVersion = javaExt.packageJSON?.version;
+   const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
+   const javaConfigNames: Set<string> = new Set();
+   const configDefinition = javaExt.packageJSON?.contributes?.configuration;
+   if (Array.isArray(configDefinition)) {
+      for (const category of configDefinition) {
+         for (const key of Object.keys(category.properties || {})) {
+            javaConfigNames.add(key);
+         }
+      }
+   } else {
+      for (const key of Object.keys(configDefinition?.properties || {})) {
+         javaConfigNames.add(key);
+      }
+   }
+
+   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("java")) {
+          for (const key of javaConfigNames) {
+              if (event.affectsConfiguration(key)) {
+                  sendInfo("", {
+                      operationName: "changeJavaSettings",
+                      arg: key,
+                      javaversion: javaExtVersion,
+                      remark: isPreReleaseVersion ? "pre-release" : "stable",
+                  });
+              }
+          }
+      }
+  }));
 }
 
 function traceSessionStatus(javaExt: vscode.Extension<any>) {
