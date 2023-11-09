@@ -5,7 +5,6 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import "./style.scss";
 import { ProjectJDKPanel } from "./ProjectJDKPanel";
-import "@vscode/webview-ui-toolkit/dist/toolkit"
 import { onWillListRuntimes } from "./vscode.api";
 import { ToolingJDKPanel } from "./ToolingJDKPanel";
 

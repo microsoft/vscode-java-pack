@@ -2,20 +2,13 @@
 // Licensed under the MIT license.
 
 import { DataGridRowTypes, GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import { VSCodeDataGrid, VSCodeDataGridRow, VSCodeDataGridCell, VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import * as React from "react";
 import { encodeCommandUriWithTelemetry, ProjectType } from "../../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
 import { DefaultJDKSelector } from "./components/DefaultJDKSelector";
 import { ProjectTypeHint } from "./components/ProjectTypeHint";
 import { onWillListRuntimes, openBuildScript } from "./vscode.api";
-
-const { wrap } = provideReactWrapper(React);
-const DataGrid = wrap(webviewUI.VSCodeDataGrid);
-const DataRow = wrap(webviewUI.VSCodeDataGridRow);
-const DataCell = wrap(webviewUI.VSCodeDataGridCell);
-const Button = wrap(webviewUI.VSCodeButton);
 
 interface Props {
   jdkEntries: JavaRuntimeEntry[];
@@ -39,32 +32,32 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
     const projectTypeHint = (projectType: ProjectType) => {
       switch (projectType) {
         case "Maven":
-          return <Button onClick={() => this.showHint("Maven")} appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. pom.xml)."><span className="codicon codicon-info"></span></Button>
+          return <VSCodeButton onClick={() => this.showHint("Maven")} appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. pom.xml)."><span className="codicon codicon-info"></span></VSCodeButton>
         case "Gradle":
-          return <Button onClick={() => this.showHint("Gradle")} appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. build.gradle)."><span className="codicon codicon-info"></span></Button>
+          return <VSCodeButton onClick={() => this.showHint("Gradle")} appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. build.gradle)."><span className="codicon codicon-info"></span></VSCodeButton>
         default:
-          return <Button onClick={() => this.showHint("Others")} appearance="icon" title="For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used."><span className="codicon codicon-info"></span></Button>
+          return <VSCodeButton onClick={() => this.showHint("Others")} appearance="icon" title="For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used."><span className="codicon codicon-info"></span></VSCodeButton>
       }
     }
 
     const projectEntries = projectRuntimes
       .filter(p => p.projectType !== ProjectType.Default)
       .map((p, index) => (
-        <DataRow key={index}>
-          <DataCell gridColumn="1">{p.name}</DataCell>
-          <DataCell gridColumn="2"><div className="inline-flex">{p.projectType}{projectTypeHint(p.projectType)}</div></DataCell>
-          <DataCell gridColumn="3">
+        <VSCodeDataGridRow key={index}>
+          <VSCodeDataGridCell gridColumn="1">{p.name}</VSCodeDataGridCell>
+          <VSCodeDataGridCell gridColumn="2"><div className="inline-flex">{p.projectType}{projectTypeHint(p.projectType)}</div></VSCodeDataGridCell>
+          <VSCodeDataGridCell gridColumn="3">
             {
               hasBuildTool(p) ?
                 <div className="inline-flex">
                   <span>{p.sourceLevel}</span>
-                  <Button appearance="icon" onClick={() => this.onClickEdit(p)} title="Edit"><span className="codicon codicon-edit"></span></Button>
+                  <VSCodeButton appearance="icon" onClick={() => this.onClickEdit(p)} title="Edit"><span className="codicon codicon-edit"></span></VSCodeButton>
                 </div>
                 :
                 <DefaultJDKSelector projectRuntime={p} jdkEntries={jdkEntries} />
             }
-          </DataCell>
-        </DataRow>
+          </VSCodeDataGridCell>
+        </VSCodeDataGridRow>
       ));
     const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download", "java.installJdk");
     return (
@@ -73,18 +66,18 @@ export class ProjectJDKPanel extends React.Component<Props, State> {
         {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
         {
           projectEntries.length > 0 ?
-            <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 1fr 1fr">
-              <DataRow rowType={DataGridRowTypes.stickyHeader}>
-                <DataCell gridColumn="1">Project Name</DataCell>
-                <DataCell gridColumn="2">Type</DataCell>
-                <DataCell gridColumn="3">Java Version</DataCell>
-              </DataRow>
+            <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 1fr 1fr">
+              <VSCodeDataGridRow rowType={DataGridRowTypes.stickyHeader}>
+                <VSCodeDataGridCell gridColumn="1">Project Name</VSCodeDataGridCell>
+                <VSCodeDataGridCell gridColumn="2">Type</VSCodeDataGridCell>
+                <VSCodeDataGridCell gridColumn="3">Java Version</VSCodeDataGridCell>
+              </VSCodeDataGridRow>
               {projectEntries}
-            </DataGrid>
+            </VSCodeDataGrid>
             :
             <div>
               <p>No project detected yet. Please refresh later if Java extension is importing your projects.</p>
-              <Button onClick={this.refresh}>Refresh<span slot="start" className="codicon codicon-refresh"></span></Button>
+              <VSCodeButton onClick={this.refresh}>Refresh<span slot="start" className="codicon codicon-refresh"></span></VSCodeButton>
             </div>
         }
         <ProjectTypeHint projectType={showHintFor} />

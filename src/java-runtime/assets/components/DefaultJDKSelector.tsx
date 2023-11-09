@@ -1,14 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import * as React from "react";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../../types";
 import { setDefaultRuntime } from "../vscode.api";
-
-const { wrap } = provideReactWrapper(React);
-const Button = wrap(webviewUI.VSCodeButton);
 
 interface Props {
   jdkEntries: JavaRuntimeEntry[];
@@ -41,7 +37,7 @@ export class DefaultJDKSelector extends React.Component<Props, State> {
           : 
           <span>{p.sourceLevel}</span>
         }
-        <Button appearance="icon" onClick={() => this.onClickEdit()} title="Edit"><span className="codicon codicon-edit"></span></Button>
+        <VSCodeButton appearance="icon" onClick={() => this.onClickEdit()} title="Edit"><span className="codicon codicon-edit"></span></VSCodeButton>
       </div>
     );
   }

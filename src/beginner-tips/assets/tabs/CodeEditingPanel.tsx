@@ -2,14 +2,9 @@
 // Licensed under the MIT license.
 
 import { GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import { VSCodeDataGrid, VSCodeDataGridRow, VSCodeDataGridCell } from "@vscode/webview-ui-toolkit/react";
 import React from 'react';
 const isMac: boolean = navigator.platform.toLowerCase().indexOf("darwin") === 0;
-const { wrap } = provideReactWrapper(React);
-const DataGrid = wrap(webviewUI.VSCodeDataGrid);
-const DataRow = wrap(webviewUI.VSCodeDataGridRow);
-const DataCell = wrap(webviewUI.VSCodeDataGridCell);
 
 export default function CodeEditingPanel() {
   const controlKey = !isMac ? <kbd data-os="win">Ctrl</kbd> : <kbd data-os="mac">⌘</kbd>;
@@ -38,48 +33,48 @@ export default function CodeEditingPanel() {
         <p>
           Code Navigation makes it easy to understand existing codebase. Here to mention a few features that can help you navigate your code repositories.
         </p>
-        <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-          <DataRow key={1}>
-            <DataCell className="font-weight-bold" gridColumn="1">Go to Definition</DataCell>
-            <DataCell gridColumn="2"><kbd>F12</kbd><br />You can also hover on the symbol to preview its declaration and javadoc. To jump to the definition, hold the {controlKey} key, and click on the symbol.</DataCell>
-          </DataRow>
-          <DataRow key={2}>
-            <DataCell className="font-weight-bold" gridColumn="1">Go to Implementation</DataCell>
-            <DataCell gridColumn="2">{f12Key}<br />For an interface, this shows all the implementors of that interface and for abstract methods, this shows all concrete implementations of that method.</DataCell>
-          </DataRow>
-          <DataRow key={3}>
-            <DataCell className="font-weight-bold" gridColumn="1">Go to Type Definition</DataCell>
-            <DataCell gridColumn="2">This one allows you to go to the definition of the type of the symbol. For example, you have a class member <code>someString</code>, "Go to Definition" will take you to the definition of <code>someString</code> while "Go to <strong>Type</strong> Definition" will take you to the definition of <code>String</code>.</DataCell>
-          </DataRow>
-          <DataRow key={4}>
-            <DataCell className="font-weight-bold" gridColumn="1">Find All References</DataCell>
-            <DataCell gridColumn="2">{shiftAltF12}<br />This allows you to quickly analyze the impact of your edit or the popularity of your specific method or property throughout your repository.</DataCell>
-          </DataRow>
-        </DataGrid>
+        <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
+          <VSCodeDataGridRow key={1}>
+            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Go to Definition</VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2"><kbd>F12</kbd><br />You can also hover on the symbol to preview its declaration and javadoc. To jump to the definition, hold the {controlKey} key, and click on the symbol.</VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          <VSCodeDataGridRow key={2}>
+            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Go to Implementation</VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2">{f12Key}<br />For an interface, this shows all the implementors of that interface and for abstract methods, this shows all concrete implementations of that method.</VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          <VSCodeDataGridRow key={3}>
+            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Go to Type Definition</VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2">This one allows you to go to the definition of the type of the symbol. For example, you have a class member <code>someString</code>, "Go to Definition" will take you to the definition of <code>someString</code> while "Go to <strong>Type</strong> Definition" will take you to the definition of <code>String</code>.</VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          <VSCodeDataGridRow key={4}>
+            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Find All References</VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2">{shiftAltF12}<br />This allows you to quickly analyze the impact of your edit or the popularity of your specific method or property throughout your repository.</VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+        </VSCodeDataGrid>
       </div>
       <div>
         <p>
           The commands above will possibly take you to another file. But you can choose to stay using the peeking features below:
         </p>
-        <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-          <DataRow key={1}>
-            <DataCell className="font-weight-bold" gridColumn="1">Peek Definition</DataCell>
-            <DataCell gridColumn="2">{altF12Key}</DataCell>
-          </DataRow>
-          <DataRow key={2}>
-            <DataCell className="font-weight-bold" gridColumn="1">Peek References</DataCell>
-            <DataCell gridColumn="2">{shiftF12}</DataCell>
-          </DataRow>
-        </DataGrid>
+        <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
+          <VSCodeDataGridRow key={1}>
+            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Peek Definition</VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2">{altF12Key}</VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          <VSCodeDataGridRow key={2}>
+            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Peek References</VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2">{shiftF12}</VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+        </VSCodeDataGrid>
       </div>
       <div>
         <p> Last but not least, you can jump between the matching brackets back and forth: </p>
-        <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-          <DataRow key={1}>
-            <DataCell className="font-weight-bold" gridColumn="1">Go to Bracket</DataCell>
-            <DataCell gridColumn="2">{ctrlShiftSlash}</DataCell>
-          </DataRow>
-        </DataGrid>
+        <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
+          <VSCodeDataGridRow key={1}>
+            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Go to Bracket</VSCodeDataGridCell>
+            <VSCodeDataGridCell gridColumn="2">{ctrlShiftSlash}</VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+        </VSCodeDataGrid>
       </div>
       <h2 className="font-weight-light">IntelliSense</h2>
       <p>

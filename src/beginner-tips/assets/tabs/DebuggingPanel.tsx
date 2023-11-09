@@ -2,14 +2,9 @@
 // Licensed under the MIT license.
 
 import { GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { provideReactWrapper } from '@microsoft/fast-react-wrapper';
-import * as webviewUI from "@vscode/webview-ui-toolkit";
+import { VSCodeDataGrid, VSCodeDataGridRow, VSCodeDataGridCell } from "@vscode/webview-ui-toolkit/react";
 import React from 'react';
 const isMac: boolean = navigator.platform.toLowerCase().indexOf("darwin") === 0;
-const { wrap } = provideReactWrapper(React);
-const DataGrid = wrap(webviewUI.VSCodeDataGrid);
-const DataRow = wrap(webviewUI.VSCodeDataGridRow);
-const DataCell = wrap(webviewUI.VSCodeDataGridCell);
 
 export default function DebuggingPanel() {
     const cF5 = !isMac ? <kbd data-os="win">Ctrl + F5</kbd> : <kbd data-os="mac">⌃ F5</kbd>;
@@ -43,16 +38,16 @@ export default function DebuggingPanel() {
             <p>
                 You can also set <strong>Conditional Breakpoints</strong> based on expressions, hit counts, or a combination of both.
             </p>
-            <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-                <DataRow key={1}>
-                    <DataCell className="font-weight-bold" gridColumn="1">Expression condition</DataCell>
-                    <DataCell gridColumn="2">The breakpoint will be hit whenever the expression evaluates to <code>true</code></DataCell>
-                </DataRow>
-                <DataRow key={2}>
-                    <DataCell className="font-weight-bold" gridColumn="1">Hit count</DataCell>
-                    <DataCell gridColumn="2">The 'hit count' controls how many times a breakpoint needs to be hit before it will 'break' execution</DataCell>
-                </DataRow>
-            </DataGrid>
+            <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
+                <VSCodeDataGridRow key={1}>
+                    <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Expression condition</VSCodeDataGridCell>
+                    <VSCodeDataGridCell gridColumn="2">The breakpoint will be hit whenever the expression evaluates to <code>true</code></VSCodeDataGridCell>
+                </VSCodeDataGridRow>
+                <VSCodeDataGridRow key={2}>
+                    <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Hit count</VSCodeDataGridCell>
+                    <VSCodeDataGridCell gridColumn="2">The 'hit count' controls how many times a breakpoint needs to be hit before it will 'break' execution</VSCodeDataGridCell>
+                </VSCodeDataGridRow>
+            </VSCodeDataGrid>
             <p>
                 You can add a condition and/or hit count when creating the breakpoint (with the <a href="command:editor.debug.action.conditionalBreakpoint">Add Conditional Breakpoint</a> action) or when modifying an existing one (with the Edit Breakpoint action). In both cases, an inline text box with a drop-down menu opens where you can enter expressions.
             </p>
@@ -69,32 +64,32 @@ export default function DebuggingPanel() {
             <p>
                 Once a debug session starts, the Debug toolbar will appear on the top of the editor. You can control the execution flow using the actions below.
             </p>
-            <DataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-                <DataRow key={1}>
-                    <DataCell className="font-weight-bold" gridColumn="1">Continue/Pause</DataCell>
-                    <DataCell gridColumn="2"><kbd>F5</kbd></DataCell>
-                </DataRow>
-                <DataRow key={2}>
-                    <DataCell className="font-weight-bold" gridColumn="1">Step Over</DataCell>
-                    <DataCell gridColumn="2"><kbd>F10</kbd></DataCell>
-                </DataRow>
-                <DataRow key={3}>
-                    <DataCell className="font-weight-bold" gridColumn="1">Step Into</DataCell>
-                    <DataCell gridColumn="2"><kbd>F11</kbd></DataCell>
-                </DataRow>
-                <DataRow key={4}>
-                    <DataCell className="font-weight-bold" gridColumn="1">Step Out</DataCell>
-                    <DataCell gridColumn="2">{sF11}</DataCell>
-                </DataRow>
-                <DataRow key={5}>
-                    <DataCell className="font-weight-bold" gridColumn="1">Restart</DataCell>
-                    <DataCell gridColumn="2">{csF5}</DataCell>
-                </DataRow>
-                <DataRow key={6}>
-                    <DataCell className="font-weight-bold" gridColumn="1">Stop</DataCell>
-                    <DataCell gridColumn="2">{sF5}</DataCell>
-                </DataRow>
-            </DataGrid>
+            <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
+                <VSCodeDataGridRow key={1}>
+                    <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Continue/Pause</VSCodeDataGridCell>
+                    <VSCodeDataGridCell gridColumn="2"><kbd>F5</kbd></VSCodeDataGridCell>
+                </VSCodeDataGridRow>
+                <VSCodeDataGridRow key={2}>
+                    <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Step Over</VSCodeDataGridCell>
+                    <VSCodeDataGridCell gridColumn="2"><kbd>F10</kbd></VSCodeDataGridCell>
+                </VSCodeDataGridRow>
+                <VSCodeDataGridRow key={3}>
+                    <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Step Into</VSCodeDataGridCell>
+                    <VSCodeDataGridCell gridColumn="2"><kbd>F11</kbd></VSCodeDataGridCell>
+                </VSCodeDataGridRow>
+                <VSCodeDataGridRow key={4}>
+                    <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Step Out</VSCodeDataGridCell>
+                    <VSCodeDataGridCell gridColumn="2">{sF11}</VSCodeDataGridCell>
+                </VSCodeDataGridRow>
+                <VSCodeDataGridRow key={5}>
+                    <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Restart</VSCodeDataGridCell>
+                    <VSCodeDataGridCell gridColumn="2">{csF5}</VSCodeDataGridCell>
+                </VSCodeDataGridRow>
+                <VSCodeDataGridRow key={6}>
+                    <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Stop</VSCodeDataGridCell>
+                    <VSCodeDataGridCell gridColumn="2">{sF5}</VSCodeDataGridCell>
+                </VSCodeDataGridRow>
+            </VSCodeDataGrid>
             <h2 className="font-weight-light">Inspect Variables</h2>
             <p>
                 Variables can be inspected in the <strong>VARIABLES</strong> section of the Debug view or by hovering over their source in the editor. Variable values and expression evaluation are relative to the selected stack frame in the <strong>CALL STACK</strong> section.
