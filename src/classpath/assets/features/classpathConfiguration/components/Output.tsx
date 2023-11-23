@@ -7,6 +7,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
 import { onWillSelectOutputPath } from "../../../utils";
 import { setOutputPath } from "../classpathConfigurationViewSlice";
+import { VSCodeButton, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
+import SectionHeader from "./common/SectionHeader";
 
 const Output = (): JSX.Element => {
     const output: string = useSelector((state: any) => state.classpathConfig.output);
@@ -29,19 +31,20 @@ const Output = (): JSX.Element => {
     }, []);
 
     return (
-      <div>
-        <div className="setting-section-header mb-1">
-          <h4 className="mb-0">Output</h4>
-          {projectType !== ProjectType.UnmanagedFolder &&
-            <span className="ml-2">(Read-only)</span>
-          }
-        </div>
+      <div className="setting-section">
+        <SectionHeader title="Output" subTitle={projectType !== ProjectType.UnmanagedFolder ? "(Read-only)" : undefined} />
         <span className="setting-section-description">Specify compile output path location.</span>
-        <div className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} input text-break pl-1 mt-1`}>{output}</div>
+        <div className="setting-section-target">
+          <VSCodeTextArea
+            className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} setting-section-text`}
+            readOnly
+            value={output}
+            resize="both"
+            rows={1}
+          />
+        </div>
         {projectType === ProjectType.UnmanagedFolder &&
-          <a role="button" className="btn btn-action mt-2" onClick={() => handleClick()}>
-            Browse
-          </a>
+          <VSCodeButton onClick={() => handleClick()}>Browse</VSCodeButton>
         }
       </div>
     );

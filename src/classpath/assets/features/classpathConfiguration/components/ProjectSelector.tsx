@@ -2,16 +2,13 @@
 // Licensed under the MIT license.
 
 import React, { useEffect } from "react";
-import { Dropdown } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { ProjectInfo } from "../../../../types";
-import { Col, Row } from "react-bootstrap";
 import { Dispatch } from "@reduxjs/toolkit";
 import { activeProjectChange } from "../classpathConfigurationViewSlice";
 import { onClickGotoProjectConfiguration, onWillLoadProjectClasspath, WEBVIEW_ID } from "../../../utils";
 import { encodeCommandUriWithTelemetry, ProjectType } from "../../../../../utils/webview";
-import { Icon } from "@iconify/react";
-import chevronDownIcon from "@iconify-icons/codicon/chevron-down";
+import { VSCodeDropdown, VSCodeLink, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 
 const ProjectSelector = (): JSX.Element | null => {
   const activeProjectIndex: number = useSelector((state: any) => state.classpathConfig.activeProjectIndex);
@@ -43,35 +40,29 @@ const ProjectSelector = (): JSX.Element | null => {
 
   const projectSelections = projects.map((project, index) => {
     return (
-      <Dropdown.Item className="dropdown-item py-0 pl-1" key={project.rootPath} onSelect={() => handleActiveProjectChange(index)}>
+      <VSCodeOption key={project.rootPath} onClick={() => handleActiveProjectChange(index)}>
         {project.name}
-      </Dropdown.Item>
+      </VSCodeOption>
     );
   });
 
   return (
-    <Row className="setting-section">
-      <Col>
-        <span className="setting-section-description">Select the project folder.</span>
-        <Dropdown className="mt-1">
-          <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left">
-            <span>{projects[activeProjectIndex].name}</span>
-            <Icon className="codicon" icon={chevronDownIcon} />
-          </Dropdown.Toggle>
+    <div className="setting-section">
+      <span className="setting-section-description">Select the project folder.</span>
+      <div className="setting-section-target">
+        <VSCodeDropdown className="setting-section-dropdown">
+          {projectSelections}
+        </VSCodeDropdown>
+      </div>
 
-          <Dropdown.Menu className="dropdown-menu mt-0 p-0">
-            {projectSelections}
-          </Dropdown.Menu>
-        </Dropdown>
-        {(projectType === ProjectType.Gradle || projectType === ProjectType.Maven) &&
-          <div className="mt-1">
-            <span className="warning">
-              Below settings are only editable for projects without build tools. For {projectType} project, please edit the <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, `classpath.open${projectType}Doc`, "java.helper.openUrl", [buildFileDocUrl])}>entries</a> in <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a>.
-            </span>
-          </div>
-        }
-      </Col>
-    </Row>
+      {(projectType === ProjectType.Gradle || projectType === ProjectType.Maven) &&
+        <div className="setting-section-target">
+          <span className="setting-section-warning">
+            Below settings are only editable for projects without build tools. For {projectType} project, please edit the <VSCodeLink href={encodeCommandUriWithTelemetry(WEBVIEW_ID, `classpath.open${projectType}Doc`, "java.helper.openUrl", [buildFileDocUrl])}>entries</VSCodeLink> in <VSCodeLink href="" onClick={() => handleOpenBuildFile()}>{buildFile}</VSCodeLink>.
+          </span>
+        </div>
+      }
+    </div>
   );
 };
 

@@ -158,7 +158,7 @@ async function checkRequirement(): Promise<boolean> {
                 listProjects();
             }),
             lsApi.onDidClasspathUpdate((uri: vscode.Uri) => {
-                if (!path.relative(uri.fsPath, currentProjectRoot.fsPath)) {
+                if (currentProjectRoot && !path.relative(uri.fsPath, currentProjectRoot.fsPath)) {
                     // Use debounced function to avoid UI jittery
                     debounceLoadProjectClasspath(uri);
                 }
