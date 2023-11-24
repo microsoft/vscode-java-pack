@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Icon } from "@iconify/react";
-import closeIcon from "@iconify-icons/codicon/chrome-close";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { ListGroup } from "react-bootstrap";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
 import { onWillAddSourcePath, onWillRemoveSourcePath } from "../../../utils";
 import { ProjectType } from "../../../../../utils/webview";
+import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
+import SectionHeader from "./common/SectionHeader";
 
 const Sources = (): JSX.Element => {
+
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+
   const sources: string[] = useSelector((state: any) => state.classpathConfig.sources);
   const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType);
   const dispatch: Dispatch<any> = useDispatch();
@@ -47,42 +49,37 @@ const Sources = (): JSX.Element => {
   let sourceSections: JSX.Element | JSX.Element[];
   if (sources.length === 0) {
     sourceSections = (
-      <ListGroup.Item className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} list-row-body pl-0 py-0`}>
-        <span className="ml-1"><em>No source paths are configured.</em></span>
-      </ListGroup.Item>
+      <VSCodeDataGridRow className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} setting-section-grid-row`}>
+        <span><em>No source paths are configured.</em></span>
+      </VSCodeDataGridRow>
     );
   } else {
-    sourceSections = sources.map((source) => (
-      <ListGroup.Item className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} list-row-body pl-0 py-0`} key={source}>
-        <span className="ml-1">{source}</span>
-        {projectType === ProjectType.UnmanagedFolder &&
-          <span className="scale-up float-right">
-            <a onClick={() => handleRemove(source)}>
-              <Icon className="codicon cursor-pointer" icon={closeIcon} />
-            </a>
-          </span>
-        }
-      </ListGroup.Item>
+    sourceSections = sources.map((source, index) => (
+      <VSCodeDataGridRow className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} setting-section-grid-row`} id={`sources-${index}`} onMouseEnter={() => setHoveredRow(`sources-${index}`)} onMouseLeave={() => setHoveredRow(null)}  key={source}>
+        <span>{source}</span>
+        {hoveredRow === `sources-${index}` && projectType === ProjectType.UnmanagedFolder && (
+          <VSCodeButton appearance='icon' onClick={() => handleRemove(source)}>
+            <span className="codicon codicon-close"></span>
+          </VSCodeButton>
+        )}
+      </VSCodeDataGridRow>
     ));
   }
 
   return (
-    <div>
-      <div className="setting-section-header mb-1">
-        <h4 className="mb-0">Sources</h4>
-        {projectType !== ProjectType.UnmanagedFolder &&
-          <span className="ml-2">(Read-only)</span>
-        }
-      </div>
+    <div className="setting-section">
+      <SectionHeader title="Sources" subTitle={projectType !== ProjectType.UnmanagedFolder ? "(Read-only)" : undefined} />
       <span className="setting-section-description">Specify the source locations.</span>
-      <ListGroup className="list mt-1">
-        <ListGroup.Item className="list-row-header flex-vertical-center pr-2 pl-0 py-0">
-          <span className="ml-1">Path</span>
-        </ListGroup.Item>
-        {sourceSections}
-      </ListGroup>
+      <div className="setting-section-target">
+        <VSCodeDataGrid>
+          <VSCodeDataGridRow className="setting-section-grid-row" rowType="header">
+            <span className=" setting-section-grid-row-header">Path</span>
+          </VSCodeDataGridRow>
+          {sourceSections}
+        </VSCodeDataGrid>
+      </div>
       {projectType === ProjectType.UnmanagedFolder &&
-        <a role="button" className="btn btn-action mt-2" onClick={() => handleAdd()}>Add</a>
+        <VSCodeButton onClick={() => handleAdd()}>Add</VSCodeButton>
       }
     </div>
   );

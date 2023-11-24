@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import React, { useEffect } from "react";
-import { Col, Container, Row, Spinner } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import Output from "./components/Output";
@@ -15,6 +14,7 @@ import { ClasspathViewException, ProjectInfo } from "../../../types";
 import { catchException, listProjects, loadClasspath } from "./classpathConfigurationViewSlice";
 import JdkRuntime from "./components/JdkRuntime";
 import { onWillListProjects } from "../../utils";
+import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
 
 const ClasspathConfigurationView = (): JSX.Element => {
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
@@ -24,31 +24,15 @@ const ClasspathConfigurationView = (): JSX.Element => {
   if (exception) {
     content = <Exception />;
   } else if (projects.length === 0) {
-    content = <Spinner animation="border" role="status" size="sm"><span className="sr-only">Loading...</span></Spinner>;
+    content = <VSCodeProgressRing></VSCodeProgressRing>;
   } else {
     content = (
       <div>
         <ProjectSelector />
-        <Row className="setting-section">
-          <Col>
-            <Sources />
-          </Col>
-        </Row>
-        <Row className="setting-section">
-          <Col>
-            <Output />
-          </Col>
-        </Row>
-        <Row className="setting-section">
-          <Col>
-            <JdkRuntime />
-          </Col>
-        </Row>
-        <Row className="setting-section">
-          <Col>
-            <ReferencedLibraries />
-          </Col>
-        </Row>
+        <Sources />
+        <Output />
+        <JdkRuntime />
+        <ReferencedLibraries />
       </div>
     );
   }
@@ -73,14 +57,10 @@ const ClasspathConfigurationView = (): JSX.Element => {
   }, []);
 
   return (
-    <Container className="root mt-4">
-      <Row className="setting-header">
-        <Col>
-          <Header />
-        </Col>
-      </Row>
+    <div className="root">
+      <Header />
       {content}
-    </Container>
+    </div>
   );
 };
 
