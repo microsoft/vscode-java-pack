@@ -10,10 +10,10 @@ import Sources from "./components/Sources";
 import ReferencedLibraries from "./components/ReferencedLibraries";
 import Header from "./components/Header";
 import Exception from "./components/Exception";
-import { ClasspathViewException, ProjectInfo } from "../../../types";
-import { catchException, listProjects, loadClasspath } from "./classpathConfigurationViewSlice";
+import { ClasspathViewException, ProjectInfo, VmInstall } from "../../../types";
+import { catchException, listProjects, listVmInstalls, loadClasspath } from "./classpathConfigurationViewSlice";
 import JdkRuntime from "./components/JdkRuntime";
-import { onWillListProjects } from "../../utils";
+import { onWillListProjects, onWillListVmInstalls } from "../../utils";
 import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
 
 const ClasspathConfigurationView = (): JSX.Element => {
@@ -43,6 +43,8 @@ const ClasspathConfigurationView = (): JSX.Element => {
     const {data} = event;
     if (data.command === "onDidListProjects") {
       dispatch(listProjects(data.projectInfo));
+    } else if (data.command === "onDidListVmInstalls") {
+      dispatch(listVmInstalls(data.vmInstalls))
     } else if (data.command === "onDidLoadProjectClasspath") {
       dispatch(loadClasspath(data));
     } else if (data.command === "onException") {
@@ -53,6 +55,7 @@ const ClasspathConfigurationView = (): JSX.Element => {
   useEffect(() => {
     window.addEventListener("message", onInitialize);
     onWillListProjects();
+    onWillListVmInstalls();
     return () => window.removeEventListener("message", onInitialize);
   }, []);
 
@@ -72,6 +75,7 @@ interface OnInitializeEvent {
       rootPath: string;
       projectType: string;
     }[];
+    vmInstalls?: VmInstall[];
     sources?: string[];
     output?: string;
     referencedLibraries?: string[];

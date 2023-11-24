@@ -15,6 +15,12 @@ export function onWillListProjects() {
   });
 }
 
+export function onWillListVmInstalls() {
+  vscode.postMessage({
+    command: "onWillListVmInstalls",
+  });
+}
+
 export function onWillLoadProjectClasspath(uri: string) {
   vscode.postMessage({
     command: "onWillLoadProjectClasspath",
@@ -38,6 +44,13 @@ export function onWillRemoveSourcePath(sourcePaths: string[]) {
 export function onWillAddSourcePath() {
   vscode.postMessage({
     command: "onWillAddSourcePath"
+  });
+}
+
+export function onWillChangeJdk(jdkPath: string) {
+  vscode.postMessage({
+    command: "onWillChangeJdk",
+    jdkPath,
   });
 }
 

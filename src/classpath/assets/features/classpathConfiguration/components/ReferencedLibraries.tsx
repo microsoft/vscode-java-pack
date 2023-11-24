@@ -29,9 +29,9 @@ const ReferencedLibraries = (): JSX.Element => {
 
   const onDidAddReferencedLibraries = (event: OnDidAddReferencedLibrariesEvent) => {
     const {data} = event;
-      if (data.command === "onDidAddReferencedLibraries") {
-        dispatch(addReferencedLibraries(data.jars));
-      }
+    if (data.command === "onDidAddReferencedLibraries") {
+      dispatch(addReferencedLibraries(data.jars));
+    }
   };
 
   useEffect(() => {

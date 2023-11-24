@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getExtensionContext, getNonce } from "../utils";
 import * as fse from "fs-extra";
-import { ProjectInfo, ClasspathComponent, ClasspathViewException } from "./types";
+import { ProjectInfo, ClasspathComponent, ClasspathViewException, VmInstall } from "./types";
 import _ from "lodash";
 import minimatch from "minimatch";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
@@ -18,6 +18,7 @@ let lsApi: LanguageServerAPI | undefined;
 let currentProjectRoot: vscode.Uri;
 const SOURCE_PATH_KEY: string = "org.eclipse.jdt.ls.core.sourcePaths";
 const OUTPUT_PATH_KEY: string = "org.eclipse.jdt.ls.core.outputPath";
+const VM_LOCATION_KEY: string = "org.eclipse.jdt.ls.core.vm.location";
 const REFERENCED_LIBRARIES_KEY: string = "org.eclipse.jdt.ls.core.referencedLibraries";
 const MINIMUM_JAVA_EXTENSION_VERSION: string = "0.77.0";
 
@@ -66,6 +67,9 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
             case "onWillListProjects":
                 await listProjects();
                 break;
+            case "onWillListVmInstalls": 
+                await listVmInstalls();
+                break;
             case "onWillLoadProjectClasspath":
                 currentProjectRoot = vscode.Uri.parse(message.uri);
                 await loadProjectClasspath(currentProjectRoot);
@@ -75,6 +79,9 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
                 break;
             case "onWillAddSourcePath":
                 await addSourcePath(currentProjectRoot);
+                break;
+            case "onWillChangeJdk":
+                await changeJdk(currentProjectRoot, message.jdkPath);
                 break;
             case "onWillRemoveSourcePath":
                 removeSourcePath(currentProjectRoot, message.sourcePaths);
@@ -198,6 +205,24 @@ const listProjects = instrumentOperation("classpath.listProjects", async (operat
     });
 });
 
+const listVmInstalls = instrumentOperation("classpath.listVmInstalls", async (operationId: string) => {
+    let vmInstalls: VmInstall[] = await getVmInstallsFromLS();
+    vmInstalls = vmInstalls.sort((vmA: VmInstall, vmB: VmInstall) => {
+        return vmA.name.localeCompare(vmB.name);
+    });
+
+    if (vmInstalls.length > 0) {
+        classpathConfigurationPanel?.webview.postMessage({
+            command: "onDidListVmInstalls",
+            vmInstalls,
+        });
+    } else {
+        sendInfo(operationId, {
+            vmNumber: vmInstalls.length,
+        });
+    }
+});
+
 const loadProjectClasspath = instrumentOperation("classpath.loadClasspath", async (operationId: string, currentProjectRoot: vscode.Uri) => {
     const classpath = await getProjectClasspathFromLS(currentProjectRoot);
     if (classpath) {
@@ -206,6 +231,7 @@ const loadProjectClasspath = instrumentOperation("classpath.loadClasspath", asyn
             projectType: classpath.projectType,
             sources: classpath.sourcePaths,
             output: classpath.defaultOutputPath,
+            activeVmInstallPath: classpath.jdkPath,
             referencedLibraries: classpath.referenceLibraries
         });
     }
@@ -312,6 +338,46 @@ const setOutputPath = instrumentOperation("classpath.setOutputPath", async (oper
     }
 });
 
+const changeJdk = instrumentOperation("classpath.changeJdk", async (_operationId: string, currentProjectRoot: vscode.Uri, jdkPath: string) => {
+    if (jdkPath === "add-new-jdk") {
+        const javaHome: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
+            defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
+            openLabel: "Select JDK Home",
+            canSelectFiles: false,
+            canSelectFolders: true,
+            title: "Select the installation path of the JDK"
+        });
+        if (javaHome) {
+            jdkPath = javaHome[0].fsPath;
+        } else {
+            return;
+        }
+    }
+    const result: IJdkUpdateResult = await vscode.commands.executeCommand<IJdkUpdateResult>(
+        "java.execute.workspaceCommand",
+        "java.project.updateJdk",
+        currentProjectRoot.toString(),
+        jdkPath
+    );
+    if (result.success) {
+        const activeVmInstallPath = result.message;
+        let vmInstalls: VmInstall[] = await getVmInstallsFromLS();
+        vmInstalls = vmInstalls.sort((vmA: VmInstall, vmB: VmInstall) => {
+            return vmA.name.localeCompare(vmB.name);
+        });
+        classpathConfigurationPanel?.webview.postMessage({
+            command: "onDidChangeJdk",
+            activeVmInstallPath,
+            vmInstalls,
+        });
+    } else {
+        vscode.window.showErrorMessage(result.message);
+        const err: Error = new Error(result.message);
+        setUserError(err);
+        throw(err);
+    }
+});
+
 const addReferencedLibraries = instrumentOperation("classpath.addReferencedLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
     const jarFiles: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
         defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
@@ -395,10 +461,20 @@ async function getProjectsFromLS(): Promise<ProjectInfo[]> {
     return ret;
 }
 
+async function getVmInstallsFromLS(): Promise<VmInstall[]> {
+    const ret: VmInstall[] = [];
+    try {
+        ret.push(...await vscode.commands.executeCommand<VmInstall[]>("java.execute.workspaceCommand", "java.vm.getAllInstalls") || []);
+    } catch (error) {
+    }
+    return ret;
+}
+
 async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComponent> {
     const queryKeys: string[] = [
         SOURCE_PATH_KEY,
         OUTPUT_PATH_KEY,
+        VM_LOCATION_KEY,
         REFERENCED_LIBRARIES_KEY
     ];
 
@@ -410,6 +486,7 @@ async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComp
         projectType: await getProjectType(uri.fsPath),
         sourcePaths: response[SOURCE_PATH_KEY] as string[],
         defaultOutputPath: response[OUTPUT_PATH_KEY] as string,
+        jdkPath: response[VM_LOCATION_KEY] as string,
         referenceLibraries: response[REFERENCED_LIBRARIES_KEY] as string[],
     };
     const baseFsPath = uri.fsPath;
@@ -506,4 +583,9 @@ interface IReferencedLibraries {
     include: string[];
     exclude: string[];
     sources: { [binary: string]: string };
+}
+
+interface IJdkUpdateResult {
+    success: boolean;
+    message: string;
 }
