@@ -378,7 +378,7 @@
     "react-bootstrap": "^1.6.6",
     "react-dom": "^16.14.0",
     "react-redux": "^7.2.9",
-    "semver": "^7.3.8",
+    "semver": "^7.5.2",
     "vscode-extension-telemetry-wrapper": "^0.13.2",
     "vscode-tas-client": "^0.1.63"
   }
