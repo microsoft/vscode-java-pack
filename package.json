@@ -335,7 +335,7 @@
     "bytes": "^3.1.2",
     "css-loader": "^6.7.1",
     "file-loader": "^6.2.0",
-    "postcss": "^8.4.17",
+    "postcss": "^8.4.31",
     "postcss-loader": "^6.2.1",
     "process": "0.11.10",
     "sass": "^1.55.0",
