@@ -362,7 +362,7 @@
     "@vscode/codicons": "0.0.25",
     "@vscode/webview-ui-toolkit": "1.2.2",
     "@xmldom/xmldom": "^0.8.3",
-    "axios": "^0.21.4",
+    "axios": "^1.6.0",
     "bootstrap": "^4.6.2",
     "compare-versions": "^3.6.0",
     "expand-home-dir": "0.0.3",
