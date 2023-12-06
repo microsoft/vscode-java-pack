@@ -62,43 +62,50 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
         dark: vscode.Uri.file(path.join(context.extensionPath, "caption.dark.svg"))
     };
 
-    context.subscriptions.push(classpathConfigurationPanel.webview.onDidReceiveMessage((async (message) => {
-        switch (message.command) {
-            case "onWillListProjects":
-                await listProjects();
-                break;
-            case "onWillListVmInstalls": 
-                await listVmInstalls();
-                break;
-            case "onWillLoadProjectClasspath":
-                currentProjectRoot = vscode.Uri.parse(message.uri);
-                await loadProjectClasspath(currentProjectRoot);
-                break;
-            case "onWillSelectOutputPath":
-                await setOutputPath(currentProjectRoot);
-                break;
-            case "onWillAddSourcePath":
-                await addSourcePath(currentProjectRoot);
-                break;
-            case "onWillChangeJdk":
-                await changeJdk(currentProjectRoot, message.jdkPath);
-                break;
-            case "onWillRemoveSourcePath":
-                removeSourcePath(currentProjectRoot, message.sourcePaths);
-                break;
-            case "onWillAddReferencedLibraries":
-                await addReferencedLibraries(currentProjectRoot);
-                break;
-            case "onWillRemoveReferencedLibraries":
-                removeReferencedLibrary(currentProjectRoot, message.path);
-                break;
-            case "onClickGotoProjectConfiguration":
-                gotoProjectConfigurationFile(message.rootUri, message.projectType);
-                break;
-            default:
-                break;
-        }
-    })));
+    context.subscriptions.push(
+        classpathConfigurationPanel.webview.onDidReceiveMessage((async (message) => {
+            switch (message.command) {
+                case "onWillListProjects":
+                    await listProjects();
+                    break;
+                case "onWillListVmInstalls": 
+                    await listVmInstalls();
+                    break;
+                case "onWillLoadProjectClasspath":
+                    currentProjectRoot = vscode.Uri.parse(message.uri);
+                    await loadProjectClasspath(currentProjectRoot);
+                    break;
+                case "onWillSelectOutputPath":
+                    await setOutputPath(currentProjectRoot);
+                    break;
+                case "onWillAddSourcePath":
+                    await addSourcePath(currentProjectRoot);
+                    break;
+                case "onWillChangeJdk":
+                    await changeJdk(currentProjectRoot, message.jdkPath);
+                    break;
+                case "onWillRemoveSourcePath":
+                    removeSourcePath(currentProjectRoot, message.sourcePaths);
+                    break;
+                case "onWillAddReferencedLibraries":
+                    await addReferencedLibraries(currentProjectRoot);
+                    break;
+                case "onWillRemoveReferencedLibraries":
+                    removeReferencedLibrary(currentProjectRoot, message.path);
+                    break;
+                case "onClickGotoProjectConfiguration":
+                    gotoProjectConfigurationFile(message.rootUri, message.projectType);
+                    break;
+                default:
+                    break;
+            }
+        })),
+        vscode.workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
+            if (e.affectsConfiguration("java.configuration.runtimes")) {
+                debounceListVmInstalls();
+            }
+        }),
+    );
 
     classpathConfigurationPanel.webview.html = getHtmlForWebview(classpathConfigurationPanel.webview, context.asAbsolutePath("./out/assets/classpath/index.js"));
 
@@ -222,6 +229,7 @@ const listVmInstalls = instrumentOperation("classpath.listVmInstalls", async (op
         });
     }
 });
+const debounceListVmInstalls = _.debounce(listVmInstalls, 3000 /*ms*/);
 
 const loadProjectClasspath = instrumentOperation("classpath.loadClasspath", async (operationId: string, currentProjectRoot: vscode.Uri) => {
     const classpath = await getProjectClasspathFromLS(currentProjectRoot);
