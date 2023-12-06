@@ -9,6 +9,8 @@ export const classpathConfigurationViewSlice = createSlice({
     initialState: {
       activeProjectIndex: 0,
       projects: [],
+      activeVmInstallPath: "",
+      vmInstalls: [],
       projectType: undefined,
       sources: [] as string[],
       output: "",
@@ -20,12 +22,16 @@ export const classpathConfigurationViewSlice = createSlice({
         state.projects = action.payload;
         state.activeProjectIndex = 0;
       },
+      listVmInstalls: (state, action) => {
+        state.vmInstalls = action.payload;
+      },
       activeProjectChange: (state, action) => {
         state.activeProjectIndex = action.payload;
       },
       loadClasspath: (state, action) => {
         state.projectType = action.payload.projectType;
         state.output = action.payload.output;
+        state.activeVmInstallPath = action.payload.activeVmInstallPath;
         // Only update the array when they have different elements.
         if (isDifferentStringArray(state.sources, action.payload.sources)) {
           state.sources = action.payload.sources;
@@ -39,6 +45,13 @@ export const classpathConfigurationViewSlice = createSlice({
       },
       setOutputPath: (state, action) => {
         state.output = action.payload;
+      },
+      setJdks: (state, action) => {
+        state.activeVmInstallPath = action.payload.activeVmInstallPath;
+        if (action.payload.vmInstalls &&
+              isDifferentStringArray(state.vmInstalls, action.payload.vmInstalls)) {
+          state.vmInstalls = action.payload.vmInstalls;
+        }
       },
       removeReferencedLibrary: (state, action) => {
         const removedIndex: number = action.payload as number;
@@ -62,10 +75,12 @@ function isDifferentStringArray(a1: string[], a2: string[]): boolean {
 
 export const {
   listProjects,
+  listVmInstalls,
   activeProjectChange,
   loadClasspath,
   updateSource,
   setOutputPath,
+  setJdks,
   removeReferencedLibrary,
   addReferencedLibraries,
   catchException,

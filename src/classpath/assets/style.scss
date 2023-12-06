@@ -58,11 +58,16 @@
  
   p {
     word-break: break-all;
+    margin: 0;
+    padding: 4px;
   }
 
   .setting-section-option {
+    padding: 0 4px;
+    .setting-section-option-action {
     display: flex;
     align-items: flex-end;
+    }
   }
 }
 
