@@ -52,8 +52,13 @@
   &[open][position='below'] .dropdown-above-description {
     display: none;
   }
+
   &[open][position='above'] .dropdown-below-description {
     display: none;
+  }
+
+  &[open][position='above'] #add-new-jdk {
+    margin: calc(var(--design-unit) * 1px) 0;
   }
  
   p {
@@ -65,8 +70,11 @@
   .setting-section-option {
     padding: 0 4px;
     .setting-section-option-action {
-    display: flex;
-    align-items: flex-end;
+      display: flex;
+      align-items: flex-end;
+      .codicon {
+        margin-right: calc(var(--design-unit) * 1px);
+      }
     }
   }
 }
