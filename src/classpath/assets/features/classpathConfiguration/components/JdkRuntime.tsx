@@ -55,13 +55,13 @@ const JdkRuntime = (): JSX.Element => {
       className="setting-section-option"
       key="add-new-jdk"
       value="add-new-jdk"
+      id="add-new-jdk"
       onMouseEnter={() => setOptionDescription("Select a JDK from the file system.")}
       onMouseLeave={() => setOptionDescription(activeVmInstallPath + 'asds')}
       onClick={() => handleSelectJdk("add-new-jdk")}
     >
       <div className="setting-section-option-action">
-        <span className="codicon codicon-folder-opened"></span>
-        Add a new JDK...
+        <span className="codicon codicon-folder-opened"/>Add a new JDK...
       </div>
     </VSCodeOption>
   );

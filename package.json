@@ -360,7 +360,7 @@
     "@iconify/react": "^1.1.4",
     "@reduxjs/toolkit": "^1.8.6",
     "@vscode/codicons": "^0.0.35",
-    "@vscode/webview-ui-toolkit": "1.2.2",
+    "@vscode/webview-ui-toolkit": "1.4.0",
     "@xmldom/xmldom": "^0.8.3",
     "axios": "^1.6.0",
     "bootstrap": "^4.6.2",
