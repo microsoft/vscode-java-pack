@@ -346,8 +346,13 @@ const setOutputPath = instrumentOperation("classpath.setOutputPath", async (oper
     }
 });
 
-const changeJdk = instrumentOperation("classpath.changeJdk", async (_operationId: string, currentProjectRoot: vscode.Uri, jdkPath: string) => {
+const changeJdk = instrumentOperation("classpath.changeJdk", async (operationId: string, currentProjectRoot: vscode.Uri, jdkPath: string) => {
+    const actionResult: Record<string, string> = {
+        name: "classpath.configuration",
+        kind: "use-existing-jdk"
+    };
     if (jdkPath === "add-new-jdk") {
+        actionResult.kind = "add-new-jdk";
         const javaHome: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
             openLabel: "Select JDK Home",
@@ -367,6 +372,11 @@ const changeJdk = instrumentOperation("classpath.changeJdk", async (_operationId
         currentProjectRoot.toString(),
         jdkPath
     );
+
+    actionResult.message = result.message;
+    actionResult.code = result.success ? "0" : "1";
+    sendInfo(operationId, actionResult);
+
     if (result.success) {
         const activeVmInstallPath = result.message;
         let vmInstalls: VmInstall[] = await getVmInstallsFromLS();
