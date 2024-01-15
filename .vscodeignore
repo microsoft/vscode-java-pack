@@ -14,3 +14,4 @@ webpack.config.js
 out/**/*.map
 *.vsix
 scripts
+.azure-pipelines/**

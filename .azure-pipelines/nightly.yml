@@ -1,0 +1,76 @@
+name: $(Date:yyyyMMdd).$(Rev:r)
+variables:
+  - name: Codeql.Enabled
+    value: true
+schedules:
+  - cron: 0 0 * * *
+    branches:
+      include:
+        - main
+resources:
+  repositories:
+    - repository: self
+      type: git
+      ref: refs/heads/main
+    - repository: 1esPipelines
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
+trigger: none
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  parameters:
+    pool:
+      os: linux
+      name: 1ES_JavaTooling_Pool
+      image: 1ES_JavaTooling_Ubuntu-2004
+    sdl:
+      sourceAnalysisPool:
+        name: 1ES_JavaTooling_Pool
+        image: 1ES_JavaTooling_Windows_2022
+        os: windows
+    customBuildTags:
+      - MigrationTooling-mseng-VSJava-13437-Tool
+    stages:
+      - stage: Build
+        jobs:
+          - job: Job_1
+            displayName: Agent job 1
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  artifactName: vsix
+                  targetPath: $(Build.ArtifactStagingDirectory)
+                  displayName: "Publish Artifact: vsix"
+            steps:
+              - checkout: self
+                clean: true
+                fetchTags: false
+              - task: NodeTool@0
+                displayName: Use Node 16.x
+                inputs:
+                  versionSpec: 16.x
+              - task: Npm@1
+                displayName: npm install
+                inputs:
+                  verbose: false
+              - task: CmdLine@2
+                displayName: Replace AI Key
+                inputs:
+                  script: npx json@9.0.6 -I -f package.json -e "this.aiKey=\"$AI_KEY\""
+              - task: Bash@3
+                displayName: update version in package json
+                inputs:
+                  targetType: inline
+                  script: |-
+                    node ./scripts/prepare-nightly-build.js
+                    mv ./package.insiders.json ./package.json
+              - task: CmdLine@2
+                displayName: VSCE package --pre-release
+                inputs:
+                  script: npx @vscode/vsce@latest package --pre-release
+              - task: CopyFiles@2
+                displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
+                inputs:
+                  Contents: "*.vsix"
+                  TargetFolder: $(Build.ArtifactStagingDirectory)
