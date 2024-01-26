@@ -57,5 +57,6 @@ export enum ProjectType {
 export enum NatureId {
   Maven = "org.eclipse.m2e.core.maven2Nature",
   Gradle = "org.eclipse.buildship.core.gradleprojectnature",
-  Java = "org.eclipse.jdt.core.javanature",
+  GradleBs = "com.microsoft.gradle.bs.importer.GradleBuildServerProjectNature",
+  UnmanagedFolder = "org.eclipse.jdt.ls.unmanagedFolderNature",
 }
