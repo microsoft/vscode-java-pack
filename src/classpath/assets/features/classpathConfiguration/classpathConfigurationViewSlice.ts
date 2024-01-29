@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, current } from "@reduxjs/toolkit";
 import _ from "lodash";
+import { ClasspathEntry } from "../../../types";
 
 export const classpathConfigurationViewSlice = createSlice({
     name: "classpathConfig",
@@ -12,9 +13,9 @@ export const classpathConfigurationViewSlice = createSlice({
       activeVmInstallPath: "",
       vmInstalls: [],
       projectType: undefined,
-      sources: [] as string[],
+      sources: [] as ClasspathEntry[],
       output: "",
-      referencedLibraries: [] as string[],
+      libraries: [] as ClasspathEntry[],
       exception: undefined,
     },
     reducers: {
@@ -33,11 +34,16 @@ export const classpathConfigurationViewSlice = createSlice({
         state.output = action.payload.output;
         state.activeVmInstallPath = action.payload.activeVmInstallPath;
         // Only update the array when they have different elements.
-        if (isDifferentStringArray(state.sources, action.payload.sources)) {
+        const currentSources = _.sortBy(current(state.sources), ["path", "output"]);
+        const newSources = _.sortBy(action.payload.sources, ["path", "output"]);
+        if (!_.isEqual(currentSources, newSources)) {
           state.sources = action.payload.sources;
         }
-        if (isDifferentStringArray(state.referencedLibraries, action.payload.referencedLibraries)) {
-          state.referencedLibraries = action.payload.referencedLibraries;
+
+        const currentLibs = _.sortBy(current(state.libraries), ["path"]);
+        const newLibs = _.sortBy(action.payload.libraries, ["path"]);
+        if (!_.isEqual(currentLibs, newLibs)) {
+          state.libraries = action.payload.libraries;
         }
       },
       updateSource: (state, action) => {
@@ -55,13 +61,13 @@ export const classpathConfigurationViewSlice = createSlice({
       },
       removeReferencedLibrary: (state, action) => {
         const removedIndex: number = action.payload as number;
-        if (removedIndex > -1 && removedIndex < state.referencedLibraries.length) {
-          state.referencedLibraries.splice(removedIndex, 1);
+        if (removedIndex > -1 && removedIndex < state.libraries.length) {
+          state.libraries.splice(removedIndex, 1);
         }
       },
-      addReferencedLibraries: (state, action) => {
-        state.referencedLibraries.push(...action.payload);
-        state.referencedLibraries = _.uniq(state.referencedLibraries);
+      addLibraries: (state, action) => {
+        state.libraries.unshift(...action.payload);
+        state.libraries = _.uniq(state.libraries);
       },
       catchException: (state, action) => {
         state.exception = action.payload;
@@ -82,7 +88,7 @@ export const {
   setOutputPath,
   setJdks,
   removeReferencedLibrary,
-  addReferencedLibraries,
+  addLibraries,
   catchException,
 } = classpathConfigurationViewSlice.actions;
 

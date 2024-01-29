@@ -17,10 +17,25 @@ export interface VmInstall {
 
 export interface ClasspathComponent {
     projectType: ProjectType;
-    sourcePaths: string[];
+    sourcePaths: ClasspathEntry[];
     defaultOutputPath: string;
     jdkPath: string;
-    referenceLibraries: string[];
+    libraries: ClasspathEntry[];
+}
+
+export interface ClasspathEntry {
+    kind: ClasspathEntryKind;
+    path: string;
+    output?: string;
+    attributes?: { [key: string]: string }
+}
+
+export enum ClasspathEntryKind {
+    Library = 1,
+    Project = 2,
+    Source = 3,
+    Variable = 4,
+    Container = 5,
 }
 
 export enum ClasspathViewException {

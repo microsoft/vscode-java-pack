@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { ProjectType } from "../../utils/webview";
+import { ClasspathEntry } from "../types";
 
 export const WEBVIEW_ID = "java.classpathConfiguration";
 
@@ -34,6 +35,24 @@ export function onWillSelectOutputPath() {
   });
 }
 
+export function onWillSetOutputPath(outputPath: string) {
+  vscode.postMessage({
+    command: "onWillSetOutputPath",
+    outputPath,
+  });
+
+}
+
+export function onWillUpdateClassPaths(sourcePaths: ClasspathEntry[], vmInstallPath: string, libraries: ClasspathEntry[]) {
+  vscode.postMessage({
+    command: "onWillUpdateClassPaths",
+    sourcePaths,
+    vmInstallPath,
+    libraries
+  });
+
+}
+
 export function onWillRemoveSourcePath(sourcePaths: string[]) {
   vscode.postMessage({
     command: "onWillRemoveSourcePath",
@@ -41,9 +60,30 @@ export function onWillRemoveSourcePath(sourcePaths: string[]) {
   });
 }
 
-export function onWillAddSourcePath() {
+export function onWillSelectFolder(type: string) {
   vscode.postMessage({
-    command: "onWillAddSourcePath"
+    command: "onWillSelectFolder",
+    type,
+  });
+}
+
+export function onWillAddSourcePathForUnmanagedFolder() {
+  vscode.postMessage({
+    command: "onWillAddSourcePathForUnmanagedFolder"
+  });
+}
+
+export function onWillUpdateSourcePathsForUnmanagedFolder(sourcePaths: string[]) {
+  vscode.postMessage({
+    command: "onWillUpdateSourcePathsForUnmanagedFolder",
+    sourcePaths
+  });
+
+}
+
+export function onWillAddNewJdk() {
+  vscode.postMessage({
+    command: "onWillAddNewJdk"
   });
 }
 
@@ -54,17 +94,18 @@ export function onWillChangeJdk(jdkPath: string) {
   });
 }
 
-export function onWillAddReferencedLibraries() {
+export function onWillSelectLibraries() {
   vscode.postMessage({
-    command: "onWillAddReferencedLibraries"
+    command: "onWillSelectLibraries"
   });
 }
 
-export function onWillRemoveReferencedLibraries(path: string) {
+export function onWillUpdateUnmanagedFolderLibraries(jarFilePaths: string[]) {
   vscode.postMessage({
-    command: "onWillRemoveReferencedLibraries",
-    path,
+    command: "onWillUpdateUnmanagedFolderLibraries",
+    jarFilePaths,
   });
+
 }
 
 export function onClickGotoProjectConfiguration(rootUri: string, projectType: ProjectType) {
@@ -72,5 +113,12 @@ export function onClickGotoProjectConfiguration(rootUri: string, projectType: Pr
     command: "onClickGotoProjectConfiguration",
     rootUri,
     projectType,
+  });
+}
+
+export function onWillExecuteCommand(id: string) {
+  vscode.postMessage({
+    command: "onWillExecuteCommand",
+    id,
   });
 }
