@@ -16,6 +16,7 @@ import compareVersions from "compare-versions";
 let classpathConfigurationPanel: vscode.WebviewPanel | undefined;
 let lsApi: LanguageServerAPI | undefined;
 let currentProjectRoot: vscode.Uri;
+const Nature_IDS: string = "org.eclipse.jdt.ls.core.natureIds"
 const SOURCE_PATH_KEY: string = "org.eclipse.jdt.ls.core.sourcePaths";
 const OUTPUT_PATH_KEY: string = "org.eclipse.jdt.ls.core.outputPath";
 const VM_LOCATION_KEY: string = "org.eclipse.jdt.ls.core.vm.location";
@@ -490,6 +491,7 @@ async function getVmInstallsFromLS(): Promise<VmInstall[]> {
 
 async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComponent> {
     const queryKeys: string[] = [
+        Nature_IDS,
         SOURCE_PATH_KEY,
         OUTPUT_PATH_KEY,
         VM_LOCATION_KEY,
@@ -501,7 +503,7 @@ async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComp
         queryKeys
     );
     const classpath: ClasspathComponent = {
-        projectType: await getProjectType(uri.fsPath),
+        projectType: getProjectType(uri.fsPath, response[Nature_IDS] as string[]),
         sourcePaths: response[SOURCE_PATH_KEY] as string[],
         defaultOutputPath: response[OUTPUT_PATH_KEY] as string,
         jdkPath: response[VM_LOCATION_KEY] as string,

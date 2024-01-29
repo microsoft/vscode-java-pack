@@ -267,7 +267,7 @@ async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeEntry[]> {
 
       for (const project of projects) {
         const runtimeSpec = await getRuntimeSpec(project.uri);
-        const projectType: ProjectType = await getProjectType(vscode.Uri.parse(project.uri).fsPath);
+        const projectType: ProjectType = getProjectType(vscode.Uri.parse(project.uri).fsPath, runtimeSpec.natureIds);
         ret.push({
           name: project.displayName || project.name,
           rootPath: project.uri,
@@ -293,7 +293,7 @@ async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
 
     for (const projectRoot of projects) {
       const runtimeSpec = await getRuntimeSpec(projectRoot);
-      const projectType: ProjectType = await getProjectType(vscode.Uri.parse(projectRoot).fsPath);
+      const projectType: ProjectType = await getProjectType(vscode.Uri.parse(projectRoot).fsPath, runtimeSpec.natureIds);
       ret.push({
         name: getProjectNameFromUri(projectRoot),
         rootPath: projectRoot,
@@ -306,14 +306,17 @@ async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
 }
 
 async function getRuntimeSpec(projectRootUri: string) {
+  let natureIds;
   let runtimePath;
   let sourceLevel;
   const javaExt = vscode.extensions.getExtension("redhat.java");
   if (javaExt && javaExt.isActive) {
+    const NATURE_IDS = "org.eclipse.jdt.ls.core.natureIds";
     const SOURCE_LEVEL_KEY = "org.eclipse.jdt.core.compiler.source";
     const VM_INSTALL_PATH = "org.eclipse.jdt.ls.core.vm.location";
     try {
-      const settings: any = await javaExt.exports.getProjectSettings(projectRootUri, [SOURCE_LEVEL_KEY, VM_INSTALL_PATH]);
+      const settings: any = await javaExt.exports.getProjectSettings(projectRootUri, [NATURE_IDS, SOURCE_LEVEL_KEY, VM_INSTALL_PATH]);
+      natureIds = settings[NATURE_IDS];
       runtimePath = settings[VM_INSTALL_PATH];
       sourceLevel = settings[SOURCE_LEVEL_KEY];
     } catch (error) {
@@ -322,6 +325,7 @@ async function getRuntimeSpec(projectRootUri: string) {
   }
 
   return {
+    natureIds,
     runtimePath,
     sourceLevel
   };
