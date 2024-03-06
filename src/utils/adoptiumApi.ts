@@ -104,7 +104,7 @@ export async function latestCompatibleAsset(featureVersion: string, jvmImpl: str
         os = "linux";
     }
 
-    let arch = process.arch;
+    let arch = process.arch as string;
     if (arch === "arm64") {
         arch = "aarch64";
     }

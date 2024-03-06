@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as crypto from "crypto"; 
 import * as vscode from "vscode";
 import { readFile as fsReadFile } from "fs";
 import * as util from "util";
@@ -79,10 +80,8 @@ export function isInsiders() {
 }
 
 export function getNonce() {
-  let text = "";
-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
+  let array = new Uint32Array(16);
+  array = crypto.getRandomValues(array);
+  const buffer = Buffer.from(array);
+  return buffer.toString('base64');
 }

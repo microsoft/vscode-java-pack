@@ -4,7 +4,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
-import { webviewCmdLinkHandler } from "../utils";
+import { getNonce, webviewCmdLinkHandler } from "../utils";
 
 const WEBVIEW_ID = "java.gettingStarted";
 const WEBVIEW_TITLE = "Tips for Beginners";
@@ -126,13 +126,4 @@ class BeginnerTipsPage {
 			</body>
 			</html>`;
 	}
-}
-
-function getNonce() {
-	let text = "";
-	const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for (let i = 0; i < 32; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
 }
