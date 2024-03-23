@@ -97,6 +97,9 @@
     display: flex;
     align-items: center;
   }
+  .setting-section-grid-cell-left {
+    padding-right: calc(var(--design-unit) * 4px);
+  }
   .setting-section-grid-cell-readonly {
     justify-content: space-between;
   }
@@ -115,19 +118,17 @@
 }
 
 .setting-section-text {
-  width: 420px;
+  width: 100%;
   word-break: break-all;
 }
 
-.setting-list-actions-placeholder {
-  height: calc(var(--design-unit) * 8px);
-  width: 0
-}
 .setting-list-actions {
   height: calc(var(--design-unit) * 8px);
-  width: 100%;
-  background: var(--background);
-  z-index: 1;
+}
+
+.setting-overflow-area {
+  overflow: auto;
+  max-height: 50vh;
 }
 
 .inactive {

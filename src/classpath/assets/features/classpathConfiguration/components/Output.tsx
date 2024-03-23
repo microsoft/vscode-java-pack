@@ -7,11 +7,11 @@ import { useSelector, useDispatch } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
 import { onWillSelectOutputPath } from "../../../utils";
 import { setOutputPath } from "../classpathConfigurationViewSlice";
-import { VSCodeButton, VSCodeTextArea } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 
 const Output = (): JSX.Element | null => {
-    const output: string = useSelector((state: any) => state.classpathConfig.output);
-    const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType);
+    const output: string = useSelector((state: any) => state.classpathConfig.output[state.classpathConfig.activeProjectIndex]);
+    const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType[state.classpathConfig.activeProjectIndex]);
     const dispatch: Dispatch<any> = useDispatch();
     const handleClick = () => {
       onWillSelectOutputPath();
@@ -36,19 +36,14 @@ const Output = (): JSX.Element | null => {
     return (
       <div className="setting-section mt-2">
         <h4 className="mb-2 pl-1">Output Path</h4>
-        <div className="pt-1 pb-1">
-          <VSCodeButton className="pl-1 pr-1 pt-1 pb-1 mb-1" slot="end" appearance="icon" onClick={() => handleClick()}>
-            <span className="codicon codicon-folder-opened mr-1"></span>
-            Browse
-          </VSCodeButton>
-        </div>
-        <VSCodeTextArea
-          className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} setting-section-text pl-1`}
+        <VSCodeTextField className="inactive setting-section-text pl-1"
           readOnly
           value={output}
-          resize="both"
-          rows={1}
-        />
+          placeholder="Output Path">
+          <VSCodeButton slot="end" appearance="icon" title="Browse..." aria-label="Browse..." onClick={() => handleClick()}>
+            <span className="codicon codicon-folder-opened"></span>
+          </VSCodeButton>
+        </VSCodeTextField>
       </div>
     );
 };

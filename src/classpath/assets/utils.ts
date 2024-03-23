@@ -35,19 +35,14 @@ export function onWillSelectOutputPath() {
   });
 }
 
-export function onWillSetOutputPath(outputPath: string) {
-  vscode.postMessage({
-    command: "onWillSetOutputPath",
-    outputPath,
-  });
-
-}
-
-export function onWillUpdateClassPaths(sourcePaths: ClasspathEntry[], vmInstallPath: string, libraries: ClasspathEntry[]) {
+export function onWillUpdateClassPaths(rootPaths: string[], projectTypes: ProjectType[], sourcePaths: ClasspathEntry[][], defaultOutputPaths: string[], vmInstallPaths: string[], libraries: ClasspathEntry[][]) {
   vscode.postMessage({
     command: "onWillUpdateClassPaths",
+    rootPaths,
+    projectTypes,
     sourcePaths,
-    vmInstallPath,
+    defaultOutputPaths,
+    vmInstallPaths,
     libraries
   });
 
@@ -73,24 +68,9 @@ export function onWillAddSourcePathForUnmanagedFolder() {
   });
 }
 
-export function onWillUpdateSourcePathsForUnmanagedFolder(sourcePaths: string[]) {
-  vscode.postMessage({
-    command: "onWillUpdateSourcePathsForUnmanagedFolder",
-    sourcePaths
-  });
-
-}
-
 export function onWillAddNewJdk() {
   vscode.postMessage({
     command: "onWillAddNewJdk"
-  });
-}
-
-export function onWillChangeJdk(jdkPath: string) {
-  vscode.postMessage({
-    command: "onWillChangeJdk",
-    jdkPath,
   });
 }
 
@@ -98,14 +78,6 @@ export function onWillSelectLibraries() {
   vscode.postMessage({
     command: "onWillSelectLibraries"
   });
-}
-
-export function onWillUpdateUnmanagedFolderLibraries(jarFilePaths: string[]) {
-  vscode.postMessage({
-    command: "onWillUpdateUnmanagedFolderLibraries",
-    jarFilePaths,
-  });
-
 }
 
 export function onClickGotoProjectConfiguration(rootUri: string, projectType: ProjectType) {
@@ -121,4 +93,22 @@ export function onWillExecuteCommand(id: string) {
     command: "onWillExecuteCommand",
     id,
   });
+}
+
+// TODO: better way to handle the max height calculation?
+export const updateMaxHeight = () => {
+  let maxHeight = window.innerHeight;
+  const projectSelector = document.getElementById("project-selector");
+  if (projectSelector) {
+    maxHeight -= projectSelector.getBoundingClientRect().height;
+  }
+  const footer = document.getElementById("footer");
+  if (footer) {
+    maxHeight -= footer.getBoundingClientRect().height;
+  }
+  maxHeight -= 120;
+  const areas = Array.from(document.getElementsByClassName("setting-overflow-area") as HTMLCollectionOf<HTMLElement>);
+  for (let i = 0; i < areas.length; i++) {
+    areas[i].style!.maxHeight = (maxHeight <= 10 ? 10 : maxHeight) + "px";
+  }
 }

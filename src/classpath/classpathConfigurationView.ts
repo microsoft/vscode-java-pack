@@ -77,31 +77,19 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
                 case "onWillSelectOutputPath":
                     await selectOutputPath(currentProjectRoot);
                     break;
-                case "onWillSetOutputPath":
-                    await setOutputPath(currentProjectRoot, message.outputPath);
-                    break;
                 case "onWillAddSourcePathForUnmanagedFolder":
                     await addSourcePathForUnmanagedFolder(currentProjectRoot);
-                    break;
-                case "onWillUpdateSourcePathsForUnmanagedFolder":
-                    await updateSourcePathsForUnmanagedFolder(currentProjectRoot, message.sourcePaths);
                     break;
                 case "onWillSelectFolder":
                     await selectFolder(currentProjectRoot, message.type);
                     break;
                 case "onWillUpdateClassPaths":
-                    await updateClassPaths(currentProjectRoot, message.sourcePaths, message.vmInstallPath, message.libraries);
+                    await updateClassPaths(message.rootPaths, message.projectTypes, message.sourcePaths, message.defaultOutputPaths, message.vmInstallPaths, message.libraries);
                     break;
                 case "onWillAddNewJdk":
                     await addNewJdk(currentProjectRoot);
-                case "onWillChangeJdk":
-                    await changeJdk(currentProjectRoot, message.jdkPath);
-                    break;
                 case "onWillSelectLibraries":
                     await selectLibraries(currentProjectRoot);
-                    break;
-                case "onWillUpdateUnmanagedFolderLibraries":
-                    await updateUnmanagedFolderLibraries(message.jarFilePaths);
                     break;
                 case "onClickGotoProjectConfiguration":
                     gotoProjectConfigurationFile(message.rootUri, message.projectType);
@@ -327,20 +315,40 @@ const selectFolder = instrumentOperation("classpath.selectFolder", async (_opera
     });
 });
 
-const updateClassPaths = instrumentOperation("classpath.updateClassPaths", async (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: ClasspathEntry[], vmInstallPath: string, libraries: ClasspathEntry[]) => {
-    const classpathEntries: ClasspathEntry[] = [];
-    classpathEntries.push(...sourcePaths);
-    classpathEntries.push({
-        kind: ClasspathEntryKind.Container,
-        path: `org.eclipse.jdt.launching.JRE_CONTAINER/${vmInstallPath}`,
+const updateClassPaths = instrumentOperation("classpath.updateClassPaths", async (_operationId: string, rootPaths: string[], projectTypes: ProjectType[], sourcePaths: ClasspathEntry[][], defaultOutputPaths: string[], vmInstallPaths: string[], libraries: ClasspathEntry[][]) => {
+    classpathConfigurationPanel?.webview.postMessage({
+        command: "onDidChangeLoadingState",
+        loading: true,
     });
-    classpathEntries.push(...libraries);
-    await vscode.commands.executeCommand(
-        "java.execute.workspaceCommand",
-        "java.project.updateClassPaths",
-        currentProjectRoot.toString(),
-        JSON.stringify({classpathEntries}),
-    );
+
+    const projectCount = rootPaths.length;
+    for (let i = 0; i < projectCount; i++) {
+        const currentProjectRoot: vscode.Uri = vscode.Uri.parse(rootPaths[i]);
+        if (projectTypes[i] === ProjectType.UnmanagedFolder) {
+            updateSourcePathsForUnmanagedFolder(currentProjectRoot, sourcePaths[i].map(sp => sp.path));
+            setOutputPath( currentProjectRoot, defaultOutputPaths[i]);
+            updateUnmanagedFolderLibraries(libraries[i].map(l => l.path));
+            changeJdk(currentProjectRoot, vmInstallPaths[i]);
+        } else {
+            const classpathEntries: ClasspathEntry[] = [];
+            classpathEntries.push(...sourcePaths[i]);
+            classpathEntries.push({
+                kind: ClasspathEntryKind.Container,
+                path: `org.eclipse.jdt.launching.JRE_CONTAINER/${vmInstallPaths[i]}`,
+            });
+            classpathEntries.push(...libraries[i]);
+            await vscode.commands.executeCommand(
+                "java.execute.workspaceCommand",
+                "java.project.updateClassPaths",
+                currentProjectRoot.toString(),
+                JSON.stringify({classpathEntries}),
+            );
+        }
+    }
+    classpathConfigurationPanel?.webview.postMessage({
+        command: "onDidChangeLoadingState",
+        loading: false,
+    });
 });
 
 const selectOutputPath = instrumentOperation("classpath.selectOutputPath", async (_operationId: string, currentProjectRoot: vscode.Uri) => {

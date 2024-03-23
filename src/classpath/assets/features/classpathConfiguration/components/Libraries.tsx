@@ -6,14 +6,14 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeReferencedLibrary, addLibraries } from "../classpathConfigurationViewSlice";
 import { onWillSelectLibraries } from "../../../utils";
-import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
 
 const Libraries = (): JSX.Element => {
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
-  const libraries: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.libraries);
+  const libraries: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.libraries[state.classpathConfig.activeProjectIndex]);
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleRemove = (index: number) => {
@@ -62,36 +62,10 @@ const Libraries = (): JSX.Element => {
     return pathComponents[pathComponents.length - 1];
   }
 
-  const updateListMaxHeight = () => {
-    const list = document.getElementById("testtest");
-    if (!list) {
-      return;
-    }
-
-    let maxHeight = window.innerHeight;
-    const projectSelector = document.getElementById("project-selector");
-    if (projectSelector) {
-      maxHeight -= projectSelector.getBoundingClientRect().height;
-    }
-    const navBar = document.getElementById("div.tablist");
-    if (navBar) {
-      maxHeight -= navBar.getBoundingClientRect().height;
-    }
-    const footer = document.getElementById("footer");
-    if (footer) {
-      maxHeight -= footer.getBoundingClientRect().height;
-    }
-    maxHeight -= 125;
-    list.style.maxHeight = (maxHeight <= 10 ? 10 : maxHeight) + "px";
-  }
-
   useEffect(() => {
-    updateListMaxHeight();
     window.addEventListener("message", onDidAddLibraries);
-    window.addEventListener('resize', updateListMaxHeight);
     return () => {
       window.removeEventListener("message", onDidAddLibraries);
-      window.removeEventListener("resize", updateListMaxHeight);
     }
   }, []);
 
@@ -122,17 +96,15 @@ const Libraries = (): JSX.Element => {
 
   return (
     <div className="setting-section">
-      <div className="pb-1">
-        <div className="flex-center">
-          <div id="placeholder" className="setting-list-actions-placeholder"/>
-          <div id="list-actions" className="setting-list-actions">
-            <VSCodeButton className="pl-1 pr-1 pt-1 pb-1" slot="end" appearance="icon" onClick={() => handleAdd()}>
-              <span className="codicon codicon-add mr-1"></span>
-              Add Library
-            </VSCodeButton>
-          </div>
+      <div>
+        <div id="list-actions" className="flex-center setting-list-actions">
+          <VSCodeButton className="pl-1 pr-1 pt-1 pb-1" slot="end" appearance="icon" onClick={() => handleAdd()}>
+            <span className="codicon codicon-add mr-1"></span>
+            Add Library...
+          </VSCodeButton>
         </div>
-        <div id="testtest" style={{maxHeight: "200px", overflowY: "scroll"}}>
+        <VSCodeDivider className="mb-0"/>
+        <div className="setting-overflow-area">
           <VSCodeDataGrid>
             {librariesSections}
           </VSCodeDataGrid>

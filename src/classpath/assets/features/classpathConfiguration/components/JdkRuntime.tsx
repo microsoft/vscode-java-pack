@@ -11,7 +11,7 @@ import { setJdks } from "../classpathConfigurationViewSlice";
 const JdkRuntime = (): JSX.Element => {
 
   const vmInstalls: VmInstall[] = useSelector((state: any) => state.classpathConfig.vmInstalls);
-  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.activeVmInstallPath);
+  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.activeVmInstallPath[state.classpathConfig.activeProjectIndex]);
 
   const [optionDescription, setOptionDescription] = useState<string | null>(null);
 

@@ -43,3 +43,8 @@ export enum ClasspathViewException {
     StaleJavaExtension = "staleJavaExtension",
     NoJavaProjects = "noJavaProjects",
 }
+
+export enum ProjectState {
+    Unloaded = "unloaded",
+    Loaded = "loaded",
+}

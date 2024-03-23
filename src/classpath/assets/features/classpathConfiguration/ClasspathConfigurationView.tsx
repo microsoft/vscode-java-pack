@@ -20,7 +20,7 @@ import Footer from "./components/Footer";
 
 const ClasspathConfigurationView = (): JSX.Element => {
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
-  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType);
+  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType[state.classpathConfig.activeProjectIndex]);
   const exception: ClasspathViewException | undefined = useSelector((state: any) => state.classpathConfig.exception);
   let content: JSX.Element;
 
@@ -74,7 +74,9 @@ const ClasspathConfigurationView = (): JSX.Element => {
     window.addEventListener("message", onInitialize);
     onWillListProjects();
     onWillListVmInstalls();
-    return () => window.removeEventListener("message", onInitialize);
+    return () => {
+      window.removeEventListener("message", onInitialize);
+    }
   }, []);
 
   return (

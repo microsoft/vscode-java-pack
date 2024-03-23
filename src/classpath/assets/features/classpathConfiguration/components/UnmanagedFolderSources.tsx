@@ -7,15 +7,15 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
 import { onWillAddSourcePathForUnmanagedFolder } from "../../../utils";
 import { ProjectType } from "../../../../../utils/webview";
-import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import { ClasspathEntry } from "../../../../types";
 
 const UnmanagedFolderSources = (): JSX.Element => {
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
-  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.sources);
-  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType);
+  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.sources[state.classpathConfig.activeProjectIndex]);
+  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType[state.classpathConfig.activeProjectIndex]);
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleRemove = (path: string) => {
@@ -76,13 +76,14 @@ const UnmanagedFolderSources = (): JSX.Element => {
 
   return (
     <div className="setting-section">
-      <h4 className="mt-2 mb-2 pl-1">Source Paths</h4>
-      <div className="pt-1 pb-1">
+      <h4 className="mt-1 mb-1 pl-1">Source Paths</h4>
+      <div id="list-actions" className="flex-center setting-list-actions">
         <VSCodeButton className="pl-1 pr-1 pt-1 pb-1" slot="end" appearance="icon" onClick={() => handleAdd()}>
           <span className="codicon codicon-add mr-1"></span>
-          Add Source Root
+          Add Source Root...
         </VSCodeButton>
       </div>
+      <VSCodeDivider className="mb-0"/>
       <VSCodeDataGrid>
         {sourceSections}
       </VSCodeDataGrid>

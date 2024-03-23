@@ -11,8 +11,8 @@ import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
 
 const Sources = (): JSX.Element => {
 
-  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.sources);
-  const defaultOutput: string = useSelector((state: any) => state.classpathConfig.output);
+  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.sources[state.classpathConfig.activeProjectIndex]);
+  const defaultOutput: string = useSelector((state: any) => state.classpathConfig.output[state.classpathConfig.activeProjectIndex]);
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [editRow, setEditRow] = useState<number | null>(null);
@@ -164,7 +164,7 @@ const Sources = (): JSX.Element => {
     } else {
       return (
         <VSCodeDataGridRow className="setting-section-grid-row" id={`sources-${index}`} onMouseEnter={() => setHoveredRow(`sources-${index}`)} onMouseLeave={() => setHoveredRow(null)} key={source.path}>
-          <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-readonly" gridColumn="1">
+          <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-left setting-section-grid-cell-readonly" gridColumn="1">
             {source.path}
           </VSCodeDataGridCell>
           <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-readonly" gridColumn="2">
@@ -195,22 +195,27 @@ const Sources = (): JSX.Element => {
 
   return (
     <div className="setting-section">
-      <VSCodeButton className="pl-1 pr-1 pt-1 pb-1" slot="end" appearance="icon" onClick={() => handleAdd()}>
-        <span className="codicon codicon-add mr-1"></span>
-        Add Source Root
-      </VSCodeButton>
-      <VSCodeDataGrid gridTemplateColumns="40% 60%" generateHeader="sticky">
-        <VSCodeDataGridRow className="setting-section-grid-row" rowType="header">
-          <VSCodeDataGridCell className="setting-section-grid-cell" cellType="columnheader" gridColumn="1">
-            <span className="setting-section-grid-row-header">Path</span>
-          </VSCodeDataGridCell>
-          <VSCodeDataGridCell className="setting-section-grid-cell" cellType="columnheader" gridColumn="2">
-            <span className="setting-section-grid-row-header">Output</span>
-          </VSCodeDataGridCell>
-        </VSCodeDataGridRow>
-        {getSourceSections()}
-        {getAdditionalEditRow()}
-      </VSCodeDataGrid>
+      <div id="list-actions" className="flex-center setting-list-actions">
+        <VSCodeButton className="pl-1 pr-1 pt-1 pb-1" slot="end" appearance="icon" onClick={() => handleAdd()}>
+          <span className="codicon codicon-add mr-1"></span>
+          Add Source Root...
+        </VSCodeButton>
+      </div>
+      <div className="setting-overflow-area">
+        <VSCodeDataGrid gridTemplateColumns="40% 60%" generateHeader="sticky">
+          <VSCodeDataGridRow className="setting-section-grid-row" rowType="header">
+            <VSCodeDataGridCell className="setting-section-grid-cell" cellType="columnheader" gridColumn="1">
+              <span className="setting-section-grid-row-header">Path</span>
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell className="setting-section-grid-cell" cellType="columnheader" gridColumn="2">
+              <span className="setting-section-grid-row-header">Output</span>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          {getSourceSections()}
+          {getAdditionalEditRow()}
+        </VSCodeDataGrid>
+      </div>
+      
     </div>
   );
 };

@@ -3,7 +3,7 @@
 
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { ProjectInfo } from "../../../../types";
+import { ProjectInfo, ProjectState } from "../../../../types";
 import { Dispatch } from "@reduxjs/toolkit";
 import { activeProjectChange } from "../classpathConfigurationViewSlice";
 import { onWillLoadProjectClasspath } from "../../../utils";
@@ -12,6 +12,7 @@ import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 const ProjectSelector = (): JSX.Element | null => {
   const activeProjectIndex: number = useSelector((state: any) => state.classpathConfig.activeProjectIndex);
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
+  const projectState: ProjectState[] = useSelector((state: any) => state.classpathConfig.projectState);
 
   const dispatch: Dispatch<any> = useDispatch();
 
@@ -19,8 +20,14 @@ const ProjectSelector = (): JSX.Element | null => {
     dispatch(activeProjectChange(index));
   };
 
+  const loadProjectClasspath = (rootPath: string) => {
+    if (projectState[activeProjectIndex] === ProjectState.Unloaded) {
+      onWillLoadProjectClasspath(rootPath);
+    }
+  }
+
   useEffect(() => {
-    onWillLoadProjectClasspath(projects[activeProjectIndex].rootPath);
+    loadProjectClasspath(projects[activeProjectIndex].rootPath);
   }, [activeProjectIndex, projects]);
 
   const projectSelections = projects.map((project, index) => {

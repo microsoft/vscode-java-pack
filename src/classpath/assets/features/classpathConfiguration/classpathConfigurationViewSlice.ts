@@ -3,25 +3,35 @@
 
 import { createSlice, current } from "@reduxjs/toolkit";
 import _ from "lodash";
-import { ClasspathEntry } from "../../../types";
+import { ClasspathEntry, ProjectState } from "../../../types";
+import { ProjectType } from "../../../../utils/webview";
 
 export const classpathConfigurationViewSlice = createSlice({
     name: "classpathConfig",
     initialState: {
       activeProjectIndex: 0,
       projects: [],
-      activeVmInstallPath: "",
+      activeVmInstallPath: [] as string[],
       vmInstalls: [],
-      projectType: undefined,
-      sources: [] as ClasspathEntry[],
-      output: "",
-      libraries: [] as ClasspathEntry[],
+      projectType: [] as ProjectType[],
+      sources: [] as ClasspathEntry[][],
+      output: [] as string[],
+      libraries: [] as ClasspathEntry[][],
+      projectState: [] as ProjectState[],
+      loadingState: false,
       exception: undefined,
     },
     reducers: {
       listProjects: (state, action) => {
         state.projects = action.payload;
         state.activeProjectIndex = 0;
+        const projectNum = state.projects.length;
+        state.activeVmInstallPath = Array(projectNum).fill("");
+        state.projectType = Array(projectNum).fill("");
+        state.sources = Array(projectNum).fill([]);
+        state.output = Array(projectNum).fill("");
+        state.libraries = Array(projectNum).fill([]);
+        state.projectState = Array(projectNum).fill(ProjectState.Unloaded);
       },
       listVmInstalls: (state, action) => {
         state.vmInstalls = action.payload;
@@ -30,30 +40,31 @@ export const classpathConfigurationViewSlice = createSlice({
         state.activeProjectIndex = action.payload;
       },
       loadClasspath: (state, action) => {
-        state.projectType = action.payload.projectType;
-        state.output = action.payload.output;
-        state.activeVmInstallPath = action.payload.activeVmInstallPath;
+        state.projectState[state.activeProjectIndex] = ProjectState.Loaded;
+        state.projectType[state.activeProjectIndex] = action.payload.projectType;
+        state.output[state.activeProjectIndex] = action.payload.output;
+        state.activeVmInstallPath[state.activeProjectIndex] = action.payload.activeVmInstallPath;
         // Only update the array when they have different elements.
         const currentSources = _.sortBy(current(state.sources), ["path", "output"]);
         const newSources = _.sortBy(action.payload.sources, ["path", "output"]);
         if (!_.isEqual(currentSources, newSources)) {
-          state.sources = action.payload.sources;
+          state.sources[state.activeProjectIndex] = action.payload.sources;
         }
 
         const currentLibs = _.sortBy(current(state.libraries), ["path"]);
         const newLibs = _.sortBy(action.payload.libraries, ["path"]);
         if (!_.isEqual(currentLibs, newLibs)) {
-          state.libraries = action.payload.libraries;
+          state.libraries[state.activeProjectIndex] = action.payload.libraries;
         }
       },
       updateSource: (state, action) => {
-        state.sources = action.payload;
+        state.sources[state.activeProjectIndex] = action.payload;
       },
       setOutputPath: (state, action) => {
-        state.output = action.payload;
+        state.output[state.activeProjectIndex] = action.payload;
       },
       setJdks: (state, action) => {
-        state.activeVmInstallPath = action.payload.activeVmInstallPath;
+        state.activeVmInstallPath[state.activeProjectIndex] = action.payload.activeVmInstallPath;
         if (action.payload.vmInstalls &&
               isDifferentStringArray(state.vmInstalls, action.payload.vmInstalls)) {
           state.vmInstalls = action.payload.vmInstalls;
@@ -61,17 +72,22 @@ export const classpathConfigurationViewSlice = createSlice({
       },
       removeReferencedLibrary: (state, action) => {
         const removedIndex: number = action.payload as number;
-        if (removedIndex > -1 && removedIndex < state.libraries.length) {
-          state.libraries.splice(removedIndex, 1);
+        if (removedIndex > -1 && removedIndex < state.libraries[state.activeProjectIndex].length) {
+          state.libraries[state.activeProjectIndex].splice(removedIndex, 1);
         }
       },
       addLibraries: (state, action) => {
-        state.libraries.unshift(...action.payload);
-        state.libraries = _.uniq(state.libraries);
+        let newLibs = state.libraries[state.activeProjectIndex];
+        newLibs.unshift(...action.payload);
+        newLibs = _.uniq(newLibs);
+        state.libraries[state.activeProjectIndex] = _.uniq(newLibs);
       },
       catchException: (state, action) => {
         state.exception = action.payload;
-      }
+      },
+      updateLoadingState: (state, action) => {
+        state.loadingState = action.payload;
+      },
     },
 });
 
@@ -90,6 +106,7 @@ export const {
   removeReferencedLibrary,
   addLibraries,
   catchException,
+  updateLoadingState,
 } = classpathConfigurationViewSlice.actions;
 
 export default classpathConfigurationViewSlice.reducer;
