@@ -321,30 +321,46 @@ const updateClassPaths = instrumentOperation("classpath.updateClassPaths", async
         loading: true,
     });
 
-    const projectCount = rootPaths.length;
-    for (let i = 0; i < projectCount; i++) {
-        const currentProjectRoot: vscode.Uri = vscode.Uri.parse(rootPaths[i]);
-        if (projectTypes[i] === ProjectType.UnmanagedFolder) {
-            updateSourcePathsForUnmanagedFolder(currentProjectRoot, sourcePaths[i].map(sp => sp.path));
-            setOutputPath( currentProjectRoot, defaultOutputPaths[i]);
-            updateUnmanagedFolderLibraries(libraries[i].map(l => l.path));
-            changeJdk(currentProjectRoot, vmInstallPaths[i]);
-        } else {
-            const classpathEntries: ClasspathEntry[] = [];
-            classpathEntries.push(...sourcePaths[i]);
-            classpathEntries.push({
-                kind: ClasspathEntryKind.Container,
-                path: `org.eclipse.jdt.launching.JRE_CONTAINER/${vmInstallPaths[i]}`,
-            });
-            classpathEntries.push(...libraries[i]);
-            await vscode.commands.executeCommand(
-                "java.execute.workspaceCommand",
-                "java.project.updateClassPaths",
-                currentProjectRoot.toString(),
-                JSON.stringify({classpathEntries}),
-            );
+    try {
+        const projectCount = rootPaths.length;
+        for (let i = 0; i < projectCount; i++) {
+            const currentProjectRoot: vscode.Uri = vscode.Uri.parse(rootPaths[i]);
+            if (projectTypes[i] === ProjectType.UnmanagedFolder) {
+                updateSourcePathsForUnmanagedFolder(currentProjectRoot, sourcePaths[i].map(sp => sp.path));
+                setOutputPath( currentProjectRoot, defaultOutputPaths[i]);
+                updateUnmanagedFolderLibraries(libraries[i].map(l => l.path));
+                changeJdk(currentProjectRoot, vmInstallPaths[i]);
+            } else {
+                const classpathEntries: ClasspathEntry[] = [];
+                classpathEntries.push(...sourcePaths[i]);
+                if (vmInstallPaths[i]?.length > 0) {
+                    classpathEntries.push({
+                        kind: ClasspathEntryKind.Container,
+                        path: `org.eclipse.jdt.launching.JRE_CONTAINER/${vmInstallPaths[i]}`,
+                    });
+                }
+                classpathEntries.push(...libraries[i]);
+                if (classpathEntries.length > 0) {
+                    await vscode.commands.executeCommand(
+                        "java.execute.workspaceCommand",
+                        "java.project.updateClassPaths",
+                        currentProjectRoot.toString(),
+                        JSON.stringify({classpathEntries}),
+                    );
+                }
+            }
         }
+    } catch (error) {
+        const err: Error = new Error(`Failed to update classpaths: ${error}`);
+        vscode.window.showErrorMessage(err.message, "Open Log Files").then((choice) => {
+            if (choice === "Open Log Files") {
+                vscode.commands.executeCommand("java.open.logs");
+            }
+        });
+        setUserError(err);
+        sendError(err);
     }
+
     classpathConfigurationPanel?.webview.postMessage({
         command: "onDidChangeLoadingState",
         loading: false,
