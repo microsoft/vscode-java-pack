@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
 import { onWillSelectFolder } from "../../../utils";
-import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
 
 const Sources = (): JSX.Element => {
@@ -201,6 +201,7 @@ const Sources = (): JSX.Element => {
           Add Source Root...
         </VSCodeButton>
       </div>
+      <VSCodeDivider className="mb-0"/>
       <div className="setting-overflow-area">
         <VSCodeDataGrid gridTemplateColumns="40% 60%" generateHeader="sticky">
           <VSCodeDataGridRow className="setting-section-grid-row" rowType="header">
