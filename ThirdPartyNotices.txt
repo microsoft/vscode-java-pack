@@ -16,15 +16,14 @@ are grateful to these developers for their contribution to open source.
 8. highlight.js (https://github.com/highlightjs/highlight.js)
 9. jquery (https://github.com/jquery/jquery)
 10. lodash (lodash/lodash)
-11. minimatch (https://github.com/isaacs/minimatch)
-12. react (https://github.com/facebook/react)
-13. react-bootstrap (https://github.com/react-bootstrap/react-bootstrap)
-14. react-dom (https://github.com/facebook/react)
-15. react-redux (https://github.com/reduxjs/react-redux)
-16. semver (https://github.com/npm/node-semver)
-17. vscode-extension-telemetry-wrapper (https://github.com/Eskibear/vscode-extension-telemetry-wrapper)
-18. xmldom (https://github.com/xmldom/xmldom)
-19. HdrHistogramJS (https://github.com/HdrHistogram/HdrHistogramJS)
+11. react (https://github.com/facebook/react)
+12. react-bootstrap (https://github.com/react-bootstrap/react-bootstrap)
+13. react-dom (https://github.com/facebook/react)
+14. react-redux (https://github.com/reduxjs/react-redux)
+15. semver (https://github.com/npm/node-semver)
+16. vscode-extension-telemetry-wrapper (https://github.com/Eskibear/vscode-extension-telemetry-wrapper)
+17. xmldom (https://github.com/xmldom/xmldom)
+18. HdrHistogramJS (https://github.com/HdrHistogram/HdrHistogramJS)
 
 @iconify/react NOTICES BEGIN HERE
 =============================
@@ -320,27 +319,6 @@ terms above.
 
 =========================================
 END OF lodash NOTICES AND INFORMATION
-
-minimatch NOTICES BEGIN HERE
-=============================
-The ISC License
-
-Copyright (c) Isaac Z. Schlueter and Contributors
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
-IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-=========================================
-END OF minimatch NOTICES AND INFORMATION
 
 react NOTICES BEGIN HERE
 =============================

@@ -19,7 +19,7 @@ const Exception = (): JSX.Element | null => {
       }
       content = (
         <div>
-          <span>There is no Java projects opened in the current workspace. Please <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openProject", command)}>open a Java project</a>.</span>
+          <span>There is no Java projects opened in the current workspace. Please try to <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reload", "workbench.action.webview.reloadWebviewAction")}>reload the page</a> or <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openProject", command)}>open a Java project</a>.</span>
         </div>
       );
       break;

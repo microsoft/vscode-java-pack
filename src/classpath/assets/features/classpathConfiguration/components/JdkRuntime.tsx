@@ -2,27 +2,27 @@
 // Licensed under the MIT license.
 
 import React, { Dispatch, useEffect, useState } from "react";
-import { encodeCommandUriWithTelemetry } from "../../../../../utils/webview";
-import { WEBVIEW_ID, onWillChangeJdk } from "../../../utils";
-import { VSCodeDivider, VSCodeDropdown, VSCodeLink, VSCodeOption, } from "@vscode/webview-ui-toolkit/react";
+import { onWillAddNewJdk, onWillExecuteCommand } from "../../../utils";
+import { VSCodeDivider, VSCodeDropdown, VSCodeOption, } from "@vscode/webview-ui-toolkit/react";
 import { useDispatch, useSelector } from "react-redux";
 import { VmInstall } from "../../../../types";
 import { setJdks } from "../classpathConfigurationViewSlice";
-import SectionHeader from "./common/SectionHeader";
 
 const JdkRuntime = (): JSX.Element => {
 
   const vmInstalls: VmInstall[] = useSelector((state: any) => state.classpathConfig.vmInstalls);
-  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.activeVmInstallPath);
+  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.activeVmInstallPath[state.classpathConfig.activeProjectIndex]);
 
   const [optionDescription, setOptionDescription] = useState<string | null>(null);
 
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleSelectJdk = (path: string) => {
-    onWillChangeJdk(path);
-    if (path !== "add-new-jdk") {
-      // if the user selects a existing JDK, we directly update the activeVmInstallPath.
+    if (path === "add-new-jdk") {
+      onWillAddNewJdk();
+    } else if (path === "download-jdk") {
+      onWillExecuteCommand("java.installJdk")
+    } else {
       dispatch(setJdks({activeVmInstallPath: path}));
     }
   }
@@ -56,15 +56,31 @@ const JdkRuntime = (): JSX.Element => {
       key="add-new-jdk"
       value="add-new-jdk"
       id="add-new-jdk"
-      onMouseEnter={() => setOptionDescription("Select a JDK from the file system.")}
-      onMouseLeave={() => setOptionDescription(activeVmInstallPath + 'asds')}
+      onMouseEnter={() => setOptionDescription("Select a JDK from the local file system.")}
+      onMouseLeave={() => setOptionDescription(activeVmInstallPath)}
       onClick={() => handleSelectJdk("add-new-jdk")}
     >
       <div className="setting-section-option-action">
-        <span className="codicon codicon-folder-opened"/>Add a new JDK...
+        <span className="codicon codicon-folder-opened"/>Find a local JDK...
       </div>
     </VSCodeOption>
   );
+
+  const downloadJdk = (
+      <VSCodeOption
+        className="setting-section-option"
+        key="download-jdk"
+        value="download-jdk"
+        id="download-jdk"
+        onMouseEnter={() => setOptionDescription("Download a new JDK.")}
+        onMouseLeave={() => setOptionDescription(activeVmInstallPath)}
+        onClick={() => handleSelectJdk("download-jdk")}
+      >
+        <div className="setting-section-option-action">
+          <span className="codicon codicon-desktop-download"/>Download a new JDK...
+        </div>
+      </VSCodeOption>
+    );
 
   useEffect(() => {
     window.addEventListener("message", onDidChangeJdk);
@@ -79,9 +95,8 @@ const JdkRuntime = (): JSX.Element => {
 
   return (
     <div className="setting-section">
-      <SectionHeader title="JDK Runtime" subTitle={undefined}/>
-      <span className="setting-section-description">Specify the JDK runtime of the project. Or <VSCodeLink href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.jdk", "java.installJdk")}>install a new JDK</VSCodeLink>.</span>
-      <div className="setting-section-target">
+      <div className="flex-center mt-2">
+        <span className="setting-section-description mr-1">JDK:</span>
         <VSCodeDropdown id="jdk-dropdown" value={activeVmInstallPath} className="setting-section-dropdown" position="below">
           <div className="dropdown-description dropdown-above-description">
             <p>{optionDescription ?? activeVmInstallPath}</p>
@@ -90,6 +105,7 @@ const JdkRuntime = (): JSX.Element => {
           {jdkSelections}
           <VSCodeDivider></VSCodeDivider>
           {addNewJdk}
+          {downloadJdk}
           <div className="dropdown-description dropdown-below-description">
             <VSCodeDivider></VSCodeDivider>
             <p>{optionDescription ?? activeVmInstallPath}</p>

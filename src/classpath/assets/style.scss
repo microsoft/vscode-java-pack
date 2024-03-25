@@ -1,19 +1,29 @@
 .root {
-  overflow: hidden;
-  min-width: 480px;
+  min-width: 560px;
   margin: 20px 40px 0;
 }
  
 .setting-header {
   color: var(--vscode-settings-headerForeground);
-  margin-bottom: 0;
+}
+
+.setting-footer {
+  position: fixed;
+  bottom: 0;
+  width: 80%;
+  background: var(--background);
 }
  
 .setting-section {
-  padding: 10px 8px 14px;
- 
-  &:hover {
-    background-color: var(--vscode-settings-focusedRowBackground);
+  width: 100%;
+}
+
+.setting-panels {
+  overflow-x: visible;
+
+  .setting-panels-view {
+    max-width: 80vw;
+    flex-direction: column;
   }
 }
 
@@ -21,11 +31,9 @@
   color: var(--vscode-settings-headerForeground);
   display: flex;
   align-items: baseline;
-  padding-top: 2px;
 
   .setting-section-title {
     margin: 0;
-    padding-right:8px;
   }
  
   span {
@@ -35,10 +43,6 @@
  
 .setting-section-description {
   color: var(--vscode-descriptionForeground);
-}
-
-.setting-section-target {
-  padding: 2px 0;
 }
 
 .setting-section-dropdown {
@@ -84,15 +88,28 @@
 }
 
 .setting-section-grid-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding-left: 4px;
- 
   .setting-section-grid-row-header {
     font-weight: 700;
   }
- 
+  .setting-section-grid-cell {
+    padding: 0;
+    display: flex;
+    align-items: center;
+  }
+  .setting-section-grid-cell-left {
+    padding-right: calc(var(--design-unit) * 4px);
+  }
+  .setting-section-grid-cell-readonly {
+    justify-content: space-between;
+  }
+  .setting-section-grid-cell-editable {
+    justify-content: end;
+  }
+  .setting-section-grid-text {
+    flex-grow: 1;
+  }
+
   span {
     font-size: 12.8px;
     line-height: 22px;
@@ -101,12 +118,26 @@
 }
 
 .setting-section-text {
-  width: 420px;
+  width: 100%;
   word-break: break-all;
+}
+
+.setting-list-actions {
+  height: calc(var(--design-unit) * 8px);
+}
+
+.setting-overflow-area {
+  overflow: auto;
+  max-height: 50vh;
 }
 
 .inactive {
   opacity: 0.67;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
 @import "~@vscode/codicons/dist/codicon.css";
+@import "utils.scss";

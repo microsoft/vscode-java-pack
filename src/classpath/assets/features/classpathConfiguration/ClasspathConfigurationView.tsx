@@ -7,17 +7,20 @@ import { Dispatch } from "@reduxjs/toolkit";
 import Output from "./components/Output";
 import ProjectSelector from "./components/ProjectSelector";
 import Sources from "./components/Sources";
-import ReferencedLibraries from "./components/ReferencedLibraries";
-import Header from "./components/Header";
+import Libraries from "./components/Libraries";
 import Exception from "./components/Exception";
-import { ClasspathViewException, ProjectInfo, VmInstall } from "../../../types";
+import { ClasspathViewException, ProjectInfo, ClasspathEntry, VmInstall } from "../../../types";
 import { catchException, listProjects, listVmInstalls, loadClasspath } from "./classpathConfigurationViewSlice";
 import JdkRuntime from "./components/JdkRuntime";
 import { onWillListProjects, onWillListVmInstalls } from "../../utils";
-import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
+import { VSCodePanelTab, VSCodePanelView, VSCodePanels, VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
+import { ProjectType } from "../../../../utils/webview";
+import UnmanagedFolderSources from "./components/UnmanagedFolderSources";
+import Footer from "./components/Footer";
 
 const ClasspathConfigurationView = (): JSX.Element => {
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
+  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType[state.classpathConfig.activeProjectIndex]);
   const exception: ClasspathViewException | undefined = useSelector((state: any) => state.classpathConfig.exception);
   let content: JSX.Element;
 
@@ -28,11 +31,26 @@ const ClasspathConfigurationView = (): JSX.Element => {
   } else {
     content = (
       <div>
-        <ProjectSelector />
-        <Sources />
-        <Output />
-        <JdkRuntime />
-        <ReferencedLibraries />
+        <div className="mb-12">
+          <ProjectSelector />
+          <VSCodePanels className="setting-panels">
+            <VSCodePanelTab id="source">Sources</VSCodePanelTab>
+            <VSCodePanelTab id="jdk">JDK Runtime</VSCodePanelTab>
+            <VSCodePanelTab id="libraries">Libraries</VSCodePanelTab>
+            <VSCodePanelView className="setting-panels-view">
+              {[ProjectType.Gradle, ProjectType.Maven].includes(projectType) && (<Sources />)}
+              {projectType !== ProjectType.Gradle && projectType !== ProjectType.Maven && (<UnmanagedFolderSources />)}
+              {projectType === ProjectType.UnmanagedFolder && (<Output />)}
+            </VSCodePanelView>
+            <VSCodePanelView className="setting-panels-view">
+              <JdkRuntime />
+            </VSCodePanelView>
+            <VSCodePanelView className="setting-panels-view">
+              <Libraries />
+            </VSCodePanelView>
+          </VSCodePanels>
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -56,12 +74,13 @@ const ClasspathConfigurationView = (): JSX.Element => {
     window.addEventListener("message", onInitialize);
     onWillListProjects();
     onWillListVmInstalls();
-    return () => window.removeEventListener("message", onInitialize);
+    return () => {
+      window.removeEventListener("message", onInitialize);
+    }
   }, []);
 
   return (
     <div className="root">
-      <Header />
       {content}
     </div>
   );
@@ -76,9 +95,9 @@ interface OnInitializeEvent {
       projectType: string;
     }[];
     vmInstalls?: VmInstall[];
-    sources?: string[];
+    sources?: ClasspathEntry[];
     output?: string;
-    referencedLibraries?: string[];
+    libraries?: string[];
     exception?: ClasspathViewException;
   };
 }

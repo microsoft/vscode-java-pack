@@ -5,9 +5,8 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getExtensionContext, getNonce } from "../utils";
 import * as fse from "fs-extra";
-import { ProjectInfo, ClasspathComponent, ClasspathViewException, VmInstall } from "./types";
+import { ProjectInfo, ClasspathComponent, ClasspathViewException, VmInstall, ClasspathEntry, ClasspathEntryKind } from "./types";
 import _ from "lodash";
-import minimatch from "minimatch";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 import { getProjectNameFromUri, getProjectType, isDefaultProject } from "../utils/jdt";
 import { ProjectType } from "../utils/webview";
@@ -16,11 +15,10 @@ import compareVersions from "compare-versions";
 let classpathConfigurationPanel: vscode.WebviewPanel | undefined;
 let lsApi: LanguageServerAPI | undefined;
 let currentProjectRoot: vscode.Uri;
-const Nature_IDS: string = "org.eclipse.jdt.ls.core.natureIds"
-const SOURCE_PATH_KEY: string = "org.eclipse.jdt.ls.core.sourcePaths";
+const NATURE_IDS: string = "org.eclipse.jdt.ls.core.natureIds"
 const OUTPUT_PATH_KEY: string = "org.eclipse.jdt.ls.core.outputPath";
 const VM_LOCATION_KEY: string = "org.eclipse.jdt.ls.core.vm.location";
-const REFERENCED_LIBRARIES_KEY: string = "org.eclipse.jdt.ls.core.referencedLibraries";
+const CLASSPATH_ENTRIES_KEY: string = "org.eclipse.jdt.ls.core.classpathEntries";
 const MINIMUM_JAVA_EXTENSION_VERSION: string = "0.77.0";
 
 export async function showClasspathConfigurationPage(context: vscode.ExtensionContext): Promise<void> {
@@ -31,7 +29,7 @@ export async function showClasspathConfigurationPage(context: vscode.ExtensionCo
 
     classpathConfigurationPanel = vscode.window.createWebviewPanel(
         "java.classpathConfiguration",
-        "Classpath Configuration",
+        "Project Settings",
         vscode.ViewColumn.Active,
         {
             enableScripts: true,
@@ -77,25 +75,27 @@ async function initializeWebview(context: vscode.ExtensionContext): Promise<void
                     await loadProjectClasspath(currentProjectRoot);
                     break;
                 case "onWillSelectOutputPath":
-                    await setOutputPath(currentProjectRoot);
+                    await selectOutputPath(currentProjectRoot);
                     break;
-                case "onWillAddSourcePath":
-                    await addSourcePath(currentProjectRoot);
+                case "onWillAddSourcePathForUnmanagedFolder":
+                    await addSourcePathForUnmanagedFolder(currentProjectRoot);
                     break;
-                case "onWillChangeJdk":
-                    await changeJdk(currentProjectRoot, message.jdkPath);
+                case "onWillSelectFolder":
+                    await selectFolder(currentProjectRoot, message.type);
                     break;
-                case "onWillRemoveSourcePath":
-                    removeSourcePath(currentProjectRoot, message.sourcePaths);
+                case "onWillUpdateClassPaths":
+                    await updateClassPaths(message.rootPaths, message.projectTypes, message.sourcePaths, message.defaultOutputPaths, message.vmInstallPaths, message.libraries);
                     break;
-                case "onWillAddReferencedLibraries":
-                    await addReferencedLibraries(currentProjectRoot);
-                    break;
-                case "onWillRemoveReferencedLibraries":
-                    removeReferencedLibrary(currentProjectRoot, message.path);
+                case "onWillAddNewJdk":
+                    await addNewJdk(currentProjectRoot);
+                case "onWillSelectLibraries":
+                    await selectLibraries(currentProjectRoot);
                     break;
                 case "onClickGotoProjectConfiguration":
                     gotoProjectConfigurationFile(message.rootUri, message.projectType);
+                    break;
+                case "onWillExecuteCommand":
+                    executeCommand(message.id);
                     break;
                 default:
                     break;
@@ -125,7 +125,7 @@ function getHtmlForWebview(webview: vscode.Webview, scriptPath: string) {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
         <meta name="theme-color" content="#000000">
-        <title>Classpath Configuration</title>
+        <title>Project Settings</title>
     </head>
     <body>
         <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
@@ -241,7 +241,7 @@ const loadProjectClasspath = instrumentOperation("classpath.loadClasspath", asyn
             sources: classpath.sourcePaths,
             output: classpath.defaultOutputPath,
             activeVmInstallPath: classpath.jdkPath,
-            referencedLibraries: classpath.referenceLibraries
+            libraries: classpath.libraries
         });
     }
 
@@ -252,7 +252,7 @@ const loadProjectClasspath = instrumentOperation("classpath.loadClasspath", asyn
 
 const debounceLoadProjectClasspath = _.debounce(loadProjectClasspath, 3000 /*ms*/);
 
-const addSourcePath = instrumentOperation("classpath.addSourcePath", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
+async function selectSourceFolderPath(currentProjectRoot: vscode.Uri): Promise<string | undefined> {
     const sourceFolder: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
         defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
         openLabel: "Select Source Folder",
@@ -273,33 +273,101 @@ const addSourcePath = instrumentOperation("classpath.addSourcePath", async (_ope
         if (!relativePath) {
             relativePath = ".";
         }
-        const sourcePaths: string[] = vscode.workspace.getConfiguration("java", currentProjectRoot).get<string[]>("project.sourcePaths") || [];
-        if (sourcePaths.includes(relativePath)) {
-            vscode.window.showInformationMessage(`The path ${relativePath} has already been a source path.`);
-            return;
-        }
-        sourcePaths.push(relativePath);
-        vscode.workspace.getConfiguration("java", currentProjectRoot).update(
-            "project.sourcePaths",
-            sourcePaths,
-            vscode.ConfigurationTarget.Workspace,
-        );
-        classpathConfigurationPanel?.webview.postMessage({
-            command: "onDidUpdateSourceFolder",
-            sourcePaths,
-        });
+        return relativePath;
     }
+    return undefined;
+}
+
+const addSourcePathForUnmanagedFolder = instrumentOperation("classpath.addSourcePathForUnmanagedFolder", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
+    const relativePath: string | undefined = await selectSourceFolderPath(currentProjectRoot);
+    if (!relativePath) {
+        return;
+    }
+    const sourcePaths: string[] = vscode.workspace.getConfiguration("java", currentProjectRoot).get<string[]>("project.sourcePaths") || [];
+    if (sourcePaths.includes(relativePath)) {
+        vscode.window.showInformationMessage(`The path ${relativePath} has already been a source path.`);
+        return;
+    }
+    sourcePaths.push(relativePath);
+    classpathConfigurationPanel?.webview.postMessage({
+        command: "onDidUpdateSourceFolder",
+        sourcePaths,
+    });
 });
 
-const removeSourcePath = instrumentOperation("classpath.removeSourcePath", (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: string[]) => {
+const updateSourcePathsForUnmanagedFolder = instrumentOperation("classpath.updateSourcePathsForUnmanagedFolder", async (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: string[]) => {
     vscode.workspace.getConfiguration("java", currentProjectRoot).update(
         "project.sourcePaths",
         sourcePaths,
-        vscode.ConfigurationTarget.Workspace
+        vscode.ConfigurationTarget.Workspace,
     );
 });
 
-const setOutputPath = instrumentOperation("classpath.setOutputPath", async (operationId: string, currentProjectRoot: vscode.Uri) => {
+const selectFolder = instrumentOperation("classpath.selectFolder", async (_operationId: string, currentProjectRoot: vscode.Uri, type: string) => {
+    const relativePath: string | undefined = await selectSourceFolderPath(currentProjectRoot);
+    if (!relativePath) {
+        return;
+    }
+     classpathConfigurationPanel?.webview.postMessage({
+        command: "onDidSelectFolder",
+        path: relativePath,
+        type: type,
+    });
+});
+
+const updateClassPaths = instrumentOperation("classpath.updateClassPaths", async (_operationId: string, rootPaths: string[], projectTypes: ProjectType[], sourcePaths: ClasspathEntry[][], defaultOutputPaths: string[], vmInstallPaths: string[], libraries: ClasspathEntry[][]) => {
+    classpathConfigurationPanel?.webview.postMessage({
+        command: "onDidChangeLoadingState",
+        loading: true,
+    });
+
+    try {
+        const projectCount = rootPaths.length;
+        for (let i = 0; i < projectCount; i++) {
+            const currentProjectRoot: vscode.Uri = vscode.Uri.parse(rootPaths[i]);
+            if (projectTypes[i] === ProjectType.UnmanagedFolder) {
+                updateSourcePathsForUnmanagedFolder(currentProjectRoot, sourcePaths[i].map(sp => sp.path));
+                setOutputPath( currentProjectRoot, defaultOutputPaths[i]);
+                updateUnmanagedFolderLibraries(libraries[i].map(l => l.path));
+                changeJdk(currentProjectRoot, vmInstallPaths[i]);
+            } else {
+                const classpathEntries: ClasspathEntry[] = [];
+                classpathEntries.push(...sourcePaths[i]);
+                if (vmInstallPaths[i]?.length > 0) {
+                    classpathEntries.push({
+                        kind: ClasspathEntryKind.Container,
+                        path: `org.eclipse.jdt.launching.JRE_CONTAINER/${vmInstallPaths[i]}`,
+                    });
+                }
+                classpathEntries.push(...libraries[i]);
+                if (classpathEntries.length > 0) {
+                    await vscode.commands.executeCommand(
+                        "java.execute.workspaceCommand",
+                        "java.project.updateClassPaths",
+                        currentProjectRoot.toString(),
+                        JSON.stringify({classpathEntries}),
+                    );
+                }
+            }
+        }
+    } catch (error) {
+        const err: Error = new Error(`Failed to update classpaths: ${error}`);
+        vscode.window.showErrorMessage(err.message, "Open Log Files").then((choice) => {
+            if (choice === "Open Log Files") {
+                vscode.commands.executeCommand("java.open.logs");
+            }
+        });
+        setUserError(err);
+        sendError(err);
+    }
+
+    classpathConfigurationPanel?.webview.postMessage({
+        command: "onDidChangeLoadingState",
+        loading: false,
+    });
+});
+
+const selectOutputPath = instrumentOperation("classpath.selectOutputPath", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
     const outputFolder: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
         defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
         openLabel: "Select Output Folder",
@@ -323,27 +391,82 @@ const setOutputPath = instrumentOperation("classpath.setOutputPath", async (oper
             setUserError(err);
             throw(err);
         }
-        if ((await fse.readdir(outputFullPath)).length) {
-            const choice: string | undefined = await vscode.window.showInformationMessage(`The contents in ${outputFullPath} will be removed, are you sure to continue?`, "Yes", "No");
-            if (choice === "Yes") {
-                await fse.remove(outputFullPath);
-                await fse.ensureDir(outputFullPath);
-            } else {
-                sendInfo(operationId, {
-                    canceled: "Cancelled for un-empty output folder",
-                });
-                return;
-            }
-        }
-        vscode.workspace.getConfiguration("java", currentProjectRoot).update(
-            "project.outputPath",
-            outputRelativePath,
-            vscode.ConfigurationTarget.Workspace,
-        );
         classpathConfigurationPanel?.webview.postMessage({
             command: "onDidSelectOutputPath",
             output: outputRelativePath,
         });
+    }
+});
+
+const setOutputPath = instrumentOperation("classpath.setOutputPath", async (operationId: string, currentProjectRoot: vscode.Uri, outputRelativePath: string) => {
+    if (vscode.workspace.getConfiguration("java", currentProjectRoot).get<string>("project.outputPath") === outputRelativePath) {
+        return;
+    }
+
+    const outputFullPath = path.join(currentProjectRoot.fsPath, outputRelativePath);
+    if ((await fse.readdir(outputFullPath)).length) {
+        const choice: string | undefined = await vscode.window.showInformationMessage(`The contents in ${outputFullPath} will be removed, are you sure to continue?`, "Yes", "No");
+        if (choice === "Yes") {
+            await fse.remove(outputFullPath);
+            await fse.ensureDir(outputFullPath);
+        } else {
+            sendInfo(operationId, {
+                canceled: "Cancelled for un-empty output folder",
+            });
+            return;
+        }
+    }
+    vscode.workspace.getConfiguration("java", currentProjectRoot).update(
+        "project.outputPath",
+        outputRelativePath,
+        vscode.ConfigurationTarget.Workspace,
+    );
+});
+
+const addNewJdk = instrumentOperation("classpath.addNewJdk", async (operationId: string, currentProjectRoot: vscode.Uri) => {
+    const actionResult: Record<string, string> = {
+        name: "classpath.configuration",
+        kind: "add-new-jdk"
+    };
+    const javaHome: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
+        defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
+        openLabel: "Select JDK Home",
+        canSelectFiles: false,
+        canSelectFolders: true,
+        title: "Select the installation path of the JDK"
+    });
+    if (!javaHome) {
+        return;
+    }
+
+    // TODO: is there a way to delay the jdk update but register this new jdk to server side?
+    const result: IJdkUpdateResult = await vscode.commands.executeCommand<IJdkUpdateResult>(
+        "java.execute.workspaceCommand",
+        "java.project.updateJdk",
+        currentProjectRoot.toString(),
+        javaHome[0].fsPath
+    );
+
+    actionResult.message = result.message;
+    actionResult.code = result.success ? "0" : "1";
+    sendInfo(operationId, actionResult);
+
+    if (result.success) {
+        const activeVmInstallPath = result.message;
+        let vmInstalls: VmInstall[] = await getVmInstallsFromLS();
+        vmInstalls = vmInstalls.sort((vmA: VmInstall, vmB: VmInstall) => {
+            return vmA.name.localeCompare(vmB.name);
+        });
+        classpathConfigurationPanel?.webview.postMessage({
+            command: "onDidChangeJdk",
+            activeVmInstallPath,
+            vmInstalls,
+        });
+    } else {
+        vscode.window.showErrorMessage(result.message);
+        const err: Error = new Error(result.message);
+        setUserError(err);
+        throw(err);
     }
 });
 
@@ -352,21 +475,6 @@ const changeJdk = instrumentOperation("classpath.changeJdk", async (operationId:
         name: "classpath.configuration",
         kind: "use-existing-jdk"
     };
-    if (jdkPath === "add-new-jdk") {
-        actionResult.kind = "add-new-jdk";
-        const javaHome: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
-            defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
-            openLabel: "Select JDK Home",
-            canSelectFiles: false,
-            canSelectFolders: true,
-            title: "Select the installation path of the JDK"
-        });
-        if (javaHome) {
-            jdkPath = javaHome[0].fsPath;
-        } else {
-            return;
-        }
-    }
     const result: IJdkUpdateResult = await vscode.commands.executeCommand<IJdkUpdateResult>(
         "java.execute.workspaceCommand",
         "java.project.updateJdk",
@@ -397,7 +505,15 @@ const changeJdk = instrumentOperation("classpath.changeJdk", async (operationId:
     }
 });
 
-const addReferencedLibraries = instrumentOperation("classpath.addReferencedLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
+const executeCommand = instrumentOperation("classpath.executeCommand", async (operationId: string, commandId: string) => {
+    await vscode.commands.executeCommand(commandId);
+    sendInfo(operationId, {
+        operationName: "classpath.executeCommand",
+        arg: commandId,
+    });
+});
+
+const selectLibraries = instrumentOperation("classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
     const jarFiles: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
         defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
         openLabel: "Select Jar File",
@@ -415,30 +531,21 @@ const addReferencedLibraries = instrumentOperation("classpath.addReferencedLibra
             }
             return uri.fsPath;
         });
-        addLibraryGlobs(jarPaths);
         classpathConfigurationPanel?.webview.postMessage({
-            command: "onDidAddReferencedLibraries",
-            jars: jarPaths,
+            command: "onDidAddLibraries",
+            jars: jarPaths.map(jarPath => {
+                return {
+                    kind: ClasspathEntryKind.Library,
+                    path: jarPath,
+                };
+            }),
         });
     }
 });
 
-const removeReferencedLibrary = instrumentOperation("classpath.removeReferencedLibrary", async (_operationId: string, currentProjectRoot: vscode.Uri, removalFsPath: string) => {
-    if (!path.isAbsolute(removalFsPath)) {
-        removalFsPath = path.join(currentProjectRoot.fsPath, removalFsPath);
-    }
+const updateUnmanagedFolderLibraries = instrumentOperation("classpath.updateUnmanagedFolderLibraries", async (_operationId: string, jarFilePaths: string[]) => {
     const setting = getReferencedLibrariesSetting();
-    const removedPaths = _.remove(setting.include, (include) => {
-        if (path.isAbsolute(include)) {
-            return vscode.Uri.file(include).fsPath === removalFsPath;
-        } else {
-            return include === vscode.workspace.asRelativePath(removalFsPath, false);
-        }
-    });
-    if (removedPaths.length === 0) {
-        // No duplicated item in include array, add it into the exclude field
-        setting.exclude = updatePatternArray(setting.exclude, vscode.workspace.asRelativePath(removalFsPath, false));
-    }
+    setting.include = jarFilePaths;
     updateReferencedLibraries(setting);
 });
 
@@ -491,11 +598,10 @@ async function getVmInstallsFromLS(): Promise<VmInstall[]> {
 
 async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComponent> {
     const queryKeys: string[] = [
-        Nature_IDS,
-        SOURCE_PATH_KEY,
+        NATURE_IDS,
         OUTPUT_PATH_KEY,
         VM_LOCATION_KEY,
-        REFERENCED_LIBRARIES_KEY
+        CLASSPATH_ENTRIES_KEY,
     ];
 
     const response = await lsApi!.getProjectSettings(
@@ -503,48 +609,81 @@ async function getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComp
         queryKeys
     );
     const classpath: ClasspathComponent = {
-        projectType: getProjectType(uri.fsPath, response[Nature_IDS] as string[]),
-        sourcePaths: response[SOURCE_PATH_KEY] as string[],
+        projectType: getProjectType(uri.fsPath, response[NATURE_IDS] as string[]),
+        sourcePaths: await getSourceRoots(response[CLASSPATH_ENTRIES_KEY], uri),
         defaultOutputPath: response[OUTPUT_PATH_KEY] as string,
         jdkPath: response[VM_LOCATION_KEY] as string,
-        referenceLibraries: response[REFERENCED_LIBRARIES_KEY] as string[],
+        libraries: getLibraries(response[CLASSPATH_ENTRIES_KEY]),
     };
     const baseFsPath = uri.fsPath;
-
-    classpath.sourcePaths = classpath.sourcePaths.map(p => {
-        const relativePath: string = path.relative(baseFsPath, p);
-        if (!relativePath) {
-            return ".";
-        }
-        return relativePath;
-    }).sort((srcA: string, srcB: string) => {
-        return srcA.localeCompare(srcB);
-    });
 
     const outputRelativePath: string = path.relative(baseFsPath, classpath.defaultOutputPath);
     if (!outputRelativePath.startsWith("..")) {
         classpath.defaultOutputPath = path.relative(baseFsPath, classpath.defaultOutputPath);
     }
 
-    classpath.referenceLibraries = classpath.referenceLibraries.map(p => {
-        const normalizedPath: string = vscode.Uri.file(p).fsPath;
+    classpath.libraries = classpath.libraries.map(l => {
+        let normalizedPath: string = vscode.Uri.file(l.path).fsPath;
         if (normalizedPath.startsWith(baseFsPath)) {
-            return path.relative(baseFsPath, normalizedPath);
+            normalizedPath = path.relative(baseFsPath, normalizedPath);
         }
-        return normalizedPath;
-    }).sort((libA: string, libB: string) => {
-        // relative paths come first
-        const isAbsolutePathForA: boolean = path.isAbsolute(libA);
-        const isAbsolutePathForB: boolean = path.isAbsolute(libB);
-        if (isAbsolutePathForA && !isAbsolutePathForB) {
-            return 1;
-        } else if (!isAbsolutePathForA && isAbsolutePathForB) {
-            return -1;
-        } else {
-            return libA.localeCompare(libB);
-        }
+
+        return {
+            ...l,
+            path: normalizedPath,
+        };
     });
     return classpath;
+}
+
+async function getSourceRoots(classpathEntries: ClasspathEntry[], baseUri: vscode.Uri): Promise<ClasspathEntry[]> {
+    const result: ClasspathEntry[] = [];
+    const baseFsPath = baseUri.fsPath;
+    for (const entry of classpathEntries) {
+        if (entry.kind !== ClasspathEntryKind.Source) {
+            continue;
+        }
+
+        if (!await fse.pathExists(entry.path)) {
+            continue;
+        }
+        let relativePath: string = path.relative(baseFsPath, entry.path);
+        if (!relativePath) {
+            relativePath = ".";
+        }
+        let relativeOutputPath: string | undefined;
+        if (entry.output) {
+            relativeOutputPath = path.relative(baseFsPath, entry.output);
+            if (!relativeOutputPath) {
+                relativeOutputPath = ".";
+            }
+        }
+        result.push({
+            kind: entry.kind,
+            path: relativePath,
+            output: relativeOutputPath,
+            attributes: entry.attributes,
+        });
+    }
+    return result.sort((srcA: ClasspathEntry, srcB: ClasspathEntry) => {
+        return srcA.path.localeCompare(srcB.path);
+    });
+}
+
+function getLibraries(classpathEntries: ClasspathEntry[]): ClasspathEntry[] {
+    const result: ClasspathEntry[] = [];
+    for (const entry of classpathEntries) {
+        if (entry.kind === ClasspathEntryKind.Source || entry.kind === ClasspathEntryKind.Container) {
+            continue;
+        }
+        result.push({
+            kind: entry.kind,
+            path: entry.path,
+            attributes: entry.attributes,
+        });
+    }
+
+    return result;
 }
 
 function getReferencedLibrariesSetting(): IReferencedLibraries {
@@ -567,30 +706,6 @@ function updateReferencedLibraries(libraries: IReferencedLibraries): void {
         updateSetting = libraries.include;
     }
     vscode.workspace.getConfiguration().update("java.project.referencedLibraries", updateSetting);
-}
-
-function addLibraryGlobs(libraryGlobs: string[]) {
-    const setting = getReferencedLibrariesSetting();
-    setting.exclude = dedupAlreadyCoveredPattern(libraryGlobs, ...setting.exclude);
-    setting.include = updatePatternArray(setting.include, ...libraryGlobs);
-    updateReferencedLibraries(setting);
-}
-
-/**
- * Check if the `update` patterns are already covered by `origin` patterns and return those uncovered
- */
-function dedupAlreadyCoveredPattern(origin: string[], ...update: string[]): string[] {
-    return update.filter((newPattern) => {
-        return !origin.some((originPattern) => {
-            return minimatch(newPattern, originPattern);
-        });
-    });
-}
-
-function updatePatternArray(origin: string[], ...update: string[]): string[] {
-    update = dedupAlreadyCoveredPattern(origin, ...update);
-    origin.push(...update);
-    return _.uniq(origin);
 }
 
 interface LanguageServerAPI {

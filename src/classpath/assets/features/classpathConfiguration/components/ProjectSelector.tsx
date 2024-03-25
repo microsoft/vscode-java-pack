@@ -3,23 +3,16 @@
 
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { ProjectInfo } from "../../../../types";
+import { ProjectInfo, ProjectState } from "../../../../types";
 import { Dispatch } from "@reduxjs/toolkit";
 import { activeProjectChange } from "../classpathConfigurationViewSlice";
-import { onClickGotoProjectConfiguration, onWillLoadProjectClasspath } from "../../../utils";
-import { ProjectType } from "../../../../../utils/webview";
-import { VSCodeDropdown, VSCodeLink, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
+import { onWillLoadProjectClasspath } from "../../../utils";
+import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 
 const ProjectSelector = (): JSX.Element | null => {
   const activeProjectIndex: number = useSelector((state: any) => state.classpathConfig.activeProjectIndex);
   const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
-  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType);
-  let buildFile: string = "";
-  if (projectType === ProjectType.Maven) {
-    buildFile = "pom.xml";
-  } else if (projectType === ProjectType.Gradle) {
-    buildFile = "build.gradle";
-  }
+  const projectState: ProjectState[] = useSelector((state: any) => state.classpathConfig.projectState);
 
   const dispatch: Dispatch<any> = useDispatch();
 
@@ -27,12 +20,14 @@ const ProjectSelector = (): JSX.Element | null => {
     dispatch(activeProjectChange(index));
   };
 
-  const handleOpenBuildFile = () => {
-    onClickGotoProjectConfiguration(projects[activeProjectIndex].rootPath, projectType);
-  };
+  const loadProjectClasspath = (rootPath: string) => {
+    if (projectState[activeProjectIndex] === ProjectState.Unloaded) {
+      onWillLoadProjectClasspath(rootPath);
+    }
+  }
 
   useEffect(() => {
-    onWillLoadProjectClasspath(projects[activeProjectIndex].rootPath);
+    loadProjectClasspath(projects[activeProjectIndex].rootPath);
   }, [activeProjectIndex, projects]);
 
   const projectSelections = projects.map((project, index) => {
@@ -44,22 +39,13 @@ const ProjectSelector = (): JSX.Element | null => {
   });
 
   return (
-    <div className="setting-section">
-      <span className="setting-section-description">Select the project.</span>
-      <div className="setting-section-target">
+    <div id="project-selector" className="setting-section">
+      <div className="flex-center mt-2 mb-2">
+        <span className="setting-section-description ml-1 mr-1">Project:</span>
         <VSCodeDropdown className="setting-section-dropdown">
-          {projectSelections}
+            {projectSelections}
         </VSCodeDropdown>
       </div>
-
-      {(projectType === ProjectType.Gradle || projectType === ProjectType.Maven) &&
-        <div className="setting-section-target">
-          <span className="setting-section-warning">
-            '{projects[activeProjectIndex].name}' is imported by {projectType}, changes made to the classpath might be lost after reloading.
-            To make permanent changes, please edit the <VSCodeLink href="" onClick={() => handleOpenBuildFile()}>{buildFile}</VSCodeLink> file.
-          </span>
-        </div>
-      }
     </div>
   );
 };

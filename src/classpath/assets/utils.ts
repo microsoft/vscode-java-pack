@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { ProjectType } from "../../utils/webview";
+import { ClasspathEntry } from "../types";
 
 export const WEBVIEW_ID = "java.classpathConfiguration";
 
@@ -34,6 +35,19 @@ export function onWillSelectOutputPath() {
   });
 }
 
+export function onWillUpdateClassPaths(rootPaths: string[], projectTypes: ProjectType[], sourcePaths: ClasspathEntry[][], defaultOutputPaths: string[], vmInstallPaths: string[], libraries: ClasspathEntry[][]) {
+  vscode.postMessage({
+    command: "onWillUpdateClassPaths",
+    rootPaths,
+    projectTypes,
+    sourcePaths,
+    defaultOutputPaths,
+    vmInstallPaths,
+    libraries
+  });
+
+}
+
 export function onWillRemoveSourcePath(sourcePaths: string[]) {
   vscode.postMessage({
     command: "onWillRemoveSourcePath",
@@ -41,29 +55,28 @@ export function onWillRemoveSourcePath(sourcePaths: string[]) {
   });
 }
 
-export function onWillAddSourcePath() {
+export function onWillSelectFolder(type: string) {
   vscode.postMessage({
-    command: "onWillAddSourcePath"
+    command: "onWillSelectFolder",
+    type,
   });
 }
 
-export function onWillChangeJdk(jdkPath: string) {
+export function onWillAddSourcePathForUnmanagedFolder() {
   vscode.postMessage({
-    command: "onWillChangeJdk",
-    jdkPath,
+    command: "onWillAddSourcePathForUnmanagedFolder"
   });
 }
 
-export function onWillAddReferencedLibraries() {
+export function onWillAddNewJdk() {
   vscode.postMessage({
-    command: "onWillAddReferencedLibraries"
+    command: "onWillAddNewJdk"
   });
 }
 
-export function onWillRemoveReferencedLibraries(path: string) {
+export function onWillSelectLibraries() {
   vscode.postMessage({
-    command: "onWillRemoveReferencedLibraries",
-    path,
+    command: "onWillSelectLibraries"
   });
 }
 
@@ -73,4 +86,29 @@ export function onClickGotoProjectConfiguration(rootUri: string, projectType: Pr
     rootUri,
     projectType,
   });
+}
+
+export function onWillExecuteCommand(id: string) {
+  vscode.postMessage({
+    command: "onWillExecuteCommand",
+    id,
+  });
+}
+
+// TODO: better way to handle the max height calculation?
+export const updateMaxHeight = () => {
+  let maxHeight = window.innerHeight;
+  const projectSelector = document.getElementById("project-selector");
+  if (projectSelector) {
+    maxHeight -= projectSelector.getBoundingClientRect().height;
+  }
+  const footer = document.getElementById("footer");
+  if (footer) {
+    maxHeight -= footer.getBoundingClientRect().height;
+  }
+  maxHeight -= 120;
+  const areas = Array.from(document.getElementsByClassName("setting-overflow-area") as HTMLCollectionOf<HTMLElement>);
+  for (let i = 0; i < areas.length; i++) {
+    areas[i].style!.maxHeight = (maxHeight <= 10 ? 10 : maxHeight) + "px";
+  }
 }
