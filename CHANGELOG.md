@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.26.0
+### Changed
+- Improve the classpath configuration page so that it can update the classpath for Maven and Gradle projects.
+
 ## 0.25.15
 ### Added
 - Add statistics for the aggregated reliability and performance data of the language server protocol requests on extension exit.
