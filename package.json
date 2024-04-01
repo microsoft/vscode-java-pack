@@ -71,6 +71,12 @@
     "onWalkthrough:javaWelcome"
   ],
   "contributes": {
+    "javaShortcuts": [
+      {
+        "title": "$(project) Open Project Settings",
+        "command": "java.classpathConfiguration"
+      }
+    ],
     "walkthroughs": [
       {
         "id": "javaWelcome",
