@@ -1,39 +1,16 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeLens, CodeLensProvider, DocumentSymbol, Event, EventEmitter, ExtensionContext, Range, Selection, TextDocument, Uri, commands, languages, window, workspace } from "vscode";
-import { COMMAND_FIX, COMMAND_HIGHLIGHT, COMMAND_INSPECT_CLASS, COMMAND_INSPECT_RANGE, Inspection, InspectionRenderer, inspectClass, inspectRange } from ".";
-import { output } from "../output";
-import { fixUsingCopilot } from "./fix";
-import { DefaultRenderer } from "./render/DefaultRenderer";
-import { calculateHintPosition, debounce, getFirstLevelClassesOfDoc, uncapitalize } from "./utils";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeLens, CodeLensProvider, Event, EventEmitter, ExtensionContext, Range, Selection, TextDocument, Uri, languages, window, workspace } from "vscode";
+import { InspectionRenderer } from "./inspect";
+import { output } from "./output";
+import { fixUsingCopilot } from "./inspect/fix";
+import { DefaultRenderer } from "./inspect/render/DefaultRenderer";
+import { debounce, getFirstLevelClassesOfDoc } from "./inspect/utils";
+import { COMMAND_INSPECT_CLASS, COMMAND_INSPECT_RANGE, registerCommands } from "./commands";
 
 export function activateJavaCopilot(context: ExtensionContext): void {
     const renderer: InspectionRenderer = new DefaultRenderer(context);
 
     // Commands
-    commands.registerCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range | Selection) => {
-        void inspectRange(document, range).then(inspections => renderer.renderInspections(document, inspections));
-    });
-    commands.registerCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: DocumentSymbol) => {
-        void inspectClass(document, clazz).then(inspections => renderer.renderInspections(document, inspections));
-    });
-    commands.registerCommand(COMMAND_FIX, async (problem: Inspection['problem'], solution: string) => {
-        const range = calculateHintPosition(problem);
-        void commands.executeCommand('vscode.editorChat.start', {
-            autoSend: true,
-            message: `/fix ${problem.description}, maybe ${uncapitalize(solution)}`,
-            position: range.start,
-            initialSelection: new Selection(range.start, range.end),
-            initialRange: range
-        });
-    });
-    commands.registerCommand(COMMAND_HIGHLIGHT, async (inspection: Inspection) => {
-        inspection.document && void workspace.openTextDocument(inspection.document.uri).then(document => {
-            void window.showTextDocument(document).then(editor => {
-                const range = document.lineAt(inspection.problem.position.line).range;
-                editor.selection = new Selection(range.start, range.end);
-                editor.revealRange(range);
-            });
-        });
-    });
+    registerCommands(renderer);
 
     const inspectCodeLensesProvider = new InspectCodeLensProvider().install(context);
     const rerenderDocumentDebouncelyMap: { [key: string]: (document: TextDocument) => void } = {};

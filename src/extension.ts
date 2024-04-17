@@ -23,7 +23,7 @@ import { initialize as initUtils } from "./utils";
 import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
-import { activateJavaCopilot } from "./copilot/inspect/activate";
+import { activateJavaCopilot } from "./copilot/activate";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;

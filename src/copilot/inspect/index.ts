@@ -4,22 +4,34 @@ import { cacheClassAndMethodInspections } from './cache';
 import { inspectCode, inspectCodeDebouncely } from './inspect.code';
 import { getContainedClassesOfRange, getContainingClassOfRange, getIntersectionMethodsOfRange, getUnionRange, getProjectJavaVersion } from './utils';
 import path = require('path');
+import { COMMAND_FIX, COMMAND_HIGHLIGHT } from "../commands";
 
 export const JAVA_COPILOT_FEATURE_GROUP = 'java.copilot';
-export const COMMAND_INSPECT_RANGE = 'java.copilot.inspect.range';
-export const COMMAND_INSPECT_CLASS = 'java.copilot.inspect.class';
-export const COMMAND_FIX = 'java.copilot.fix.inspection';
-export const COMMAND_HIGHLIGHT = 'java.copilot.highlight.inspection';
 
 export interface Inspection {
     document?: TextDocument;
     problem: {
+        /**
+         * short description of the problem
+         */
         description: string;
         position: {
-            line: number; // real line number
-            relativeLine: number; // relative line number to the method
-            code: string
+            /**
+             * real line number to the start of the document, will change
+             */
+            line: number;
+            /**
+             * relative line number to the start of the symbol(method/class), won't change
+             */
+            relativeLine: number;
+            /**
+             * code of the first line of the problematic code block
+             */
+            code: string;
         };
+        /**
+         * symbol name of the problematic code block, e.g. method name/class name, keywork, etc.
+         */
         symbol: string;
     }
     solution: string;
@@ -78,7 +90,8 @@ export async function inspectRange(document: TextDocument, range: Range | Select
     return inspections;
 }
 
-export function doInspectDocument(document: TextDocument): Promise<Inspection[]> {
+// @ts-ignore unusd method
+function doInspectDocument(document: TextDocument): Promise<Inspection[]> {
     const documentKey = document.uri.fsPath;
     const content: string = document.getText();
     const result = inspectCodeDebouncely(content, documentKey, 3000).then((inspections: Inspection[]) => {
@@ -88,7 +101,8 @@ export function doInspectDocument(document: TextDocument): Promise<Inspection[]>
     return result;
 }
 
-export async function doInspectSymbol(document: TextDocument, symbol: DocumentSymbol): Promise<Inspection[]> {
+// @ts-ignore unusd method
+async function doInspectSymbol(document: TextDocument, symbol: DocumentSymbol): Promise<Inspection[]> {
     output.debug('inspecting symbol:', symbol.name);
     const range = new Range(new Position(symbol.range.start.line, 0), symbol.range.end);
     const content: string = document.getText(range);
@@ -102,7 +116,7 @@ export async function doInspectSymbol(document: TextDocument, symbol: DocumentSy
     return inspections;
 }
 
-export async function doInspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
+async function doInspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
     const adjustedRange = new Range(new Position(range.start.line, 0), new Position(range.end.line, document.lineAt(range.end.line).text.length));
     const content: string = document.getText(adjustedRange);
     const offset = range.start.line;
@@ -110,7 +124,7 @@ export async function doInspectRange(document: TextDocument, range: Range | Sele
     const inspections = await inspectCode(content, javaVersion);
     inspections.forEach(s => {
         s.document = document;
-        s.problem.position.line = s.problem.position.relativeLine + offset; // real line number
+        s.problem.position.line = s.problem.position.relativeLine + offset; // calculate real line number
     });
     return inspections;
 }

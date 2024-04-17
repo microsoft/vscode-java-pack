@@ -2,7 +2,7 @@ import { DocumentSymbol, TextDocument } from 'vscode';
 import { Inspection } from ".";
 import { CLASS_KINDS, METHOD_KINDS, calculateSymbolVersionId, getClassesAndMethodsOfDoc } from './utils';
 
-// Map<documentKey, Map<symbolName, [symbolId, Promise<Inspection[]>]
+// Map<documentKey, Map<symbolName, [symbolVersionId, Promise<Inspection[]>]
 const DOC_SYMBOL_VERSION_INSPECTIONS: Map<string, Map<string, [string, Promise<Inspection[]>]>> = new Map();
 // Map<documentKey, [documentVersion, Promise<RefactorInspection[]>>>
 // const DOC_VERSION_INSPECTIONS: Map<string, [number, Promise<Inspection[]>]> = new Map();
@@ -14,8 +14,8 @@ export function hasCache(document: TextDocument, symbol?: DocumentSymbol): boole
     }
     const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
     const versionInspections = symbolInspections?.get(symbol.name);
-    const symbolId = calculateSymbolVersionId(document, symbol);
-    return versionInspections?.[0] === symbolId;
+    const symbolVersionId = calculateSymbolVersionId(document, symbol);
+    return versionInspections?.[0] === symbolVersionId;
 }
 
 export async function getCachedInspectionsOfDoc(document: TextDocument): Promise<Inspection[]> {
@@ -58,7 +58,7 @@ function cache(document: TextDocument, symbol: DocumentSymbol, inspections: Insp
 }
 
 /**
- * @param allInspections inspections having `position.line` as the real line number
+ * @param allInspections inspections having `promblem.position.line` as the real line number
  */
 function cacheMethodInspections(allInspections: Inspection[], methods: DocumentSymbol[], document: TextDocument): void {
     for (const method of methods) {
@@ -67,7 +67,7 @@ function cacheMethodInspections(allInspections: Inspection[], methods: DocumentS
             return inspectionRange.line >= method.range.start.line && inspectionRange.line <= method.range.end.line;
         });
         if (methodInspections.length < 1) continue;
-        // re-calculate `relativeLine`, `relativeLine` is the relative line number to the method
+        // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method
         methodInspections.forEach(inspection => inspection.problem.position.relativeLine = inspection.problem.position.line - method.range.start.line);
         cache(document, method, methodInspections);
     }
@@ -82,7 +82,7 @@ function cacheClassInspections(allInspections: Inspection[], classes: DocumentSy
             return inspection.problem.position.line === clazz.range.start.line;
         });
         if (classInspections.length < 1) continue;
-        // re-calculate `relativeLine`, `relativeLine` is the relative line number to the method
+        // re-calculate `relativeLine` of class inspections, `relativeLine` is the relative line number to the start of the class
         classInspections.forEach(inspection => inspection.problem.position.relativeLine = inspection.problem.position.line - clazz.range.start.line);
         cache(document, clazz, classInspections);
     }
