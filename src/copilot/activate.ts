@@ -3,10 +3,18 @@ import { COMMAND_INSPECT_CLASS, COMMAND_INSPECT_RANGE, registerCommands } from "
 import { InspectionRenderer } from "./inspect";
 import { DefaultRenderer } from "./inspect/render/DefaultRenderer";
 import { fixDiagnostic } from "./inspect/render/DiagnosticRenderer";
-import { debounce, getFirstLevelClassesOfDoc } from "./inspect/utils";
-import { output } from "./output";
+import { debounce, getFirstLevelClassesOfDoc, logger, waitUntilExtensionsActivated } from "./inspect/utils";
 
-export function activateJavaCopilot(context: ExtensionContext): void {
+export const DEPENDENT_EXTENSIONS = ['github.copilot-chat', 'redhat.java'];
+
+export async function activateJavaCopilot(context: ExtensionContext): Promise<void> {
+    logger.info('Waiting for dependent extensions to be ready...');
+    await waitUntilExtensionsActivated(DEPENDENT_EXTENSIONS);
+    logger.info('Activating Java Copilot features...');
+    doActivate(context);
+}
+
+export function doActivate(context: ExtensionContext): void {
     const renderer: InspectionRenderer = new DefaultRenderer(context);
 
     // Commands
@@ -61,7 +69,7 @@ class InspectCodeLensProvider implements CodeLensProvider {
     public readonly onDidChangeCodeLenses: Event<void> = this.emitter.event;
 
     install(context: ExtensionContext): InspectCodeLensProvider {
-        output.log('[InspectCodeLensProvider] install...');
+        logger.debug('[InspectCodeLensProvider] install...');
         context.subscriptions.push(
             languages.registerCodeLensProvider({ language: 'java' }, this)
         );
@@ -69,7 +77,7 @@ class InspectCodeLensProvider implements CodeLensProvider {
     }
 
     async rerender(document: TextDocument) {
-        output.log('[InspectCodeLensProvider] rerender inspect codelenses...');
+        logger.debug('[InspectCodeLensProvider] rerender inspect codelenses...');
         if (document.languageId !== 'java') return;
         const docCodeLenses: CodeLens[] = [];
         const classes = await getFirstLevelClassesOfDoc(document);

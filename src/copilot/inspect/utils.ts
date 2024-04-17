@@ -1,10 +1,42 @@
 import * as crypto from "crypto";
-import { DocumentSymbol, Position, Range, Selection, SymbolKind, TextDocument, commands } from "vscode";
+import { DocumentSymbol, LogOutputChannel, Position, Range, Selection, SymbolKind, TextDocument, commands, extensions, window } from "vscode";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { Inspection } from ".";
 
 export const DEFAULT_JAVA_VERSION = 17;
 export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
+
+export const DEPENDENT_EXTENSIONS = ['github.copilot-chat', 'redhat.java'];
+
+export async function checkDependencyExtensions(): Promise<void> {
+    for (const id of DEPENDENT_EXTENSIONS) {
+        const extension = extensions.getExtension(id);
+        if (extension === undefined) {
+            const result = await window.showWarningMessage(`This feature depends on extension "${id}", do you want to install it?`, { modal: true }, 'Install');
+            if (result === 'Install') {
+                await commands.executeCommand('workbench.extensions.installExtension', id);
+            } else {
+                throw new Error(`Extension "${id}" is not installed.`);
+            }
+        }
+    }
+    for (const id of DEPENDENT_EXTENSIONS) {
+        const extension = extensions.getExtension(id);
+        if (extension?.isActive) {
+            window.showWarningMessage(`Please try later after extension "${extension?.packageJSON.name}" is activated.`);
+            throw new Error(`Extension "${extension?.packageJSON.name}" is not activated.`);
+        }
+    }
+}
+
+export async function isJavaExtensionReady(): Promise<void> {
+    const extension = extensions.getExtension('redhat.java');
+    if (extension?.isActive) {
+        window.showWarningMessage(`Please try later after extension "${extension?.packageJSON.name}" is activated.`);
+        throw new Error(`Extension "${extension?.packageJSON.name}" is not activated.`);
+    }
+}
 
 export function debounce(func: (...args: any[]) => void, wait = 800) {
     let timeout: NodeJS.Timeout;
@@ -121,3 +153,31 @@ export function isEqual<T>(a: T[], b: T[]): boolean {
     }
     return true;
 }
+
+export async function waitUntilExtensionsActivated(extensionIds: string[], interval: number = 1500) {
+    const start = Date.now();
+    return new Promise<void>((resolve) => {
+        if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
+            logger.info(`All dependent extensions [${extensionIds.join(', ')}] are activated.`);
+            return resolve();
+        }
+        const notInstalledExtensionIds = extensionIds.filter(id => !extensions.getExtension(id));
+        if (notInstalledExtensionIds.length > 0) {
+            sendInfo('java.copilot.inspection.dependentExtensions.notInstalledExtensions', { extensionIds: `[${notInstalledExtensionIds.join(',')}]` });
+            logger.info(`Dependent extensions [${notInstalledExtensionIds.join(', ')}] are not installed, setting interval to 10s.`);
+        } else {
+            logger.info(`All dependent extensions are installed, but some are not activated, keep interval ${interval}ms.`);
+        }
+        interval = notInstalledExtensionIds ? interval : 10000;
+        const id = setInterval(() => {
+            if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
+                clearInterval(id);
+                sendInfo('java.copilot.inspection.dependentExtensions.waited', { time: Date.now() - start });
+                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be installed/activated.`);
+                resolve();
+            }
+        }, interval);
+    });
+}
+
+export const logger: LogOutputChannel = window.createOutputChannel("Rewriting Suggestions", { log: true });

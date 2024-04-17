@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { DecorationOptions, ExtensionContext, OverviewRulerLane, TextDocument, TextEditorDecorationType, ThemeColor, Uri, window } from "vscode";
 import { Inspection, InspectionRenderer } from "..";
-import { output } from "../../output";
 import { getCachedInspectionsOfDoc } from "../cache";
-import { calculateHintPosition } from "../utils";
+import { calculateHintPosition, logger } from "../utils";
 import path = require("path");
 
 export class RulerHighlightRenderer implements InspectionRenderer {
@@ -12,7 +11,7 @@ export class RulerHighlightRenderer implements InspectionRenderer {
 
     public install(_context: ExtensionContext): void {
         if (this.rulerDecorationType) return;
-        output.log(`[RulerRenderer] install`);
+        logger.debug(`[RulerRenderer] install`);
         const color = new ThemeColor('textLink.foreground');
         this.rulerDecorationType = window.createTextEditorDecorationType({
             isWholeLine: true,
@@ -23,7 +22,7 @@ export class RulerHighlightRenderer implements InspectionRenderer {
 
     public uninstall(): void {
         if (!this.rulerDecorationType) return;
-        output.log(`[RulerRenderer] uninstall`);
+        logger.debug(`[RulerRenderer] uninstall`);
         this.rulerHighlights.clear();
         window.visibleTextEditors.forEach(editor => this.rulerDecorationType && editor.setDecorations(this.rulerDecorationType, []));
         this.rulerDecorationType.dispose();
@@ -41,7 +40,7 @@ export class RulerHighlightRenderer implements InspectionRenderer {
     }
 
     public async rerender(document: TextDocument): Promise<void> {
-        output.log(`[RulerRenderer] rerender ${path.basename(document.uri.fsPath)}`);
+        logger.debug(`[RulerRenderer] rerender ${path.basename(document.uri.fsPath)}`);
         this.clear(document);
         const inspections = await getCachedInspectionsOfDoc(document);
         this.renderInspections(document, inspections);

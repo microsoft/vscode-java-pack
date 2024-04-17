@@ -38,10 +38,6 @@
   "capabilities": {
     "virtualWorkspaces": false
   },
-  "extensionDependencies": [
-    "github.copilot-chat",
-    "redhat.java"
-  ],
   "enabledApiProposals": [
     "languageModels"
   ],

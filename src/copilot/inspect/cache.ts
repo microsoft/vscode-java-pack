@@ -1,6 +1,6 @@
-import { DocumentSymbol, TextDocument } from 'vscode';
+import { DocumentSymbol, SymbolKind, TextDocument } from 'vscode';
 import { Inspection } from ".";
-import { CLASS_KINDS, METHOD_KINDS, calculateSymbolVersionId, getClassesAndMethodsOfDoc } from './utils';
+import { CLASS_KINDS, METHOD_KINDS, calculateSymbolVersionId, getClassesAndMethodsOfDoc, logger } from './utils';
 
 // Map<documentKey, Map<symbolName, [symbolVersionId, Promise<Inspection[]>]
 const DOC_SYMBOL_VERSION_INSPECTIONS: Map<string, Map<string, [string, Promise<Inspection[]>]>> = new Map();
@@ -38,6 +38,7 @@ export function getCachedInspectionsOfSymbol(document: TextDocument, symbol: Doc
     const versionInspections = symbolInspections?.get(symbol.name);
     const symbolVersionId = calculateSymbolVersionId(document, symbol);
     if (versionInspections?.[0] === symbolVersionId) {
+        logger.debug(`cache hit for ${SymbolKind[symbol.kind]} ${symbol.name} of ${document.uri.fsPath}`);
         return versionInspections[1].then(inspections => {
             inspections.forEach(s => {
                 s.document = document;
@@ -46,10 +47,12 @@ export function getCachedInspectionsOfSymbol(document: TextDocument, symbol: Doc
             return inspections;
         });
     }
+    logger.debug(`cache miss for ${SymbolKind[symbol.kind]} ${symbol.name} of ${document.uri.fsPath}`);
     return undefined;
 }
 
 function cache(document: TextDocument, symbol: DocumentSymbol, inspections: Inspection[]): void {
+    logger.debug(`cache ${inspections.length} inspections for ${SymbolKind[symbol.kind]} ${symbol.name} of ${document.uri.fsPath}`);
     const documentKey = document.uri.fsPath;
     const symbolVersionId = calculateSymbolVersionId(document, symbol);
     const cachedSymbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey) ?? new Map();

@@ -2,9 +2,8 @@
 import { DecorationOptions, ExtensionContext, MarkdownString, TextDocument, TextEditorDecorationType, Uri, window } from "vscode";
 import { Inspection, InspectionRenderer } from "..";
 import { COMMAND_FIX } from "../../../copilot/commands";
-import { output } from "../../output";
 import { getCachedInspectionsOfDoc } from "../cache";
-import { calculateHintPosition } from "../utils";
+import { calculateHintPosition, logger } from "../utils";
 import path = require("path");
 
 export class GutterIconRenderer implements InspectionRenderer {
@@ -13,7 +12,7 @@ export class GutterIconRenderer implements InspectionRenderer {
 
     public install(context: ExtensionContext): void {
         if (this.gutterIconDecorationType) return;
-        output.log(`[GutterIconRenderer] install`);
+        logger.debug(`[GutterIconRenderer] install`);
         const icon = Uri.file(path.join(context.asAbsolutePath('resources'), `gutter-blue.svg`));
         this.gutterIconDecorationType = window.createTextEditorDecorationType({
             isWholeLine: true,
@@ -24,7 +23,7 @@ export class GutterIconRenderer implements InspectionRenderer {
 
     public uninstall(): void {
         if (!this.gutterIconDecorationType) return;
-        output.log(`[GutterIconRenderer] uninstall`);
+        logger.debug(`[GutterIconRenderer] uninstall`);
         this.gutterIcons.clear();
         window.visibleTextEditors.forEach(editor => this.gutterIconDecorationType && editor.setDecorations(this.gutterIconDecorationType, []));
         this.gutterIconDecorationType.dispose();
@@ -42,7 +41,7 @@ export class GutterIconRenderer implements InspectionRenderer {
     }
 
     public async rerender(document: TextDocument): Promise<void> {
-        output.log(`[GutterIconRenderer] rerender ${path.basename(document.uri.fsPath)}`);
+        logger.debug(`[GutterIconRenderer] rerender ${path.basename(document.uri.fsPath)}`);
         this.clear(document);
         const inspections = await getCachedInspectionsOfDoc(document);
         this.renderInspections(document, inspections);

@@ -2,9 +2,8 @@
 import { CodeLens, CodeLensProvider, Disposable, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
 import { Inspection, InspectionRenderer } from "..";
 import { COMMAND_FIX } from "../../../copilot/commands";
-import { output } from "../../output";
 import { getCachedInspectionsOfDoc } from "../cache";
-import { calculateHintPosition as calculateInspectPosition } from "../utils";
+import { calculateHintPosition as calculateInspectPosition, logger } from "../utils";
 import path = require("path");
 
 export class CodeLensRenderer implements InspectionRenderer {
@@ -14,14 +13,14 @@ export class CodeLensRenderer implements InspectionRenderer {
 
     public install(context: ExtensionContext): void {
         if (this.disposableRegitry) return;
-        output.log(`[CodeLensRenderer] install`);
+        logger.debug(`[CodeLensRenderer] install`);
         this.disposableRegitry = languages.registerCodeLensProvider({ language: 'java' }, this.provider);
         context.subscriptions.push(this.disposableRegitry);
     }
 
     public uninstall(): void {
         if (!this.disposableRegitry) return;
-        output.log(`[CodeLensRenderer] uninstall`);
+        logger.debug(`[CodeLensRenderer] uninstall`);
         this.codeLenses.clear();
         this.disposableRegitry.dispose();
         this.provider.refresh();
@@ -38,7 +37,7 @@ export class CodeLensRenderer implements InspectionRenderer {
     }
 
     public async rerender(document: TextDocument): Promise<void> {
-        output.log(`[CodeLensRenderer] rerender ${path.basename(document.uri.fsPath)}`);
+        logger.debug(`[CodeLensRenderer] rerender ${path.basename(document.uri.fsPath)}`);
         this.clear(document);
         const inspections = await getCachedInspectionsOfDoc(document);
         this.renderInspections(document, inspections);

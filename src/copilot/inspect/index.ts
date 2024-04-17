@@ -1,9 +1,8 @@
 import { DocumentSymbol, ExtensionContext, Position, ProgressLocation, Range, Selection, SymbolKind, TextDocument, commands, window } from "vscode";
 import { COMMAND_FIX, COMMAND_HIGHLIGHT } from "../commands";
-import { output } from '../output';
 import { cacheClassAndMethodInspections } from './cache';
 import { inspectCode, inspectCodeDebouncely } from './inspect.code';
-import { getContainedClassesOfRange, getContainingClassOfRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange } from './utils';
+import { getContainedClassesOfRange, getContainingClassOfRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange, logger } from './utils';
 import path = require('path');
 
 export const JAVA_COPILOT_FEATURE_GROUP = 'java.copilot';
@@ -47,15 +46,18 @@ export interface InspectionRenderer {
 }
 
 export async function inspectDocument(document: TextDocument): Promise<Inspection[]> {
+    logger.info('inspecting document:', document.fileName);
     const range = new Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end);
     return inspectRange(document, range);
 }
 
 export async function inspectClass(document: TextDocument, clazz: DocumentSymbol): Promise<Inspection[]> {
+    logger.info('inspecting class:', clazz.name);
     return inspectRange(document, clazz.range);
 }
 
 export async function inspectSymbol(document: TextDocument, symbol: DocumentSymbol): Promise<Inspection[]> {
+    logger.info(`inspecting symbol ${SymbolKind[symbol.kind]} ${symbol.name}`);
     return inspectRange(document, symbol.range);
 }
 
@@ -103,7 +105,7 @@ function doInspectDocument(document: TextDocument): Promise<Inspection[]> {
 
 // @ts-ignore unusd method
 async function doInspectSymbol(document: TextDocument, symbol: DocumentSymbol): Promise<Inspection[]> {
-    output.debug('inspecting symbol:', symbol.name);
+    logger.debug('inspecting symbol:', symbol.name);
     const range = new Range(new Position(symbol.range.start.line, 0), symbol.range.end);
     const content: string = document.getText(range);
     const symbolKey = `${document.uri.fsPath}:${symbol.name}`;

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Disposable, LanguageModelChatAssistantMessage, LanguageModelChatMessage, LanguageModelChatSystemMessage, LanguageModelChatUserMessage, lm } from 'vscode';
 import { addContextProperty, instrumentSimpleOperation } from 'vscode-extension-telemetry-wrapper';
-import { output } from './output';
+import { logger } from './inspect/utils';
 
 export const END_MARK = "<|endofresponse|>";
 async function _sendRequest(systemMessages: { role: string, content: string }[], instruction: string): Promise<string> {
@@ -19,11 +19,9 @@ async function _sendRequest(systemMessages: { role: string, content: string }[],
     let rounds: number = 0;
     const doSendRequest = async (message: string): Promise<boolean> => {
         rounds++;
-        output.warn(`User:`);
-        output.log(message);
+        logger.info(`User: \n`, message);
         messages.push(new LanguageModelChatUserMessage(message));
-        output.warn(`Assistant:`);
-        output.log('thinking...');
+        logger.info('Assistant: thinking...');
 
         let rawAnswer: string = '';
         try {
@@ -32,12 +30,11 @@ async function _sendRequest(systemMessages: { role: string, content: string }[],
                 rawAnswer += item;
             }
         } catch (e) {
-            output.error(`Failed to send request to copilot: ${e}`);
+            logger.error(`Failed to send request to copilot`, e);
             throw new Error(`Failed to send request to copilot: ${e}`);
         }
         messages.push(new LanguageModelChatAssistantMessage(rawAnswer));
-        output.warn(`Assistant:`);
-        output.log(rawAnswer);
+        logger.info(`Assistant: \n`, rawAnswer);
         answer += rawAnswer;
         return !answer.trim().endsWith(END_MARK);
     };
@@ -45,6 +42,7 @@ async function _sendRequest(systemMessages: { role: string, content: string }[],
     while (isPartial && rounds < 10) {
         isPartial = await doSendRequest('continue where you left off.');
     }
+    logger.debug('rounds', rounds);
     addContextProperty('rounds', rounds + '');
     return answer.replace(END_MARK, "");
 }

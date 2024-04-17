@@ -2,9 +2,8 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, Range, Selection, TextDocument, languages } from "vscode";
 import { Inspection, InspectionRenderer, JAVA_COPILOT_FEATURE_GROUP } from "..";
 import { COMMAND_FIX } from "../../../copilot/commands";
-import { output } from "../../output";
 import { getCachedInspectionsOfDoc } from "../cache";
-import { calculateHintPosition } from "../utils";
+import { calculateHintPosition, logger } from "../utils";
 import path = require("path");
 
 export class DiagnosticRenderer implements InspectionRenderer {
@@ -12,14 +11,14 @@ export class DiagnosticRenderer implements InspectionRenderer {
 
     public install(context: ExtensionContext): void {
         if (this.diagnostics) return;
-        output.log('[DiagnosticRenderer] install...');
+        logger.debug('[DiagnosticRenderer] install...');
         this.diagnostics = languages.createDiagnosticCollection(JAVA_COPILOT_FEATURE_GROUP);
         context.subscriptions.push(this.diagnostics);
     }
 
     public uninstall(): void {
         if (!this.diagnostics) return;
-        output.log('[DiagnosticRenderer] uninstall...');
+        logger.debug('[DiagnosticRenderer] uninstall...');
         this.diagnostics.clear();
         this.diagnostics.dispose();
         this.diagnostics = undefined;
@@ -34,7 +33,7 @@ export class DiagnosticRenderer implements InspectionRenderer {
     }
 
     public async rerender(document: TextDocument): Promise<void> {
-        output.log(`[DiagnosticRenderer] rerender ${path.basename(document.uri.fsPath)}`);
+        logger.debug(`[DiagnosticRenderer] rerender ${path.basename(document.uri.fsPath)}`);
         this.clear(document);
         const inspections = await getCachedInspectionsOfDoc(document);
         this.renderInspections(document, inspections);

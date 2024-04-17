@@ -1,8 +1,7 @@
 import { addContextProperty, instrumentSimpleOperation } from 'vscode-extension-telemetry-wrapper';
 import { Inspection } from '.';
-import { output } from '../output';
 import { END_MARK, sendRequest } from '../sendRequest';
-import { DEFAULT_JAVA_VERSION } from './utils';
+import { DEFAULT_JAVA_VERSION, logger } from './utils';
 
 const SYSTEM_MESSAGE = (version: number) => `
     You are expert at Java and code refactoring. Please identify code blocks that can be rewritten with
@@ -22,7 +21,7 @@ const SYSTEM_MESSAGE = (version: number) => `
     Your reply must be the complete original code sent to you plus your comments, without any other modifications.
     Never comment on undertermined problems.
     Never comment on code that is well-written or simple enough.
-    Don't add any explanation, don't format output. Don't output markdown.
+    Don't add any explanation, don't format logger. Don't output markdown.
     You must end your response with "//${END_MARK}".
     `;
 const EXAMPLE_USER_MESSAGE = `
@@ -103,7 +102,7 @@ const debounceMap = new Map<string, NodeJS.Timeout>();
 export function inspectCodeDebouncely(code: string, key: string, wait: number = 3000, javaVersion: number = DEFAULT_JAVA_VERSION): Promise<Inspection[]> {
     if (debounceMap.has(key)) {
         clearTimeout(debounceMap.get(key) as NodeJS.Timeout);
-        output.log(`debounced`, key);
+        logger.debug(`debounced`, key);
     }
     return new Promise<Inspection[]>((resolve) => {
         debounceMap.set(key, setTimeout(() => {
@@ -138,6 +137,7 @@ async function _inspectCode(code: string, javaVersion: number = DEFAULT_JAVA_VER
     const inspections = extractInspections(codeBlock);
     addContextProperty('javaVersion', javaVersion + '');
     addContextProperty('codeLength', code.length + '');
+    addContextProperty('codeLines', filteredLines + '');
     addContextProperty('insectionsCount', inspections.length + '');
     addContextProperty('propblems', `[${inspections.map(i => i.problem.description).join(',')}]`);
     adjustCodeBlock(inspections, originalLines);
