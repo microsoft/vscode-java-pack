@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Disposable, LanguageModelChatAssistantMessage, LanguageModelChatMessage, LanguageModelChatSystemMessage, LanguageModelChatUserMessage, lm } from 'vscode';
+import { addContextProperty, instrumentSimpleOperation } from 'vscode-extension-telemetry-wrapper';
 import { output } from './output';
 
 export const END_MARK = "<|endofresponse|>";
-export async function ask(systemMessages: { role: string, content: string }[], instruction: string): Promise<string> {
+async function _sendRequest(systemMessages: { role: string, content: string }[], instruction: string): Promise<string> {
     const messages: LanguageModelChatMessage[] = systemMessages.map(message => {
         switch (message.role) {
             case 'system':
@@ -16,7 +17,7 @@ export async function ask(systemMessages: { role: string, content: string }[], i
     })
     let answer: string = '';
     let rounds: number = 0;
-    const doAsk = async (message: string): Promise<boolean> => {
+    const doSendRequest = async (message: string): Promise<boolean> => {
         rounds++;
         output.warn(`User:`);
         output.log(message);
@@ -39,14 +40,20 @@ export async function ask(systemMessages: { role: string, content: string }[], i
         answer += rawAnswer;
         return !answer.trim().endsWith(END_MARK);
     };
-    let isPartial: boolean = await doAsk(instruction);
+    let isPartial: boolean = await doSendRequest(instruction);
     while (isPartial && rounds < 10) {
-        isPartial = await doAsk('continue where you left off.');
+        isPartial = await doSendRequest('continue where you left off.');
     }
+    addContextProperty('rounds', rounds + '');
     return answer.replace(END_MARK, "");
 }
 
-export function extractCodeBlock(markdownText: string): string {
+export async function sendRequest(systemMessages: { role: string, content: string }[], instruction: string): Promise<string> {
+    return instrumentSimpleOperation("java.copilot.sendRequest", _sendRequest)(systemMessages, instruction);
+}
+
+// @ts-ignore unused method
+function extractCodeBlock(markdownText: string): string {
     const regex = /```(?:Java|java)?([\s\S]*?)```/g;
     const codeBlocks: string[] = [];
     let match: RegExpExecArray | null;

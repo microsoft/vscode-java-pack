@@ -1,10 +1,10 @@
 import { DocumentSymbol, ExtensionContext, Position, ProgressLocation, Range, Selection, SymbolKind, TextDocument, commands, window } from "vscode";
+import { COMMAND_FIX, COMMAND_HIGHLIGHT } from "../commands";
 import { output } from '../output';
 import { cacheClassAndMethodInspections } from './cache';
 import { inspectCode, inspectCodeDebouncely } from './inspect.code';
-import { getContainedClassesOfRange, getContainingClassOfRange, getIntersectionMethodsOfRange, getUnionRange, getProjectJavaVersion } from './utils';
+import { getContainedClassesOfRange, getContainingClassOfRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange } from './utils';
 import path = require('path');
-import { COMMAND_FIX, COMMAND_HIGHLIGHT } from "../commands";
 
 export const JAVA_COPILOT_FEATURE_GROUP = 'java.copilot';
 
@@ -80,7 +80,7 @@ export async function inspectRange(document: TextDocument, range: Range | Select
     if (inspections.length < 1) {
         void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
     } else if (inspections.length == 1) {
-        void commands.executeCommand(COMMAND_FIX, inspections[0].problem, inspections[0].solution);
+        void commands.executeCommand(COMMAND_FIX, inspections[0].problem, inspections[0].solution, 'auto');
     } else {
         void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
             selection === "Go to" && void commands.executeCommand(COMMAND_HIGHLIGHT, inspections[0]);

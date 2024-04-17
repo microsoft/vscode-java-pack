@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { CodeLens, CodeLensProvider, Disposable, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
-import { COMMAND_FIX, Inspection, InspectionRenderer } from "..";
+import { Inspection, InspectionRenderer } from "..";
+import { COMMAND_FIX } from "../../../copilot/commands";
 import { output } from "../../output";
 import { getCachedInspectionsOfDoc } from "../cache";
 import { calculateHintPosition as calculateInspectPosition } from "../utils";
@@ -62,7 +63,7 @@ export class CodeLensRenderer implements InspectionRenderer {
             title: inspection.solution,
             tooltip: inspection.problem.description,
             command: COMMAND_FIX,
-            arguments: [inspection.problem, inspection.solution]
+            arguments: [inspection.problem, inspection.solution, 'codelenses']
         });
         //@ts-ignore
         codeLens.additional = inspection;

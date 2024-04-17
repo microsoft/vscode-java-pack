@@ -1,6 +1,7 @@
+import { addContextProperty, instrumentSimpleOperation } from 'vscode-extension-telemetry-wrapper';
 import { Inspection } from '.';
-import { END_MARK, ask } from '../ask.copilot';
 import { output } from '../output';
+import { END_MARK, sendRequest } from '../sendRequest';
 import { DEFAULT_JAVA_VERSION } from './utils';
 
 const SYSTEM_MESSAGE = (version: number) => `
@@ -115,6 +116,10 @@ export function inspectCodeDebouncely(code: string, key: string, wait: number = 
 }
 
 export async function inspectCode(code: string, javaVersion: number = DEFAULT_JAVA_VERSION): Promise<Inspection[]> {
+    return instrumentSimpleOperation("java.copilot.inspect.code", _inspectCode)(code, javaVersion);
+}
+
+async function _inspectCode(code: string, javaVersion: number = DEFAULT_JAVA_VERSION): Promise<Inspection[]> {
     const originalLines: string[] = code.split('\n');
     const filteredLines: string[] = [];
     forEachFilteredLines(originalLines, line => filteredLines.push(line));
@@ -129,8 +134,12 @@ export async function inspectCode(code: string, javaVersion: number = DEFAULT_JA
         { role: "user", content: EXAMPLE_USER_MESSAGE },
         { role: "assistant", content: EXAMPLE_ASSISTANT_MESSAGE },
     ];
-    const codeBlock = await ask(messages, filteredLinesContent);
+    const codeBlock = await sendRequest(messages, filteredLinesContent);
     const inspections = extractInspections(codeBlock);
+    addContextProperty('javaVersion', javaVersion + '');
+    addContextProperty('codeLength', code.length + '');
+    addContextProperty('insectionsCount', inspections.length + '');
+    addContextProperty('propblems', `[${inspections.map(i => i.problem.description).join(',')}]`);
     adjustCodeBlock(inspections, originalLines);
     return inspections;
 }

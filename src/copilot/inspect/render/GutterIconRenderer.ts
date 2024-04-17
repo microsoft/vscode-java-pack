@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { DecorationOptions, ExtensionContext, MarkdownString, TextDocument, TextEditorDecorationType, Uri, window } from "vscode";
-import { COMMAND_FIX, Inspection, InspectionRenderer } from "..";
+import { Inspection, InspectionRenderer } from "..";
+import { COMMAND_FIX } from "../../../copilot/commands";
 import { output } from "../../output";
 import { getCachedInspectionsOfDoc } from "../cache";
 import { calculateHintPosition } from "../utils";
@@ -64,7 +65,7 @@ export class GutterIconRenderer implements InspectionRenderer {
 
     private static toGutterIcon(inspection: Inspection): GutterIcon {
         const range = calculateHintPosition(inspection.problem);
-        const args = [inspection.problem, inspection.solution];
+        const args = [inspection.problem, inspection.solution, 'guttericons'];
         const commandUri = Uri.parse(`command:${COMMAND_FIX}?${encodeURIComponent(JSON.stringify(args))}`);
         const hoverMessage = new MarkdownString(`${inspection.problem.description}\n\n$(copilot) [${inspection.solution}](${commandUri})`, true);
         hoverMessage.isTrusted = true;

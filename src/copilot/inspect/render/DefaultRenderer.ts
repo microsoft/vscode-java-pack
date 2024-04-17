@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { ExtensionContext, TextDocument, WorkspaceConfiguration, workspace } from "vscode";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { Inspection, InspectionRenderer } from "..";
 import { CodeLensRenderer } from "./CodeLensRenderer";
 import { DiagnosticRenderer } from "./DiagnosticRenderer";
@@ -17,13 +18,14 @@ export class DefaultRenderer implements InspectionRenderer {
         this.renderers['rulerhighlights'] = new RulerHighlightRenderer();
         workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('java.copilot.suggestion.renderer')) {
-                this.reinstallRenderers();
+                const settings = this.reinstallRenderers();
+                sendInfo('java.copilot.suggestion.renderer.changed', { 'settings': `${settings.join(',')}` });
             }
         });
         this.reinstallRenderers();
     }
 
-    private reinstallRenderers(): void {
+    private reinstallRenderers(): string[] {
         this.installedRenderers.splice(0, this.installedRenderers.length);
         const settings = this.reloadSettings();
         Object.entries(this.renderers).forEach(([type, renderer]) => {
@@ -34,6 +36,7 @@ export class DefaultRenderer implements InspectionRenderer {
                 renderer.uninstall();
             }
         });
+        return settings;
     }
 
     private reloadSettings(): string[] {

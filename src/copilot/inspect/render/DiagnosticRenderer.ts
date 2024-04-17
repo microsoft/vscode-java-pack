@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, TextDocument, languages } from "vscode";
-import { JAVA_COPILOT_FEATURE_GROUP, Inspection, InspectionRenderer } from "..";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, Range, Selection, TextDocument, languages } from "vscode";
+import { Inspection, InspectionRenderer, JAVA_COPILOT_FEATURE_GROUP } from "..";
+import { COMMAND_FIX } from "../../../copilot/commands";
 import { output } from "../../output";
 import { getCachedInspectionsOfDoc } from "../cache";
 import { calculateHintPosition } from "../utils";
@@ -60,4 +61,31 @@ export class DiagnosticRenderer implements InspectionRenderer {
         diagnostic.additional = inspection;
         return diagnostic;
     }
+}
+
+export async function fixDiagnostic(document: TextDocument, _range: Range | Selection, context: CodeActionContext, _token: CancellationToken): Promise<CodeAction[]> {
+    if (document?.languageId !== 'java') {
+        return [];
+    }
+    const actions: CodeAction[] = [];
+    for (const diagnostic of context.diagnostics) {
+        if (diagnostic.source !== JAVA_COPILOT_FEATURE_GROUP) {
+            continue;
+        }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const inspection: Inspection = diagnostic.additional as Inspection;
+        const action: CodeAction = {
+            title: inspection.solution,
+            diagnostics: [diagnostic],
+            kind: CodeActionKind.RefactorRewrite,
+            command: {
+                title: diagnostic.message,
+                command: COMMAND_FIX,
+                arguments: [inspection.problem, inspection.solution, 'diagnostics']
+            }
+        };
+        actions.push(action);
+    }
+    return actions;
 }

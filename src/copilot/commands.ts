@@ -1,5 +1,6 @@
-import { commands, TextDocument, DocumentSymbol, workspace, Range, Selection, window } from "vscode";
-import { inspectRange, inspectClass, Inspection, InspectionRenderer } from "./inspect";
+import { DocumentSymbol, Range, Selection, TextDocument, commands, window, workspace } from "vscode";
+import { addContextProperty, instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
+import { Inspection, InspectionRenderer, inspectClass, inspectRange } from "./inspect";
 import { calculateHintPosition, uncapitalize } from "./inspect/utils";
 
 export const COMMAND_INSPECT_RANGE = 'java.copilot.inspect.range';
@@ -8,14 +9,16 @@ export const COMMAND_FIX = 'java.copilot.fix.inspection';
 export const COMMAND_HIGHLIGHT = 'java.copilot.highlight.inspection';
 
 export function registerCommands(renderer: InspectionRenderer) {
-    commands.registerCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range | Selection) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range | Selection) => {
         void inspectRange(document, range).then(inspections => renderer.renderInspections(document, inspections));
     });
-    commands.registerCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: DocumentSymbol) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: DocumentSymbol) => {
         void inspectClass(document, clazz).then(inspections => renderer.renderInspections(document, inspections));
     });
-    commands.registerCommand(COMMAND_FIX, async (problem: Inspection['problem'], solution: string) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: Inspection['problem'], solution: string, source) => {
         const range = calculateHintPosition(problem);
+        addContextProperty('problem', problem.description);
+        addContextProperty('source', source);
         void commands.executeCommand('vscode.editorChat.start', {
             autoSend: true,
             message: `/fix ${problem.description}, maybe ${uncapitalize(solution)}`,
@@ -24,7 +27,7 @@ export function registerCommands(renderer: InspectionRenderer) {
             initialRange: range
         });
     });
-    commands.registerCommand(COMMAND_HIGHLIGHT, async (inspection: Inspection) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_HIGHLIGHT, async (inspection: Inspection) => {
         inspection.document && void workspace.openTextDocument(inspection.document.uri).then(document => {
             void window.showTextDocument(document).then(editor => {
                 const range = document.lineAt(inspection.problem.position.line).range;

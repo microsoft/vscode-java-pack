@@ -1,10 +1,10 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, CodeLens, CodeLensProvider, Event, EventEmitter, ExtensionContext, Range, Selection, TextDocument, Uri, languages, window, workspace } from "vscode";
-import { InspectionRenderer } from "./inspect";
-import { output } from "./output";
-import { fixUsingCopilot } from "./inspect/fix";
-import { DefaultRenderer } from "./inspect/render/DefaultRenderer";
-import { debounce, getFirstLevelClassesOfDoc } from "./inspect/utils";
 import { COMMAND_INSPECT_CLASS, COMMAND_INSPECT_RANGE, registerCommands } from "./commands";
+import { InspectionRenderer } from "./inspect";
+import { DefaultRenderer } from "./inspect/render/DefaultRenderer";
+import { fixDiagnostic } from "./inspect/render/DiagnosticRenderer";
+import { debounce, getFirstLevelClassesOfDoc } from "./inspect/utils";
+import { output } from "./output";
 
 export function activateJavaCopilot(context: ExtensionContext): void {
     const renderer: InspectionRenderer = new DefaultRenderer(context);
@@ -33,13 +33,13 @@ export function activateJavaCopilot(context: ExtensionContext): void {
     };
 
     context.subscriptions.push(
-        languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: fixUsingCopilot }), // Fix using Copilot
+        languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: fixDiagnostic }), // Fix using Copilot
         languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: inspectUsingCopilot }), // Inspect using Copilot
         workspace.onDidOpenTextDocument(doc => rerenderDocument(doc)), // Rerender class codelens and cached suggestions on document open
         workspace.onDidChangeTextDocument(e => rerenderDocument(e.document, true)), // Rerender class codelens and cached suggestions on document change
         window.onDidChangeVisibleTextEditors(editors => editors.forEach(editor => rerenderDocument(editor.document))) // rerender in case of renderers changed.
     );
-    window.visibleTextEditors.forEach(editor => rerenderDocument(editor.document)); 
+    window.visibleTextEditors.forEach(editor => rerenderDocument(editor.document));
 }
 
 async function inspectUsingCopilot(document: TextDocument, range: Range | Selection, _context: CodeActionContext, _token: CancellationToken): Promise<CodeAction[]> {
