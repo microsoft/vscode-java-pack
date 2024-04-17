@@ -32,6 +32,7 @@ async function _sendRequest(systemMessages: { role: string, content: string }[],
                 rawAnswer += item;
             }
         } catch (e) {
+            output.error(`Failed to send request to copilot: ${e}`);
             throw new Error(`Failed to send request to copilot: ${e}`);
         }
         messages.push(new LanguageModelChatAssistantMessage(rawAnswer));
