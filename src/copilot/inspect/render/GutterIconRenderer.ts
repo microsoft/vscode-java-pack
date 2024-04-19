@@ -5,6 +5,7 @@ import { InspectionRenderer } from "./InspectionRenderer";
 import { logger } from "../../../copilot/utils";
 import path = require("path");
 import { COMMAND_FIX } from "../commands";
+import InspectionCache from "../InspectionCache";
 
 export class GutterIconRenderer implements InspectionRenderer {
     private readonly gutterIcons: Map<Uri, GutterIcon[]> = new Map();
