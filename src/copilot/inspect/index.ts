@@ -1,10 +1,22 @@
-import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, ExtensionContext, TextDocument, languages, window, workspace, Range, Selection } from "vscode";
+import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, ExtensionContext, TextDocument, languages, window, workspace, Range, Selection, extensions } from "vscode";
 import { COMMAND_INSPECT_RANGE, registerCommands } from "./commands";
 import { DocumentRenderer } from "./DocumentRenderer";
 import { fixDiagnostic } from "./render/DiagnosticRenderer";
 import InspectionCache from "./InspectionCache";
+import { logger } from "../utils";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
+
+export const DEPENDENT_EXTENSIONS = ['github.copilot-chat', 'redhat.java'];
 
 export async function activateCopilotInspection(context: ExtensionContext): Promise<void> {
+    logger.info('Waiting for dependent extensions to be ready...');
+    await waitUntilExtensionsActivated(DEPENDENT_EXTENSIONS);
+    logger.info('Activating Java Copilot features...');
+    doActivate(context);
+    logger.info('Java Copilot features activated.');
+}
+
+export function doActivate(context: ExtensionContext): void {
     const renderer: DocumentRenderer = new DocumentRenderer().install(context);
     registerCommands(renderer);
 
@@ -30,4 +42,30 @@ async function rewrite(document: TextDocument, range: Range | Selection, _contex
         }
     };
     return [action];
+}
+
+export async function waitUntilExtensionsActivated(extensionIds: string[], interval: number = 1500) {
+    const start = Date.now();
+    return new Promise<void>((resolve) => {
+        if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
+            logger.info(`All dependent extensions [${extensionIds.join(', ')}] are activated.`);
+            return resolve();
+        }
+        const notInstalledExtensionIds = extensionIds.filter(id => !extensions.getExtension(id));
+        if (notInstalledExtensionIds.length > 0) {
+            sendInfo('java.copilot.inspection.dependentExtensions.notInstalledExtensions', { extensionIds: `[${notInstalledExtensionIds.join(',')}]` });
+            logger.info(`Dependent extensions [${notInstalledExtensionIds.join(', ')}] are not installed, setting checking interval to 10s.`);
+        } else {
+            logger.info(`All dependent extensions are installed, but some are not activated, keep checking interval ${interval}ms.`);
+        }
+        interval = notInstalledExtensionIds ? interval : 10000;
+        const id = setInterval(() => {
+            if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
+                clearInterval(id);
+                sendInfo('java.copilot.inspection.dependentExtensions.waited', { time: Date.now() - start });
+                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be installed/activated.`);
+                resolve();
+            }
+        }, interval);
+    });
 }
