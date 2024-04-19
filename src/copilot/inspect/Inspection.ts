@@ -1,4 +1,4 @@
-import { TextDocument, workspace, window, Selection } from "vscode";
+import { TextDocument, workspace, window, Selection, Range, Position } from "vscode";
 
 export interface Inspection {
     document?: TextDocument;
@@ -31,10 +31,6 @@ export interface Inspection {
 }
 
 export namespace Inspection {
-    export function fix(inspection: Inspection, source: string) {
-        //TODO: implement me
-    }
-
     export function highlight(inspection: Inspection) {
         inspection.document && void workspace.openTextDocument(inspection.document.uri).then(document => {
             void window.showTextDocument(document).then(editor => {
@@ -43,5 +39,22 @@ export namespace Inspection {
                 editor.revealRange(range);
             });
         });
+    }
+
+    export function calculateHintPosition(problem: Inspection['problem']): Range {
+        const position = problem.position;
+        const startLine: number = position.line;
+        let startColumn: number = position.code.indexOf(problem.symbol), endLine: number = -1, endColumn: number = -1;
+        if (startColumn > -1) {
+            // highlight only the symbol
+            endLine = position.line;
+            endColumn = startColumn + problem.symbol?.length;
+        } else {
+            // highlight entire first line
+            startColumn = position.code.search(/\S/) ?? 0; // first non-whitespace character
+            endLine = position.line;
+            endColumn = position.code.length; // last character
+        }
+        return new Range(new Position(startLine, startColumn), new Position(endLine, endColumn));
     }
 }

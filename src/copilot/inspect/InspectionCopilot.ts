@@ -3,7 +3,8 @@ import Copilot from "../Copilot";
 import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
 import path from "path";
-import { TextDocument, DocumentSymbol, SymbolKind, ProgressLocation, Position, Range, Selection, window } from "vscode";
+import { TextDocument, DocumentSymbol, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window } from "vscode";
+import { COMMAND_FIX } from "./commands";
 
 export default class InspectionCopilot extends Copilot {
 
@@ -157,7 +158,7 @@ export default class InspectionCopilot extends Copilot {
             void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
         } else if (inspections.length == 1) {
             // apply the only suggestion automatically
-            void Inspection.fix(inspections[0], 'auto');
+            void commands.executeCommand(COMMAND_FIX, inspections[0].problem, inspections[0].solution, 'auto');
         } else {
             // show message to go to the first suggestion
             void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {

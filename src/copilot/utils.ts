@@ -64,3 +64,7 @@ export async function getFirstLevelClassesOfDoc(document: TextDocument): Promise
     const symbols = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind));
 }
+
+export function uncapitalize(str: string): string {
+    return str.charAt(0).toLowerCase() + str.slice(1);
+}
