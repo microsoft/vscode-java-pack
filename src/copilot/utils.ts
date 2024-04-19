@@ -1,4 +1,5 @@
-import { DocumentSymbol, LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace } from "vscode";
+import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol } from "vscode";
+import { SymbolNode } from "./inspect/SymbolNode";
 
 export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
@@ -8,7 +9,7 @@ export const logger: LogOutputChannel = window.createOutputChannel("Java Rewriti
 /**
  * get all the class symbols contained in the `range` in the `document`
  */
-export async function getClassesContainedInRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
+export async function getClassesContainedInRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
     const symbols = await getClassesAndMethodsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         .filter(clazz => range.contains(clazz.range));
@@ -17,7 +18,7 @@ export async function getClassesContainedInRange(range: Range | Selection, docum
 /**
  * get the innermost class symbol that completely contains the `range` in the `document`
  */
-export async function getInnermostClassContainsRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol> {
+export async function getInnermostClassContainsRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode> {
     const symbols = await getClassesAndMethodsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         // reverse the classes to get the innermost class first
@@ -27,13 +28,13 @@ export async function getInnermostClassContainsRange(range: Range | Selection, d
 /**
  * get all the method symbols that are completely or partially contained in the `range` in the `document`
  */
-export async function getIntersectionMethodsOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
+export async function getIntersectionMethodsOfRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
     const symbols = await getClassesAndMethodsOfDocument(document);
     return symbols.filter(symbol => METHOD_KINDS.includes(symbol.kind))
         .filter(method => method.range.intersection(range));
 }
 
-export function getUnionRange(symbols: DocumentSymbol[]): Range {
+export function getUnionRange(symbols: SymbolNode[]): Range {
     let result: Range = new Range(symbols[0].range.start, symbols[0].range.end);
     for (const symbol of symbols) {
         result = result.union(symbol.range);
@@ -44,12 +45,12 @@ export function getUnionRange(symbols: DocumentSymbol[]): Range {
 /**
  * get all classes (classes inside methods are not considered) and methods of a document in a pre-order traversal manner
  */
-async function getClassesAndMethodsOfDocument(document: TextDocument): Promise<DocumentSymbol[]> {
-    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse();
+export async function getClassesAndMethodsOfDocument(document: TextDocument): Promise<SymbolNode[]> {
+    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse().map(symbol => new SymbolNode(symbol));
 
-    const result: DocumentSymbol[] = [];
+    const result: SymbolNode[] = [];
     while (stack.length > 0) {
-        const symbol = stack.pop() as DocumentSymbol;
+        const symbol = stack.pop() as SymbolNode;
         if (CLASS_KINDS.includes(symbol.kind)) {
             result.push(symbol);
             stack.push(...symbol.children.reverse());
@@ -60,9 +61,9 @@ async function getClassesAndMethodsOfDocument(document: TextDocument): Promise<D
     return result;
 }
 
-export async function getTopLevelClassesOfDocument(document: TextDocument): Promise<DocumentSymbol[]> {
+export async function getTopLevelClassesOfDocument(document: TextDocument): Promise<SymbolNode[]> {
     const symbols = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []);
-    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind));
+    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind)).map(symbol => new SymbolNode(symbol));
 }
 
 export function uncapitalize(str: string): string {
