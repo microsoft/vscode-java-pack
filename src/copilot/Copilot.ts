@@ -52,7 +52,7 @@ export default class Copilot {
             complete = await _send('continue where you left off.');
         }
         logger.debug('rounds', rounds);
-        sendInfo('java.copilot.sendRequest.rounds', { rounds: rounds });
+        sendInfo('java.copilot.sendRequest', { rounds: rounds });
         return answer.replace(this.endMark, "");
     }
 

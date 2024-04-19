@@ -1,4 +1,4 @@
-import { addContextProperty, instrumentSimpleOperation } from "vscode-extension-telemetry-wrapper";
+import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
 import { logger } from "../utils";
 import { Inspection } from "./Inspection";
@@ -149,11 +149,13 @@ export default class InspectionCopilot extends Copilot {
 
         const codeWithInspectionComments = await this.send(codeLinesContent);
         const inspections = this.extractInspections(codeWithInspectionComments, codeLines);
-        // add context properties for telemetry
-        addContextProperty('codeLength', code.length + '');
-        addContextProperty('codeLines', codeLines.length + '');
-        addContextProperty('insectionsCount', inspections.length + '');
-        addContextProperty('propblems', `[${inspections.map(i => i.problem.description).join(',')}]`);
+        // add properties for telemetry
+        sendInfo('java.copilot.inspect.code', { 
+            codeLength: code.length, 
+            codeLines: codeLines.length, 
+            insectionsCount: inspections.length, 
+            propblems: `[${inspections.map(i => i.problem.description).join(',')}]` 
+        });
         return inspections;
     }
 
