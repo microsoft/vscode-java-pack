@@ -1,4 +1,4 @@
-import { TextDocument } from "vscode";
+import { TextDocument, workspace, window, Selection } from "vscode";
 
 export interface Inspection {
     document?: TextDocument;
@@ -36,6 +36,12 @@ export namespace Inspection {
     }
 
     export function highlight(inspection: Inspection) {
-        //TODO: implement me
+        inspection.document && void workspace.openTextDocument(inspection.document.uri).then(document => {
+            void window.showTextDocument(document).then(editor => {
+                const range = document.lineAt(inspection.problem.position.line).range;
+                editor.selection = new Selection(range.start, range.end);
+                editor.revealRange(range);
+            });
+        });
     }
 }
