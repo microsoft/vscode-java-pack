@@ -1,4 +1,4 @@
-import { DocumentSymbol, LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection } from "vscode";
+import { DocumentSymbol, LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace } from "vscode";
 
 export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
@@ -67,4 +67,11 @@ export async function getTopLevelClassesOfDocument(document: TextDocument): Prom
 
 export function uncapitalize(str: string): string {
     return str.charAt(0).toLowerCase() + str.slice(1);
+}
+
+export function isCodeLensDisabled(): boolean {
+    const editorConfig = workspace.getConfiguration('editor');
+    const enabled = editorConfig.get<boolean>('codeLens');
+    // If it's explicitly set to false, CodeLens is turned off
+    return enabled === false;
 }
