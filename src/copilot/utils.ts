@@ -76,3 +76,10 @@ export function isCodeLensDisabled(): boolean {
     // If it's explicitly set to false, CodeLens is turned off
     return enabled === false;
 }
+
+export async function getProjectJavaVersion(document: TextDocument): Promise<number> {
+    const uri = document.uri.toString();
+    const key = "org.eclipse.jdt.core.compiler.source";
+    const settings: { [key]: string } = await commands.executeCommand("java.project.getSettings", uri, [key]);
+    return parseInt(settings[key]) || 17;
+}

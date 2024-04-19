@@ -10,7 +10,6 @@ export default class Copilot {
     public static readonly NOT_CANCELLABEL: CancellationToken = { isCancellationRequested: false, onCancellationRequested: () => Disposable.from() };
 
     public constructor(
-        private readonly systemMessagesOrSamples: LanguageModelChatMessage[],
         private readonly model: string = Copilot.DEFAULT_MODEL,
         private readonly modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         private readonly maxRounds: number = Copilot.DEFAULT_MAX_ROUNDS,
@@ -19,13 +18,14 @@ export default class Copilot {
     }
 
     private async doSend(
+        systemMessagesOrSamples: LanguageModelChatMessage[],
         userMessage: string,
         modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
         let answer: string = '';
         let rounds: number = 0;
-        const messages = [...this.systemMessagesOrSamples];
+        const messages = [...systemMessagesOrSamples];
         const _send = async (message: string): Promise<boolean> => {
             rounds++;
             logger.info(`User: \n`, message);
@@ -57,10 +57,11 @@ export default class Copilot {
     }
 
     public async send(
+        systemMessagesOrSamples: LanguageModelChatMessage[],
         userMessage: string,
         modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
-        return instrumentSimpleOperation("java.copilot.sendRequest", this.doSend.bind(this))(userMessage, modelOptions, cancellationToken);
+        return instrumentSimpleOperation("java.copilot.sendRequest", this.doSend.bind(this))(systemMessagesOrSamples, userMessage, modelOptions, cancellationToken);
     }
 }
