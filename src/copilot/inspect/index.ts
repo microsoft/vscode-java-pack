@@ -5,6 +5,7 @@ import { fixDiagnostic } from "./render/DiagnosticRenderer";
 import InspectionCache from "./InspectionCache";
 import { logger } from "../utils";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
+import InspectionCopilot from "./InspectionCopilot";
 
 export const DEPENDENT_EXTENSIONS = ['github.copilot-chat', 'redhat.java'];
 
@@ -17,8 +18,9 @@ export async function activateCopilotInspection(context: ExtensionContext): Prom
 }
 
 export function doActivate(context: ExtensionContext): void {
+    const copilot = new InspectionCopilot();
     const renderer: DocumentRenderer = new DocumentRenderer().install(context);
-    registerCommands(renderer);
+    registerCommands(copilot, renderer);
 
     context.subscriptions.push(
         languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: fixDiagnostic }), // Fix using Copilot

@@ -10,15 +10,13 @@ export const COMMAND_INSPECT_CLASS = 'java.copilot.inspect.class';
 export const COMMAND_INSPECT_RANGE = 'java.copilot.inspect.range';
 export const COMMAND_FIX = 'java.copilot.fix.inspection';
 
-export function registerCommands(renderer: DocumentRenderer) {
+export function registerCommands(copilot: InspectionCopilot, renderer: DocumentRenderer) {
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: SymbolNode) => {
-        const copilot = new InspectionCopilot();
         await copilot.inspectClass(document, clazz);
         renderer.rerender(document);
     });
 
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range | Selection) => {
-        const copilot = new InspectionCopilot();
         await copilot.inspectRange(document, range);
         renderer.rerender(document);
     });

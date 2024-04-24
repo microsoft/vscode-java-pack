@@ -105,10 +105,19 @@ export default class InspectionCopilot extends Copilot {
     private static readonly INDICATOR_PATTERN: RegExp = /\/\/ @INDICATOR: (.*)/;
     private static readonly LEVEL_PATTERN: RegExp = /\/\/ @SEVERITY: (.*)/;
 
-    private readonly debounceMap = new Map<string, NodeJS.Timeout>();
+    private static readonly DEFAULT_MAX_CONCURRENCIES: number = 3;
 
-    public constructor() {
+    private readonly debounceMap = new Map<string, NodeJS.Timeout>();
+    private concurrencies: number = 0;
+
+    public constructor(
+        private readonly maxConcurrencies: number = InspectionCopilot.DEFAULT_MAX_CONCURRENCIES,
+    ) {
         super();
+    }
+
+    public get busy(): boolean {
+        return this.concurrencies >= this.maxConcurrencies;
     }
 
     public async inspectDocument(document: TextDocument): Promise<Inspection[]> {
@@ -128,43 +137,53 @@ export default class InspectionCopilot extends Copilot {
     }
 
     public async inspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
-        // ajust the range to the minimal container class or (multiple) method symbols
-        const methods: SymbolNode[] = await getIntersectionMethodsOfRange(range, document);
-        const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
-        const symbols: SymbolNode[] = [...classes, ...methods];
-        if (symbols.length < 1) {
-            const containingClass: SymbolNode = await getInnermostClassContainsRange(range, document);
-            symbols.push(containingClass);
+        if (this.busy) {
+            logger.warn('Copilot is busy, please retry after current inspecting tasks is finished.');
+            void window.showWarningMessage(`Copilot is busy, please retry after current inspecting tasks are finished.`);
+            return Promise.resolve([]);
         }
+        try {
+            this.concurrencies++;
+            // ajust the range to the minimal container class or (multiple) method symbols
+            const methods: SymbolNode[] = await getIntersectionMethodsOfRange(range, document);
+            const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
+            const symbols: SymbolNode[] = [...classes, ...methods];
+            if (symbols.length < 1) {
+                const containingClass: SymbolNode = await getInnermostClassContainsRange(range, document);
+                symbols.push(containingClass);
+            }
 
-        // get the union range of the container symbols, which will be insepcted by copilot
-        const expandedRange: Range = getUnionRange(symbols);
+            // get the union range of the container symbols, which will be insepcted by copilot
+            const expandedRange: Range = getUnionRange(symbols);
 
-        // inspect the expanded union range
-        const symbolName = symbols[0].symbol.name;
-        const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
-        const inspections = await window.withProgress({
-            location: ProgressLocation.Notification,
-            title: `Inspecting ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\"`,
-            cancellable: false
-        }, (_progress) => {
-            return this.doInspectRange(document, expandedRange);
-        });
-
-        // show message based on the number of inspections
-        if (inspections.length < 1) {
-            void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
-        } else if (inspections.length == 1) {
-            // apply the only suggestion automatically
-            void commands.executeCommand(COMMAND_FIX, inspections[0].problem, inspections[0].solution, 'auto');
-        } else {
-            // show message to go to the first suggestion
-            void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
-                selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
+            // inspect the expanded union range
+            const symbolName = symbols[0].symbol.name;
+            const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
+            const inspections = await window.withProgress({
+                location: ProgressLocation.Notification,
+                title: `Inspecting ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\"`,
+                cancellable: false
+            }, (_progress) => {
+                return this.doInspectRange(document, expandedRange);
             });
+
+            // show message based on the number of inspections
+            if (inspections.length < 1) {
+                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
+            } else if (inspections.length == 1) {
+                // apply the only suggestion automatically
+                void commands.executeCommand(COMMAND_FIX, inspections[0].problem, inspections[0].solution, 'auto');
+            } else {
+                // show message to go to the first suggestion
+                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
+                    selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
+                });
+            }
+            InspectionCache.cache(document, symbols, inspections);
+            return inspections;
+        } finally {
+            this.concurrencies--;
         }
-        InspectionCache.cache(document, symbols, inspections);
-        return inspections;
     }
 
     /**
@@ -230,11 +249,11 @@ export default class InspectionCopilot extends Copilot {
         const codeWithInspectionComments = await this.send(messages, codeLinesContent);
         const inspections = this.extractInspections(codeWithInspectionComments, codeLines);
         // add properties for telemetry
-        sendInfo('java.copilot.inspect.code', { 
+        sendInfo('java.copilot.inspect.code', {
             javaVersion: context.javaVersion,
-            codeLength: code.length, 
-            codeLines: codeLines.length, 
-            insectionsCount: inspections.length, 
+            codeLength: code.length,
+            codeLines: codeLines.length,
+            insectionsCount: inspections.length,
             problems: inspections.map(i => i.problem.description).join(',')
         });
         return inspections;
