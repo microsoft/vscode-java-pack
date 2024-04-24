@@ -5,7 +5,7 @@
   "license": "MIT",
   "version": "0.26.0",
   "publisher": "vscjava",
-  "preview": true,
+  "preview": false,
   "engines": {
     "vscode": "^1.74.0"
   },

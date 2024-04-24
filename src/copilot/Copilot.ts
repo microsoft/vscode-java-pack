@@ -1,9 +1,10 @@
 import { LanguageModelChatMessage, LanguageModelChatUserMessage, LanguageModelChatAssistantMessage, lm, Disposable, CancellationToken, LanguageModelChatRequestOptions } from "vscode";
-import { addContextProperty, instrumentSimpleOperation } from "vscode-extension-telemetry-wrapper";
+import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { logger } from "./utils";
 
 export default class Copilot {
     public static readonly DEFAULT_END_MARK = '<|endofresponse|>';
+    public static readonly DEFAULT_MAX_ROUNDS = 10;
     public static readonly DEFAULT_MODEL = 'copilot-gpt-4';
     public static readonly DEFAULT_MODEL_OPTIONS: LanguageModelChatRequestOptions = { modelOptions: {} };
     public static readonly NOT_CANCELLABEL: CancellationToken = { isCancellationRequested: false, onCancellationRequested: () => Disposable.from() };
@@ -12,7 +13,8 @@ export default class Copilot {
         private readonly systemMessagesOrSamples: LanguageModelChatMessage[],
         private readonly model: string = Copilot.DEFAULT_MODEL,
         private readonly modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
-        public readonly endMark: string = Copilot.DEFAULT_END_MARK
+        private readonly maxRounds: number = Copilot.DEFAULT_MAX_ROUNDS,
+        private readonly endMark: string = Copilot.DEFAULT_END_MARK
     ) {
     }
 
@@ -46,11 +48,11 @@ export default class Copilot {
             return answer.trim().endsWith(this.endMark);
         };
         let complete: boolean = await _send(userMessage);
-        while (!complete && rounds < 10) {
+        while (!complete && rounds < this.maxRounds) {
             complete = await _send('continue where you left off.');
         }
         logger.debug('rounds', rounds);
-        addContextProperty('rounds', rounds + '');
+        sendInfo('java.copilot.sendRequest.rounds', { rounds: rounds });
         return answer.replace(this.endMark, "");
     }
 
