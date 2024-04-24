@@ -1,5 +1,5 @@
 import { DocumentSymbol, TextDocument, Range, Selection, commands } from "vscode";
-import { addContextProperty, instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
+import { instrumentOperationAsVsCodeCommand, sendInfo } from "vscode-extension-telemetry-wrapper";
 import InspectionCopilot from "./InspectionCopilot";
 import { Inspection } from "./Inspection";
 import { uncapitalize } from "../utils";
@@ -21,8 +21,7 @@ export function registerCommands() {
 
     instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: Inspection['problem'], solution: string, source) => {
         const range = Inspection.calculateHintPosition(problem);
-        addContextProperty('problem', problem.description);
-        addContextProperty('source', source);
+        sendInfo(COMMAND_FIX, { problem: problem.description, solution, source });
         void commands.executeCommand('vscode.editorChat.start', {
             autoSend: true,
             message: `/fix ${problem.description}, maybe ${uncapitalize(solution)}`,
