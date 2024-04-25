@@ -4,7 +4,7 @@ import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
 import { logger } from "../../../copilot/utils";
 import path = require("path");
-import { COMMAND_FIX } from "../commands";
+import { COMMAND_FIX_INSPECTION } from "../commands";
 
 export class GutterIconRenderer implements InspectionRenderer {
     private readonly gutterIcons: Map<Uri, GutterIcon[]> = new Map();
@@ -59,7 +59,7 @@ export class GutterIconRenderer implements InspectionRenderer {
     private static toGutterIcon(inspection: Inspection): GutterIcon {
         const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
         const args = [inspection.problem, inspection.solution, 'guttericons'];
-        const commandUri = Uri.parse(`command:${COMMAND_FIX}?${encodeURIComponent(JSON.stringify(args))}`);
+        const commandUri = Uri.parse(`command:${COMMAND_FIX_INSPECTION}?${encodeURIComponent(JSON.stringify(args))}`);
         const hoverMessage = new MarkdownString(`${inspection.problem.description}\n\n$(copilot) [${inspection.solution}](${commandUri})`, true);
         hoverMessage.isTrusted = true;
         return { range, hoverMessage, inspection };

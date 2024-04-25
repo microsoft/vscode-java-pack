@@ -4,7 +4,7 @@ import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersec
 import { Inspection } from "./Inspection";
 import path from "path";
 import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatSystemMessage, LanguageModelChatMessage, LanguageModelChatUserMessage, LanguageModelChatAssistantMessage } from "vscode";
-import { COMMAND_FIX } from "./commands";
+import { COMMAND_FIX_INSPECTION } from "./commands";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
 
@@ -172,7 +172,7 @@ export default class InspectionCopilot extends Copilot {
                 void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
             } else if (inspections.length == 1) {
                 // apply the only suggestion automatically
-                void commands.executeCommand(COMMAND_FIX, inspections[0].problem, inspections[0].solution, 'auto');
+                void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0].problem, inspections[0].solution, 'auto');
             } else {
                 // show message to go to the first suggestion
                 void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
