@@ -111,13 +111,15 @@ export default class InspectionCopilot extends Copilot {
     }
 
     /**
-     * inspect the given code using copilot and return the inspections
+     * inspect the given code (debouncely if `key` is provided) using copilot and return the inspections
      * @param code code to inspect
-     * @param key key to debounce the inspecting, if provided
+     * @param key key to debounce the inspecting, which is used to support multiple debouncing. Consider 
+     *  the case that we have multiple documents, and we only want to debounce the method calls on the 
+     *  same document (identified by `key`).
      * @param wait debounce time in milliseconds, default is 3000ms
      * @returns inspections provided by copilot
      */
-    public inspectCode(code: string, key?: string, wait?: number): Promise<Inspection[]> {
+    public inspectCode(code: string, key?: string, wait: number = 3000): Promise<Inspection[]> {
         const _doInspectCode: (code: string) => Promise<Inspection[]> = instrumentSimpleOperation("java.copilot.inspect.code", this.doInspectCode.bind(this));
         if (!key) { // inspect code immediately without debounce
             return _doInspectCode(code);
@@ -133,12 +135,12 @@ export default class InspectionCopilot extends Copilot {
                     this.debounceMap.delete(key);
                     resolve(inspections);
                 });
-            }, wait ?? 0 <= 0 ? 3000 : wait));
+            }, wait <= 0 ? 3000 : wait));
         });
     }
 
     private async doInspectCode(code: string): Promise<Inspection[]> {
-        const originalLines: string[] = code.split('\n');
+        const originalLines: string[] = code.split(/\r?\n/);
         // code lines without empty lines and comments
         const codeLines: { originalLineIndex: number, content: string }[] = this.extractCodeLines(originalLines)
         const codeLinesContent = codeLines.map(l => l.content).join('\n');
@@ -154,7 +156,7 @@ export default class InspectionCopilot extends Copilot {
             codeLength: code.length, 
             codeLines: codeLines.length, 
             insectionsCount: inspections.length, 
-            propblems: `[${inspections.map(i => i.problem.description).join(',')}]` 
+            problems: inspections.map(i => i.problem.description).join(',')
         });
         return inspections;
     }
@@ -231,7 +233,6 @@ export default class InspectionCopilot extends Copilot {
     private extractCodeLines(originalLines: string[]): { originalLineIndex: number, content: string }[] {
         const codeLines: { originalLineIndex: number, content: string }[] = [];
         let inBlockComment = false;
-        let codeLineIndex = 0;
         for (let originalLineIndex = 0; originalLineIndex < originalLines.length; originalLineIndex++) {
             const trimmedLine = originalLines[originalLineIndex].trim();
 
@@ -243,7 +244,6 @@ export default class InspectionCopilot extends Copilot {
             // If we're not in a block comment, add the line to the output
             if (trimmedLine !== '' && !inBlockComment && !trimmedLine.startsWith('//')) {
                 codeLines.push({ content: originalLines[originalLineIndex], originalLineIndex });
-                codeLineIndex++;
             }
 
             // Check for block comment end
