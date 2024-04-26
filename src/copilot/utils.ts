@@ -6,22 +6,22 @@ export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constru
 export const logger: LogOutputChannel = window.createOutputChannel("Java Rewriting Suggestions", { log: true });
 
 export async function getContainedClassesOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
-    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse();
-    const classes = getClassesAndMethodsOfSymbols(stack).filter(symbol => CLASS_KINDS.includes(symbol.kind));
-    return classes.filter(clazz => range.contains(clazz.range));
+    const symbols = await getClassesAndMethodsOfDocument(document);
+    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
+        .filter(clazz => range.contains(clazz.range));
 }
 
 export async function getIntersectionMethodsOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
-    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse();
-    const methods = getClassesAndMethodsOfSymbols(stack).filter(symbol => METHOD_KINDS.includes(symbol.kind));
-    return methods.filter(method => method.range.intersection(range));
+    const symbols = await getClassesAndMethodsOfDocument(document);
+    return symbols.filter(symbol => METHOD_KINDS.includes(symbol.kind))
+        .filter(method => method.range.intersection(range));
 }
 
 export async function getContainingClassOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol> {
-    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse();
-    const classes = getClassesAndMethodsOfSymbols(stack).filter(symbol => CLASS_KINDS.includes(symbol.kind));
-    // reverse the classes to get the innermost class first
-    return classes.reverse().filter(clazz => clazz.range.contains(range))[0];
+    const symbols = await getClassesAndMethodsOfDocument(document);
+    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
+        // reverse the classes to get the innermost class first
+        .reverse().filter(clazz => clazz.range.contains(range))[0];
 }
 
 export function getUnionRange(symbols: DocumentSymbol[]): Range {
@@ -32,8 +32,11 @@ export function getUnionRange(symbols: DocumentSymbol[]): Range {
     return result;
 }
 
-function getClassesAndMethodsOfSymbols(symbols: DocumentSymbol[]): DocumentSymbol[] {
-    const stack = symbols;
+/**
+ * get all classes (classes inside methods are not considered) and methods of a document in a pre-order traversal manner
+ */
+async function getClassesAndMethodsOfDocument(document: TextDocument): Promise<DocumentSymbol[]> {
+    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse();
 
     const result: DocumentSymbol[] = [];
     while (stack.length > 0) {
