@@ -5,29 +5,38 @@ export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constru
 
 export const logger: LogOutputChannel = window.createOutputChannel("Java Rewriting Suggestions", { log: true });
 
+/**
+ * get all the class symbols contained in the `range` in the `document`
+ */
 export async function getContainedClassesOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
     const symbols = await getClassesAndMethodsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         .filter(clazz => range.contains(clazz.range));
 }
 
-export async function getIntersectionMethodsOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
-    const symbols = await getClassesAndMethodsOfDocument(document);
-    return symbols.filter(symbol => METHOD_KINDS.includes(symbol.kind))
-        .filter(method => method.range.intersection(range));
-}
-
-export async function getContainingClassOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol> {
+/**
+ * get the innermost class symbol that completely contains the `range` in the `document`
+ */
+export async function getContainerClassOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol> {
     const symbols = await getClassesAndMethodsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         // reverse the classes to get the innermost class first
         .reverse().filter(clazz => clazz.range.contains(range))[0];
 }
 
+/**
+ * get all the method symbols that are completely or partially contained in the `range` in the `document`
+ */
+export async function getIntersectionMethodsOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
+    const symbols = await getClassesAndMethodsOfDocument(document);
+    return symbols.filter(symbol => METHOD_KINDS.includes(symbol.kind))
+        .filter(method => method.range.intersection(range));
+}
+
 export function getUnionRange(symbols: DocumentSymbol[]): Range {
     let result: Range = new Range(symbols[0].range.start, symbols[0].range.end);
-    for (const method of symbols) {
-        result = result.union(method.range);
+    for (const symbol of symbols) {
+        result = result.union(symbol.range);
     }
     return result;
 }

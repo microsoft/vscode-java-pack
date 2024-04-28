@@ -1,6 +1,6 @@
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
-import { getContainedClassesOfRange, getContainingClassOfRange, getIntersectionMethodsOfRange, getUnionRange, logger } from "../utils";
+import { getContainedClassesOfRange, getContainerClassOfRange, getIntersectionMethodsOfRange, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
 import path from "path";
 import { TextDocument, DocumentSymbol, SymbolKind, ProgressLocation, Position, Range, Selection, window } from "vscode";
@@ -134,7 +134,7 @@ export default class InspectionCopilot extends Copilot {
         const classes: DocumentSymbol[] = await getContainedClassesOfRange(range, document);
         const symbols: DocumentSymbol[] = [...classes, ...methods];
         if (symbols.length < 1) {
-            const containingClass: DocumentSymbol = await getContainingClassOfRange(range, document);
+            const containingClass: DocumentSymbol = await getContainerClassOfRange(range, document);
             symbols.push(containingClass);
         }
 
@@ -199,12 +199,12 @@ export default class InspectionCopilot extends Copilot {
     private async doInspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
         const adjustedRange = new Range(new Position(range.start.line, 0), new Position(range.end.line, document.lineAt(range.end.line).text.length));
         const content: string = document.getText(adjustedRange);
-        const offset = range.start.line;
+        const startLine = range.start.line;
         const inspections = await this.inspectCode(content);
         inspections.forEach(s => {
             s.document = document;
             // real line index to the start of the document
-            s.problem.position.line = s.problem.position.relativeLine + offset;
+            s.problem.position.line = s.problem.position.relativeLine + startLine;
         });
         return inspections;
     }
