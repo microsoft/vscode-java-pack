@@ -1,7 +1,9 @@
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
-import { logger } from "../utils";
+import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
+import path from "path";
+import { TextDocument, DocumentSymbol, SymbolKind, ProgressLocation, Position, Range, Selection, window } from "vscode";
 
 export default class InspectionCopilot extends Copilot {
 
@@ -110,6 +112,61 @@ export default class InspectionCopilot extends Copilot {
         super(messages);
     }
 
+    public async inspectDocument(document: TextDocument): Promise<Inspection[]> {
+        logger.info('inspecting document:', document.fileName);
+        const range = new Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end);
+        return this.inspectRange(document, range);
+    }
+
+    public async inspectClass(document: TextDocument, clazz: DocumentSymbol): Promise<Inspection[]> {
+        logger.info('inspecting class:', clazz.name);
+        return this.inspectRange(document, clazz.range);
+    }
+
+    public async inspectSymbol(document: TextDocument, symbol: DocumentSymbol): Promise<Inspection[]> {
+        logger.info(`inspecting symbol ${SymbolKind[symbol.kind]} ${symbol.name}`);
+        return this.inspectRange(document, symbol.range);
+    }
+
+    public async inspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
+        // ajust the range to the minimal container class or (multiple) method symbols
+        const methods: DocumentSymbol[] = await getIntersectionMethodsOfRange(range, document);
+        const classes: DocumentSymbol[] = await getClassesContainedInRange(range, document);
+        const symbols: DocumentSymbol[] = [...classes, ...methods];
+        if (symbols.length < 1) {
+            const containingClass: DocumentSymbol = await getInnermostClassContainsRange(range, document);
+            symbols.push(containingClass);
+        }
+
+        // get the union range of the container symbols, which will be insepcted by copilot
+        const expandedRange: Range = getUnionRange(symbols);
+
+        // inspect the expanded union range
+        const symbolName = symbols[0].name;
+        const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
+        const inspections = await window.withProgress({
+            location: ProgressLocation.Notification,
+            title: `Inspecting ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\"`,
+            cancellable: false
+        }, (_progress) => {
+            return this.doInspectRange(document, expandedRange);
+        });
+
+        // show message based on the number of inspections
+        if (inspections.length < 1) {
+            void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
+        } else if (inspections.length == 1) {
+            // apply the only suggestion automatically
+            void Inspection.fix(inspections[0], 'auto');
+        } else {
+            // show message to go to the first suggestion
+            void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
+                selection === "Go to" && void Inspection.highlight(inspections[0]);
+            });
+        }
+        return inspections;
+    }
+
     /**
      * inspect the given code (debouncely if `key` is provided) using copilot and return the inspections
      * @param code code to inspect
@@ -137,6 +194,19 @@ export default class InspectionCopilot extends Copilot {
                 });
             }, wait <= 0 ? 3000 : wait));
         });
+    }
+
+    private async doInspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
+        const adjustedRange = new Range(new Position(range.start.line, 0), new Position(range.end.line, document.lineAt(range.end.line).text.length));
+        const content: string = document.getText(adjustedRange);
+        const startLine = range.start.line;
+        const inspections = await this.inspectCode(content);
+        inspections.forEach(s => {
+            s.document = document;
+            // real line index to the start of the document
+            s.problem.position.line = s.problem.position.relativeLine + startLine;
+        });
+        return inspections;
     }
 
     private async doInspectCode(code: string): Promise<Inspection[]> {

@@ -29,3 +29,13 @@ export interface Inspection {
     solution: string;
     severity: string;
 }
+
+export namespace Inspection {
+    export function fix(inspection: Inspection, source: string) {
+        //TODO: implement me
+    }
+
+    export function highlight(inspection: Inspection) {
+        //TODO: implement me
+    }
+}
