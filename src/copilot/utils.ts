@@ -8,7 +8,7 @@ export const logger: LogOutputChannel = window.createOutputChannel("Java Rewriti
 /**
  * get all the class symbols contained in the `range` in the `document`
  */
-export async function getContainedClassesOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
+export async function getClassesContainedInRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol[]> {
     const symbols = await getClassesAndMethodsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         .filter(clazz => range.contains(clazz.range));
@@ -17,7 +17,7 @@ export async function getContainedClassesOfRange(range: Range | Selection, docum
 /**
  * get the innermost class symbol that completely contains the `range` in the `document`
  */
-export async function getContainerClassOfRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol> {
+export async function getInnermostClassContainsRange(range: Range | Selection, document: TextDocument): Promise<DocumentSymbol> {
     const symbols = await getClassesAndMethodsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         // reverse the classes to get the innermost class first

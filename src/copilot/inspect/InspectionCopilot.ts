@@ -1,6 +1,6 @@
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
-import { getContainedClassesOfRange, getContainerClassOfRange, getIntersectionMethodsOfRange, getUnionRange, logger } from "../utils";
+import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
 import path from "path";
 import { TextDocument, DocumentSymbol, SymbolKind, ProgressLocation, Position, Range, Selection, window } from "vscode";
@@ -131,10 +131,10 @@ export default class InspectionCopilot extends Copilot {
     public async inspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
         // ajust the range to the minimal container class or (multiple) method symbols
         const methods: DocumentSymbol[] = await getIntersectionMethodsOfRange(range, document);
-        const classes: DocumentSymbol[] = await getContainedClassesOfRange(range, document);
+        const classes: DocumentSymbol[] = await getClassesContainedInRange(range, document);
         const symbols: DocumentSymbol[] = [...classes, ...methods];
         if (symbols.length < 1) {
-            const containingClass: DocumentSymbol = await getContainerClassOfRange(range, document);
+            const containingClass: DocumentSymbol = await getInnermostClassContainsRange(range, document);
             symbols.push(containingClass);
         }
 
