@@ -31,7 +31,7 @@ export interface Inspection {
 }
 
 export namespace Inspection {
-    export function highlight(inspection: Inspection) {
+    export function selectFirstLineOfInspection(inspection: Inspection) {
         inspection.document && void workspace.openTextDocument(inspection.document.uri).then(document => {
             void window.showTextDocument(document).then(editor => {
                 const range = document.lineAt(inspection.problem.position.line).range;
@@ -41,7 +41,7 @@ export namespace Inspection {
         });
     }
 
-    export function calculateHintPosition(problem: Inspection['problem']): Range {
+    export function getIndicatorRangeOfInspection(problem: Inspection['problem']): Range {
         const position = problem.position;
         const startLine: number = position.line;
         let startColumn: number = position.code.indexOf(problem.symbol), endLine: number = -1, endColumn: number = -1;

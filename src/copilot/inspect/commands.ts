@@ -20,8 +20,8 @@ export function registerCommands() {
     });
 
     instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: Inspection['problem'], solution: string, source) => {
-        const range = Inspection.calculateHintPosition(problem);
-        sendInfo(COMMAND_FIX, { problem: problem.description, solution, source });
+        const range = Inspection.getIndicatorRangeOfInspection(problem);
+        sendInfo(`${COMMAND_FIX}.info`, { problem: problem.description, solution, source });
         void commands.executeCommand('vscode.editorChat.start', {
             autoSend: true,
             message: `/fix ${problem.description}, maybe ${uncapitalize(solution)}`,

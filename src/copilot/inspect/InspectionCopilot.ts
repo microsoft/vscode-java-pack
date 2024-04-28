@@ -162,7 +162,7 @@ export default class InspectionCopilot extends Copilot {
         } else {
             // show message to go to the first suggestion
             void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
-                selection === "Go to" && void Inspection.highlight(inspections[0]);
+                selection === "Go to" && void Inspection.selectFirstLineOfInspection(inspections[0]);
             });
         }
         return inspections;

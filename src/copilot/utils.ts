@@ -60,7 +60,7 @@ async function getClassesAndMethodsOfDocument(document: TextDocument): Promise<D
     return result;
 }
 
-export async function getFirstLevelClassesOfDoc(document: TextDocument): Promise<DocumentSymbol[]> {
+export async function getTopLevelClassesOfDoc(document: TextDocument): Promise<DocumentSymbol[]> {
     const symbols = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind));
 }

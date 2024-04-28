@@ -1,5 +1,5 @@
 import { CodeLens, CodeLensProvider, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
-import { getFirstLevelClassesOfDoc, logger } from "../utils";
+import { getTopLevelClassesOfDoc, logger } from "../utils";
 import { COMMAND_INSPECT_CLASS } from "./commands";
 
 export class InspectActionCodeLensProvider implements CodeLensProvider {
@@ -7,7 +7,7 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
     private emitter: EventEmitter<void> = new EventEmitter<void>();
     public readonly onDidChangeCodeLenses: Event<void> = this.emitter.event;
 
-    install(context: ExtensionContext): InspectActionCodeLensProvider {
+    public install(context: ExtensionContext): InspectActionCodeLensProvider {
         logger.debug('[InspectCodeLensProvider] install...');
         context.subscriptions.push(
             languages.registerCodeLensProvider({ language: 'java' }, this)
@@ -15,11 +15,11 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
         return this;
     }
 
-    async rerender(document: TextDocument) {
+    public async rerender(document: TextDocument) {
         logger.debug('[InspectCodeLensProvider] rerender inspect codelenses...');
         if (document.languageId !== 'java') return;
         const docCodeLenses: CodeLens[] = [];
-        const classes = await getFirstLevelClassesOfDoc(document);
+        const classes = await getTopLevelClassesOfDoc(document);
         classes.forEach(clazz => docCodeLenses.push(new CodeLens(clazz.range, {
             title: "Rewrite with new syntax",
             command: COMMAND_INSPECT_CLASS,
@@ -29,11 +29,11 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
         this.refresh();
     }
 
-    provideCodeLenses(document: TextDocument): CodeLens[] {
+    public provideCodeLenses(document: TextDocument): CodeLens[] {
         return this.inspectCodeLenses.get(document.uri) ?? [];
     }
 
-    refresh(): void {
+    public refresh(): void {
         this.emitter.fire();
     }
 }
