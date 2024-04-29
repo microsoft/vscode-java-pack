@@ -1,5 +1,5 @@
 import { CodeLens, CodeLensProvider, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
-import { getTopLevelClassesOfDoc, logger } from "../utils";
+import { getTopLevelClassesOfDocument, logger } from "../utils";
 import { COMMAND_INSPECT_CLASS } from "./commands";
 
 export class InspectActionCodeLensProvider implements CodeLensProvider {
@@ -16,24 +16,20 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
     }
 
     public async rerender(document: TextDocument) {
-        logger.debug('[InspectCodeLensProvider] rerender inspect codelenses...');
         if (document.languageId !== 'java') return;
+        logger.debug('[InspectCodeLensProvider] rerender inspect codelenses...');
         const docCodeLenses: CodeLens[] = [];
-        const classes = await getTopLevelClassesOfDoc(document);
+        const classes = await getTopLevelClassesOfDocument(document);
         classes.forEach(clazz => docCodeLenses.push(new CodeLens(clazz.range, {
             title: "Rewrite with new syntax",
             command: COMMAND_INSPECT_CLASS,
             arguments: [document, clazz]
         })));
         this.inspectCodeLenses.set(document.uri, docCodeLenses);
-        this.refresh();
+        this.emitter.fire();
     }
 
     public provideCodeLenses(document: TextDocument): CodeLens[] {
         return this.inspectCodeLenses.get(document.uri) ?? [];
-    }
-
-    public refresh(): void {
-        this.emitter.fire();
     }
 }

@@ -31,7 +31,7 @@ export interface Inspection {
 }
 
 export namespace Inspection {
-    export function selectFirstLineOfInspection(inspection: Inspection) {
+    export function revealFirstLineOfInspection(inspection: Inspection) {
         inspection.document && void workspace.openTextDocument(inspection.document.uri).then(document => {
             void window.showTextDocument(document).then(editor => {
                 const range = document.lineAt(inspection.problem.position.line).range;
@@ -41,6 +41,10 @@ export namespace Inspection {
         });
     }
 
+    /**
+     * get the range of the indicator of the inspection.
+     * `indicator` will be used as the position of code lens/diagnostics and also used as initial selection for fix commands.
+     */
     export function getIndicatorRangeOfInspection(problem: Inspection['problem']): Range {
         const position = problem.position;
         const startLine: number = position.line;

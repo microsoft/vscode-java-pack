@@ -19,7 +19,8 @@ export function registerCommands() {
         void copilot.inspectRange(document, range);
     });
 
-    instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: Inspection['problem'], solution: string, source) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: Inspection['problem'], solution: string, source: string) => {
+        // source is where is this command triggered from, e.g. "gutter", "codelens", "diagnostic"
         const range = Inspection.getIndicatorRangeOfInspection(problem);
         sendInfo(`${COMMAND_FIX}.info`, { problem: problem.description, solution, source });
         void commands.executeCommand('vscode.editorChat.start', {
