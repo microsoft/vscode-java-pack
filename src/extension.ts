@@ -23,6 +23,7 @@ import { initialize as initUtils } from "./utils";
 import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
+import { activateCopilotInspection } from "./copilot/inspect";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -81,6 +82,8 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
       vscode.commands.executeCommand("java.runtime");
     });
   }
+
+  activateCopilotInspection(context);
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {

@@ -59,3 +59,12 @@ async function getClassesAndMethodsOfDocument(document: TextDocument): Promise<D
     }
     return result;
 }
+
+export async function getTopLevelClassesOfDocument(document: TextDocument): Promise<DocumentSymbol[]> {
+    const symbols = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []);
+    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind));
+}
+
+export function uncapitalize(str: string): string {
+    return str.charAt(0).toLowerCase() + str.slice(1);
+}
