@@ -1,7 +1,7 @@
 import { DocumentSymbol, TextDocument, Range, Selection, commands } from "vscode";
 import { instrumentOperationAsVsCodeCommand, sendInfo } from "vscode-extension-telemetry-wrapper";
 import InspectionCopilot from "./InspectionCopilot";
-import { Inspection } from "./Inspection";
+import { Inspection, InspectionProblem } from "./Inspection";
 import { uncapitalize } from "../utils";
 
 export const COMMAND_INSPECT_CLASS = 'java.copilot.inspect.class';
@@ -19,7 +19,7 @@ export function registerCommands() {
         void copilot.inspectRange(document, range);
     });
 
-    instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: Inspection['problem'], solution: string, source: string) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: InspectionProblem, solution: string, source: string) => {
         // source is where is this command triggered from, e.g. "gutter", "codelens", "diagnostic"
         const range = Inspection.getIndicatorRangeOfInspection(problem);
         sendInfo(`${COMMAND_FIX}.info`, { problem: problem.description, solution, source });

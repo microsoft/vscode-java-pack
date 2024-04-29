@@ -17,7 +17,7 @@ export default class InspectionCopilot extends Copilot {
     other code...
     // @PROBLEM: problem of the code in less than 10 words, should be as short as possible, starts with a gerund/noun word, e.g., "Using".
     // @SOLUTION: solution to fix the problem in less than 10 words, should be as short as possible, starts with a verb.
-    // @SYMBOL: symbol of the problematic code block, must be a single word contained by the problematic code. it's usually a Java keyword, a method/field/variable name, or a value(e.g. magic number)... but NOT multiple, '<null>' if cannot be identified
+    // @INDICATOR: indicator of the problematic code block, must be a single word contained by the problematic code. it's usually a Java keyword, a method/field/variable name, or a value(e.g. magic number)... but NOT multiple, '<null>' if cannot be identified
     // @SEVERITY: severity of the problem, must be one of **[HIGH, MIDDLE, LOW]**, *HIGH* for Probable bugs, Security risks, Exception handling or Resource management(e.g. memory leaks); *MIDDLE* for Error handling, Performance, Reflective accesses issues and Verbose or redundant code; *LOW* for others
     the original problematic code...
     \`\`\`
@@ -59,7 +59,7 @@ export default class InspectionCopilot extends Copilot {
     @Entity
     // @PROBLEM: Using a traditional POJO
     // @SOLUTION: transform into a record
-    // @SYMBOL: EmployeePojo
+    // @INDICATOR: EmployeePojo
     // @SEVERITY: MIDDLE
     public class EmployeePojo implements Employee {
         public final String name;
@@ -70,7 +70,7 @@ export default class InspectionCopilot extends Copilot {
             String result = '';
             // @PROBLEM: Using if-else statements to check the type of animal
             // @SOLUTION: Use switch expression
-            // @SYMBOL: if
+            // @INDICATOR: if
             // @SEVERITY: MIDDLE
             if (this.name.equals("Miller")) {
                 result = "Senior";
@@ -87,7 +87,7 @@ export default class InspectionCopilot extends Copilot {
             } catch (Exception e) {
                 // @PROBLEM: Print stack trace in case of an exception
                 // @SOLUTION: Log errors to a logger
-                // @SYMBOL: ex.printStackTrace
+                // @INDICATOR: ex.printStackTrace
                 // @SEVERITY: LOW
                 e.printStackTrace();
             }
@@ -99,7 +99,7 @@ export default class InspectionCopilot extends Copilot {
     // Initialize regex patterns
     private static readonly PROBLEM_PATTERN: RegExp = /\/\/ @PROBLEM: (.*)/;
     private static readonly SOLUTION_PATTERN: RegExp = /\/\/ @SOLUTION: (.*)/;
-    private static readonly SYMBOL_PATTERN: RegExp = /\/\/ @SYMBOL: (.*)/;
+    private static readonly INDICATOR_PATTERN: RegExp = /\/\/ @INDICATOR: (.*)/;
     private static readonly LEVEL_PATTERN: RegExp = /\/\/ @SEVERITY: (.*)/;
 
     private readonly debounceMap = new Map<string, NodeJS.Timeout>();
@@ -258,7 +258,7 @@ export default class InspectionCopilot extends Copilot {
             i++;
         }
 
-        return inspections.filter(i => i.problem.symbol.trim() !== '<null>').sort((a, b) => a.problem.position.relativeLine - b.problem.position.relativeLine);
+        return inspections.filter(i => i.problem.indicator.trim() !== '<null>').sort((a, b) => a.problem.position.relativeLine - b.problem.position.relativeLine);
     }
 
     /**
@@ -272,14 +272,14 @@ export default class InspectionCopilot extends Copilot {
             problem: {
                 description: '',
                 position: { line: -1, relativeLine: -1, code: '' },
-                symbol: ''
+                indicator: ''
             },
             solution: '',
             severity: ''
         };
         const problemMatch = lines[index + 0].match(InspectionCopilot.PROBLEM_PATTERN);
         const solutionMatch = lines[index + 1].match(InspectionCopilot.SOLUTION_PATTERN);
-        const symbolMatch = lines[index + 2].match(InspectionCopilot.SYMBOL_PATTERN);
+        const indicatorMatch = lines[index + 2].match(InspectionCopilot.INDICATOR_PATTERN);
         const severityMatch = lines[index + 3].match(InspectionCopilot.LEVEL_PATTERN);
         if (problemMatch) {
             inspection.problem.description = problemMatch[1].trim();
@@ -287,8 +287,8 @@ export default class InspectionCopilot extends Copilot {
         if (solutionMatch) {
             inspection.solution = solutionMatch[1].trim();
         }
-        if (symbolMatch) {
-            inspection.problem.symbol = symbolMatch[1].trim();
+        if (indicatorMatch) {
+            inspection.problem.indicator = indicatorMatch[1].trim();
         }
         if (severityMatch) {
             inspection.severity = severityMatch[1].trim();

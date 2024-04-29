@@ -1,31 +1,33 @@
 import { TextDocument, workspace, window, Selection, Range, Position } from "vscode";
 
+export interface InspectionProblem {
+    /**
+     * short description of the problem
+     */
+    description: string;
+    position: {
+        /**
+         * real line number to the start of the document, will change
+         */
+        line: number;
+        /**
+         * relative line number to the start of the symbol(method/class), won't change
+         */
+        relativeLine: number;
+        /**
+         * code of the first line of the problematic code block
+         */
+        code: string;
+    };
+    /**
+     * indicator of the problematic code block, e.g. method name/class name, keywork, etc.
+     */
+    indicator: string;
+}
+
 export interface Inspection {
     document?: TextDocument;
-    problem: {
-        /**
-         * short description of the problem
-         */
-        description: string;
-        position: {
-            /**
-             * real line number to the start of the document, will change
-             */
-            line: number;
-            /**
-             * relative line number to the start of the symbol(method/class), won't change
-             */
-            relativeLine: number;
-            /**
-             * code of the first line of the problematic code block
-             */
-            code: string;
-        };
-        /**
-         * symbol name of the problematic code block, e.g. method name/class name, keywork, etc.
-         */
-        symbol: string;
-    }
+    problem: InspectionProblem;
     solution: string;
     severity: string;
 }
@@ -45,14 +47,14 @@ export namespace Inspection {
      * get the range of the indicator of the inspection.
      * `indicator` will be used as the position of code lens/diagnostics and also used as initial selection for fix commands.
      */
-    export function getIndicatorRangeOfInspection(problem: Inspection['problem']): Range {
+    export function getIndicatorRangeOfInspection(problem: InspectionProblem): Range {
         const position = problem.position;
         const startLine: number = position.line;
-        let startColumn: number = position.code.indexOf(problem.symbol), endLine: number = -1, endColumn: number = -1;
+        let startColumn: number = position.code.indexOf(problem.indicator), endLine: number = -1, endColumn: number = -1;
         if (startColumn > -1) {
             // highlight only the symbol
             endLine = position.line;
-            endColumn = startColumn + problem.symbol?.length;
+            endColumn = startColumn + problem.indicator?.length;
         } else {
             // highlight entire first line
             startColumn = position.code.search(/\S/) ?? 0; // first non-whitespace character
