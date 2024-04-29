@@ -1,14 +1,14 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, ExtensionContext, TextDocument, languages, window, workspace, Range, Selection } from "vscode";
 import { COMMAND_INSPECT_RANGE, registerCommands } from "./commands";
 import { InspectActionCodeLensProvider } from "./InspectActionCodeLensProvider";
+import { DefaultRenderer as DefaultInspectionRenderer } from "./render/DefaultRenderer";
+import { InspectionRenderer } from "./render/InspectionRenderer";
 
-export const DEPENDENT_EXTENSIONS = ['github.copilot-chat', 'redhat.java'];
-
-export async function activateCopilotInspection(context: ExtensionContext): Promise<void> {
-
-    registerCommands();
-
+export async function activateCopilotInspection(context: ExtensionContext): Promise<void> {    
     const inspectActionCodeLenses = new InspectActionCodeLensProvider().install(context);
+    const inspectionRenderer: InspectionRenderer = new DefaultInspectionRenderer().install(context);
+    // Commands
+    registerCommands(inspectionRenderer);
 
     context.subscriptions.push(
         workspace.onDidOpenTextDocument(doc => inspectActionCodeLenses.rerender(doc)), // Rerender class codelens when open a new document
