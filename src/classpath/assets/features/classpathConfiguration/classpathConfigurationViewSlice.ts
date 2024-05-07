@@ -58,7 +58,7 @@ export const classpathConfigurationViewSlice = createSlice({
         }
       },
       updateSource: (state, action) => {
-        state.sources[state.activeProjectIndex] = action.payload;
+        state.sources[state.activeProjectIndex] = _.uniqBy(action.payload as ClasspathEntry[], "path");
       },
       setOutputPath: (state, action) => {
         state.output[state.activeProjectIndex] = action.payload;
@@ -79,8 +79,7 @@ export const classpathConfigurationViewSlice = createSlice({
       addLibraries: (state, action) => {
         let newLibs = state.libraries[state.activeProjectIndex];
         newLibs.unshift(...action.payload);
-        newLibs = _.uniq(newLibs);
-        state.libraries[state.activeProjectIndex] = _.uniq(newLibs);
+        state.libraries[state.activeProjectIndex] = _.uniqBy(newLibs, "path");
       },
       catchException: (state, action) => {
         state.exception = action.payload;
