@@ -3,20 +3,23 @@ import { instrumentOperationAsVsCodeCommand, sendInfo } from "vscode-extension-t
 import InspectionCopilot from "./InspectionCopilot";
 import { Inspection, InspectionProblem } from "./Inspection";
 import { uncapitalize } from "../utils";
+import { InspectionRenderer } from "./render/InspectionRenderer";
 
 export const COMMAND_INSPECT_CLASS = 'java.copilot.inspect.class';
 export const COMMAND_INSPECT_RANGE = 'java.copilot.inspect.range';
 export const COMMAND_FIX = 'java.copilot.fix.inspection';
 
-export function registerCommands() {
+export function registerCommands(renderer: InspectionRenderer) {
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: DocumentSymbol) => {
         const copilot = new InspectionCopilot();
-        void copilot.inspectClass(document, clazz);
+        const inspections = await copilot.inspectClass(document, clazz);
+        renderer.renderInspections(document, inspections);
     });
 
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range | Selection) => {
         const copilot = new InspectionCopilot();
-        void copilot.inspectRange(document, range);
+        const inspections = await copilot.inspectRange(document, range);
+        renderer.renderInspections(document, inspections);
     });
 
     instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: InspectionProblem, solution: string, source: string) => {
