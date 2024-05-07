@@ -57,8 +57,6 @@ export class CodeLensRenderer implements InspectionRenderer {
             command: COMMAND_FIX,
             arguments: [inspection.problem, inspection.solution, 'codelenses']
         });
-        //@ts-ignore
-        codeLens.additional = inspection;
         return codeLens;
     }
 }
