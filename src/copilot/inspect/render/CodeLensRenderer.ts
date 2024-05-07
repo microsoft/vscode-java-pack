@@ -8,23 +8,23 @@ import { COMMAND_FIX } from "../commands";
 export class CodeLensRenderer implements InspectionRenderer {
     private readonly codeLenses: Map<Uri, CodeLens[]> = new Map();
     private readonly provider = new InspectionCodeLensProvider(this.codeLenses);
-    private disposableRegitry: Disposable | undefined;
+    private disposableRegistry: Disposable | undefined;
 
     public install(context: ExtensionContext): InspectionRenderer {
-        if (this.disposableRegitry) return this;
+        if (this.disposableRegistry) return this;
         logger.debug(`[CodeLensRenderer] install`);
-        this.disposableRegitry = languages.registerCodeLensProvider({ language: 'java' }, this.provider);
-        context.subscriptions.push(this.disposableRegitry);
+        this.disposableRegistry = languages.registerCodeLensProvider({ language: 'java' }, this.provider);
+        context.subscriptions.push(this.disposableRegistry);
         return this;
     }
 
     public uninstall(): void {
-        if (!this.disposableRegitry) return;
+        if (!this.disposableRegistry) return;
         logger.debug(`[CodeLensRenderer] uninstall`);
         this.codeLenses.clear();
-        this.disposableRegitry.dispose();
+        this.disposableRegistry.dispose();
         this.provider.refresh();
-        this.disposableRegitry = undefined;
+        this.disposableRegistry = undefined;
     }
 
     public clear(document?: TextDocument): void {

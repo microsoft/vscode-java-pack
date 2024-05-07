@@ -12,12 +12,14 @@ export const COMMAND_FIX = 'java.copilot.fix.inspection';
 export function registerCommands(renderer: InspectionRenderer) {
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: DocumentSymbol) => {
         const copilot = new InspectionCopilot();
-        void copilot.inspectClass(document, clazz).then(inspections => renderer.renderInspections(document, inspections));
+        const inspections = await copilot.inspectClass(document, clazz);
+        renderer.renderInspections(document, inspections);
     });
 
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range | Selection) => {
         const copilot = new InspectionCopilot();
-        void copilot.inspectRange(document, range).then(inspections => renderer.renderInspections(document, inspections));
+        const inspections = await copilot.inspectRange(document, range);
+        renderer.renderInspections(document, inspections);
     });
 
     instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: InspectionProblem, solution: string, source: string) => {
