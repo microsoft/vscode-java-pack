@@ -3,8 +3,6 @@ import { DecorationOptions, ExtensionContext, OverviewRulerLane, TextDocument, T
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
 import { logger } from "../../../copilot/utils";
-import InspectionCache from "../InspectionCache";
-import path from "path";
 
 export class RulerHighlightRenderer implements InspectionRenderer {
     private readonly rulerHighlights: Map<Uri, RulerHighlight[]> = new Map();

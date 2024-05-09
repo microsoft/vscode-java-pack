@@ -4,8 +4,6 @@ import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
 import { logger } from "../../../copilot/utils";
 import { COMMAND_FIX } from "../commands";
-import InspectionCache from "../InspectionCache";
-import path from "path";
 
 const DIAGNOSTICS_GROUP = 'java.copilot.inspection.diagnostics';
 

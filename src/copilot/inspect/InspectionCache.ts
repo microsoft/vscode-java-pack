@@ -8,7 +8,7 @@ import { SymbolNode } from './SymbolNode';
  * A map based cache for inspections of a document.
  * format: `Map<documentKey, Map<symbolQualifiedName, [symbolVersionId, Promise<Inspection[]>]`
  */
-const DOC_SYMBOL_VERSION_INSPECTIONS: Map<string, Map<string, [string, Promise<Inspection[]>]>> = new Map();
+const DOC_SYMBOL_VERSION_INSPECTIONS: Map<string, Map<string, [string, Inspection[]]>> = new Map();
 
 export default class InspectionCache {
     public static hasCache(document: TextDocument, symbol?: SymbolNode): boolean {
@@ -26,8 +26,7 @@ export default class InspectionCache {
         const symbols: SymbolNode[] = await getClassesAndMethodsOfDocument(document);
         const inspections: Inspection[] = [];
         for (const symbol of symbols) {
-            const cachedInspections = await InspectionCache.getCachedInspectionsOfSymbol(document, symbol);
-            if (cachedInspections === undefined) continue;
+            const cachedInspections = InspectionCache.getCachedInspectionsOfSymbol(document, symbol);
             inspections.push(...cachedInspections);
         }
         return inspections;
@@ -36,27 +35,25 @@ export default class InspectionCache {
     /**
      * @returns the cached inspections, or undefined if not found
      */
-    public static getCachedInspectionsOfSymbol(document: TextDocument, symbol: SymbolNode): Promise<Inspection[]> | undefined {
+    public static getCachedInspectionsOfSymbol(document: TextDocument, symbol: SymbolNode): Inspection[] {
         const documentKey = document.uri.fsPath;
         const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
         const versionInspections = symbolInspections?.get(symbol.qualifiedName);
         const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, symbol);
         if (versionInspections?.[0] === symbolVersionId) {
             logger.debug(`cache hit for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
-            return versionInspections[1].then(inspections => {
-                inspections.forEach(s => {
-                    s.document = document;
-                    s.problem.position.line = s.problem.position.relativeLine + symbol.range.start.line;
-                });
-                return inspections;
+            const inspections = versionInspections[1];
+            inspections.forEach(s => {
+                s.document = document;
+                s.problem.position.line = s.problem.position.relativeLine + symbol.range.start.line;
             });
+            return inspections;
         }
         logger.debug(`cache miss for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
-        return undefined;
+        return [];
     }
 
     public static cache(document: TextDocument, symbols: SymbolNode[], inspections: Inspection[]): void {
-        if (inspections.length < 1) return;
         for (const symbol of symbols) {
             const isMethod = METHOD_KINDS.includes(symbol.kind);
             const symbolInspections: Inspection[] = inspections.filter(inspection => {
@@ -67,7 +64,6 @@ export default class InspectionCache {
                     // NOTE: class inspections are inspections whose `position.line` is exactly the first line number of the class
                     inspectionLine === symbol.range.start.line;
             });
-            if (symbolInspections.length < 1) continue;
             // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method
             symbolInspections.forEach(inspection => inspection.problem.position.relativeLine = inspection.problem.position.line - symbol.range.start.line);
             InspectionCache.cacheSymbolInspections(document, symbol, symbolInspections);
