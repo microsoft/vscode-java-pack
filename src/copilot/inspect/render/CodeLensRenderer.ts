@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { CodeLens, CodeLensProvider, Disposable, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
+import { CodeLens, CodeLensProvider, Command, Range, Disposable, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
 import { logger, uncapitalize } from "../../../copilot/utils";
 import { COMMAND_IGNORE_INSPECTIONS, COMMAND_FIX_INSPECTION } from "../commands";
 import { capitalize } from "lodash";
+import _ from "lodash";
 
 export class CodeLensRenderer implements InspectionRenderer {
-    private readonly codeLenses: Map<Uri, CodeLens[]> = new Map();
+    private readonly codeLenses: Map<Uri, InspectionCodeLens[]> = new Map();
     private readonly provider = new InspectionCodeLensProvider(this.codeLenses);
     private disposableRegistry: Disposable | undefined;
 
@@ -41,19 +42,20 @@ export class CodeLensRenderer implements InspectionRenderer {
         if (inspections.length < 1 || !this.codeLenses) {
             return;
         }
-        const newCodeLenses: CodeLens[] = inspections.flatMap(s => CodeLensRenderer.toCodeLenses(document, s));
-        const newCodeLensesMessages = newCodeLenses.map(c => c.command?.title.trim());
-        const existingCodeLenses = this.codeLenses.get(document.uri) ?? [];
-        const leftCodeLenses = existingCodeLenses.filter(c => !newCodeLensesMessages.includes(c.command?.title.trim()));
-        newCodeLenses.push(...leftCodeLenses);
-        this.codeLenses.set(document.uri, newCodeLenses);
+        const oldItems = this.codeLenses.get(document.uri) ?? [];
+        const oldIds: string[] = _.uniq(oldItems).map(c => c.inspection.id);
+        const newIds: string[] = inspections.map(i => i.id);
+        const toKeep: InspectionCodeLens[] = _.intersection(oldIds, newIds).map(id => oldItems.find(c => c.inspection.id === id)!) ?? [];
+        const toAdd: InspectionCodeLens[] = _.difference(newIds, oldIds).map(id => inspections.find(i => i.id === id)!)
+            .flatMap(i => CodeLensRenderer.toCodeLenses(document, i));
+        this.codeLenses.set(document.uri, [...toKeep, ...toAdd]);
         this.provider.refresh();
     }
 
-    private static toCodeLenses(document: TextDocument, inspection: Inspection): CodeLens[] {
+    private static toCodeLenses(document: TextDocument, inspection: Inspection): InspectionCodeLens[] {
         const codeLenses = [];
         const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
-        const inspectionCodeLens = new CodeLens(range, {
+        const inspectionCodeLens = new InspectionCodeLens(inspection, range, {
             title: capitalize(inspection.solution),
             tooltip: inspection.problem.description,
             command: COMMAND_FIX_INSPECTION,
@@ -61,7 +63,7 @@ export class CodeLensRenderer implements InspectionRenderer {
         });
         codeLenses.push(inspectionCodeLens);
 
-        const ignoreCodeLens = new CodeLens(range, {
+        const ignoreCodeLens = new InspectionCodeLens(inspection, range, {
             title: 'Ignore',
             tooltip: `Ignore "${uncapitalize(inspection.problem.description)}"`,
             command: COMMAND_IGNORE_INSPECTIONS,
@@ -69,6 +71,12 @@ export class CodeLensRenderer implements InspectionRenderer {
         });
         codeLenses.push(ignoreCodeLens);
         return codeLenses;
+    }
+}
+
+class InspectionCodeLens extends CodeLens {
+    public constructor(public readonly inspection: Inspection, range: Range, command?: Command) {
+        super(range, command);
     }
 }
 

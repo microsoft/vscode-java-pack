@@ -5,9 +5,10 @@ import { InspectionRenderer } from "./InspectionRenderer";
 import { logger } from "../../../copilot/utils";
 import path = require("path");
 import { COMMAND_FIX_INSPECTION } from "../commands";
+import _ from "lodash";
 
 export class GutterIconRenderer implements InspectionRenderer {
-    private readonly gutterIcons: Map<Uri, GutterIcon[]> = new Map();
+    private readonly gutterIcons: Map<Uri, InspectionGutterIcon[]> = new Map();
     private gutterIconDecorationType: TextEditorDecorationType | undefined;
 
     public install(context: ExtensionContext): InspectionRenderer {
@@ -46,17 +47,19 @@ export class GutterIconRenderer implements InspectionRenderer {
         if (inspections.length < 1 || !editor || !this.gutterIconDecorationType) {
             return;
         }
-        const newGutterIcons: GutterIcon[] = inspections.map(s => GutterIconRenderer.toGutterIcon(s));
-        const newGutterIconsMessages = newGutterIcons.map(d => d.inspection.solution.trim());
-        const existingGutterIcons = this.gutterIcons.get(document.uri) ?? [];
-        const leftGutterIcons = existingGutterIcons.filter(d => !newGutterIconsMessages.includes(d.inspection.solution.trim()));
-        newGutterIcons.push(...leftGutterIcons);
+
+        const oldItems: readonly InspectionGutterIcon[] = this.gutterIcons.get(document.uri) ?? [];
+        const oldIds: string[] = _.uniq(oldItems).map(c => c.inspection.id);
+        const newIds: string[] = inspections.map(i => i.id);
+        const toKeep: InspectionGutterIcon[] = _.intersection(oldIds, newIds).map(id => oldItems.find(c => c.inspection.id === id)!) ?? [];
+        const toAdd: InspectionGutterIcon[] = _.difference(newIds, oldIds).map(id => inspections.find(i => i.id === id)!).map(i => GutterIconRenderer.toGutterIcon(i));
+        const newGutterIcons: InspectionGutterIcon[] = [...toKeep, ...toAdd];
         this.gutterIcons.set(document.uri, newGutterIcons);
 
         editor.setDecorations(this.gutterIconDecorationType, newGutterIcons);
     }
 
-    private static toGutterIcon(inspection: Inspection): GutterIcon {
+    private static toGutterIcon(inspection: Inspection): InspectionGutterIcon {
         const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
         const args = [inspection.problem, inspection.solution, 'guttericons'];
         const commandUri = Uri.parse(`command:${COMMAND_FIX_INSPECTION}?${encodeURIComponent(JSON.stringify(args))}`);
@@ -66,6 +69,6 @@ export class GutterIconRenderer implements InspectionRenderer {
     }
 }
 
-interface GutterIcon extends DecorationOptions {
+interface InspectionGutterIcon extends DecorationOptions {
     inspection: Inspection;
 }

@@ -27,6 +27,7 @@ export interface InspectionProblem {
 }
 
 export interface Inspection {
+    id: string;
     document?: TextDocument;
     symbol?: SymbolNode;
     problem: InspectionProblem;

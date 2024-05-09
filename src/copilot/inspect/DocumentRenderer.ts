@@ -13,7 +13,7 @@ import InspectionCache from "./InspectionCache";
 
 /**
  * `DocumentRenderer` is responsible for 
- * - managing `Rewrite with new syntax` code lenses renderer
+ * - managing `Rewrite with new Java syntax` code lenses renderer
  * - managing inspection renderers based on settings
  * - rendering inspections for a document
  */
