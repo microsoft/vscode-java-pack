@@ -6,7 +6,7 @@ import { SymbolNode } from './SymbolNode';
 
 /**
  * A map based cache for inspections of a document.
- * format: `Map<documentKey, Map<symbolQualifiedName, [symbolVersionId, Promise<Inspection[]>]`
+ * format: `Map<documentKey, Map<symbolQualifiedName, [symbolVersionId, Inspection[]]`
  */
 const DOC_SYMBOL_VERSION_INSPECTIONS: Map<string, Map<string, [string, Inspection[]]>> = new Map();
 
@@ -76,7 +76,7 @@ export default class InspectionCache {
         const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, symbol);
         const cachedSymbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey) ?? new Map();
         // use qualified name to prevent conflicts between symbols with the same signature in same document
-        cachedSymbolInspections.set(symbol.qualifiedName, [symbolVersionId, Promise.resolve(inspections)]);
+        cachedSymbolInspections.set(symbol.qualifiedName, [symbolVersionId, inspections]);
         DOC_SYMBOL_VERSION_INSPECTIONS.set(documentKey, cachedSymbolInspections);
     }
 
