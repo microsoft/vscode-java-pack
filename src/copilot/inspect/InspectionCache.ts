@@ -70,6 +70,40 @@ export default class InspectionCache {
         }
     }
 
+    /**
+     * invalidate the cache of a document, a symbol, or an inspection.
+     * NOTE: the cached inspections of the symbol and its contained symbols will be removed when invalidating a symbol.
+     */
+    public static invalidateInspectionCache(document?: TextDocument, symbol?: SymbolNode, inspeciton?: Inspection): void {
+        if (!document) {
+            DOC_SYMBOL_VERSION_INSPECTIONS.clear();
+        } else if (!symbol) {
+            const documentKey = document.uri.fsPath;
+            DOC_SYMBOL_VERSION_INSPECTIONS.delete(documentKey);
+        } else if (!inspeciton) {
+            const documentKey = document.uri.fsPath;
+            const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
+            // remove the cached inspections of the symbol
+            symbolInspections?.delete(symbol.qualifiedName);
+            // remove the cached inspections of contained symbols
+            symbolInspections?.forEach((_, key) => {
+                if (key.startsWith(symbol.qualifiedName)) {
+                    symbolInspections.delete(key);
+                }
+            });
+        } else {
+            const documentKey = document.uri.fsPath;
+            const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
+            const versionInspections = symbolInspections?.get(symbol.qualifiedName);
+            const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, symbol);
+            if (versionInspections?.[0] === symbolVersionId) {
+                const inspections = versionInspections[1];
+                // remove the inspection
+                inspections.splice(inspections.indexOf(inspeciton), 1);
+            }
+        }
+    }
+
     private static cacheSymbolInspections(document: TextDocument, symbol: SymbolNode, inspections: Inspection[]): void {
         logger.debug(`cache ${inspections.length} inspections for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
         const documentKey = document.uri.fsPath;
