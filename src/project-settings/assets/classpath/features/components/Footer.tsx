@@ -4,21 +4,22 @@
 import { VSCodeButton, VSCodeDivider, VSCodeLink} from "@vscode/webview-ui-toolkit/react";
 import { Dispatch } from "@reduxjs/toolkit";
 import React, { useEffect } from "react";
-import { ClasspathEntry, ProjectInfo } from "../../../../types";
+import { ClasspathEntry, ProjectInfo } from "../../../../handlers/classpath/types";
 import { useDispatch, useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
-import { onClickGotoProjectConfiguration, onWillUpdateClassPaths, updateMaxHeight } from "../../../utils";
+import { updateMaxHeight } from "../../utils";
 import { updateLoadingState } from "../classpathConfigurationViewSlice";
+import { ClasspathRequest } from "../../../vscode/utils";
 
 const Footer = (): JSX.Element => {
 
-  const activeProjectIndex: number = useSelector((state: any) => state.classpathConfig.activeProjectIndex);
-  const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
-  const sources: ClasspathEntry[][] = useSelector((state: any) => state.classpathConfig.sources);
-  const defaultOutput: string[] = useSelector((state: any) => state.classpathConfig.output);
-  const activeVmInstallPath: string[] = useSelector((state: any) => state.classpathConfig.activeVmInstallPath);
-  const projectType: ProjectType[] = useSelector((state: any) => state.classpathConfig.projectType);
-  const libraries: ClasspathEntry[][] = useSelector((state: any) => state.classpathConfig.libraries);
+  const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const projects: ProjectInfo[] = useSelector((state: any) => state.commonConfig.data.projects);
+  const sources: ClasspathEntry[][] = useSelector((state: any) => state.classpathConfig.data.sources);
+  const defaultOutput: string[] = useSelector((state: any) => state.classpathConfig.data.output);
+  const activeVmInstallPath: string[] = useSelector((state: any) => state.classpathConfig.data.activeVmInstallPath);
+  const projectType: ProjectType[] = useSelector((state: any) => state.commonConfig.data.projectType);
+  const libraries: ClasspathEntry[][] = useSelector((state: any) => state.classpathConfig.data.libraries);
   const loadingState: boolean = useSelector((state: any) => state.classpathConfig.loadingState);
 
   const dispatch: Dispatch<any> = useDispatch();
@@ -31,11 +32,11 @@ const Footer = (): JSX.Element => {
   }
 
   const handleOpenBuildFile = () => {
-    onClickGotoProjectConfiguration(projects[activeProjectIndex].rootPath, projectType[activeProjectIndex]);
+    ClasspathRequest.onClickGotoProjectConfiguration(projects[activeProjectIndex].rootPath, projectType[activeProjectIndex]);
   };
 
   const handleApply = () => {
-    onWillUpdateClassPaths(
+    ClasspathRequest.onWillUpdateClassPaths(
       projects.map(p => p.rootPath),
       projectType,
       sources,
@@ -47,7 +48,7 @@ const Footer = (): JSX.Element => {
 
   const onDidChangeLoadingState = (event: OnDidChangeLoadingStateEvent) => {
     const {data} = event;
-    if (data.command === "onDidChangeLoadingState") {
+    if (data.command === "classpath.onDidChangeLoadingState") {
       dispatch(updateLoadingState(data.loading));
     }
   }

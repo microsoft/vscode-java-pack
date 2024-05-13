@@ -4,8 +4,8 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../../../../../utils/webview";
-import { ClasspathViewException } from "../../../../types";
-import { WEBVIEW_ID } from "../../../utils";
+import { ClasspathViewException } from "../../../../handlers/classpath/types";
+import { WEBVIEW_ID } from "../../utils";
 
 const Exception = (): JSX.Element | null => {
   const exception: ClasspathViewException | undefined = useSelector((state: any) => state.classpathConfig.exception);

@@ -5,14 +5,15 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
-import { onWillSelectFolder } from "../../../utils";
+import { ClasspathRequest } from "../../../vscode/utils";
 import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
-import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
+import { ClasspathEntry, ClasspathEntryKind } from "../../../../handlers/classpath/types";
 
 const Sources = (): JSX.Element => {
 
-  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.sources[state.classpathConfig.activeProjectIndex]);
-  const defaultOutput: string = useSelector((state: any) => state.classpathConfig.output[state.classpathConfig.activeProjectIndex]);
+  const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.sources[activeProjectIndex]);
+  const defaultOutput: string = useSelector((state: any) => state.classpathConfig.data.output[activeProjectIndex]);
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [editRow, setEditRow] = useState<number | null>(null);
@@ -29,7 +30,10 @@ const Sources = (): JSX.Element => {
       }
       updatedSources.push(sourceRoot);
     }
-    dispatch(updateSource(updatedSources));
+    dispatch(updateSource({
+      activeProjectIndex,
+      sources: updatedSources
+    }));
   };
 
   const handleAdd = () => {
@@ -64,7 +68,10 @@ const Sources = (): JSX.Element => {
         output: editingOutputPath ?? undefined,
       });
     }
-    dispatch(updateSource(updatedSources));
+    dispatch(updateSource({
+      activeProjectIndex,
+      sources: updatedSources
+    }));
     setEditRow(null);
     setEditingSourcePath(null);
     setEditingOutputPath(defaultOutput);
@@ -77,12 +84,12 @@ const Sources = (): JSX.Element => {
   }
 
   const handleBrowse = (type: string) => {
-    onWillSelectFolder(type);
+    ClasspathRequest.onWillSelectFolder(type);
   }
 
   const messageHandler = (event: any) => {
     const {data} = event;
-    if (data.command === "onDidSelectFolder") {
+    if (data.command === "classpath.onDidSelectFolder") {
       /**
        * data: {
        *  command: string;
@@ -95,14 +102,17 @@ const Sources = (): JSX.Element => {
       } else if (data.type === "output") {
         setEditingOutputPath(data.path);
       }
-    } else if (data.command === "onDidUpdateSourceFolder") {
+    } else if (data.command === "classpath.onDidUpdateSourceFolder") {
       /**
        * data: {
        *  command: string;
        *  sourcePaths: string[];
        * }
        */
-      dispatch(updateSource(data.sourcePaths));
+      dispatch(updateSource({
+        activeProjectIndex,
+        sources: data.sourcePaths
+      }));
     }
   }
 

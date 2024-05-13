@@ -2,16 +2,17 @@
 // Licensed under the MIT license.
 
 import React, { Dispatch, useEffect, useState } from "react";
-import { onWillAddNewJdk, onWillExecuteCommand } from "../../../utils";
+import { ClasspathRequest } from "../../../vscode/utils";
 import { VSCodeDivider, VSCodeDropdown, VSCodeOption, } from "@vscode/webview-ui-toolkit/react";
 import { useDispatch, useSelector } from "react-redux";
-import { VmInstall } from "../../../../types";
+import { VmInstall } from "../../../../handlers/classpath/types";
 import { setJdks } from "../classpathConfigurationViewSlice";
 
 const JdkRuntime = (): JSX.Element => {
 
-  const vmInstalls: VmInstall[] = useSelector((state: any) => state.classpathConfig.vmInstalls);
-  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.activeVmInstallPath[state.classpathConfig.activeProjectIndex]);
+  const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const vmInstalls: VmInstall[] = useSelector((state: any) => state.classpathConfig.data.vmInstalls);
+  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.data.activeVmInstallPath[activeProjectIndex]);
 
   const [optionDescription, setOptionDescription] = useState<string | null>(null);
 
@@ -19,18 +20,24 @@ const JdkRuntime = (): JSX.Element => {
 
   const handleSelectJdk = (path: string) => {
     if (path === "add-new-jdk") {
-      onWillAddNewJdk();
+      ClasspathRequest.onWillAddNewJdk();
     } else if (path === "download-jdk") {
-      onWillExecuteCommand("java.installJdk")
+      ClasspathRequest.onWillExecuteCommand("java.installJdk")
     } else {
-      dispatch(setJdks({activeVmInstallPath: path}));
+      dispatch(setJdks({
+        activeProjectIndex,
+        activeVmInstallPath: path
+      }));
     }
   }
 
   const onDidChangeJdk = (event: OnDidChangeJdkEvent) => {
     const {data} = event;
-    if (data.command === "onDidChangeJdk") {
-      dispatch(setJdks(data));
+    if (data.command === "classpath.onDidChangeJdk") {
+      dispatch(setJdks({
+        activeProjectIndex,
+        ...data
+      }));
     }
   }
 

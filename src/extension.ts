@@ -6,7 +6,6 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { BeginnerTipsViewSerializer } from "./beginner-tips";
-import { ClassPathConfigurationViewSerializer } from "./classpath/classpathConfigurationView";
 import { initialize as initCommands } from "./commands";
 import { initDaemon, sendLSPUsageStats } from "./daemon";
 import { initialize as initExp } from "./exp";
@@ -24,6 +23,7 @@ import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { activateCopilotInspection } from "./copilot/inspect";
+import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -60,7 +60,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.runtime", new JavaRuntimeViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.gettingStarted", new BeginnerTipsViewSerializer(context)));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.welcome", new WelcomeViewSerializer()));
-  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.classpathConfiguration", new ClassPathConfigurationViewSerializer()));
+  context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.projectSettings", new ProjectSettingsViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.installJdk", new InstallJdkViewSerializer(context)));
 
   const config = vscode.workspace.getConfiguration("java.help");

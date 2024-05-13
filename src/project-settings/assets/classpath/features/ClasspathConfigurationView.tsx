@@ -9,21 +9,30 @@ import ProjectSelector from "./components/ProjectSelector";
 import Sources from "./components/Sources";
 import Libraries from "./components/Libraries";
 import Exception from "./components/Exception";
-import { ClasspathViewException, ProjectInfo, ClasspathEntry, VmInstall } from "../../../types";
-import { catchException, listProjects, listVmInstalls, loadClasspath } from "./classpathConfigurationViewSlice";
+import { ClasspathViewException, ProjectInfo } from "../../../handlers/classpath/types";
+import { catchException, initializeProjectsData, listVmInstalls, loadClasspath, updateActiveTab } from "./classpathConfigurationViewSlice";
 import JdkRuntime from "./components/JdkRuntime";
-import { onWillListProjects, onWillListVmInstalls } from "../../utils";
+import { ClasspathRequest } from "../../vscode/utils";
 import { VSCodePanelTab, VSCodePanelView, VSCodePanels, VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
 import { ProjectType } from "../../../../utils/webview";
 import UnmanagedFolderSources from "./components/UnmanagedFolderSources";
 import Footer from "./components/Footer";
+import "../style.scss";
+import { listProjects, setProjectType } from "../../mainpage/features/commonSlice";
 
 const ClasspathConfigurationView = (): JSX.Element => {
-  const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
-  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType[state.classpathConfig.activeProjectIndex]);
+  const activeTab: string = useSelector((state: any) => state.classpathConfig.ui.activeTab);
+  const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const projects: ProjectInfo[] = useSelector((state: any) => state.commonConfig.data.projects);
+  const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
   const exception: ClasspathViewException | undefined = useSelector((state: any) => state.classpathConfig.exception);
-  let content: JSX.Element;
+  const dispatch: Dispatch<any> = useDispatch();
 
+  const onClickTab = (tabId: string) => {
+    dispatch(updateActiveTab(tabId));
+  };
+
+  let content: JSX.Element;
   if (exception) {
     content = <Exception />;
   } else if (projects.length === 0) {
@@ -33,10 +42,10 @@ const ClasspathConfigurationView = (): JSX.Element => {
       <div>
         <div className="mb-12">
           <ProjectSelector />
-          <VSCodePanels className="setting-panels">
-            <VSCodePanelTab id="source">Sources</VSCodePanelTab>
-            <VSCodePanelTab id="jdk">JDK Runtime</VSCodePanelTab>
-            <VSCodePanelTab id="libraries">Libraries</VSCodePanelTab>
+          <VSCodePanels activeid={activeTab} className="setting-panels">
+            <VSCodePanelTab id="source" onClick={() => onClickTab("source")}>Sources</VSCodePanelTab>
+            <VSCodePanelTab id="jdk" onClick={() => onClickTab("jdk")}>JDK Runtime</VSCodePanelTab>
+            <VSCodePanelTab id="libraries" onClick={() => onClickTab("libraries")}>Libraries</VSCodePanelTab>
             <VSCodePanelView className="setting-panels-view">
               {[ProjectType.Gradle, ProjectType.Maven].includes(projectType) && (<Sources />)}
               {projectType !== ProjectType.Gradle && projectType !== ProjectType.Maven && (<UnmanagedFolderSources />)}
@@ -55,27 +64,37 @@ const ClasspathConfigurationView = (): JSX.Element => {
     );
   }
 
-  const dispatch: Dispatch<any> = useDispatch();
-
-  const onInitialize = (event: OnInitializeEvent) => {
+  const onMessage = (event: any) => {
     const {data} = event;
-    if (data.command === "onDidListProjects") {
+    if (data.command === "classpath.onDidListProjects") {
+      dispatch(initializeProjectsData({projectsNum: data.projectInfo?.length}));
       dispatch(listProjects(data.projectInfo));
-    } else if (data.command === "onDidListVmInstalls") {
+    } else if (data.command === "classpath.onDidListVmInstalls") {
       dispatch(listVmInstalls(data.vmInstalls))
-    } else if (data.command === "onDidLoadProjectClasspath") {
-      dispatch(loadClasspath(data));
-    } else if (data.command === "onException") {
+    } else if (data.command === "classpath.onDidLoadProjectClasspath") {
+      dispatch(setProjectType({
+        projectType: data.projectType
+      }));
+      dispatch(loadClasspath({
+        activeProjectIndex,
+        ...data
+      }));
+    } else if (data.command === "classpath.onException") {
       dispatch(catchException(data.exception));
     }
   };
 
   useEffect(() => {
-    window.addEventListener("message", onInitialize);
-    onWillListProjects();
-    onWillListVmInstalls();
+    window.addEventListener("message", onMessage);
+    if (projects.length == 0) {
+      // this makes sure the initialization only happens when the
+      // redux store is empty. When switching between tabs, the
+      // state will be preserved.
+      ClasspathRequest.onWillListProjects();
+      ClasspathRequest.onWillListVmInstalls();
+    }
     return () => {
-      window.removeEventListener("message", onInitialize);
+      window.removeEventListener("message", onMessage);
     }
   }, []);
 
@@ -85,21 +104,5 @@ const ClasspathConfigurationView = (): JSX.Element => {
     </div>
   );
 };
-
-interface OnInitializeEvent {
-  data: {
-    command: string;
-    projectInfo?: {
-      name: string;
-      rootPath: string;
-      projectType: string;
-    }[];
-    vmInstalls?: VmInstall[];
-    sources?: ClasspathEntry[];
-    output?: string;
-    libraries?: string[];
-    exception?: ClasspathViewException;
-  };
-}
 
 export default ClasspathConfigurationView;
