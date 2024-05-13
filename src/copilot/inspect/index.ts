@@ -1,21 +1,22 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, ExtensionContext, TextDocument, languages, window, workspace, Range, Selection } from "vscode";
 import { COMMAND_INSPECT_RANGE, registerCommands } from "./commands";
-import { InspectActionCodeLensProvider } from "./InspectActionCodeLensProvider";
-import { DefaultRenderer as DefaultInspectionRenderer } from "./render/DefaultRenderer";
-import { InspectionRenderer } from "./render/InspectionRenderer";
+import { DocumentRenderer } from "./DocumentRenderer";
+import { fixDiagnostic } from "./render/DiagnosticRenderer";
+import InspectionCache from "./InspectionCache";
 
-export async function activateCopilotInspection(context: ExtensionContext): Promise<void> {    
-    const inspectActionCodeLenses = new InspectActionCodeLensProvider().install(context);
-    const inspectionRenderer: InspectionRenderer = new DefaultInspectionRenderer().install(context);
-    // Commands
-    registerCommands(inspectionRenderer);
+export async function activateCopilotInspection(context: ExtensionContext): Promise<void> {
+    const renderer: DocumentRenderer = new DocumentRenderer().install(context);
+    registerCommands(renderer);
 
     context.subscriptions.push(
-        workspace.onDidOpenTextDocument(doc => inspectActionCodeLenses.rerender(doc)), // Rerender class codelens when open a new document
-        workspace.onDidChangeTextDocument(e => inspectActionCodeLenses.rerender(e.document)), // Rerender class codelens when change a document
-        languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: rewrite }), // add code action to rewrite code
+        languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: fixDiagnostic }), // Fix using Copilot
+        languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: rewrite }), // Inspect using Copilot
+        workspace.onDidOpenTextDocument(doc => renderer.rerender(doc)), // Rerender class codelens and cached suggestions on document open
+        workspace.onDidChangeTextDocument(e => renderer.rerender(e.document, true)), // Rerender class codelens and cached suggestions debouncely on document change
+        window.onDidChangeVisibleTextEditors(editors => editors.forEach(editor => renderer.rerender(editor.document))), // rerender in case of renderers changed.
+        workspace.onDidCloseTextDocument(doc => InspectionCache.invalidateInspectionCache(doc)), // Rerender class codelens and cached suggestions debouncely on document change
     );
-    window.visibleTextEditors.forEach(editor => inspectActionCodeLenses.rerender(editor.document));
+    window.visibleTextEditors.forEach(editor => renderer.rerender(editor.document));
 }
 
 async function rewrite(document: TextDocument, range: Range | Selection, _context: CodeActionContext, _token: CancellationToken): Promise<CodeAction[]> {

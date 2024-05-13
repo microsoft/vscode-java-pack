@@ -3,8 +3,10 @@ import Copilot from "../Copilot";
 import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
 import path from "path";
-import { TextDocument, DocumentSymbol, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window } from "vscode";
+import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window } from "vscode";
 import { COMMAND_FIX } from "./commands";
+import InspectionCache from "./InspectionCache";
+import { SymbolNode } from "./SymbolNode";
 
 export default class InspectionCopilot extends Copilot {
 
@@ -119,23 +121,23 @@ export default class InspectionCopilot extends Copilot {
         return this.inspectRange(document, range);
     }
 
-    public async inspectClass(document: TextDocument, clazz: DocumentSymbol): Promise<Inspection[]> {
-        logger.info('inspecting class:', clazz.name);
+    public async inspectClass(document: TextDocument, clazz: SymbolNode): Promise<Inspection[]> {
+        logger.info('inspecting class:', clazz.qualifiedName);
         return this.inspectRange(document, clazz.range);
     }
 
-    public async inspectSymbol(document: TextDocument, symbol: DocumentSymbol): Promise<Inspection[]> {
-        logger.info(`inspecting symbol ${SymbolKind[symbol.kind]} ${symbol.name}`);
+    public async inspectSymbol(document: TextDocument, symbol: SymbolNode): Promise<Inspection[]> {
+        logger.info(`inspecting symbol ${SymbolKind[symbol.kind]} ${symbol.qualifiedName}`);
         return this.inspectRange(document, symbol.range);
     }
 
     public async inspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
         // ajust the range to the minimal container class or (multiple) method symbols
-        const methods: DocumentSymbol[] = await getIntersectionMethodsOfRange(range, document);
-        const classes: DocumentSymbol[] = await getClassesContainedInRange(range, document);
-        const symbols: DocumentSymbol[] = [...classes, ...methods];
+        const methods: SymbolNode[] = await getIntersectionMethodsOfRange(range, document);
+        const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
+        const symbols: SymbolNode[] = [...classes, ...methods];
         if (symbols.length < 1) {
-            const containingClass: DocumentSymbol = await getInnermostClassContainsRange(range, document);
+            const containingClass: SymbolNode = await getInnermostClassContainsRange(range, document);
             symbols.push(containingClass);
         }
 
@@ -143,7 +145,7 @@ export default class InspectionCopilot extends Copilot {
         const expandedRange: Range = getUnionRange(symbols);
 
         // inspect the expanded union range
-        const symbolName = symbols[0].name;
+        const symbolName = symbols[0].symbol.name;
         const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
         const inspections = await window.withProgress({
             location: ProgressLocation.Notification,
@@ -165,6 +167,7 @@ export default class InspectionCopilot extends Copilot {
                 selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
             });
         }
+        InspectionCache.cache(document, symbols, inspections);
         return inspections;
     }
 
