@@ -60,7 +60,7 @@ export async function waitUntilExtensionsActivated(extensionIds: string[], inter
         } else {
             logger.info(`All dependent extensions are installed, but some are not activated, keep checking interval ${interval}ms.`);
         }
-        interval = notInstalledExtensionIds ? interval : 10000;
+        interval = notInstalledExtensionIds.length > 0 ? 10000 : interval;
         const id = setInterval(() => {
             if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
                 clearInterval(id);
