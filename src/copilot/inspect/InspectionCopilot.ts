@@ -1,18 +1,19 @@
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
-import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getUnionRange, logger } from "../utils";
+import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
 import path from "path";
-import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window } from "vscode";
+import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatSystemMessage, LanguageModelChatMessage, LanguageModelChatUserMessage, LanguageModelChatAssistantMessage } from "vscode";
 import { COMMAND_FIX } from "./commands";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
 
 export default class InspectionCopilot extends Copilot {
 
-    public static readonly SYSTEM_MESSAGE = `
+    public static readonly SYSTEM_MESSAGE = (context: ProjectContext) => `
     You are expert at Java and code refactoring. Please identify code blocks that can be rewritten with
-    Java latest features/syntaxes/grammar sugars to make them more **readable**, **efficient** and **concise** for given code.
+    new features/syntaxes/grammar sugar of Java ${context.javaVersion} and earlier versions to make them more **readable**,
+    **efficient** and **concise** for given code.
     I prefer \`Stream\` to loop, \`Optional\` to null, \`record\` to POJO, \`switch\` to if-else, etc.
     Please comment on the rewritable code directly in the original source code in the following format:
     \`\`\`
@@ -104,15 +105,19 @@ export default class InspectionCopilot extends Copilot {
     private static readonly INDICATOR_PATTERN: RegExp = /\/\/ @INDICATOR: (.*)/;
     private static readonly LEVEL_PATTERN: RegExp = /\/\/ @SEVERITY: (.*)/;
 
-    private readonly debounceMap = new Map<string, NodeJS.Timeout>();
+    private static readonly DEFAULT_MAX_CONCURRENCIES: number = 3;
 
-    public constructor() {
-        const messages: { role: string, content: string }[] = [
-            { role: "system", content: InspectionCopilot.SYSTEM_MESSAGE },
-            { role: "user", content: InspectionCopilot.EXAMPLE_USER_MESSAGE },
-            { role: "assistant", content: InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE },
-        ];
-        super(messages);
+    private readonly debounceMap = new Map<string, NodeJS.Timeout>();
+    private concurrencies: number = 0;
+
+    public constructor(
+        private readonly maxConcurrencies: number = InspectionCopilot.DEFAULT_MAX_CONCURRENCIES,
+    ) {
+        super();
+    }
+
+    public get busy(): boolean {
+        return this.concurrencies >= this.maxConcurrencies;
     }
 
     public async inspectDocument(document: TextDocument): Promise<Inspection[]> {
@@ -132,43 +137,53 @@ export default class InspectionCopilot extends Copilot {
     }
 
     public async inspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
-        // ajust the range to the minimal container class or (multiple) method symbols
-        const methods: SymbolNode[] = await getIntersectionMethodsOfRange(range, document);
-        const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
-        const symbols: SymbolNode[] = [...classes, ...methods];
-        if (symbols.length < 1) {
-            const containingClass: SymbolNode = await getInnermostClassContainsRange(range, document);
-            symbols.push(containingClass);
+        if (this.busy) {
+            logger.warn('Copilot is busy, please retry after current inspecting tasks is finished.');
+            void window.showWarningMessage(`Copilot is busy, please retry after current inspecting tasks are finished.`);
+            return Promise.resolve([]);
         }
+        try {
+            this.concurrencies++;
+            // ajust the range to the minimal container class or (multiple) method symbols
+            const methods: SymbolNode[] = await getIntersectionMethodsOfRange(range, document);
+            const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
+            const symbols: SymbolNode[] = [...classes, ...methods];
+            if (symbols.length < 1) {
+                const containingClass: SymbolNode = await getInnermostClassContainsRange(range, document);
+                symbols.push(containingClass);
+            }
 
-        // get the union range of the container symbols, which will be insepcted by copilot
-        const expandedRange: Range = getUnionRange(symbols);
+            // get the union range of the container symbols, which will be insepcted by copilot
+            const expandedRange: Range = getUnionRange(symbols);
 
-        // inspect the expanded union range
-        const symbolName = symbols[0].symbol.name;
-        const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
-        const inspections = await window.withProgress({
-            location: ProgressLocation.Notification,
-            title: `Inspecting ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\"`,
-            cancellable: false
-        }, (_progress) => {
-            return this.doInspectRange(document, expandedRange);
-        });
-
-        // show message based on the number of inspections
-        if (inspections.length < 1) {
-            void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
-        } else if (inspections.length == 1) {
-            // apply the only suggestion automatically
-            void commands.executeCommand(COMMAND_FIX, inspections[0].problem, inspections[0].solution, 'auto');
-        } else {
-            // show message to go to the first suggestion
-            void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
-                selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
+            // inspect the expanded union range
+            const symbolName = symbols[0].symbol.name;
+            const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
+            const inspections = await window.withProgress({
+                location: ProgressLocation.Notification,
+                title: `Inspecting ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\"`,
+                cancellable: false
+            }, (_progress) => {
+                return this.doInspectRange(document, expandedRange);
             });
+
+            // show message based on the number of inspections
+            if (inspections.length < 1) {
+                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
+            } else if (inspections.length == 1) {
+                // apply the only suggestion automatically
+                void commands.executeCommand(COMMAND_FIX, inspections[0].problem, inspections[0].solution, 'auto');
+            } else {
+                // show message to go to the first suggestion
+                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
+                    selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
+                });
+            }
+            InspectionCache.cache(document, symbols, inspections);
+            return inspections;
+        } finally {
+            this.concurrencies--;
         }
-        InspectionCache.cache(document, symbols, inspections);
-        return inspections;
     }
 
     /**
@@ -180,10 +195,10 @@ export default class InspectionCopilot extends Copilot {
      * @param wait debounce time in milliseconds, default is 3000ms
      * @returns inspections provided by copilot
      */
-    public inspectCode(code: string, key?: string, wait: number = 3000): Promise<Inspection[]> {
-        const _doInspectCode: (code: string) => Promise<Inspection[]> = instrumentSimpleOperation("java.copilot.inspect.code", this.doInspectCode.bind(this));
+    public inspectCode(code: string, context: ProjectContext, key?: string, wait: number = 3000): Promise<Inspection[]> {
+        const _doInspectCode: (code: string, context: ProjectContext) => Promise<Inspection[]> = instrumentSimpleOperation("java.copilot.inspect.code", this.doInspectCode.bind(this));
         if (!key) { // inspect code immediately without debounce
-            return _doInspectCode(code);
+            return this.doInspectCode(code, context);
         }
         // inspect code with debounce if key is provided
         if (this.debounceMap.has(key)) {
@@ -192,7 +207,7 @@ export default class InspectionCopilot extends Copilot {
         }
         return new Promise<Inspection[]>((resolve) => {
             this.debounceMap.set(key, setTimeout(() => {
-                void _doInspectCode(code).then(inspections => {
+                void _doInspectCode(code, context).then(inspections => {
                     this.debounceMap.delete(key);
                     resolve(inspections);
                 });
@@ -204,7 +219,10 @@ export default class InspectionCopilot extends Copilot {
         const adjustedRange = new Range(new Position(range.start.line, 0), new Position(range.end.line, document.lineAt(range.end.line).text.length));
         const content: string = document.getText(adjustedRange);
         const startLine = range.start.line;
-        const inspections = await this.inspectCode(content);
+        const javaVersion = await getProjectJavaVersion(document);
+        const inspections = await this.inspectCode(content, {
+            javaVersion
+        });
         inspections.forEach(s => {
             s.document = document;
             // real line index to the start of the document
@@ -213,7 +231,7 @@ export default class InspectionCopilot extends Copilot {
         return inspections;
     }
 
-    private async doInspectCode(code: string): Promise<Inspection[]> {
+    private async doInspectCode(code: string, context: ProjectContext): Promise<Inspection[]> {
         const originalLines: string[] = code.split(/\r?\n/);
         // code lines without empty lines and comments
         const codeLines: { originalLineIndex: number, content: string }[] = this.extractCodeLines(originalLines)
@@ -223,13 +241,19 @@ export default class InspectionCopilot extends Copilot {
             return Promise.resolve([]);
         }
 
-        const codeWithInspectionComments = await this.send(codeLinesContent);
+        const messages: LanguageModelChatMessage[] = [
+            new LanguageModelChatSystemMessage(InspectionCopilot.SYSTEM_MESSAGE(context)),
+            new LanguageModelChatUserMessage(InspectionCopilot.EXAMPLE_USER_MESSAGE),
+            new LanguageModelChatAssistantMessage(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
+        ];
+        const codeWithInspectionComments = await this.send(messages, codeLinesContent);
         const inspections = this.extractInspections(codeWithInspectionComments, codeLines);
         // add properties for telemetry
-        sendInfo('java.copilot.inspect.code', { 
-            codeLength: code.length, 
-            codeLines: codeLines.length, 
-            insectionsCount: inspections.length, 
+        sendInfo('java.copilot.inspect.code', {
+            javaVersion: context.javaVersion,
+            codeLength: code.length,
+            codeLines: codeLines.length,
+            insectionsCount: inspections.length,
             problems: inspections.map(i => i.problem.description).join(',')
         });
         return inspections;
@@ -327,4 +351,8 @@ export default class InspectionCopilot extends Copilot {
         }
         return codeLines;
     }
+}
+
+export interface ProjectContext {
+    javaVersion: number;
 }
