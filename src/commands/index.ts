@@ -4,15 +4,14 @@
 import { showInstallJdkWebview, showInstallJdkWebviewBeside } from "../install-jdk";
 import * as vscode from "vscode";
 import { instrumentOperation, instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
-import { showClasspathConfigurationPage } from "../classpath/classpathConfigurationView";
 import { javaExtGuideCmdHandler } from "../ext-guide";
 import { javaFormatterSettingsEditorProvider } from "../formatter-settings";
 import { javaGettingStartedCmdHandler } from "../beginner-tips";
-import { javaRuntimeCmdHandler } from "../java-runtime";
 import { overviewCmdHandler } from "../overview";
 import { webviewCmdLinkHandler } from "../utils";
 import { showWelcomeWebview, showWelcomeWebviewBeside } from "../welcome";
 import { createMavenProjectCmdHandler, createMicroProfileStarterProjectCmdHandler, createQuarkusProjectCmdHandler, createSpringBootProjectCmdHandler, installExtensionCmdHandler, openUrlCmdHandler, showExtensionCmdHandler, showReleaseNotesHandler, toggleAwtDevelopmentHandler } from "./handler";
+import { projectSettingView } from "../project-settings/projectSettingsView";
 
 export function initialize(context: vscode.ExtensionContext) {
   registerCommandHandler(context, "java.overview", overviewCmdHandler);
@@ -23,7 +22,6 @@ export function initialize(context: vscode.ExtensionContext) {
   registerCommandHandler(context, "java.helper.showExtension", showExtensionCmdHandler);
   registerCommandHandler(context, "java.helper.openUrl", openUrlCmdHandler);
   registerCommandHandler(context, "java.showReleaseNotes", showReleaseNotesHandler);
-  registerCommandHandler(context, "java.runtime", javaRuntimeCmdHandler);
   registerCommandHandler(context, "java.helper.installExtension", installExtensionCmdHandler);
   registerCommandHandler(context, "java.gettingStarted", javaGettingStartedCmdHandler);
   registerCommandHandler(context, "java.extGuide", javaExtGuideCmdHandler);
@@ -32,7 +30,9 @@ export function initialize(context: vscode.ExtensionContext) {
   registerCommandHandler(context, "java.welcome.fromWalkthrough", showWelcomeWebview);
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.formatterSettings", javaFormatterSettingsEditorProvider.showFormatterSettingsEditor, javaFormatterSettingsEditorProvider));
   context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.formatterSettings.showTextEditor", javaFormatterSettingsEditorProvider.reopenWithTextEditor));
-  registerCommandHandler(context, "java.classpathConfiguration", showClasspathConfigurationPage);
+  context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.projectSettings", projectSettingView.showProjectSettingsPage, projectSettingView));
+  context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.runtime", () => projectSettingView.showProjectSettingsPage("classpath/jdk"), projectSettingView));
+  context.subscriptions.push(instrumentOperationAsVsCodeCommand("java.classpathConfiguration", () => projectSettingView.showProjectSettingsPage("classpath"), projectSettingView));
   registerCommandHandler(context, "java.installJdk", showInstallJdkWebviewBeside);
   registerCommandHandler(context, "java.installJdk.fromWalkthrough", showInstallJdkWebview);
   registerCommandHandler(context, "java.toggleAwtDevelopment", toggleAwtDevelopmentHandler);

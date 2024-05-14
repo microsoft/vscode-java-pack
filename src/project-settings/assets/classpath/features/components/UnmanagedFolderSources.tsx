@@ -5,17 +5,18 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
-import { onWillAddSourcePathForUnmanagedFolder } from "../../../utils";
+import { ClasspathRequest } from "../../../vscode/utils";
 import { ProjectType } from "../../../../../utils/webview";
 import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
-import { ClasspathEntry } from "../../../../types";
+import { ClasspathEntry } from "../../../../handlers/classpath/types";
 
 const UnmanagedFolderSources = (): JSX.Element => {
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
-  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.sources[state.classpathConfig.activeProjectIndex]);
-  const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType[state.classpathConfig.activeProjectIndex]);
+  const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.sources[activeProjectIndex]);
+  const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleRemove = (path: string) => {
@@ -26,21 +27,27 @@ const UnmanagedFolderSources = (): JSX.Element => {
       }
       updatedSources.push(sourceRoot);
     }
-    dispatch(updateSource(updatedSources));
+    dispatch(updateSource({
+      activeProjectIndex,
+      sources: updatedSources
+    }));
   };
 
   const handleAdd = () => {
-    onWillAddSourcePathForUnmanagedFolder();
+    ClasspathRequest.onWillAddSourcePathForUnmanagedFolder();
   };
 
   const onDidUpdateSourceFolder = (event: OnDidAddSourceFolderEvent) => {
     const {data} = event;
-    if (data.command === "onDidUpdateSourceFolder") {
-      dispatch(updateSource(data.sourcePaths.map(sp => {
-        return {
+    if (data.command === "classpath.onDidUpdateSourceFolder") {
+      dispatch(updateSource({
+        activeProjectIndex,
+        sources: data.sourcePaths.map(sp => {
+          return {
             path: sp,
-        };
-      })));
+          };
+        })
+      }));
     }
   };
 

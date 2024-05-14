@@ -59,7 +59,6 @@
     "onCommand:java.showReleaseNotes",
     "onWebviewPanel:java.overview",
     "onCommand:java.runtime",
-    "onWebviewPanel:java.runtime",
     "onCommand:java.gettingStarted",
     "onWebviewPanel:java.gettingStarted",
     "onCommand:java.extGuide",
@@ -69,7 +68,8 @@
     "onCommand:java.installJdk",
     "onWebviewPanel:java.installJdk",
     "onCommand:java.classpathConfiguration",
-    "onWebviewPanel:java.classpathConfiguration",
+    "onCommand:java.projectSettings",
+    "onWebviewPanel:java.projectSettings",
     "onCommand:java.formatterSettings",
     "onWalkthrough:javaWelcome"
   ],
@@ -77,7 +77,7 @@
     "javaShortcuts": [
       {
         "title": "$(project) Open Project Settings",
-        "command": "java.classpathConfiguration"
+        "command": "java.projectSettings"
       }
     ],
     "walkthroughs": [
@@ -180,6 +180,11 @@
         "command": "java.classpathConfiguration",
         "category": "Java",
         "title": "Configure Classpath"
+      },
+      {
+        "command": "java.projectSettings",
+        "category": "Java",
+        "title": "Open Project Settings"
       },
       {
         "command": "java.overview",

@@ -3,16 +3,16 @@
 
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { ProjectInfo, ProjectState } from "../../../../types";
+import { ProjectInfo, ProjectState } from "../../../../handlers/classpath/types";
 import { Dispatch } from "@reduxjs/toolkit";
-import { activeProjectChange } from "../classpathConfigurationViewSlice";
-import { onWillLoadProjectClasspath } from "../../../utils";
+import { ClasspathRequest } from "../../../vscode/utils";
 import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
+import { activeProjectChange } from "../../../mainpage/features/commonSlice";
 
 const ProjectSelector = (): JSX.Element | null => {
-  const activeProjectIndex: number = useSelector((state: any) => state.classpathConfig.activeProjectIndex);
-  const projects: ProjectInfo[] = useSelector((state: any) => state.classpathConfig.projects);
-  const projectState: ProjectState[] = useSelector((state: any) => state.classpathConfig.projectState);
+  const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const projects: ProjectInfo[] = useSelector((state: any) => state.commonConfig.data.projects);
+  const projectState: ProjectState[] = useSelector((state: any) => state.commonConfig.data.projectState);
 
   const dispatch: Dispatch<any> = useDispatch();
 
@@ -22,7 +22,7 @@ const ProjectSelector = (): JSX.Element | null => {
 
   const loadProjectClasspath = (rootPath: string) => {
     if (projectState[activeProjectIndex] === ProjectState.Unloaded) {
-      onWillLoadProjectClasspath(rootPath);
+      ClasspathRequest.onWillLoadProjectClasspath(rootPath);
     }
   }
 

@@ -1,6 +1,6 @@
 .root {
   min-width: 560px;
-  margin: 20px 40px 0;
+  margin: 8px 18px 0;
 }
  
 .setting-header {
@@ -119,6 +119,7 @@
 
 .setting-section-text {
   width: 100%;
+  max-width: 420px;
   word-break: break-all;
 }
 
@@ -138,6 +139,3 @@
 .hidden {
   visibility: hidden;
 }
-
-@import "~@vscode/codicons/dist/codicon.css";
-@import "utils.scss";

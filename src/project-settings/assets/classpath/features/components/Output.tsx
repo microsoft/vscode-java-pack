@@ -5,22 +5,26 @@ import { Dispatch } from "@reduxjs/toolkit";
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
-import { onWillSelectOutputPath } from "../../../utils";
+import { ClasspathRequest } from "../../../vscode/utils";
 import { setOutputPath } from "../classpathConfigurationViewSlice";
 import { VSCodeButton, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 
 const Output = (): JSX.Element | null => {
-    const output: string = useSelector((state: any) => state.classpathConfig.output[state.classpathConfig.activeProjectIndex]);
-    const projectType: ProjectType = useSelector((state: any) => state.classpathConfig.projectType[state.classpathConfig.activeProjectIndex]);
+    const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+    const output: string = useSelector((state: any) => state.classpathConfig.data.output[activeProjectIndex]);
+    const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
     const dispatch: Dispatch<any> = useDispatch();
     const handleClick = () => {
-      onWillSelectOutputPath();
+      ClasspathRequest.onWillSelectOutputPath();
     };
 
     const onDidSelectOutputPath = (event: OnDidSelectOutputPathEvent) => {
       const {data} = event;
-      if (data.command === "onDidSelectOutputPath") {
-        dispatch(setOutputPath(data.output));
+      if (data.command === "classpath.onDidSelectOutputPath") {
+        dispatch(setOutputPath({
+          activeProjectIndex,
+          outputPath: data.output
+        }));
       }
     };
 
