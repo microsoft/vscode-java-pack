@@ -27,10 +27,18 @@ const ProjectSelector = (): JSX.Element | null => {
   }
 
   useEffect(() => {
+    if (projects.length === 0) {
+      return;
+    }
+
     loadProjectClasspath(projects[activeProjectIndex].rootPath);
   }, [activeProjectIndex, projects]);
 
   const projectSelections = projects.map((project, index) => {
+    if (projects.length === 0) {
+      return null;
+    }
+
     return (
       <VSCodeOption className="setting-section-option" key={project.rootPath} onClick={() => handleActiveProjectChange(index)}>
         {project.name}

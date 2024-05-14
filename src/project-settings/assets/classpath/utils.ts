@@ -10,6 +10,10 @@ export const updateMaxHeight = () => {
   if (projectSelector) {
     maxHeight -= projectSelector.getBoundingClientRect().height;
   }
+  const hinter = document.getElementById("hint");
+  if (hinter) {
+    maxHeight -= hinter.getBoundingClientRect().height;
+  }
   const footer = document.getElementById("footer");
   if (footer) {
     maxHeight -= footer.getBoundingClientRect().height;

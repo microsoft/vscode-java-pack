@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import React, { Dispatch, useEffect, useState } from "react";
-import { ClasspathRequest } from "../../../vscode/utils";
+import { ClasspathRequest, CommonRequest } from "../../../vscode/utils";
 import { VSCodeDivider, VSCodeDropdown, VSCodeOption, } from "@vscode/webview-ui-toolkit/react";
 import { useDispatch, useSelector } from "react-redux";
 import { VmInstall } from "../../../../handlers/classpath/types";
@@ -22,7 +22,7 @@ const JdkRuntime = (): JSX.Element => {
     if (path === "add-new-jdk") {
       ClasspathRequest.onWillAddNewJdk();
     } else if (path === "download-jdk") {
-      ClasspathRequest.onWillExecuteCommand("java.installJdk")
+      CommonRequest.onWillExecuteCommand("java.installJdk")
     } else {
       dispatch(setJdks({
         activeProjectIndex,

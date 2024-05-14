@@ -7,6 +7,15 @@ import { ClasspathEntry } from "../../handlers/classpath/types";
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi();
 
+export namespace CommonRequest {
+    export function onWillExecuteCommand(id: string) {
+        vscode.postMessage({
+            command: "common.onWillExecuteCommand",
+            id,
+        });
+    }
+}
+
 export namespace ClasspathRequest {
     export function onWillListProjects() {
         vscode.postMessage({
@@ -83,13 +92,6 @@ export namespace ClasspathRequest {
             command: "classpath.onClickGotoProjectConfiguration",
             rootUri,
             projectType,
-        });
-    }
-
-    export function onWillExecuteCommand(id: string) {
-        vscode.postMessage({
-            command: "classpath.onWillExecuteCommand",
-            id,
         });
     }
 }
