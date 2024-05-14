@@ -7,10 +7,10 @@ import ClasspathConfigurationView from "../../classpath/features/ClasspathConfig
 import { updateActiveTab } from "../../classpath/features/classpathConfigurationViewSlice";
 import "../style.scss";
 import { updateActiveSection } from "./commonSlice";
-import SideBar from "./component/sideBar";
 import ProjectSelector from "./component/ProjectSelector";
 import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import Footer from "./component/Footer";
+import SideBar from "./component/SideBar";
 
 const ProjectSettingView = (): JSX.Element => {
   const activeSection: string = useSelector((state: any) => state.commonConfig.ui.activeSection);
