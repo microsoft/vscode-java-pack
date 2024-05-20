@@ -2,8 +2,9 @@
 import { CodeLens, CodeLensProvider, Disposable, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
-import { logger } from "../../../copilot/utils";
-import { COMMAND_FIX } from "../commands";
+import { logger, uncapitalize } from "../../../copilot/utils";
+import { COMMAND_IGNORE_INSPECTIONS, COMMAND_FIX_INSPECTION } from "../commands";
+import { capitalize } from "lodash";
 
 export class CodeLensRenderer implements InspectionRenderer {
     private readonly codeLenses: Map<Uri, CodeLens[]> = new Map();
@@ -40,7 +41,7 @@ export class CodeLensRenderer implements InspectionRenderer {
         if (inspections.length < 1 || !this.codeLenses) {
             return;
         }
-        const newCodeLenses: CodeLens[] = inspections.map(s => CodeLensRenderer.toCodeLens(s));
+        const newCodeLenses: CodeLens[] = inspections.flatMap(s => CodeLensRenderer.toCodeLenses(document, s));
         const newCodeLensesMessages = newCodeLenses.map(c => c.command?.title.trim());
         const existingCodeLenses = this.codeLenses.get(document.uri) ?? [];
         const leftCodeLenses = existingCodeLenses.filter(c => !newCodeLensesMessages.includes(c.command?.title.trim()));
@@ -49,15 +50,25 @@ export class CodeLensRenderer implements InspectionRenderer {
         this.provider.refresh();
     }
 
-    private static toCodeLens(inspection: Inspection): CodeLens {
+    private static toCodeLenses(document: TextDocument, inspection: Inspection): CodeLens[] {
+        const codeLenses = [];
         const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
-        const codeLens = new CodeLens(range, {
-            title: inspection.solution,
+        const inspectionCodeLens = new CodeLens(range, {
+            title: capitalize(inspection.solution),
             tooltip: inspection.problem.description,
-            command: COMMAND_FIX,
+            command: COMMAND_FIX_INSPECTION,
             arguments: [inspection.problem, inspection.solution, 'codelenses']
         });
-        return codeLens;
+        codeLenses.push(inspectionCodeLens);
+
+        const ignoreCodeLens = new CodeLens(range, {
+            title: 'Ignore',
+            tooltip: `Ignore "${uncapitalize(inspection.problem.description)}"`,
+            command: COMMAND_IGNORE_INSPECTIONS,
+            arguments: [document, inspection.symbol, inspection]
+        });
+        codeLenses.push(ignoreCodeLens);
+        return codeLenses;
     }
 }
 

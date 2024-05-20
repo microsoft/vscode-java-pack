@@ -15,6 +15,11 @@ export async function getClassesContainedInRange(range: Range | Selection, docum
         .filter(clazz => range.contains(clazz.range));
 }
 
+export async function getClassesAndMethodsContainedInRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
+    const symbols = await getClassesAndMethodsOfDocument(document);
+    return symbols.filter(symbol => range.contains(symbol.range));
+}
+
 /**
  * get the innermost class symbol that completely contains the `range` in the `document`
  */

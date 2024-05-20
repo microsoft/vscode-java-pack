@@ -2,8 +2,8 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, Range, Selection, TextDocument, languages } from "vscode";
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
-import { logger } from "../../../copilot/utils";
-import { COMMAND_FIX } from "../commands";
+import { logger, uncapitalize } from "../../../copilot/utils";
+import { COMMAND_IGNORE_INSPECTIONS, COMMAND_FIX_INSPECTION } from "../commands";
 
 const DIAGNOSTICS_GROUP = 'java.copilot.inspection.diagnostics';
 
@@ -69,17 +69,28 @@ export async function fixDiagnostic(document: TextDocument, _range: Range | Sele
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const inspection: Inspection = diagnostic.additional as Inspection;
-        const action: CodeAction = {
+        const fixAction: CodeAction = {
             title: inspection.solution,
             diagnostics: [diagnostic],
             kind: CodeActionKind.RefactorRewrite,
             command: {
                 title: diagnostic.message,
-                command: COMMAND_FIX,
+                command: COMMAND_FIX_INSPECTION,
                 arguments: [inspection.problem, inspection.solution, 'diagnostics']
             }
         };
-        actions.push(action);
+        actions.push(fixAction);
+        const ignoreAction: CodeAction = {
+            title: `Ignore "${uncapitalize(inspection.problem.description)}"`,
+            diagnostics: [diagnostic],
+            kind: CodeActionKind.RefactorRewrite,
+            command: {
+                title: `Ignore "${uncapitalize(inspection.problem.description)}"`,
+                command: COMMAND_IGNORE_INSPECTIONS,
+                arguments: [document, inspection.symbol, inspection]
+            }
+        };
+        actions.push(ignoreAction);
     }
     return actions;
 }

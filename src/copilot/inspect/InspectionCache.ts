@@ -1,5 +1,5 @@
 import { SymbolKind, TextDocument } from 'vscode';
-import { METHOD_KINDS, getClassesAndMethodsOfDocument, logger } from '../utils';
+import { METHOD_KINDS, getClassesAndMethodsContainedInRange, getClassesAndMethodsOfDocument, logger } from '../utils';
 import { Inspection } from './Inspection';
 import * as crypto from "crypto";
 import { SymbolNode } from './SymbolNode';
@@ -11,20 +11,37 @@ import { SymbolNode } from './SymbolNode';
 const DOC_SYMBOL_VERSION_INSPECTIONS: Map<string, Map<string, [string, Inspection[]]>> = new Map();
 
 export default class InspectionCache {
-    public static hasCache(document: TextDocument, symbol?: SymbolNode): boolean {
+    /**
+     * check if the document or the symbol is cached.
+     * if the symbol is provided, check if the symbol or its contained symbols are cached.
+     */
+    public static async hasCache(document: TextDocument, symbol?: SymbolNode): Promise<boolean> {
         const documentKey = document.uri.fsPath;
         if (!symbol) {
             return DOC_SYMBOL_VERSION_INSPECTIONS.has(documentKey);
         }
         const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
-        const versionInspections = symbolInspections?.get(symbol.qualifiedName);
-        const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, symbol);
-        return versionInspections?.[0] === symbolVersionId;
+        // check if the symbol or its contained symbols are cached
+        const symbols = await getClassesAndMethodsContainedInRange(symbol.range, document);
+        for (const s of symbols) {
+            const versionInspections = symbolInspections?.get(s.qualifiedName);
+            const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, s);
+            if (versionInspections?.[0] === symbolVersionId) {
+                return true;
+            }
+        }
+        return false;
     }
 
+    /**
+     * Get cached inspections of a document, if the document is not cached, return an empty array.
+     * Cached inspections of outdated symbols are filtered out.Symbols are considered outdated if 
+     * their content has changed.
+     */
     public static async getCachedInspectionsOfDoc(document: TextDocument): Promise<Inspection[]> {
         const symbols: SymbolNode[] = await getClassesAndMethodsOfDocument(document);
         const inspections: Inspection[] = [];
+        // we don't get cached inspections directly from the cache, because we need to filter out outdated symbols
         for (const symbol of symbols) {
             const cachedInspections = InspectionCache.getCachedInspectionsOfSymbol(document, symbol);
             inspections.push(...cachedInspections);
@@ -109,6 +126,10 @@ export default class InspectionCache {
         const documentKey = document.uri.fsPath;
         const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, symbol);
         const cachedSymbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey) ?? new Map();
+        inspections.forEach(s => {
+            s.document = document;
+            s.symbol = symbol;
+        });
         // use qualified name to prevent conflicts between symbols with the same signature in same document
         cachedSymbolInspections.set(symbol.qualifiedName, [symbolVersionId, inspections]);
         DOC_SYMBOL_VERSION_INSPECTIONS.set(documentKey, cachedSymbolInspections);

@@ -5,10 +5,12 @@ import { Inspection, InspectionProblem } from "./Inspection";
 import { uncapitalize } from "../utils";
 import { SymbolNode } from "./SymbolNode";
 import { DocumentRenderer } from "./DocumentRenderer";
+import InspectionCache from "./InspectionCache";
 
 export const COMMAND_INSPECT_CLASS = 'java.copilot.inspect.class';
 export const COMMAND_INSPECT_RANGE = 'java.copilot.inspect.range';
-export const COMMAND_FIX = 'java.copilot.fix.inspection';
+export const COMMAND_FIX_INSPECTION = 'java.copilot.inspection.fix';
+export const COMMAND_IGNORE_INSPECTIONS = 'java.copilot.inspection.ignore';
 
 export function registerCommands(copilot: InspectionCopilot, renderer: DocumentRenderer) {
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: SymbolNode) => {
@@ -21,10 +23,10 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         renderer.rerender(document);
     });
 
-    instrumentOperationAsVsCodeCommand(COMMAND_FIX, async (problem: InspectionProblem, solution: string, source: string) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_FIX_INSPECTION, async (problem: InspectionProblem, solution: string, source: string) => {
         // source is where is this command triggered from, e.g. "gutter", "codelens", "diagnostic"
         const range = Inspection.getIndicatorRangeOfInspection(problem);
-        sendInfo(`${COMMAND_FIX}.info`, { problem: problem.description, solution, source });
+        sendInfo(`${COMMAND_FIX_INSPECTION}.info`, { problem: problem.description, solution, source });
         void commands.executeCommand('vscode.editorChat.start', {
             autoSend: true,
             message: `/fix ${problem.description}, maybe ${uncapitalize(solution)}`,
@@ -32,5 +34,13 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
             initialSelection: new Selection(range.start, range.end),
             initialRange: range
         });
+    });
+
+    instrumentOperationAsVsCodeCommand(COMMAND_IGNORE_INSPECTIONS, async (document: TextDocument, symbol?: SymbolNode, inspection?: Inspection) => {
+        if (inspection) {
+            sendInfo(`${COMMAND_IGNORE_INSPECTIONS}.info`, { problem: inspection.problem.description, solution: inspection.solution });
+        }
+        InspectionCache.invalidateInspectionCache(document, symbol, inspection);
+        renderer.rerender(document);
     });
 }
