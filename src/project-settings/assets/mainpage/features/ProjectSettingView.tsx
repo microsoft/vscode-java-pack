@@ -7,6 +7,10 @@ import ClasspathConfigurationView from "../../classpath/features/ClasspathConfig
 import { updateActiveTab } from "../../classpath/features/classpathConfigurationViewSlice";
 import "../style.scss";
 import { updateActiveSection } from "./commonSlice";
+import ProjectSelector from "./component/ProjectSelector";
+import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
+import Footer from "./component/Footer";
+import SideBar from "./component/SideBar";
 
 const ProjectSettingView = (): JSX.Element => {
   const activeSection: string = useSelector((state: any) => state.commonConfig.ui.activeSection);
@@ -35,7 +39,7 @@ const ProjectSettingView = (): JSX.Element => {
       if (routes.length > 1) {
         switch (routes[0]) {
           case "classpath":
-            // TODO: sometimes when directly trigger 'COnfigure Java Runtime', the tab won't
+            // TODO: sometimes when directly trigger 'Configure Java Runtime', the tab won't
             // focus to the JDK part, need to investigate
             dispatch(updateActiveTab(routes[1]));
             break;
@@ -46,26 +50,20 @@ const ProjectSettingView = (): JSX.Element => {
     }
   }
 
-  const onClickNavBarItem = (panelId: string) => {
-    dispatch(updateActiveSection(panelId));
-  };
-
   return (
-    <div className="app-container">
-        <div className="app-sidebar">
-          <div className="app-sidebar-content">
-            <div className="mt-2">
-              <div className={`section-link ${activeSection === "classpath" ? "section-link-active" : ""}`} onClick={() => onClickNavBarItem("classpath")}>
-                Classpath
-              </div>
-            </div>
-          </div>
-          <div className="app-sidebar-resizer" />
-        </div>
+    <div className="root">
+      <ProjectSelector />
+      <VSCodeDivider />
+      <div className="app-container">
+        <SideBar />
         <div className="app-frame">
           {getSectionContent()}
         </div>
       </div>
+      <VSCodeDivider />
+      <Footer />
+    </div>
+
   );
 };
 

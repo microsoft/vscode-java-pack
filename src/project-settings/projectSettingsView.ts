@@ -3,7 +3,7 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import { sendError } from "vscode-extension-telemetry-wrapper";
+import { instrumentOperation, sendError, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getExtensionContext, getNonce } from "../utils";
 import { ClasspathPanelHandler } from "./handlers/classpath/ClasspathPanelHandler";
 
@@ -56,6 +56,15 @@ class ProjectSettingView {
 
         context.subscriptions.push(
             new ClasspathPanelHandler(projectSettingsPanel.webview),
+            projectSettingsPanel.webview.onDidReceiveMessage(async (message) => {
+                switch (message.command) {
+                    case "common.onWillExecuteCommand":
+                        this.executeCommand(message.id);
+                        break;
+                    default:
+                        break;
+                }
+            }),
         );
 
         projectSettingsPanel.webview.html = this.getHtmlForWebview(projectSettingsPanel.webview, context.asAbsolutePath("./out/assets/project-settings/index.js"));
@@ -83,6 +92,14 @@ class ProjectSettingView {
         </html>
         `;
     }
+
+    private executeCommand = instrumentOperation("projectSetting.executeCommand", async (operationId: string, commandId: string) => {
+        await vscode.commands.executeCommand(commandId);
+        sendInfo(operationId, {
+            operationName: "projectSetting.executeCommand",
+            arg: commandId,
+        });
+    });
 }
 
 export class ProjectSettingsViewSerializer implements vscode.WebviewPanelSerializer {

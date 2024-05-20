@@ -68,7 +68,7 @@ const UnmanagedFolderSources = (): JSX.Element => {
       <VSCodeDataGridRow className={`${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""} setting-section-grid-row`} id={`sources-${index}`} onMouseEnter={() => setHoveredRow(`sources-${index}`)} onMouseLeave={() => setHoveredRow(null)}  key={source.path}>
         <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-readonly" gridColumn="1">
           <div className="setting-section-grid-cell">
-             <span className={"codicon codicon-folder mr-1"}></span>
+             <span className="codicon codicon-folder mr-1"></span>
              <span>{source.path}</span>
            </div>
           {hoveredRow === `sources-${index}` && projectType === ProjectType.UnmanagedFolder && (

@@ -1,8 +1,8 @@
 .app-container {
-  min-height: 100vh;
+  min-height: calc(100vh - 98px);
   display: flex;
   flex-direction: row;
-  height: 100vh;
+  height: calc(100vh - 98px);
 }
 
 .app-sidebar {
@@ -22,6 +22,10 @@
 
       &:hover {
         cursor: pointer;
+      }
+
+      .codicon {
+        font-size: 12px;
       }
     }
 
@@ -48,6 +52,15 @@
   height: 100vh;
   max-height: 100%;
   z-index: 1;
+  min-width: 560px;
+  margin: 0 18px;
+}
+
+.app-footer {
+  position: absolute;
+  bottom: 0;
+  width: 80%;
+  background: var(--background);
 }
 
 @import "../utils.scss";

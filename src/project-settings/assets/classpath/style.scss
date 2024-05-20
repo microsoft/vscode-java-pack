@@ -1,17 +1,12 @@
 .root {
-  min-width: 560px;
-  margin: 8px 18px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
 }
  
 .setting-header {
   color: var(--vscode-settings-headerForeground);
-}
-
-.setting-footer {
-  position: fixed;
-  bottom: 0;
-  width: 80%;
-  background: var(--background);
 }
  
 .setting-section {

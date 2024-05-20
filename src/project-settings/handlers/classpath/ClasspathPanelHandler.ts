@@ -67,9 +67,6 @@ export class ClasspathPanelHandler implements vscode.Disposable {
             case "classpath.onClickGotoProjectConfiguration":
                 this.gotoProjectConfigurationFile(message.rootUri, message.projectType);
                 break;
-            case "classpath.onWillExecuteCommand":
-                this.executeCommand(message.id);
-                break;
             default:
                 break;
         }
@@ -443,14 +440,6 @@ export class ClasspathPanelHandler implements vscode.Disposable {
             setUserError(err);
             throw (err);
         }
-    });
-
-    private executeCommand = instrumentOperation("classpath.executeCommand", async (operationId: string, commandId: string) => {
-        await vscode.commands.executeCommand(commandId);
-        sendInfo(operationId, {
-            operationName: "classpath.executeCommand",
-            arg: commandId,
-        });
     });
 
     private selectLibraries = instrumentOperation("classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
