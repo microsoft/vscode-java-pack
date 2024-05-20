@@ -36,10 +36,11 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         });
     });
 
-    instrumentOperationAsVsCodeCommand(COMMAND_IGNORE_INSPECTIONS, async (document: TextDocument, symbol?: SymbolNode, inspeciton?: Inspection) => {
-        if (inspeciton) {
-            sendInfo(`${COMMAND_IGNORE_INSPECTIONS}.info`, { problem: inspeciton.problem.description, solution: inspeciton.solution });
+    instrumentOperationAsVsCodeCommand(COMMAND_IGNORE_INSPECTIONS, async (document: TextDocument, symbol?: SymbolNode, inspection?: Inspection) => {
+        if (inspection) {
+            sendInfo(`${COMMAND_IGNORE_INSPECTIONS}.info`, { problem: inspection.problem.description, solution: inspection.solution });
         }
-        void InspectionCache.invalidateInspectionCache(document, symbol, inspeciton).then(() => renderer.rerender(document));
+        InspectionCache.invalidateInspectionCache(document, symbol, inspection);
+        renderer.rerender(document);
     });
 }
