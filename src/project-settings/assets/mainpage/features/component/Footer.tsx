@@ -4,11 +4,11 @@
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { Dispatch } from "@reduxjs/toolkit";
 import React, { useEffect } from "react";
-import { ClasspathEntry, ProjectInfo } from "../../../../handlers/classpath/types";
+import { ClasspathEntry, ProjectInfo } from "../../../../types";
 import { useDispatch, useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
 import { updateLoadingState } from "../../../classpath/features/classpathConfigurationViewSlice";
-import { ClasspathRequest } from "../../../vscode/utils";
+import { ClasspathRequest, MavenRequest } from "../../../vscode/utils";
 
 const Footer = (): JSX.Element => {
 
@@ -18,6 +18,7 @@ const Footer = (): JSX.Element => {
   const activeVmInstallPath: string[] = useSelector((state: any) => state.classpathConfig.data.activeVmInstallPath);
   const projectType: ProjectType[] = useSelector((state: any) => state.commonConfig.data.projectType);
   const libraries: ClasspathEntry[][] = useSelector((state: any) => state.classpathConfig.data.libraries);
+  const activeProfiles: string[] = useSelector((state: any) => state.mavenConfig.data.activeProfiles);
   const loadingState: boolean = useSelector((state: any) => state.classpathConfig.loadingState);
 
   const dispatch: Dispatch<any> = useDispatch();
@@ -31,6 +32,13 @@ const Footer = (): JSX.Element => {
       activeVmInstallPath,
       libraries
     );
+
+    // maven section
+    for (let i = 0; i < projects.length; i++) {
+      if (projectType[i] === ProjectType.Maven) {
+        MavenRequest.onWillUpdateSelectProfiles(projects[i].rootPath, activeProfiles[i]);
+      }
+    }
   };
 
   const onDidChangeLoadingState = (event: OnDidChangeLoadingStateEvent) => {

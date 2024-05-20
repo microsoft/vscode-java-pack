@@ -7,7 +7,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { removeReferencedLibrary, addLibraries } from "../classpathConfigurationViewSlice";
 import { ClasspathRequest } from "../../../vscode/utils";
 import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
-import { ClasspathEntry, ClasspathEntryKind } from "../../../../handlers/classpath/types";
+import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
 
 const Libraries = (): JSX.Element => {
 

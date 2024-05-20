@@ -5,7 +5,7 @@ import React, { Dispatch, useEffect, useState } from "react";
 import { ClasspathRequest, CommonRequest } from "../../../vscode/utils";
 import { VSCodeDivider, VSCodeDropdown, VSCodeOption, } from "@vscode/webview-ui-toolkit/react";
 import { useDispatch, useSelector } from "react-redux";
-import { VmInstall } from "../../../../handlers/classpath/types";
+import { VmInstall } from "../../../../types";
 import { setJdks } from "../classpathConfigurationViewSlice";
 
 const JdkRuntime = (): JSX.Element => {
@@ -97,6 +97,9 @@ const JdkRuntime = (): JSX.Element => {
     // to change its style.
     document.querySelector("#jdk-dropdown")?.shadowRoot
         ?.querySelector(".listbox")?.setAttribute("style", "max-height: initial;");
+    if (vmInstalls.length === 0) {
+      ClasspathRequest.onWillListVmInstalls();
+    }
     return () => window.removeEventListener("message", onDidChangeJdk);
   }, []);
 

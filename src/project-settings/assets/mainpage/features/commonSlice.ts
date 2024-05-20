@@ -3,14 +3,14 @@
 
 import { createSlice } from "@reduxjs/toolkit";
 import { ProjectType } from "../../../../utils/webview";
-import { ProjectState } from "../../../handlers/classpath/types";
+import { ProjectState, SectionId } from "../../../types";
 import _ from "lodash";
 
 export const commonSlice = createSlice({
     name: "commonConfiguration",
     initialState: {
         ui: {
-            activeSection: "classpath",
+            activeSection: SectionId.Classpath,
             activeProjectIndex: 0,
         },
         data: {
@@ -31,6 +31,10 @@ export const commonSlice = createSlice({
         },
         activeProjectChange: (state, action) => {
             state.ui.activeProjectIndex = action.payload;
+            if (state.data.projectType[state.ui.activeProjectIndex] === ProjectType.Maven
+                    && state.ui.activeSection === SectionId.Maven) {
+                        state.ui.activeSection = SectionId.Classpath;
+            }
         },
         setProjectType: (state, action) => {
             state.data.projectState[state.ui.activeProjectIndex] = ProjectState.Loaded;

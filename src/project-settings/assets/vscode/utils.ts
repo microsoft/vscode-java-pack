@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ProjectType } from "../../../utils/webview";
-import { ClasspathEntry } from "../../handlers/classpath/types";
+import { ClasspathEntry } from "../../types";
 
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi();
@@ -92,6 +92,23 @@ export namespace ClasspathRequest {
             command: "classpath.onClickGotoProjectConfiguration",
             rootUri,
             projectType,
+        });
+    }
+}
+
+export namespace MavenRequest {
+    export function onWillGetSelectedProfiles(uri: string) {
+        vscode.postMessage({
+            command: "maven.onWillGetSelectedProfiles",
+            uri,
+        });
+    }
+
+    export function onWillUpdateSelectProfiles(uri: string, selectedProfiles: string) {
+        vscode.postMessage({
+            command: "maven.onWillUpdateSelectProfiles",
+            uri,
+            selectedProfiles,
         });
     }
 }

@@ -4,13 +4,16 @@
 import React, { Dispatch } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ClasspathConfigurationView from "../../classpath/features/ClasspathConfigurationView";
-import { updateActiveTab } from "../../classpath/features/classpathConfigurationViewSlice";
+import { initializeClasspathData, updateActiveTab } from "../../classpath/features/classpathConfigurationViewSlice";
 import "../style.scss";
-import { updateActiveSection } from "./commonSlice";
+import { listProjects, updateActiveSection } from "./commonSlice";
 import ProjectSelector from "./component/ProjectSelector";
 import { VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
 import Footer from "./component/Footer";
 import SideBar from "./component/SideBar";
+import MavenConfigurationView from "../../maven/features/MavenConfigurationView";
+import { SectionId } from "../../../types";
+import { initializeMavenData } from "../../maven/features/mavenConfigurationViewSlice";
 
 const ProjectSettingView = (): JSX.Element => {
   const activeSection: string = useSelector((state: any) => state.commonConfig.ui.activeSection);
@@ -24,8 +27,10 @@ const ProjectSettingView = (): JSX.Element => {
   }, []);
 
   const getSectionContent = () => {
-    if (activeSection === "classpath") {
+    if (activeSection === SectionId.Classpath) {
       return <ClasspathConfigurationView />;
+    } else if (activeSection === SectionId.Maven) {
+      return <MavenConfigurationView />;
     }
 
     return null;
@@ -38,7 +43,7 @@ const ProjectSettingView = (): JSX.Element => {
       dispatch(updateActiveSection(routes[0]));
       if (routes.length > 1) {
         switch (routes[0]) {
-          case "classpath":
+          case SectionId.Classpath:
             // TODO: sometimes when directly trigger 'Configure Java Runtime', the tab won't
             // focus to the JDK part, need to investigate
             dispatch(updateActiveTab(routes[1]));
@@ -47,6 +52,10 @@ const ProjectSettingView = (): JSX.Element => {
             break;
         }
       }
+    } else if (data.command === "main.onDidListProjects") {
+      dispatch(initializeClasspathData({ projectsNum: data.projectInfo?.length }));
+      dispatch(initializeMavenData({ projectsNum: data.projectInfo?.length }));
+      dispatch(listProjects(data.projectInfo));
     }
   }
 

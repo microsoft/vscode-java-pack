@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { ProjectType } from "../../../utils/webview";
+import { ProjectType } from "../utils/webview";
 
 export interface ProjectInfo {
     name: string;
@@ -47,4 +47,10 @@ export enum ClasspathViewException {
 export enum ProjectState {
     Unloaded = "unloaded",
     Loaded = "loaded",
+}
+
+export enum SectionId {
+    Classpath = "classpath",
+    Maven = "maven",
+    Formatter = "formatter",
 }
