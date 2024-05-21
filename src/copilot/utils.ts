@@ -1,5 +1,6 @@
-import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol } from "vscode";
+import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, ProgressLocation, version } from "vscode";
 import { SymbolNode } from "./inspect/SymbolNode";
+import { SemVer } from "semver";
 
 export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
@@ -85,6 +86,32 @@ export function isCodeLensDisabled(): boolean {
 export async function getProjectJavaVersion(document: TextDocument): Promise<number> {
     const uri = document.uri.toString();
     const key = "org.eclipse.jdt.core.compiler.source";
-    const settings: { [key]: string } = await commands.executeCommand("java.project.getSettings", uri, [key]);
-    return parseInt(settings[key]) || 17;
+    try {
+        const settings: { [key]: string } = await retryOnFailure(async () => {
+            return await commands.executeCommand("java.project.getSettings", uri, [key]);
+        });
+        return parseInt(settings[key]) || 17;
+    } catch (e) {
+        throw new Error(`Failed to get Java version, please check if the project is loaded normally: ${e}`);
+    }
+}
+
+export async function retryOnFailure<T>(task: () => Promise<T>, timeout: number = 15000, retryInterval: number = 3000): Promise<T> {
+    const startTime = Date.now();
+
+    while (true) {
+        try {
+            return await task();
+        } catch (error) {
+            if (Date.now() - startTime >= timeout) {
+                throw error;
+            } else {
+                await new Promise(resolve => setTimeout(resolve, retryInterval));
+            }
+        }
+    }
+}
+
+export function isLlmApiReady(): boolean {
+    return new SemVer(version).compare(new SemVer("1.90.0-insider")) >= 0;
 }

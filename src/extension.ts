@@ -24,6 +24,7 @@ import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { activateCopilotInspection } from "./copilot/inspect";
 import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
+import { isLlmApiReady } from "./copilot/utils";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -47,7 +48,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   initDaemon(context);
 
   activatedTimestamp = performance.now();
-  if(context.storageUri) {
+  if (context.storageUri) {
     const javaWorkspaceStoragePath = path.join(context.storageUri.fsPath, "..", "redhat.java");
     cleanJavaWorkspaceIndicator = path.join(javaWorkspaceStoragePath, "jdt_ws", ".cleanWorkspace");
   }
@@ -83,7 +84,9 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
     });
   }
 
-  activateCopilotInspection(context);
+  if (isLlmApiReady()) {
+    activateCopilotInspection(context);
+  }
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {

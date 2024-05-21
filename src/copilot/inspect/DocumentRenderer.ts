@@ -104,7 +104,11 @@ export class DocumentRenderer {
         if (settings.length === 0) {
             settings.push('diagnostics');
             settings.push('rulerhighlights');
-            settings.push(isCodeLensDisabled() ? 'guttericons' : 'codelenses');
+            const disabled = isCodeLensDisabled();
+            if (disabled) {
+                logger.warn('CodeLens is disabled, fallback to GutterIcons');
+            }
+            settings.push(disabled ? 'guttericons' : 'codelenses');
         }
         return settings;
     }
