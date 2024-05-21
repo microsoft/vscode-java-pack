@@ -28,7 +28,8 @@ export default class Copilot {
         const messages = [...systemMessagesOrSamples];
         const _send = async (message: string): Promise<boolean> => {
             rounds++;
-            logger.info(`User: \n`, message);
+            logger.debug(`User: \n`, message);
+            logger.info(`User: ${message.split('\n')[0]}...`);
             messages.push(new LanguageModelChatMessage(LanguageModelChatMessageRole.User, message));
             logger.info('Copilot: thinking...');
 
@@ -47,7 +48,8 @@ export default class Copilot {
                 throw new Error(`Failed to send request to copilot: ${e}`);
             }
             messages.push(new LanguageModelChatMessage(LanguageModelChatMessageRole.Assistant, rawAnswer));
-            logger.info(`Copilot: \n`, rawAnswer);
+            logger.debug(`Copilot: \n`, rawAnswer);
+            logger.debug(`Copilot: ${rawAnswer.split('\n')[0]}...`);
             answer += rawAnswer;
             return answer.trim().endsWith(this.endMark);
         };

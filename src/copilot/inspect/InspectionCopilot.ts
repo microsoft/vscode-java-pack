@@ -3,7 +3,7 @@ import Copilot from "../Copilot";
 import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
 import path from "path";
-import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatMessage, LanguageModelChatMessageRole } from "vscode";
+import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatMessage } from "vscode";
 import { COMMAND_FIX_INSPECTION } from "./commands";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
@@ -162,7 +162,7 @@ export default class InspectionCopilot extends Copilot {
             const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
             const inspections = await window.withProgress({
                 location: ProgressLocation.Notification,
-                title: `Inspecting ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\"`,
+                title: `Inspecting ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}"`,
                 cancellable: false
             }, (_progress) => {
                 return this.doInspectRange(document, expandedRange);
@@ -170,13 +170,13 @@ export default class InspectionCopilot extends Copilot {
 
             // show message based on the number of inspections
             if (inspections.length < 1) {
-                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got 0 suggestions.`);
+                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}" and got 0 suggestions.`);
             } else if (inspections.length == 1) {
                 // apply the only suggestion automatically
                 void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0].problem, inspections[0].solution, 'auto');
             } else {
                 // show message to go to the first suggestion
-                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of \"${path.basename(document.fileName)}\" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
+                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
                     selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
                 });
             }
@@ -220,10 +220,8 @@ export default class InspectionCopilot extends Copilot {
         const adjustedRange = new Range(new Position(range.start.line, 0), new Position(range.end.line, document.lineAt(range.end.line).text.length));
         const content: string = document.getText(adjustedRange);
         const startLine = range.start.line;
-        const javaVersion = await getProjectJavaVersion(document);
-        const inspections = await this.inspectCode(content, {
-            javaVersion
-        });
+        const context = await this.collectProjectContext(document);
+        const inspections = await this.inspectCode(content, context);
         inspections.forEach(s => {
             s.document = document;
             // real line index to the start of the document
@@ -355,6 +353,11 @@ export default class InspectionCopilot extends Copilot {
             }
         }
         return codeLines;
+    }
+
+    async collectProjectContext(document: TextDocument): Promise<ProjectContext> {
+        const javaVersion = await getProjectJavaVersion(document);
+        return { javaVersion };
     }
 }
 

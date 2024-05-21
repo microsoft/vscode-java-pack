@@ -11,6 +11,7 @@ export const DEPENDENT_EXTENSIONS = ['github.copilot-chat', 'redhat.java'];
 
 export async function activateCopilotInspection(context: ExtensionContext): Promise<void> {
     logger.info('Waiting for dependent extensions to be ready...');
+    await waitUntilExtensionsInstalled(DEPENDENT_EXTENSIONS);
     await waitUntilExtensionsActivated(DEPENDENT_EXTENSIONS);
     logger.info('Activating Java Copilot features...');
     doActivate(context);
@@ -49,25 +50,41 @@ async function rewrite(document: TextDocument, range: Range | Selection, _contex
 export async function waitUntilExtensionsActivated(extensionIds: string[], interval: number = 1500) {
     const start = Date.now();
     return new Promise<void>((resolve) => {
-        if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
+        const notActivatedExtensionIds = extensionIds.filter(id => !extensions.getExtension(id)?.isActive);
+        if (notActivatedExtensionIds.length == 0) {
             logger.info(`All dependent extensions [${extensionIds.join(', ')}] are activated.`);
             return resolve();
         }
-        const notInstalledExtensionIds = extensionIds.filter(id => !extensions.getExtension(id));
-        if (notInstalledExtensionIds.length > 0) {
-            sendInfo('java.copilot.inspection.dependentExtensions.notInstalledExtensions', { extensionIds: `[${notInstalledExtensionIds.join(',')}]` });
-            logger.info(`Dependent extensions [${notInstalledExtensionIds.join(', ')}] are not installed, setting checking interval to 10s.`);
-        } else {
-            logger.info(`All dependent extensions are installed, but some are not activated, keep checking interval ${interval}ms.`);
-        }
-        interval = notInstalledExtensionIds.length > 0 ? 10000 : interval;
+        logger.info(`Dependent extensions [${notActivatedExtensionIds.join(', ')}] are not activated, waiting...`);
         const id = setInterval(() => {
             if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
                 clearInterval(id);
-                sendInfo('java.copilot.inspection.dependentExtensions.waited', { time: Date.now() - start });
-                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be installed/activated.`);
+                sendInfo('java.copilot.inspection.dependentExtensions.waitActivated', { time: Date.now() - start });
+                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be activated.`);
                 resolve();
             }
         }, interval);
+    });
+}
+
+export async function waitUntilExtensionsInstalled(extensionIds: string[]) {
+    const start = Date.now();
+    return new Promise<void>((resolve) => {
+        const notInstalledExtensionIds = extensionIds.filter(id => !extensions.getExtension(id));
+        if (notInstalledExtensionIds.length == 0) {
+            logger.info(`All dependent extensions [${extensionIds.join(', ')}] are installed.`);
+            return resolve();
+        }
+        sendInfo('java.copilot.inspection.dependentExtensions.notInstalledExtensions', { extensionIds: `[${notInstalledExtensionIds.join(',')}]` });
+        logger.info(`Dependent extensions [${notInstalledExtensionIds.join(', ')}] are not installed, waiting...`);
+
+        const disposable = extensions.onDidChange(() => {
+            if (extensionIds.every(id => extensions.getExtension(id))) {
+                disposable.dispose();
+                sendInfo('java.copilot.inspection.dependentExtensions.waitInstalled', { time: Date.now() - start });
+                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be installed.`);
+                resolve();
+            }
+        });
     });
 }
