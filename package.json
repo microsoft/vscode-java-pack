@@ -38,9 +38,6 @@
   "capabilities": {
     "virtualWorkspaces": false
   },
-  "enabledApiProposals": [
-    "languageModels"
-  ],
   "activationEvents": [
     "onLanguage:java",
     "workspaceContains:pom.xml",

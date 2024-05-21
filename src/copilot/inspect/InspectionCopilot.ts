@@ -3,10 +3,11 @@ import Copilot from "../Copilot";
 import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
 import path from "path";
-import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatSystemMessage, LanguageModelChatMessage, LanguageModelChatUserMessage, LanguageModelChatAssistantMessage } from "vscode";
+import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatMessage, LanguageModelChatMessageRole } from "vscode";
 import { COMMAND_FIX_INSPECTION } from "./commands";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
+import { randomUUID } from "crypto";
 
 export default class InspectionCopilot extends Copilot {
 
@@ -242,9 +243,9 @@ export default class InspectionCopilot extends Copilot {
         }
 
         const messages: LanguageModelChatMessage[] = [
-            new LanguageModelChatSystemMessage(InspectionCopilot.SYSTEM_MESSAGE(context)),
-            new LanguageModelChatUserMessage(InspectionCopilot.EXAMPLE_USER_MESSAGE),
-            new LanguageModelChatAssistantMessage(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
+            LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE(context)),
+            LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
+            LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
         ];
         const codeWithInspectionComments = await this.send(messages, codeLinesContent);
         const inspections = this.extractInspections(codeWithInspectionComments, codeLines);
@@ -254,7 +255,10 @@ export default class InspectionCopilot extends Copilot {
             codeLength: code.length,
             codeLines: codeLines.length,
             insectionsCount: inspections.length,
-            problems: inspections.map(i => i.problem.description).join(',')
+            inspections: `[${inspections.map(i => JSON.stringify({
+                problem: i.problem.description,
+                solution: i.solution,
+            })).join(',')}]`,
         });
         return inspections;
     }
@@ -296,6 +300,7 @@ export default class InspectionCopilot extends Copilot {
      */
     private extractInspection(index: number, lines: string[]): Inspection {
         const inspection: Inspection = {
+            id: randomUUID().toString(),
             problem: {
                 description: '',
                 position: { line: -1, relativeLine: -1, code: '' },

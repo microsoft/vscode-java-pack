@@ -35,7 +35,7 @@ export function doActivate(context: ExtensionContext): void {
 
 async function rewrite(document: TextDocument, range: Range | Selection, _context: CodeActionContext, _token: CancellationToken): Promise<CodeAction[]> {
     const action: CodeAction = {
-        title: "Rewrite with new syntax",
+        title: "Rewrite with new Java syntax",
         kind: CodeActionKind.RefactorRewrite,
         command: {
             title: "Rewrite selected code",

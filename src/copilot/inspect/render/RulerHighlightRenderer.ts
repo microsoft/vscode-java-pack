@@ -3,9 +3,10 @@ import { DecorationOptions, ExtensionContext, OverviewRulerLane, TextDocument, T
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
 import { logger } from "../../../copilot/utils";
+import _ from "lodash";
 
 export class RulerHighlightRenderer implements InspectionRenderer {
-    private readonly rulerHighlights: Map<Uri, RulerHighlight[]> = new Map();
+    private readonly rulerHighlights: Map<Uri, InspectionRulerHighlight[]> = new Map();
     private rulerDecorationType: TextEditorDecorationType | undefined;
 
     public install(_context: ExtensionContext): InspectionRenderer {
@@ -44,22 +45,23 @@ export class RulerHighlightRenderer implements InspectionRenderer {
         if (inspections.length < 1 || !editor || !this.rulerDecorationType) {
             return;
         }
-        const newRulerHightlights: RulerHighlight[] = inspections.map(s => RulerHighlightRenderer.toRulerHighlight(s));
-        const newRulerHighlightsMessages = newRulerHightlights.map(d => d.inspection.solution.trim());
-        const existingRulerHighlights = this.rulerHighlights.get(document.uri) ?? [];
-        const leftRulerHighlights = existingRulerHighlights.filter(d => !newRulerHighlightsMessages.includes(d.inspection.solution.trim()));
-        newRulerHightlights.push(...leftRulerHighlights);
+        const oldItems: readonly InspectionRulerHighlight[] = this.rulerHighlights.get(document.uri) ?? [];
+        const oldIds: string[] = _.uniq(oldItems).map(c => c.inspection.id);
+        const newIds: string[] = inspections.map(i => i.id);
+        const toKeep: InspectionRulerHighlight[] = _.intersection(oldIds, newIds).map(id => oldItems.find(c => c.inspection.id === id)!) ?? [];
+        const toAdd: InspectionRulerHighlight[] = _.difference(newIds, oldIds).map(id => inspections.find(i => i.id === id)!).map(i => RulerHighlightRenderer.toRulerHighlight(i));
+        const newRulerHightlights: InspectionRulerHighlight[] = [...toKeep, ...toAdd];
         this.rulerHighlights.set(document.uri, newRulerHightlights);
 
         editor.setDecorations(this.rulerDecorationType, newRulerHightlights);
     }
 
-    private static toRulerHighlight(inspection: Inspection): RulerHighlight {
+    private static toRulerHighlight(inspection: Inspection): InspectionRulerHighlight {
         const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
         return { range, inspection };
     }
 }
 
-interface RulerHighlight extends DecorationOptions {
+interface InspectionRulerHighlight extends DecorationOptions {
     inspection: Inspection;
 }
