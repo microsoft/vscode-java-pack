@@ -220,8 +220,8 @@ export default class InspectionCopilot extends Copilot {
         const adjustedRange = new Range(new Position(range.start.line, 0), new Position(range.end.line, document.lineAt(range.end.line).text.length));
         const content: string = document.getText(adjustedRange);
         const startLine = range.start.line;
-        const context = await this.collectProjectContext(document);
-        const inspections = await this.inspectCode(content, context);
+        const projectContext = await this.collectProjectContext(document);
+        const inspections = await this.inspectCode(content, projectContext);
         inspections.forEach(s => {
             s.document = document;
             // real line index to the start of the document

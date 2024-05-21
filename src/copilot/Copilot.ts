@@ -49,7 +49,7 @@ export default class Copilot {
             }
             messages.push(new LanguageModelChatMessage(LanguageModelChatMessageRole.Assistant, rawAnswer));
             logger.debug(`Copilot: \n`, rawAnswer);
-            logger.debug(`Copilot: ${rawAnswer.split('\n')[0]}...`);
+            logger.info(`Copilot: ${rawAnswer.split('\n')[0]}...`);
             answer += rawAnswer;
             return answer.trim().endsWith(this.endMark);
         };
