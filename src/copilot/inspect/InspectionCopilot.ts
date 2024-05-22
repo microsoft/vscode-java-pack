@@ -1,4 +1,4 @@
-import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
 import { fixedInstrumentSimpleOperation, getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
@@ -22,7 +22,7 @@ export default class InspectionCopilot extends Copilot {
     // @PROBLEM: problem of the code in less than 10 words, should be as short as possible, starts with a gerund/noun word, e.g., "Using".
     // @SOLUTION: solution to fix the problem in less than 10 words, should be as short as possible, starts with a verb.
     // @INDICATOR: indicator of the problematic code block, must be a single word contained by the problematic code. it's usually a Java keyword, a method/field/variable name, or a value(e.g. magic number)... but NOT multiple, '<null>' if cannot be identified
-    // @SEVERITY: severity of the problem, must be one of **[HIGH, MIDDLE, LOW]**, *HIGH* for Probable bugs, Security risks, Exception handling or Resource management(e.g. memory leaks); *MIDDLE* for Error handling, Performance, Reflective accesses issues and Verbose or redundant code; *LOW* for others
+    // @SEVERITY: severity of the problem, must be one of **[HIGH, MIDDLE, LOW]**
     the original problematic code...
     \`\`\`
     The comment must be placed directly above the problematic code, and the problematic code must be kept unchanged.
@@ -162,7 +162,7 @@ export default class InspectionCopilot extends Copilot {
             const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
             const inspections = await window.withProgress({
                 location: ProgressLocation.Notification,
-                title: `Inspecting ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}"`,
+                title: `Inspecting ${symbolKind} ${symbolName}...`,
                 cancellable: false
             }, (_progress) => {
                 return this.doInspectRange(document, expandedRange);
@@ -173,7 +173,7 @@ export default class InspectionCopilot extends Copilot {
                 void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}" and got 0 suggestions.`);
             } else if (inspections.length == 1) {
                 // apply the only suggestion automatically
-                void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0].problem, inspections[0].solution, 'auto');
+                void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0], 'auto');
             } else {
                 // show message to go to the first suggestion
                 void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
