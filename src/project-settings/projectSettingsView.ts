@@ -5,8 +5,9 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getExtensionContext, getNonce } from "../utils";
-import { ClasspathRequestHandler } from "./handlers/classpath/ClasspathRequestHandler";
-import { MavenRequestHandler } from "./handlers/classpath/MavenRequestHandler";
+import { ClasspathRequestHandler } from "./handlers/ClasspathRequestHandler";
+import { MavenRequestHandler } from "./handlers/MavenRequestHandler";
+import { CompilerRequestHandler } from "./handlers/CompilerRequestHandler";
 
 let projectSettingsPanel: vscode.WebviewPanel | undefined;
 class ProjectSettingView {
@@ -62,6 +63,7 @@ class ProjectSettingView {
 
         context.subscriptions.push(
             new ClasspathRequestHandler(projectSettingsPanel.webview),
+            new CompilerRequestHandler(projectSettingsPanel.webview),
             new MavenRequestHandler(projectSettingsPanel.webview),
             projectSettingsPanel.webview.onDidReceiveMessage(async (message) => {
                 switch (message.command) {

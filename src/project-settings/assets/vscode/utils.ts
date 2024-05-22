@@ -112,3 +112,34 @@ export namespace MavenRequest {
         });
     }
 }
+
+export namespace CompilerRequest {
+    export function onWillGetAvailableComplianceLevels() {
+        vscode.postMessage({
+            command: "compiler.onWillGetAvailableComplianceLevels",
+        });
+    }
+
+    export function onWillGetCompilerSettings(uri: string) {
+        vscode.postMessage({
+            command: "compiler.onWillGetCompilerSettings",
+            uri,
+        });
+    }
+
+    export function onWillUpdateCompilerSettings(uri: string, useRelease: boolean, enablePreview: boolean,
+            complianceLevel: string, sourceLevel: string, targetLevel: string, generateDebugInfo: boolean,
+            storeMethodParamNames: boolean) {
+        vscode.postMessage({
+            command: "compiler.onWillUpdateCompilerSettings",
+            uri,
+            useRelease,
+            enablePreview,
+            complianceLevel,
+            sourceLevel,
+            targetLevel,
+            generateDebugInfo,
+            storeMethodParamNames,
+        });
+    }
+}

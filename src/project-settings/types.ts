@@ -51,6 +51,7 @@ export enum ProjectState {
 
 export enum SectionId {
     Classpath = "classpath",
+    Compiler = "compiler",
     Maven = "maven",
     Formatter = "formatter",
 }

@@ -8,7 +8,7 @@ import { ClasspathEntry, ProjectInfo } from "../../../../types";
 import { useDispatch, useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
 import { updateLoadingState } from "../../../classpath/features/classpathConfigurationViewSlice";
-import { ClasspathRequest, MavenRequest } from "../../../vscode/utils";
+import { ClasspathRequest, CompilerRequest, MavenRequest } from "../../../vscode/utils";
 
 const Footer = (): JSX.Element => {
 
@@ -19,6 +19,13 @@ const Footer = (): JSX.Element => {
   const projectType: ProjectType[] = useSelector((state: any) => state.commonConfig.data.projectType);
   const libraries: ClasspathEntry[][] = useSelector((state: any) => state.classpathConfig.data.libraries);
   const activeProfiles: string[] = useSelector((state: any) => state.mavenConfig.data.activeProfiles);
+  const useRelease: boolean[] = useSelector((state: any) => state.compilerConfig.data.useRelease);
+  const enablePreview: boolean[] = useSelector((state: any) => state.compilerConfig.data.enablePreview);
+  const complianceLevel: string[] = useSelector((state: any) => state.compilerConfig.data.complianceLevel);
+  const sourceLevel: string[] = useSelector((state: any) => state.compilerConfig.data.sourceLevel);
+  const targetLevel: string[] = useSelector((state: any) => state.compilerConfig.data.targetLevel);
+  const generateDebugInfo: boolean[] = useSelector((state: any) => state.compilerConfig.data.generateDebugInfo);
+  const storeMethodParamNames: boolean[] = useSelector((state: any) => state.compilerConfig.data.storeMethodParamNames);
   const loadingState: boolean = useSelector((state: any) => state.classpathConfig.loadingState);
 
   const dispatch: Dispatch<any> = useDispatch();
@@ -38,6 +45,20 @@ const Footer = (): JSX.Element => {
       if (projectType[i] === ProjectType.Maven) {
         MavenRequest.onWillUpdateSelectProfiles(projects[i].rootPath, activeProfiles[i]);
       }
+    }
+
+    // compiler section
+    for (let i = 0; i < projects.length; i++) {
+      CompilerRequest.onWillUpdateCompilerSettings(
+        projects[i].rootPath,
+        useRelease[i],
+        enablePreview[i],
+        complianceLevel[i],
+        sourceLevel[i],
+        targetLevel[i],
+        generateDebugInfo[i],
+        storeMethodParamNames[i]
+      );
     }
   };
 

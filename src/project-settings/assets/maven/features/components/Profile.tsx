@@ -44,17 +44,15 @@ const Profile = (): JSX.Element => {
 
   return (
     <div className="setting-section">
-      <div>
-        <div className="setting-section-subtitle">
-          <h4 className="mt-3 mb-1 mr-1">Active Maven Profiles</h4>
-          <span>(comma separated)</span>
-        </div>
-
-        <VSCodeTextField className="setting-section-text"
-          value={activeProfiles ?? ""}
-          onInput={handleInput}>
-        </VSCodeTextField>
+      <div className="setting-section-subtitle">
+        <h4 className="mt-3 mb-1 mr-1">Active Maven Profiles</h4>
+        <span>(comma separated)</span>
       </div>
+
+      <VSCodeTextField className="setting-section-text"
+        value={activeProfiles ?? ""}
+        onInput={handleInput}>
+      </VSCodeTextField>
     </div>
   );
 };
