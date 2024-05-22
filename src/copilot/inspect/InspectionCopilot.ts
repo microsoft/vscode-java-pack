@@ -91,7 +91,7 @@ export default class InspectionCopilot extends Copilot {
     private static readonly DEFAULT_MAX_CONCURRENCIES: number = 3;
 
     private readonly debounceMap = new Map<string, NodeJS.Timeout>();
-    private concurrencies: number = 0;
+    private readonly inspecting: Set<TextDocument> = new Set<TextDocument>();
 
     public constructor(
         private readonly maxConcurrencies: number = InspectionCopilot.DEFAULT_MAX_CONCURRENCIES,
@@ -100,7 +100,7 @@ export default class InspectionCopilot extends Copilot {
     }
 
     public get busy(): boolean {
-        return this.concurrencies >= this.maxConcurrencies;
+        return this.inspecting.size >= this.maxConcurrencies;
     }
 
     public async inspectDocument(document: TextDocument): Promise<Inspection[]> {
@@ -125,8 +125,11 @@ export default class InspectionCopilot extends Copilot {
             void window.showWarningMessage(`Copilot is busy, please retry after current inspecting tasks are finished.`);
             return Promise.resolve([]);
         }
+        if (this.inspecting.has(document)) {
+            return Promise.resolve([]);
+        }
         try {
-            this.concurrencies++;
+            this.inspecting.add(document);
             // ajust the range to the minimal container class or (multiple) method symbols
             const methods: SymbolNode[] = await getIntersectionMethodsOfRange(range, document);
             const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
@@ -165,7 +168,7 @@ export default class InspectionCopilot extends Copilot {
             InspectionCache.cache(document, symbols, inspections);
             return inspections;
         } finally {
-            this.concurrencies--;
+            this.inspecting.delete(document);
         }
     }
 
