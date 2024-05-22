@@ -27,10 +27,15 @@ class ProjectSettingView {
         }
 
         projectSettingsPanel.reveal();
-        projectSettingsPanel.webview.postMessage({
-            command: "main.onWillChangeRoute",
-            route: sectionId
-        });
+        const oneTimeHook = projectSettingsPanel.webview.onDidReceiveMessage(() => {
+            // send the route change msg once react component is ready.
+            // and dispose it once it's done.
+            projectSettingsPanel!.webview.postMessage({
+                command: "main.onWillChangeRoute",
+                route: sectionId
+            });
+            oneTimeHook.dispose();
+        })
     }
 
     public async initializeWebview(context: vscode.ExtensionContext): Promise<void> {
