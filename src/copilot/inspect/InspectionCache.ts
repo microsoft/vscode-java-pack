@@ -5,9 +5,9 @@ import { SymbolNode } from './SymbolNode';
 
 /**
  * A map based cache for inspections of a document.
- * format: `Map<documentKey, Map<symbolQualifiedName, [symbolVersionId, Inspection[]]`
+ * format: `Map<documentKey, Map<symbolQualifiedName, [symbolSnapshotId, Inspection[]]`
  */
-const DOC_SYMBOL_VERSION_INSPECTIONS: Map<string, Map<string, [string, Inspection[]]>> = new Map();
+const DOC_SYMBOL_SNAPSHOT_INSPECTIONS: Map<string, Map<string, [string, Inspection[]]>> = new Map();
 
 export default class InspectionCache {
     /**
@@ -17,14 +17,14 @@ export default class InspectionCache {
     public static async hasCache(document: TextDocument, symbol?: SymbolNode): Promise<boolean> {
         const documentKey = document.uri.fsPath;
         if (!symbol) {
-            return DOC_SYMBOL_VERSION_INSPECTIONS.has(documentKey);
+            return DOC_SYMBOL_SNAPSHOT_INSPECTIONS.has(documentKey);
         }
-        const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
+        const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
         // check if the symbol or its contained symbols are cached
         const symbols = await getClassesAndMethodsContainedInRange(symbol.range, document);
         for (const s of symbols) {
-            const versionInspections = symbolInspections?.get(s.qualifiedName);
-            if (versionInspections?.[0] === s.versionId) {
+            const snapshotInspections = symbolInspections?.get(s.qualifiedName);
+            if (snapshotInspections?.[0] === s.snapshotId) {
                 return true;
             }
         }
@@ -52,11 +52,11 @@ export default class InspectionCache {
      */
     public static getCachedInspectionsOfSymbol(document: TextDocument, symbol: SymbolNode): Inspection[] {
         const documentKey = document.uri.fsPath;
-        const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
-        const versionInspections = symbolInspections?.get(symbol.qualifiedName);
-        if (versionInspections?.[0] === symbol.versionId) {
+        const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
+        const snapshotInspections = symbolInspections?.get(symbol.qualifiedName);
+        if (snapshotInspections?.[0] === symbol.snapshotId) {
             logger.debug(`cache hit for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
-            const inspections = versionInspections[1];
+            const inspections = snapshotInspections[1];
             inspections.forEach(s => {
                 s.document = document;
                 s.problem.position.line = s.problem.position.relativeLine + symbol.range.start.line;
@@ -90,13 +90,13 @@ export default class InspectionCache {
      */
     public static invalidateInspectionCache(document?: TextDocument, symbol?: SymbolNode, inspeciton?: Inspection): void {
         if (!document) {
-            DOC_SYMBOL_VERSION_INSPECTIONS.clear();
+            DOC_SYMBOL_SNAPSHOT_INSPECTIONS.clear();
         } else if (!symbol) {
             const documentKey = document.uri.fsPath;
-            DOC_SYMBOL_VERSION_INSPECTIONS.delete(documentKey);
+            DOC_SYMBOL_SNAPSHOT_INSPECTIONS.delete(documentKey);
         } else if (!inspeciton) {
             const documentKey = document.uri.fsPath;
-            const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
+            const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
             // remove the cached inspections of the symbol
             symbolInspections?.delete(symbol.qualifiedName);
             // remove the cached inspections of contained symbols
@@ -107,10 +107,10 @@ export default class InspectionCache {
             });
         } else {
             const documentKey = document.uri.fsPath;
-            const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
-            const versionInspections = symbolInspections?.get(symbol.qualifiedName);
-            if (versionInspections?.[0] === symbol.versionId) {
-                const inspections = versionInspections[1];
+            const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
+            const snapshotInspections = symbolInspections?.get(symbol.qualifiedName);
+            if (snapshotInspections?.[0] === symbol.snapshotId) {
+                const inspections = snapshotInspections[1];
                 // remove the inspection
                 inspections.splice(inspections.indexOf(inspeciton), 1);
             }
@@ -120,13 +120,13 @@ export default class InspectionCache {
     private static cacheSymbolInspections(document: TextDocument, symbol: SymbolNode, inspections: Inspection[]): void {
         logger.debug(`cache ${inspections.length} inspections for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
         const documentKey = document.uri.fsPath;
-        const cachedSymbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey) ?? new Map();
+        const cachedSymbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey) ?? new Map();
         inspections.forEach(s => {
             s.document = document;
             s.symbol = symbol;
         });
         // use qualified name to prevent conflicts between symbols with the same signature in same document
-        cachedSymbolInspections.set(symbol.qualifiedName, [symbol.versionId, inspections]);
-        DOC_SYMBOL_VERSION_INSPECTIONS.set(documentKey, cachedSymbolInspections);
+        cachedSymbolInspections.set(symbol.qualifiedName, [symbol.snapshotId, inspections]);
+        DOC_SYMBOL_SNAPSHOT_INSPECTIONS.set(documentKey, cachedSymbolInspections);
     }
 }

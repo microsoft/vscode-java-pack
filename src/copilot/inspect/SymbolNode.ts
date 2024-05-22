@@ -7,15 +7,15 @@ import * as crypto from "crypto";
  * - qualifiedName: the fully qualified name of the symbol
  */
 export class SymbolNode {
-    public readonly versionId: string;
+    public readonly snapshotId: string;
 
     public constructor(
         public readonly document: TextDocument,
         public readonly symbol: DocumentSymbol,
         public readonly parent?: SymbolNode
     ) {
-        // calculate the version id of the symbol immediately because the symbol content may change.
-        this.versionId = SymbolNode.calculateSymbolVersionId(document, symbol);
+        // calculate the snapshot id of the symbol immediately because the symbol content may change.
+        this.snapshotId = SymbolNode.calculateSymbolSnapshotId(document, symbol);
     }
 
     public get range(): Range {
@@ -44,7 +44,7 @@ export class SymbolNode {
     /**
      * generate a unique id for the symbol based on its content, so that we can detect if the symbol has changed
      */
-    private static calculateSymbolVersionId(document: TextDocument, symbol: DocumentSymbol): string {
+    private static calculateSymbolSnapshotId(document: TextDocument, symbol: DocumentSymbol): string {
         const body = document.getText(symbol.range);
         return crypto.createHash('md5').update(body).digest("hex")
     }
