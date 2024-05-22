@@ -1,7 +1,6 @@
 import { SymbolKind, TextDocument } from 'vscode';
 import { METHOD_KINDS, getClassesAndMethodsContainedInRange, getClassesAndMethodsOfDocument, logger } from '../utils';
 import { Inspection } from './Inspection';
-import * as crypto from "crypto";
 import { SymbolNode } from './SymbolNode';
 
 /**
@@ -25,8 +24,7 @@ export default class InspectionCache {
         const symbols = await getClassesAndMethodsContainedInRange(symbol.range, document);
         for (const s of symbols) {
             const versionInspections = symbolInspections?.get(s.qualifiedName);
-            const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, s);
-            if (versionInspections?.[0] === symbolVersionId) {
+            if (versionInspections?.[0] === s.versionId) {
                 return true;
             }
         }
@@ -56,8 +54,7 @@ export default class InspectionCache {
         const documentKey = document.uri.fsPath;
         const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
         const versionInspections = symbolInspections?.get(symbol.qualifiedName);
-        const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, symbol);
-        if (versionInspections?.[0] === symbolVersionId) {
+        if (versionInspections?.[0] === symbol.versionId) {
             logger.debug(`cache hit for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
             const inspections = versionInspections[1];
             inspections.forEach(s => {
@@ -112,8 +109,7 @@ export default class InspectionCache {
             const documentKey = document.uri.fsPath;
             const symbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey);
             const versionInspections = symbolInspections?.get(symbol.qualifiedName);
-            const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, symbol);
-            if (versionInspections?.[0] === symbolVersionId) {
+            if (versionInspections?.[0] === symbol.versionId) {
                 const inspections = versionInspections[1];
                 // remove the inspection
                 inspections.splice(inspections.indexOf(inspeciton), 1);
@@ -124,22 +120,13 @@ export default class InspectionCache {
     private static cacheSymbolInspections(document: TextDocument, symbol: SymbolNode, inspections: Inspection[]): void {
         logger.debug(`cache ${inspections.length} inspections for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
         const documentKey = document.uri.fsPath;
-        const symbolVersionId = InspectionCache.calculateSymbolVersionId(document, symbol);
         const cachedSymbolInspections = DOC_SYMBOL_VERSION_INSPECTIONS.get(documentKey) ?? new Map();
         inspections.forEach(s => {
             s.document = document;
             s.symbol = symbol;
         });
         // use qualified name to prevent conflicts between symbols with the same signature in same document
-        cachedSymbolInspections.set(symbol.qualifiedName, [symbolVersionId, inspections]);
+        cachedSymbolInspections.set(symbol.qualifiedName, [symbol.versionId, inspections]);
         DOC_SYMBOL_VERSION_INSPECTIONS.set(documentKey, cachedSymbolInspections);
-    }
-
-    /**
-     * generate a unique id for the symbol based on its content, so that we can detect if the symbol has changed
-     */
-    private static calculateSymbolVersionId(document: TextDocument, symbol: SymbolNode): string {
-        const body = document.getText(symbol.range);
-        return crypto.createHash('md5').update(body).digest("hex")
     }
 }

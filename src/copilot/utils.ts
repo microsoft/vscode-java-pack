@@ -1,4 +1,4 @@
-import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, ProgressLocation, version } from "vscode";
+import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, version } from "vscode";
 import { SymbolNode } from "./inspect/SymbolNode";
 import { SemVer } from "semver";
 import { createUuid, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
@@ -53,7 +53,7 @@ export function getUnionRange(symbols: SymbolNode[]): Range {
  * get all classes (classes inside methods are not considered) and methods of a document in a pre-order traversal manner
  */
 export async function getClassesAndMethodsOfDocument(document: TextDocument): Promise<SymbolNode[]> {
-    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse().map(symbol => new SymbolNode(symbol));
+    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse().map(symbol => new SymbolNode(document, symbol));
 
     const result: SymbolNode[] = [];
     while (stack.length > 0) {
@@ -70,7 +70,7 @@ export async function getClassesAndMethodsOfDocument(document: TextDocument): Pr
 
 export async function getTopLevelClassesOfDocument(document: TextDocument): Promise<SymbolNode[]> {
     const symbols = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []);
-    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind)).map(symbol => new SymbolNode(symbol));
+    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind)).map(symbol => new SymbolNode(document, symbol));
 }
 
 export function uncapitalize(str: string): string {
