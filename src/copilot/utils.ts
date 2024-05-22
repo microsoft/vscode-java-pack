@@ -1,6 +1,7 @@
 import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, ProgressLocation, version } from "vscode";
 import { SymbolNode } from "./inspect/SymbolNode";
 import { SemVer } from "semver";
+import { createUuid, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
 
 export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
@@ -114,4 +115,39 @@ export async function retryOnFailure<T>(task: () => Promise<T>, timeout: number 
 
 export function isLlmApiReady(): boolean {
     return new SemVer(version).compare(new SemVer("1.90.0-insider")) >= 0;
+}
+
+/**
+ * copied from vscode-extension-telemetry-wrapper, the only difference is we re-throw the error to the caller but the original one doesn't.
+ */
+export function fixedInstrumentOperation(
+    operationName: string,
+    cb: (operationId: string, ...args: any[]) => any,
+    thisArg?: any,
+): (...args: any[]) => any {
+    return async (...args: any[]) => {
+        let error;
+        const operationId = createUuid();
+        const startAt: number = Date.now();
+
+        try {
+            sendOperationStart(operationId, operationName);
+            return await cb.apply(thisArg, [operationId, ...args]);
+        } catch (e) {
+            error = e as Error;
+            sendOperationError(operationId, operationName, error);
+            // NOTE: re-throw the error to the caller
+            throw e;
+        } finally {
+            const duration = Date.now() - startAt;
+            sendOperationEnd(operationId, operationName, duration, error);
+        }
+    };
+}
+
+/**
+ * copied from vscode-extension-telemetry-wrapper, the only difference is we re-throw the error to the caller but the original one doesn't.
+ */
+export function fixedInstrumentSimpleOperation(operationName: string, cb: (...args: any[]) => any, thisArg?: any): (...args: any[]) => any {
+    return fixedInstrumentOperation(operationName, async (_operationId, ...args) => await cb.apply(thisArg, args), thisArg /** unnecessary */);
 }

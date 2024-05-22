@@ -18,7 +18,7 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         try {
             await copilot.inspectClass(document, clazz);
         } catch (e) {
-            window.showErrorMessage(`Failed to inspect class "${clazz.symbol.name}" with error ${e}.`);
+            window.showErrorMessage(`Failed to inspect class "${clazz.symbol.name}", ${e}.`);
             logger.error(`Failed to inspect class "${clazz.symbol.name}".`, e);
             throw e;
         }
@@ -29,7 +29,7 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         try {
             await copilot.inspectRange(document, range);
         } catch (e) {
-            window.showErrorMessage(`Failed to inspect range of "${path.basename(document.fileName)}" with error ${e}.`);
+            window.showErrorMessage(`Failed to inspect range of "${path.basename(document.fileName)}", ${e}.`);
             logger.error(`Failed to inspect range of "${path.basename(document.fileName)}".`, e);
             throw e;
         }

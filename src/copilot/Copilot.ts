@@ -1,6 +1,6 @@
 import { LanguageModelChatMessage, lm, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatMessageRole, LanguageModelChatSelector } from "vscode";
-import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
-import { logger } from "./utils";
+import { fixedInstrumentSimpleOperation, logger } from "./utils";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
 
 export default class Copilot {
     public static readonly DEFAULT_END_MARK = '<|endofresponse|>';
@@ -44,8 +44,10 @@ export default class Copilot {
                     rawAnswer += item;
                 }
             } catch (e) {
-                logger.error(`Failed to send request to copilot`, e);
-                throw new Error(`Failed to send request to copilot: ${e}`);
+                //@ts-ignore
+                const cause = e.cause || e;
+                logger.error(`Failed to send request to copilot`, cause);
+                throw new Error(`Failed to send request to copilot: ${cause}`);
             }
             messages.push(new LanguageModelChatMessage(LanguageModelChatMessageRole.Assistant, rawAnswer));
             logger.debug(`Copilot: \n`, rawAnswer);
@@ -68,6 +70,6 @@ export default class Copilot {
         modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
-        return instrumentSimpleOperation("java.copilot.sendRequest", this.doSend.bind(this))(systemMessagesOrSamples, userMessage, modelOptions, cancellationToken);
+        return fixedInstrumentSimpleOperation("java.copilot.sendRequest", this.doSend.bind(this))(systemMessagesOrSamples, userMessage, modelOptions, cancellationToken);
     }
 }
