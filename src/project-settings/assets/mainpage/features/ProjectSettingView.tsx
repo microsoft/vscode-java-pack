@@ -44,8 +44,6 @@ const ProjectSettingView = (): JSX.Element => {
       if (routes.length > 1) {
         switch (routes[0]) {
           case SectionId.Classpath:
-            // TODO: sometimes when directly trigger 'Configure Java Runtime', the tab won't
-            // focus to the JDK part, need to investigate
             dispatch(updateActiveTab(routes[1]));
             break;
           default:
