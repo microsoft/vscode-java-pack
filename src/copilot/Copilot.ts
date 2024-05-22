@@ -46,8 +46,8 @@ export default class Copilot {
             } catch (e) {
                 //@ts-ignore
                 const cause = e.cause || e;
-                logger.error(`Failed to send request to copilot`, cause);
-                throw new Error(`Failed to send request to copilot: ${cause}`);
+                logger.error(`Failed to chat with copilot`, cause);
+                throw new Error(`Failed to chat with copilot: ${cause}`);
             }
             messages.push(new LanguageModelChatMessage(LanguageModelChatMessageRole.Assistant, rawAnswer));
             logger.debug(`Copilot: \n`, rawAnswer);
