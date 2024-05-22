@@ -8,8 +8,8 @@ import Output from "./components/Output";
 import Sources from "./components/Sources";
 import Libraries from "./components/Libraries";
 import Exception from "./components/Exception";
-import { ClasspathViewException, ProjectInfo } from "../../../handlers/classpath/types";
-import { catchException, initializeProjectsData, listVmInstalls, loadClasspath, updateActiveTab } from "./classpathConfigurationViewSlice";
+import { ClasspathViewException, ProjectInfo } from "../../../types";
+import { catchException, listVmInstalls, loadClasspath, updateActiveTab } from "./classpathConfigurationViewSlice";
 import JdkRuntime from "./components/JdkRuntime";
 import { ClasspathRequest } from "../../vscode/utils";
 import { VSCodePanelTab, VSCodePanelView, VSCodePanels, VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
@@ -17,7 +17,7 @@ import { ProjectType } from "../../../../utils/webview";
 import UnmanagedFolderSources from "./components/UnmanagedFolderSources";
 import Hint from "./components/Hint";
 import "../style.scss";
-import { listProjects, setProjectType } from "../../mainpage/features/commonSlice";
+import { setProjectType } from "../../mainpage/features/commonSlice";
 
 const ClasspathConfigurationView = (): JSX.Element => {
   const activeTab: string = useSelector((state: any) => state.classpathConfig.ui.activeTab);
@@ -62,10 +62,7 @@ const ClasspathConfigurationView = (): JSX.Element => {
 
   const onMessage = (event: any) => {
     const { data } = event;
-    if (data.command === "classpath.onDidListProjects") {
-      dispatch(initializeProjectsData({ projectsNum: data.projectInfo?.length }));
-      dispatch(listProjects(data.projectInfo));
-    } else if (data.command === "classpath.onDidListVmInstalls") {
+    if (data.command === "classpath.onDidListVmInstalls") {
       dispatch(listVmInstalls(data.vmInstalls))
     } else if (data.command === "classpath.onDidLoadProjectClasspath") {
       dispatch(setProjectType({
@@ -87,7 +84,6 @@ const ClasspathConfigurationView = (): JSX.Element => {
       // redux store is empty. When switching between tabs, the
       // state will be preserved.
       ClasspathRequest.onWillListProjects();
-      ClasspathRequest.onWillListVmInstalls();
     }
     return () => {
       window.removeEventListener("message", onMessage);

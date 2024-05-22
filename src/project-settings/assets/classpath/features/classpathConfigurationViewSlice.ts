@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { createSlice, current } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 import _ from "lodash";
-import { ClasspathEntry } from "../../../handlers/classpath/types";
+import { ClasspathEntry } from "../../../types";
 
 export const classpathConfigurationViewSlice = createSlice({
     name: "classpathConfig",
@@ -25,7 +25,7 @@ export const classpathConfigurationViewSlice = createSlice({
       updateActiveTab: (state, action) => {
         state.ui.activeTab = action.payload;
       },
-      initializeProjectsData: (state, action) => {
+      initializeClasspathData: (state, action) => {
         const projectNum = action.payload.projectsNum;
         state.data.activeVmInstallPath = Array(projectNum).fill("");
         state.data.sources = Array(projectNum).fill([]);
@@ -40,13 +40,13 @@ export const classpathConfigurationViewSlice = createSlice({
         state.data.output[activeProjectIndex] = action.payload.output;
         state.data.activeVmInstallPath[activeProjectIndex] = action.payload.activeVmInstallPath;
         // Only update the array when they have different elements.
-        const currentSources = _.sortBy(current(state.data.sources), ["path", "output"]); // TODO: activeProjectIndex needed?
+        const currentSources = _.sortBy(state.data.sources[activeProjectIndex], ["path", "output"]);
         const newSources = _.sortBy(action.payload.sources, ["path", "output"]);
         if (!_.isEqual(currentSources, newSources)) {
           state.data.sources[activeProjectIndex] = action.payload.sources;
         }
 
-        const currentLibs = _.sortBy(current(state.data.libraries), ["path"]);
+        const currentLibs = _.sortBy(state.data.libraries[activeProjectIndex], ["path"]);
         const newLibs = _.sortBy(action.payload.libraries, ["path"]);
         if (!_.isEqual(currentLibs, newLibs)) {
           state.data.libraries[activeProjectIndex] = action.payload.libraries;
@@ -97,7 +97,7 @@ function isDifferentStringArray(a1: string[], a2: string[]): boolean {
 
 export const {
   updateActiveTab,
-  initializeProjectsData,
+  initializeClasspathData,
   listVmInstalls,
   loadClasspath,
   updateSource,

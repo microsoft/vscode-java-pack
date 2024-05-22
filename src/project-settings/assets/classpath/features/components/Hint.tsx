@@ -3,7 +3,7 @@
 
 import { VSCodeLink} from "@vscode/webview-ui-toolkit/react";
 import React, { useEffect } from "react";
-import { ProjectInfo } from "../../../../handlers/classpath/types";
+import { ProjectInfo } from "../../../../types";
 import { useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
 import { updateMaxHeight } from "../../utils";

@@ -112,6 +112,11 @@
   }
 }
 
+.setting-section-subtitle {
+  display: flex;
+  align-items: baseline;
+}
+
 .setting-section-text {
   width: 100%;
   max-width: 420px;

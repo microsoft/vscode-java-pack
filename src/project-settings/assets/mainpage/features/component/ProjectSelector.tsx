@@ -3,7 +3,7 @@
 
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { ProjectInfo, ProjectState } from "../../../../handlers/classpath/types";
+import { ProjectInfo, ProjectState } from "../../../../types";
 import { Dispatch } from "@reduxjs/toolkit";
 import { ClasspathRequest } from "../../../vscode/utils";
 import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";

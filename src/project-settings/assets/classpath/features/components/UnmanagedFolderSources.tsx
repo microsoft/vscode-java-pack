@@ -8,7 +8,7 @@ import { updateSource } from "../classpathConfigurationViewSlice";
 import { ClasspathRequest } from "../../../vscode/utils";
 import { ProjectType } from "../../../../../utils/webview";
 import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
-import { ClasspathEntry } from "../../../../handlers/classpath/types";
+import { ClasspathEntry } from "../../../../types";
 
 const UnmanagedFolderSources = (): JSX.Element => {
 

@@ -5,14 +5,14 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getExtensionContext } from "../../../utils";
 import * as fse from "fs-extra";
-import { ProjectInfo, ClasspathComponent, ClasspathViewException, VmInstall, ClasspathEntry, ClasspathEntryKind } from "./types";
+import { ProjectInfo, ClasspathComponent, ClasspathViewException, VmInstall, ClasspathEntry, ClasspathEntryKind } from "../../types";
 import _ from "lodash";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 import { getProjectNameFromUri, getProjectType, isDefaultProject } from "../../../utils/jdt";
 import { ProjectType } from "../../../utils/webview";
 import compareVersions from "compare-versions";
 
-export class ClasspathPanelHandler implements vscode.Disposable {
+export class ClasspathRequestHandler implements vscode.Disposable {
     private webview: vscode.Webview;
     private currentProjectRoot: vscode.Uri | undefined;
     private disposables: vscode.Disposable[] = [];
@@ -139,7 +139,7 @@ export class ClasspathPanelHandler implements vscode.Disposable {
             });
         } else {
             this.webview.postMessage({
-                command: "classpath.onDidListProjects",
+                command: "main.onDidListProjects", // TODO: move it out of the classpath section
                 projectInfo: projects,
             });
         }

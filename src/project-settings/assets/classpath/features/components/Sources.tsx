@@ -7,7 +7,7 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
 import { ClasspathRequest } from "../../../vscode/utils";
 import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
-import { ClasspathEntry, ClasspathEntryKind } from "../../../../handlers/classpath/types";
+import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
 
 const Sources = (): JSX.Element => {
 

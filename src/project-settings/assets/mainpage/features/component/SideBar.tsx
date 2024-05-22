@@ -6,17 +6,19 @@ import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateActiveSection } from "../commonSlice";
 import { CommonRequest } from "../../../vscode/utils";
-
-const CLASSPATH = "classpath";
-const FORMATTER = "formatter";
+import { ProjectType } from "../../../../../utils/webview";
+import { SectionId } from "../../../../types";
 
 const SideBar = (): JSX.Element => {
 
   const activeSection: string = useSelector((state: any) => state.commonConfig.ui.activeSection);
+  const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
+
   const dispatch: Dispatch<any> = useDispatch();
 
   const onClickNavBarItem = (panelId: string) => {
-    if (panelId === FORMATTER) {
+    if (panelId === SectionId.Formatter) {
       CommonRequest.onWillExecuteCommand("java.formatterSettings");
       return;
     }
@@ -27,10 +29,17 @@ const SideBar = (): JSX.Element => {
     <div className="app-sidebar">
       <div className="app-sidebar-content">
         <div className="mt-2">
-          <div className={`section-link ${activeSection === CLASSPATH ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(CLASSPATH)}>
+          <div className={`section-link ${activeSection === SectionId.Classpath ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Classpath)}>
             Classpath
           </div>
-          <div className="section-link mb-1" onClick={() => onClickNavBarItem(FORMATTER)}>
+          {
+            projectType === ProjectType.Maven && (
+              <div className={`section-link ${activeSection === SectionId.Maven ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Maven)}>
+                Maven
+              </div>
+            )
+          }
+          <div className="section-link mb-1" onClick={() => onClickNavBarItem(SectionId.Formatter)}>
             Formatter <span className="codicon codicon-link-external"></span>
           </div>
         </div>
