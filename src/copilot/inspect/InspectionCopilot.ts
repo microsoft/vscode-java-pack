@@ -12,9 +12,9 @@ import { randomUUID } from "crypto";
 export default class InspectionCopilot extends Copilot {
 
     public static readonly SYSTEM_MESSAGE = (context: ProjectContext) => `
-    You are expert at Java and code refactoring. Please identify code blocks that can be rewritten with
-    new features/syntaxes/grammar sugar of Java ${context.javaVersion} and earlier versions to make them more **readable**,
-    **efficient** and **concise** for given code.
+    You are expert at Java and familiar with all newly added syntaxes/grammar sugars of each version. Please identify code blocks 
+    that can be rewritten with new syntaxes/grammar sugar of Java ${context.javaVersion} and earlier versions to make them more 
+    **readable**, **efficient** and **concise** for given code.
     I prefer \`Stream\` to loop, \`Optional\` to null, \`record\` to POJO, \`switch\` to if-else, etc.
     Please comment on the rewritable code directly in the original source code in the following format:
     \`\`\`
@@ -29,7 +29,7 @@ export default class InspectionCopilot extends Copilot {
     Your reply must be the complete original code sent to you plus your comments, without any other modifications.
     Never comment on undertermined problems.
     Never comment on code that is well-written or simple enough.
-    Don't add any explanation, don't format logger. Don't output markdown.
+    Don't add any explanation, don't format output. Don't output markdown.
     You must end your response with "//${Copilot.DEFAULT_END_MARK}".
     `;
     public static readonly EXAMPLE_USER_MESSAGE = `
@@ -49,13 +49,6 @@ export default class InspectionCopilot extends Copilot {
                 result = "FTE";
             }
             return result;
-        }
-        public void test(String[] arr) {
-            try {
-                Integer.parseInt(arr[0]);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
     }
     `;
@@ -84,17 +77,6 @@ export default class InspectionCopilot extends Copilot {
                 result = "FTE";
             }
             return result;
-        }
-        public void test(String[] arr) {
-            try {
-                Integer.parseInt(arr[0]);
-            } catch (Exception e) {
-                // @PROBLEM: Print stack trace in case of an exception
-                // @SOLUTION: Log errors to a logger
-                // @INDICATOR: ex.printStackTrace
-                // @SEVERITY: LOW
-                e.printStackTrace();
-            }
         }
     }
     //${Copilot.DEFAULT_END_MARK}
