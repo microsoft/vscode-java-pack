@@ -36,13 +36,27 @@ export const compilerConfigurationViewSlice = createSlice({
     },
     loadCompilerSettings: (state, action) => {
       const activeProjectIndex = action.payload.activeProjectIndex;
-      state.data.useRelease[activeProjectIndex] = action.payload.useRelease;
-      state.data.enablePreview[activeProjectIndex] = action.payload.enablePreview;
-      state.data.complianceLevel[activeProjectIndex] = action.payload.complianceLevel;
-      state.data.sourceLevel[activeProjectIndex] = action.payload.sourceLevel;
-      state.data.targetLevel[activeProjectIndex] = action.payload.targetLevel;
-      state.data.generateDebugInfo[activeProjectIndex] = action.payload.generateDebugInfo;
-      state.data.storeMethodParamNames[activeProjectIndex] = action.payload.storeMethodParamNames;
+      if (action.payload.useRelease !== undefined) {
+        state.data.useRelease[activeProjectIndex] = action.payload.useRelease;
+      }
+      if (action.payload.enablePreview !== undefined) {
+        state.data.enablePreview[activeProjectIndex] = action.payload.enablePreview;
+      }
+      if (action.payload.complianceLevel !== undefined) {
+        state.data.complianceLevel[activeProjectIndex] = action.payload.complianceLevel;
+      }
+      if (action.payload.sourceLevel !== undefined) {
+        state.data.sourceLevel[activeProjectIndex] = action.payload.sourceLevel;
+      }
+      if (action.payload.targetLevel !== undefined) {
+        state.data.targetLevel[activeProjectIndex] = action.payload.targetLevel;
+      }
+      if (action.payload.generateDebugInfo !== undefined) {
+        state.data.generateDebugInfo[activeProjectIndex] = action.payload.generateDebugInfo;
+      }
+      if (action.payload.storeMethodParamNames !== undefined) {
+        state.data.storeMethodParamNames[activeProjectIndex] = action.payload.storeMethodParamNames;
+      }
     },
     updateUseRelease: (state, action) => {
       const activeProjectIndex = action.payload.activeProjectIndex;

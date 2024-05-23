@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeCheckbox, VSCodeDivider, VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeCheckbox, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import React, { Dispatch, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loadCompilerSettings, updateAvailableComplianceLevels, updateComplianceLevel, updateEnablePreview, updateGenerateDebugInfo, updateSourceLevel, updateStoreMethodParamNames, updateTargetLevel, updateUseRelease } from "./compilerConfigurationViewSlice";
@@ -156,27 +156,42 @@ const CompilerConfigurationView = (): JSX.Element | null => {
 
   return (
     <div className="setting-section">
-      <h4 className="mt-3 mb-3">JDK Compliance</h4>
       <div className={showReleaseFlag ? "" : "invisible"}>
-        <VSCodeCheckbox checked={useRelease} onClick={onClickUseRelease}>Use '--release' option</VSCodeCheckbox>
+        <VSCodeCheckbox checked={useRelease} onClick={onClickUseRelease}>Use '--release' option for cross-compilation (Java 9 and later)</VSCodeCheckbox>
       </div>
-      <div className={`flex-center mt-1 mb-2 ${showReleaseFlag && useRelease ? "" : "invisible"}`}>
-        <span className="mr-1">Compliance level:</span>
-        <VSCodeDropdown value={complianceLevel}>
-            {jdkLevels(complianceLevel, "compliance", onClickComplianceLevel)}
-        </VSCodeDropdown>
-      </div>
-      <div className={`flex-center mt-1 mb-2 ${showReleaseFlag && useRelease ? "invisible" : ""}`}>
-        <span className="mr-1">Source compatibility:</span>
-        <VSCodeDropdown value={sourceLevel}>
-            {jdkLevels(sourceLevel, "source", onClickSourceLevel)}
-        </VSCodeDropdown>
-      </div>
-      <div className={`flex-center mb-2 ${showReleaseFlag && useRelease ? "invisible" : ""}`}>
-        <span className="mr-1">Target compatibility:</span>
-        <VSCodeDropdown value={targetLevel}>
-            {jdkLevels(targetLevel, "target", onClickTargetLevel)}
-        </VSCodeDropdown>
+      <div>
+        <VSCodeDataGrid gridTemplateColumns="40% 60%">
+          <VSCodeDataGridRow className={showReleaseFlag && useRelease ? "" : "invisible"}>
+            <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
+              <span>Bytecode version:</span>
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="2">
+              <VSCodeDropdown value={complianceLevel}>
+                {jdkLevels(complianceLevel, "compliance", onClickComplianceLevel)}
+              </VSCodeDropdown>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          <VSCodeDataGridRow className={showReleaseFlag && useRelease ? "invisible" : ""}>
+            <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
+              <span>Source compatibility:</span>
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="2">
+              <VSCodeDropdown value={sourceLevel}>
+                {jdkLevels(sourceLevel, "source", onClickSourceLevel)}
+              </VSCodeDropdown>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+          <VSCodeDataGridRow className={showReleaseFlag && useRelease ? "invisible" : ""}>
+            <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
+              <span>Target compatibility:</span>
+            </VSCodeDataGridCell>
+            <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="2">
+              <VSCodeDropdown value={targetLevel}>
+                {jdkLevels(targetLevel, "target", onClickTargetLevel)}
+              </VSCodeDropdown>
+            </VSCodeDataGridCell>
+          </VSCodeDataGridRow>
+        </VSCodeDataGrid>
       </div>
       <div className={`mb-2 ${showSourceTargetWarning ? "" : "invisible"}`}>
         <span className="setting-section-warning">

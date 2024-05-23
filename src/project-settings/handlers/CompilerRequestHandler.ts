@@ -96,8 +96,17 @@ export class CompilerRequestHandler implements vscode.Disposable {
         compilerSettings.set(ADD_LINE_NUMBER_ATTRIBUTE, generateDebugInfo ? "generate" : "do not generate");
         compilerSettings.set(ADD_SOURCE_FILE_NAME, generateDebugInfo ? "generate" : "do not generate");
         compilerSettings.set(STORE_METHOD_PARAMETER_INFO, storeMethodParamNames ? "generate" : "do not generate");
+
         await vscode.commands.executeCommand("java.execute.workspaceCommand",
             "java.project.updateSettings", uri, JSON.stringify([...compilerSettings]));
+
+        // Update the version according to the result.
+        this.webview.postMessage({
+            command: "compiler.onDidGetCompilerSettings",
+            complianceLevel: compilerSettings.get(COMPLIANCE_LEVEL),
+            sourceLevel: compilerSettings.get(SOURCE_COMPATIBILITY),
+            targetLevel: compilerSettings.get(TARGET_COMPATIBILITY),
+        });
     });
 
     public dispose() {
