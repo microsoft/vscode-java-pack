@@ -15,6 +15,8 @@ trigger:
   branches:
     include:
       - main
+  pr:
+  - main
 extends:
   template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
