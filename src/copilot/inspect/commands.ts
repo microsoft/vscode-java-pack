@@ -1,4 +1,4 @@
-import { TextDocument, Range, Selection, commands, window } from "vscode";
+import { TextDocument, Range, Selection, commands, window, Uri, env } from "vscode";
 import { instrumentOperationAsVsCodeCommand, sendInfo } from "vscode-extension-telemetry-wrapper";
 import InspectionCopilot from "./InspectionCopilot";
 import { Inspection, InspectionProblem } from "./Inspection";
@@ -13,12 +13,14 @@ export const COMMAND_INSPECT_RANGE = 'java.copilot.inspect.range';
 export const COMMAND_FIX_INSPECTION = 'java.copilot.inspection.fix';
 export const COMMAND_IGNORE_INSPECTIONS = 'java.copilot.inspection.ignore';
 
+const LEARN_MORE_RESPONSE_FILTERED = 'https://docs.github.com/en/copilot/configuring-github-copilot/configuring-github-copilot-settings-on-githubcom#enabling-or-disabling-duplication-detection';
+
 export function registerCommands(copilot: InspectionCopilot, renderer: DocumentRenderer) {
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: SymbolNode) => {
         try {
             await copilot.inspectClass(document, clazz);
         } catch (e) {
-            window.showErrorMessage(`Failed to inspect class "${clazz.symbol.name}", ${e}.`);
+            showErrorMessage(e, document, clazz);
             logger.error(`Failed to inspect class "${clazz.symbol.name}".`, e);
             throw e;
         }
@@ -29,7 +31,7 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         try {
             await copilot.inspectRange(document, range);
         } catch (e) {
-            window.showErrorMessage(`Failed to inspect range of "${path.basename(document.fileName)}", ${e}.`);
+            showErrorMessage(e, document, range);
             logger.error(`Failed to inspect range of "${path.basename(document.fileName)}".`, e);
             throw e;
         }
@@ -55,5 +57,22 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         }
         InspectionCache.invalidateInspectionCache(document, symbol, inspection);
         renderer.rerender(document);
+    });
+}
+
+function showErrorMessage(e: unknown, document: TextDocument, target: SymbolNode | Range) {
+    let message = target instanceof Range ?
+        `Failed to inspect range of "${path.basename(document.fileName)}", ${e}` :
+        `Failed to inspect class "${target.symbol.name}", ${e}`;
+
+    const actions = new Map<string, () => void>();
+    if (e instanceof Error && e.message.toLowerCase().includes('response got filtered')) {
+        actions.set('Learn more', () => env.openExternal(Uri.parse(LEARN_MORE_RESPONSE_FILTERED)));
+        message += ', possibly because it matches existing public code';
+    }
+    window.showErrorMessage(`${message}.`, ...actions.keys()).then(choice => {
+        if (choice) {
+            actions.get(choice)!();
+        }
     });
 }
