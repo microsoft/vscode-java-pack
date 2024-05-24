@@ -34,7 +34,7 @@ export const compilerConfigurationViewSlice = createSlice({
     updateAvailableComplianceLevels: (state, action) => {
       state.ui.availableComplianceLevels = action.payload.availableComplianceLevels;
     },
-    loadCompilerSettings: (state, action) => {
+    updateCompilerSettings: (state, action) => {
       const activeProjectIndex = action.payload.activeProjectIndex;
       if (action.payload.useRelease !== undefined) {
         state.data.useRelease[activeProjectIndex] = action.payload.useRelease;
@@ -58,48 +58,13 @@ export const compilerConfigurationViewSlice = createSlice({
         state.data.storeMethodParamNames[activeProjectIndex] = action.payload.storeMethodParamNames;
       }
     },
-    updateUseRelease: (state, action) => {
-      const activeProjectIndex = action.payload.activeProjectIndex;
-      state.data.useRelease[activeProjectIndex] = action.payload.useRelease;
-    },
-    updateEnablePreview: (state, action) => {
-      const activeProjectIndex = action.payload.activeProjectIndex;
-      state.data.enablePreview[activeProjectIndex] = action.payload.enablePreview;
-    },
-    updateComplianceLevel: (state, action) => {
-      const activeProjectIndex = action.payload.activeProjectIndex;
-      state.data.complianceLevel[activeProjectIndex] = action.payload.complianceLevel;
-    },
-    updateSourceLevel: (state, action) => {
-      const activeProjectIndex = action.payload.activeProjectIndex;
-      state.data.sourceLevel[activeProjectIndex] = action.payload.sourceLevel;
-    },
-    updateTargetLevel: (state, action) => {
-      const activeProjectIndex = action.payload.activeProjectIndex;
-      state.data.targetLevel[activeProjectIndex] = action.payload.targetLevel;
-    },
-    updateGenerateDebugInfo: (state, action) => {
-      const activeProjectIndex = action.payload.activeProjectIndex;
-      state.data.generateDebugInfo[activeProjectIndex] = action.payload.generateDebugInfo;
-    },
-    updateStoreMethodParamNames: (state, action) => {
-      const activeProjectIndex = action.payload.activeProjectIndex;
-      state.data.storeMethodParamNames[activeProjectIndex] = action.payload.storeMethodParamNames;
-    },
   },
 });
 
 export const {
   initializeCompilerData,
   updateAvailableComplianceLevels,
-  loadCompilerSettings,
-  updateUseRelease,
-  updateEnablePreview,
-  updateComplianceLevel,
-  updateSourceLevel,
-  updateTargetLevel,
-  updateGenerateDebugInfo,
-  updateStoreMethodParamNames,
+  updateCompilerSettings,
 } = compilerConfigurationViewSlice.actions;
 
 export default compilerConfigurationViewSlice.reducer;
