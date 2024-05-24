@@ -2,7 +2,6 @@ import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
 import { fixedInstrumentSimpleOperation, getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
-import path from "path";
 import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatMessage } from "vscode";
 import { COMMAND_FIX_INSPECTION } from "./commands";
 import InspectionCache from "./InspectionCache";
@@ -88,10 +87,12 @@ export default class InspectionCopilot extends Copilot {
     `;
 
     // Initialize regex patterns
+    private static readonly COMMENT_PATTERN: RegExp = /\/\/ @[A-Z]+: (.*)/;
     private static readonly PROBLEM_PATTERN: RegExp = /\/\/ @PROBLEM: (.*)/;
     private static readonly SOLUTION_PATTERN: RegExp = /\/\/ @SOLUTION: (.*)/;
     private static readonly INDICATOR_PATTERN: RegExp = /\/\/ @INDICATOR: (.*)/;
     private static readonly LEVEL_PATTERN: RegExp = /\/\/ @SEVERITY: (.*)/;
+    private static readonly INSPECTION_COMMENT_LINE_COUNT = 4;
 
     private static readonly DEFAULT_MAX_CONCURRENCIES: number = 3;
 
@@ -160,13 +161,14 @@ export default class InspectionCopilot extends Copilot {
 
             // show message based on the number of inspections
             if (inspections.length < 1) {
-                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}" and got 0 suggestions.`);
+                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}, etc. and got 0 suggestions.`);
             } else if (inspections.length == 1) {
                 // apply the only suggestion automatically
                 void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0], 'auto');
             } else {
                 // show message to go to the first suggestion
-                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
+                // inspected a, ..., etc. and got n suggestions.
+                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}, etc. and got ${inspections.length} suggestions.`, "Go to").then(selection => {
                     selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
                 });
             }
@@ -259,20 +261,24 @@ export default class InspectionCopilot extends Copilot {
     private extractInspections(codeWithInspectionComments: string, codeLines: { originalLineIndex: number, content: string }[]): Inspection[] {
         const lines = codeWithInspectionComments.split('\n').filter(line => line.trim().length > 0);
         const inspections: Inspection[] = [];
-        let inspectionCommentLineCount = 0;
+        let commentLineCount = 0;
 
         for (let i = 0; i < lines.length;) {
-            const problemMatch = lines[i].match(InspectionCopilot.PROBLEM_PATTERN);
-            if (problemMatch) {
-                const inspection: Inspection = this.extractInspection(i, lines);
-                const codeLineIndex = i - inspectionCommentLineCount;
-                // relative line number to the start of the code inspected, which will be ajusted relative to the start of container symbol later when caching.
-                inspection.problem.position.relativeLine = codeLines[codeLineIndex].originalLineIndex ?? -1;
-                inspection.problem.position.code = codeLines[codeLineIndex].content;
-                inspections.push(inspection);
-                i += 4; // inspection comment has 4 lines
-                inspectionCommentLineCount += 4;
-                continue;
+            const commentMatch = lines[i].match(InspectionCopilot.COMMENT_PATTERN);
+            if (commentMatch) {
+                const inspection: Inspection | undefined = this.extractInspection(i, lines);
+                if (inspection) {
+                    const codeLineIndex = i - commentLineCount;
+                    // relative line number to the start of the code inspected, which will be ajusted relative to the start of container symbol later when caching.
+                    inspection.problem.position.relativeLine = codeLines[codeLineIndex].originalLineIndex ?? -1;
+                    inspection.problem.position.code = codeLines[codeLineIndex].content;
+                    inspections.push(inspection);
+                    i += InspectionCopilot.INSPECTION_COMMENT_LINE_COUNT; // inspection comment has 4 lines
+                    commentLineCount += InspectionCopilot.INSPECTION_COMMENT_LINE_COUNT;
+                    continue;
+                } else {
+                    commentLineCount++;
+                }
             }
             i++;
         }
@@ -286,34 +292,26 @@ export default class InspectionCopilot extends Copilot {
      * @param lines all lines of the code with inspection comments
      * @returns inspection object
      */
-    private extractInspection(index: number, lines: string[]): Inspection {
-        const inspection: Inspection = {
-            id: randomUUID().toString(),
-            problem: {
-                description: '',
-                position: { line: -1, relativeLine: -1, code: '' },
-                indicator: ''
-            },
-            solution: '',
-            severity: ''
-        };
+    private extractInspection(index: number, lines: string[]): Inspection | undefined {
         const problemMatch = lines[index + 0].match(InspectionCopilot.PROBLEM_PATTERN);
         const solutionMatch = lines[index + 1].match(InspectionCopilot.SOLUTION_PATTERN);
         const indicatorMatch = lines[index + 2].match(InspectionCopilot.INDICATOR_PATTERN);
         const severityMatch = lines[index + 3].match(InspectionCopilot.LEVEL_PATTERN);
-        if (problemMatch) {
-            inspection.problem.description = problemMatch[1].trim();
+        if (problemMatch && solutionMatch && indicatorMatch && severityMatch) {
+            return {
+                id: randomUUID().toString(),
+                problem: {
+                    description: problemMatch[1].trim(),
+                    position: { line: -1, relativeLine: -1, code: '' },
+                    indicator: indicatorMatch[1].trim()
+                },
+                solution: solutionMatch[1].trim(),
+                severity: severityMatch[1].trim()
+            };
+        } else {
+            logger.error('Failed to extract inspection from the lines:', lines.slice(index, index + 4));
+            return undefined;
         }
-        if (solutionMatch) {
-            inspection.solution = solutionMatch[1].trim();
-        }
-        if (indicatorMatch) {
-            inspection.problem.indicator = indicatorMatch[1].trim();
-        }
-        if (severityMatch) {
-            inspection.severity = severityMatch[1].trim();
-        }
-        return inspection;
     }
 
     /**
