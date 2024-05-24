@@ -344,11 +344,13 @@ export default class InspectionCopilot extends Copilot {
     }
 
     async collectProjectContext(document: TextDocument): Promise<ProjectContext> {
+        logger.info('colleteting project context info (java version)...');  
         const javaVersion = await getProjectJavaVersion(document);
+        logger.info('project java version:', javaVersion);  
         return { javaVersion };
     }
 }
 
 export interface ProjectContext {
-    javaVersion: number;
+    javaVersion: string;
 }

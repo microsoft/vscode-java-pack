@@ -84,14 +84,14 @@ export function isCodeLensDisabled(): boolean {
     return enabled === false;
 }
 
-export async function getProjectJavaVersion(document: TextDocument): Promise<number> {
+export async function getProjectJavaVersion(document: TextDocument): Promise<string> {
     const uri = document.uri.toString();
     const key = "org.eclipse.jdt.core.compiler.source";
     try {
         const settings: { [key]: string } = await retryOnFailure(async () => {
             return await commands.executeCommand("java.project.getSettings", uri, [key]);
         });
-        return parseInt(settings[key]) || 17;
+        return settings[key] ?? '17';
     } catch (e) {
         throw new Error(`Failed to get Java version, please check if the project is loaded normally: ${e}`);
     }
