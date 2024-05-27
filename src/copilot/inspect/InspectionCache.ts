@@ -25,7 +25,7 @@ export default class InspectionCache {
         for (const s of symbols) {
             const snapshotInspections = symbolInspections?.get(s.qualifiedName);
             if (snapshotInspections?.[0] === s.snapshotId) {
-                return true;
+                return snapshotInspections[1].length > 0;
             }
         }
         return false;
