@@ -71,6 +71,7 @@ export async function fixDiagnostic(document: TextDocument, _range: Range | Sele
             title: inspection.solution,
             diagnostics: [diagnostic],
             kind: CodeActionKind.RefactorRewrite,
+            isPreferred: true,
             command: {
                 title: diagnostic.message,
                 command: COMMAND_FIX_INSPECTION,
@@ -78,17 +79,6 @@ export async function fixDiagnostic(document: TextDocument, _range: Range | Sele
             }
         };
         actions.push(fixAction);
-        const ignoreAction: CodeAction = {
-            title: `Ignore "${uncapitalize(inspection.problem.description)}"`,
-            diagnostics: [diagnostic],
-            kind: CodeActionKind.RefactorRewrite,
-            command: {
-                title: `Ignore "${uncapitalize(inspection.problem.description)}"`,
-                command: COMMAND_IGNORE_INSPECTIONS,
-                arguments: [document, inspection.symbol, inspection]
-            }
-        };
-        actions.push(ignoreAction);
     }
     return actions;
 }
