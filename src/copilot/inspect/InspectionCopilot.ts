@@ -151,9 +151,10 @@ export default class InspectionCopilot extends Copilot {
             // inspect the expanded union range
             const symbolName = symbols[0].symbol.name;
             const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
+            const target = symbols.length > 1 ? `${symbolKind} ${symbolName}, etc.` : `${symbolKind} ${symbolName}`;
             const inspections = await window.withProgress({
                 location: ProgressLocation.Notification,
-                title: `Inspecting ${symbolKind} ${symbolName}...`,
+                title: `Inspecting ${target}...`,
                 cancellable: false
             }, (_progress) => {
                 return this.doInspectRange(document, expandedRange);
@@ -161,14 +162,14 @@ export default class InspectionCopilot extends Copilot {
 
             // show message based on the number of inspections
             if (inspections.length < 1) {
-                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}, etc. and got 0 suggestions.`);
+                void window.showInformationMessage(`Inspected ${target}, and got 0 suggestions.`);
             } else if (inspections.length == 1) {
                 // apply the only suggestion automatically
                 void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0], 'auto');
             } else {
                 // show message to go to the first suggestion
                 // inspected a, ..., etc. and got n suggestions.
-                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}, etc. and got ${inspections.length} suggestions.`, "Go to").then(selection => {
+                void window.showInformationMessage(`Inspected ${target}, and got ${inspections.length} suggestions.`, "Go to").then(selection => {
                     selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
                 });
             }
@@ -344,9 +345,9 @@ export default class InspectionCopilot extends Copilot {
     }
 
     async collectProjectContext(document: TextDocument): Promise<ProjectContext> {
-        logger.info('colleteting project context info (java version)...');  
+        logger.info('colleteting project context info (java version)...');
         const javaVersion = await getProjectJavaVersion(document);
-        logger.info('project java version:', javaVersion);  
+        logger.info('project java version:', javaVersion);
         return { javaVersion };
     }
 }
