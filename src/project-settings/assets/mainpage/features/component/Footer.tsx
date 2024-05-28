@@ -7,58 +7,108 @@ import React, { useEffect } from "react";
 import { ClasspathEntry, ProjectInfo } from "../../../../types";
 import { useDispatch, useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
-import { updateLoadingState } from "../../../classpath/features/classpathConfigurationViewSlice";
+import { flushClasspathToEffective, updateLoadingState } from "../../../classpath/features/classpathConfigurationViewSlice";
 import { ClasspathRequest, CompilerRequest, MavenRequest } from "../../../vscode/utils";
+import _ from "lodash";
+import { flushMavenSettingsToEffective } from "../../../maven/features/mavenConfigurationViewSlice";
+import { flushCompilerSettingsToEffective } from "../../../compiler/features/compilerConfigurationViewSlice";
 
 const Footer = (): JSX.Element => {
 
+  const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
   const projects: ProjectInfo[] = useSelector((state: any) => state.commonConfig.data.projects);
-  const sources: ClasspathEntry[][] = useSelector((state: any) => state.classpathConfig.data.sources);
-  const defaultOutput: string[] = useSelector((state: any) => state.classpathConfig.data.output);
-  const activeVmInstallPath: string[] = useSelector((state: any) => state.classpathConfig.data.activeVmInstallPath);
-  const projectType: ProjectType[] = useSelector((state: any) => state.commonConfig.data.projectType);
-  const libraries: ClasspathEntry[][] = useSelector((state: any) => state.classpathConfig.data.libraries);
-  const activeProfiles: string[] = useSelector((state: any) => state.mavenConfig.data.activeProfiles);
-  const useRelease: boolean[] = useSelector((state: any) => state.compilerConfig.data.useRelease);
-  const enablePreview: boolean[] = useSelector((state: any) => state.compilerConfig.data.enablePreview);
-  const complianceLevel: string[] = useSelector((state: any) => state.compilerConfig.data.complianceLevel);
-  const sourceLevel: string[] = useSelector((state: any) => state.compilerConfig.data.sourceLevel);
-  const targetLevel: string[] = useSelector((state: any) => state.compilerConfig.data.targetLevel);
-  const generateDebugInfo: boolean[] = useSelector((state: any) => state.compilerConfig.data.generateDebugInfo);
-  const storeMethodParamNames: boolean[] = useSelector((state: any) => state.compilerConfig.data.storeMethodParamNames);
+  const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
+
+  const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.sources[activeProjectIndex]);
+  const effectiveSources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.effective.sources[activeProjectIndex]);
+  const defaultOutput: string = useSelector((state: any) => state.classpathConfig.data.output[activeProjectIndex]);
+  const effectiveOutput: string = useSelector((state: any) => state.classpathConfig.data.effective.output[activeProjectIndex]);
+  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.data.activeVmInstallPath[activeProjectIndex]);
+  const effectiveVmInstallPath: string = useSelector((state: any) => state.classpathConfig.data.effective.activeVmInstallPath[activeProjectIndex]);
+  const libraries: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.libraries[activeProjectIndex]);
+  const effectiveLibraries: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.effective.libraries[activeProjectIndex]);
+  const classpathModified: boolean = !_.isEqual(sources, effectiveSources) ||
+      defaultOutput !== effectiveOutput ||
+      activeVmInstallPath !== effectiveVmInstallPath ||
+      !_.isEqual(libraries, effectiveLibraries);
+
+  const activeProfiles: string = useSelector((state: any) => state.mavenConfig.data.activeProfiles[activeProjectIndex]);
+  const effectiveProfiles: string = useSelector((state: any) => state.mavenConfig.data.effective.activeProfiles[activeProjectIndex]);
+  const mavenModified: boolean = !_.isEqual(activeProfiles, effectiveProfiles);
+
+  const useRelease: boolean = useSelector((state: any) => state.compilerConfig.data.useRelease[activeProjectIndex]);
+  const effectiveUseRelease: boolean = useSelector((state: any) => state.compilerConfig.data.effective.useRelease[activeProjectIndex]);
+  const enablePreview: boolean = useSelector((state: any) => state.compilerConfig.data.enablePreview[activeProjectIndex]);
+  const effectiveEnablePreview: boolean = useSelector((state: any) => state.compilerConfig.data.effective.enablePreview[activeProjectIndex]);
+  const complianceLevel: string = useSelector((state: any) => state.compilerConfig.data.complianceLevel[activeProjectIndex]);
+  const effectiveComplianceLevel: string = useSelector((state: any) => state.compilerConfig.data.effective.complianceLevel[activeProjectIndex]);
+  const sourceLevel: string = useSelector((state: any) => state.compilerConfig.data.sourceLevel[activeProjectIndex]);
+  const effectiveSourceLevel: string = useSelector((state: any) => state.compilerConfig.data.effective.sourceLevel[activeProjectIndex]);
+  const targetLevel: string = useSelector((state: any) => state.compilerConfig.data.targetLevel[activeProjectIndex]);
+  const effectiveTargetLevel: string = useSelector((state: any) => state.compilerConfig.data.effective.targetLevel[activeProjectIndex]);
+  const generateDebugInfo: boolean = useSelector((state: any) => state.compilerConfig.data.generateDebugInfo[activeProjectIndex]);
+  const effectiveGenerateDebugInfo: boolean = useSelector((state: any) => state.compilerConfig.data.effective.generateDebugInfo[activeProjectIndex]);
+  const storeMethodParamNames: boolean = useSelector((state: any) => state.compilerConfig.data.storeMethodParamNames[activeProjectIndex]);
+  const effectiveStoreMethodParamNames: boolean = useSelector((state: any) => state.compilerConfig.data.effective.storeMethodParamNames[activeProjectIndex]);
+  const compilerModified: boolean = useRelease !== effectiveUseRelease ||
+      enablePreview !== effectiveEnablePreview ||
+      complianceLevel !== effectiveComplianceLevel ||
+      sourceLevel !== effectiveSourceLevel ||
+      targetLevel !== effectiveTargetLevel ||
+      generateDebugInfo !== effectiveGenerateDebugInfo ||
+      storeMethodParamNames !== effectiveStoreMethodParamNames;
+
   const loadingState: boolean = useSelector((state: any) => state.classpathConfig.loadingState);
 
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleApply = () => {
-    ClasspathRequest.onWillUpdateClassPaths(
-      projects.map(p => p.rootPath),
-      projectType,
-      sources,
-      defaultOutput,
-      activeVmInstallPath,
-      libraries
-    );
+    // classpath section
+    if (classpathModified) {
+      ClasspathRequest.onWillUpdateClassPaths(
+        projects[activeProjectIndex].rootPath,
+        projectType,
+        sources,
+        defaultOutput,
+        activeVmInstallPath,
+        libraries,
+      );
+    }
 
     // maven section
-    for (let i = 0; i < projects.length; i++) {
-      if (projectType[i] === ProjectType.Maven) {
-        MavenRequest.onWillUpdateSelectProfiles(projects[i].rootPath, activeProfiles[i]);
-      }
+    if (mavenModified) {
+      MavenRequest.onWillUpdateSelectProfiles(projects[activeProjectIndex].rootPath, activeProfiles);
     }
 
     // compiler section
-    for (let i = 0; i < projects.length; i++) {
+    if (compilerModified) {
       CompilerRequest.onWillUpdateCompilerSettings(
-        projects[i].rootPath,
-        useRelease[i],
-        enablePreview[i],
-        complianceLevel[i],
-        sourceLevel[i],
-        targetLevel[i],
-        generateDebugInfo[i],
-        storeMethodParamNames[i]
+        projects[activeProjectIndex].rootPath,
+        useRelease,
+        enablePreview,
+        complianceLevel,
+        sourceLevel,
+        targetLevel,
+        generateDebugInfo,
+        storeMethodParamNames,
       );
+    }
+
+    // after update the settings, flush the effective settings.
+    if (classpathModified) {
+      dispatch(flushClasspathToEffective({
+        activeProjectIndex,
+      }));
+    }
+    if (mavenModified) {
+      dispatch(flushMavenSettingsToEffective({
+        activeProjectIndex
+      }));
+    }
+    if (compilerModified) {
+      dispatch(flushCompilerSettingsToEffective({
+        activeProjectIndex,
+      }));
     }
   };
 
@@ -79,7 +129,16 @@ const Footer = (): JSX.Element => {
   return (
     <div id="footer" className="pt-1 pb-2">
         {loadingState && <VSCodeButton className="ml-1" disabled>Applying...</VSCodeButton>}
-        {!loadingState && <VSCodeButton className="ml-1" appearance="primary" onClick={() => handleApply()}>Apply Settings</VSCodeButton>}
+        {!loadingState &&
+          <VSCodeButton
+            className="ml-1"
+            appearance="primary"
+            disabled={!classpathModified && !mavenModified && !compilerModified}
+            onClick={() => handleApply()}
+          >
+            Apply Settings
+          </VSCodeButton>
+        }
     </div>
   );
 };

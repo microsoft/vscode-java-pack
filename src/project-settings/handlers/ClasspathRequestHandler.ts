@@ -57,7 +57,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
                 await this.selectFolder(this.currentProjectRoot, message.type);
                 break;
             case "classpath.onWillUpdateClassPaths":
-                await this.updateClassPaths(message.rootPaths, message.projectTypes, message.sourcePaths, message.defaultOutputPaths, message.vmInstallPaths, message.libraries);
+                await this.updateClassPaths(message.rootPath, message.projectType, message.sourcePaths, message.defaultOutputPath, message.vmInstallPath, message.libraries);
                 break;
             case "classpath.onWillAddNewJdk":
                 await this.addNewJdk(this.currentProjectRoot);
@@ -252,39 +252,36 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         });
     });
 
-    private updateClassPaths = instrumentOperation("classpath.updateClassPaths", async (_operationId: string, rootPaths: string[], projectTypes: ProjectType[], sourcePaths: ClasspathEntry[][], defaultOutputPaths: string[], vmInstallPaths: string[], libraries: ClasspathEntry[][]) => {
+    private updateClassPaths = instrumentOperation("classpath.updateClassPaths", async (_operationId: string, rootPath: string, projectType: ProjectType, sourcePaths: ClasspathEntry[], defaultOutputPath: string, vmInstallPath: string, libraries: ClasspathEntry[]) => {
         this.webview.postMessage({
             command: "classpath.onDidChangeLoadingState",
             loading: true,
         });
 
         try {
-            const projectCount = rootPaths.length;
-            for (let i = 0; i < projectCount; i++) {
-                const currentProjectRoot: vscode.Uri = vscode.Uri.parse(rootPaths[i]);
-                if (projectTypes[i] === ProjectType.UnmanagedFolder) {
-                    this.updateSourcePathsForUnmanagedFolder(currentProjectRoot, sourcePaths[i].map(sp => sp.path));
-                    this.setOutputPath(currentProjectRoot, defaultOutputPaths[i]);
-                    this.updateUnmanagedFolderLibraries(libraries[i].map(l => l.path));
-                    this.changeJdk(currentProjectRoot, vmInstallPaths[i]);
-                } else {
-                    const classpathEntries: ClasspathEntry[] = [];
-                    classpathEntries.push(...sourcePaths[i]);
-                    if (vmInstallPaths[i]?.length > 0) {
-                        classpathEntries.push({
-                            kind: ClasspathEntryKind.Container,
-                            path: `org.eclipse.jdt.launching.JRE_CONTAINER/${vmInstallPaths[i]}`,
-                        });
-                    }
-                    classpathEntries.push(...libraries[i]);
-                    if (classpathEntries.length > 0) {
-                        await vscode.commands.executeCommand(
-                            "java.execute.workspaceCommand",
-                            "java.project.updateClassPaths",
-                            currentProjectRoot.toString(),
-                            JSON.stringify({ classpathEntries }),
-                        );
-                    }
+            const currentProjectRoot: vscode.Uri = vscode.Uri.parse(rootPath);
+            if (projectType === ProjectType.UnmanagedFolder) {
+                this.updateSourcePathsForUnmanagedFolder(currentProjectRoot, sourcePaths.map(sp => sp.path));
+                this.setOutputPath(currentProjectRoot, defaultOutputPath);
+                this.updateUnmanagedFolderLibraries(libraries.map(l => l.path));
+                this.changeJdk(currentProjectRoot, vmInstallPath);
+            } else {
+                const classpathEntries: ClasspathEntry[] = [];
+                classpathEntries.push(...sourcePaths);
+                if (vmInstallPath?.length > 0) {
+                    classpathEntries.push({
+                        kind: ClasspathEntryKind.Container,
+                        path: `org.eclipse.jdt.launching.JRE_CONTAINER/${vmInstallPath}`,
+                    });
+                }
+                classpathEntries.push(...libraries);
+                if (classpathEntries.length > 0) {
+                    await vscode.commands.executeCommand(
+                        "java.execute.workspaceCommand",
+                        "java.project.updateClassPaths",
+                        currentProjectRoot.toString(),
+                        JSON.stringify({ classpathEntries }),
+                    );
                 }
             }
         } catch (error) {

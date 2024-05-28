@@ -4,7 +4,7 @@
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
 import React, { Dispatch, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateActiveProfiles } from "../mavenConfigurationViewSlice";
+import { flushMavenSettingsToEffective, updateActiveProfiles } from "../mavenConfigurationViewSlice";
 import { MavenRequest } from "../../../vscode/utils";
 
 const Profile = (): JSX.Element => {
@@ -21,6 +21,9 @@ const Profile = (): JSX.Element => {
       dispatch(updateActiveProfiles({
         activeProjectIndex,
         activeProfiles: message.selectedProfiles
+      }));
+      dispatch(flushMavenSettingsToEffective({
+        activeProjectIndex
       }));
     }
   }
