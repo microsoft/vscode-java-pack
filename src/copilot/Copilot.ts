@@ -38,7 +38,7 @@ export default class Copilot {
                 const model = (await lm.selectChatModels(this.modelSelector))?.[0];
                 if (!model) {
                     const models = await lm.selectChatModels();
-                    throw new Error(`No model selected, available models: [${models.map(m => m.name).join(', ')}]`);
+                    throw new Error(`No suitable model, available models: [${models.map(m => m.name).join(', ')}]. Please make sure you have installed the latest "GitHub Copilot Chat" (v0.16.0 or later).`);
                 }
                 const response = await model.sendRequest(messages, modelOptions ?? this.modelOptions, cancellationToken);
                 for await (const item of response.text) {
