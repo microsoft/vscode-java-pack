@@ -10,6 +10,7 @@ export default class Copilot {
     public static readonly NOT_CANCELLABEL: CancellationToken = { isCancellationRequested: false, onCancellationRequested: () => Disposable.from() };
 
     public constructor(
+        private readonly systemMessagesOrSamples: LanguageModelChatMessage[],
         private readonly modelSelector: LanguageModelChatSelector = Copilot.DEFAULT_MODEL,
         private readonly modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         private readonly maxRounds: number = Copilot.DEFAULT_MAX_ROUNDS,
@@ -18,14 +19,13 @@ export default class Copilot {
     }
 
     private async doSend(
-        systemMessagesOrSamples: LanguageModelChatMessage[],
         userMessage: string,
         modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
         let answer: string = '';
         let rounds: number = 0;
-        const messages = [...systemMessagesOrSamples];
+        const messages = [...this.systemMessagesOrSamples];
         const _send = async (message: string): Promise<boolean> => {
             rounds++;
             logger.debug(`User: \n`, message);
@@ -37,7 +37,8 @@ export default class Copilot {
             try {
                 const model = (await lm.selectChatModels(this.modelSelector))?.[0];
                 if (!model) {
-                    throw new Error('No model selected');
+                    const models = await lm.selectChatModels();
+                    throw new Error(`No model selected, available models: [${models.map(m => m.name).join(', ')}]`);
                 }
                 const response = await model.sendRequest(messages, modelOptions ?? this.modelOptions, cancellationToken);
                 for await (const item of response.text) {
@@ -65,11 +66,10 @@ export default class Copilot {
     }
 
     public async send(
-        systemMessagesOrSamples: LanguageModelChatMessage[],
         userMessage: string,
         modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
-        return fixedInstrumentSimpleOperation("java.copilot.sendRequest", this.doSend.bind(this))(systemMessagesOrSamples, userMessage, modelOptions, cancellationToken);
+        return fixedInstrumentSimpleOperation("java.copilot.sendRequest", this.doSend.bind(this))(userMessage, modelOptions, cancellationToken);
     }
 }

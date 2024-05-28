@@ -9,42 +9,43 @@ import { SymbolNode } from "./SymbolNode";
 import { randomUUID } from "crypto";
 
 export default class InspectionCopilot extends Copilot {
-
-    public static readonly SYSTEM_MESSAGE = (context: ProjectContext) => `
-    **You are expert at Java and promoting new features of Java.**
-    Each Java version has added some new language features or syntaxes to make the code **more readable, efficient, and concise**. e.g. 
-    Java 8 added lambda expressions, Stream, Optional API, and also a set of functional style APIs for collections...;
-    Java 9 added new operation for Collections, Stream, and Optional APIs. and also brought a new HTTPClient...;
-    Java 10 introduced var type inference, and also added some new APIs for Collections...;
-    Java 11 - 21 added..., etc.
-    Please identify code blocks that can be rewritten with these new features of Java itself for given code.
-    Dont't suggest using third-party libraries or frameworks, only suggest using the new features of Java itself.
-    Becareful that current project uses Java ${context.javaVersion}, and the solution you provide **must** be compatible with this version.
-    Please comment on the rewritable code directly in the original source code in the following format:
+    public static readonly FORMAT_CODE = (context: ProjectContext, code: string) => `
+    Current project uses Java ${context.javaVersion}. please suggest improvements compatible with this version for code below (do not format the reponse, and do not respond markdown):    
+    ${code}
+    `;
+    public static readonly SYSTEM_MESSAGE = `
+    Your role is to identify and suggest improvements for Java code blocks that can be optimized using newer features of Java. Keep the following guidelines in mind:
+    - Focus on utilizing built-in features from recent Java versions (Java 8 and onwards) to make the code more readable, efficient, and concise.
+    - Do not suggest the use of third-party libraries or frameworks.
+    - Comment directly on the code that can be improved. Use the following format for comments:
     \`\`\`
     other code...
-    // @PROBLEM: problem of the code in less than 10 words, should be as short as possible, starts with a gerund/noun word, e.g., "Using".
-    // @SOLUTION: solution to fix the problem in less than 10 words, should be as short as possible, starts with a verb.
-    // @INDICATOR: indicator of the rewriteable code block, must be a single word contained by the rewriteable code. it's usually a Java keyword, a method/field/variable name, or a value(e.g. magic number)... but NOT multiple, '<null>' if cannot be identified
-    // @SEVERITY: severity of the problem, must be one of **[HIGH, MIDDLE, LOW]**
-    the original rewriteable code...
+    // @PROBLEM: Briefly describe the issue in the code, preferably in less than 10 words. Start your comment with a gerund/noun word, e.g., "Using".
+    // @SOLUTION: Suggest a solution to the problem in less than 10 words. Start your solution with a verb.
+    // @INDICATOR: Identify the problematic code block with a single word contained in the block. It could be a Java keyword, a method/field/variable name, or a value (e.g., magic number). Use '<null>' if an indicator cannot be identified.
+    // @SEVERITY: Rate the severity of the problem as either HIGH, MIDDLE, or LOW.
+    the original code that can be improved...
     \`\`\`
-    The comment must be placed directly above the rewriteable code, and the rewriteable code must be kept unchanged.
-    Your reply must be the complete original code sent to you plus your comments, without any other modifications.
-    Never comment on undertermined problems.
-    Never comment on code that is well-written or simple enough.
-    Don't add any explanation, don't format output. Don't output markdown.
-    You must end your response with "//${Copilot.DEFAULT_END_MARK}".
+    - Place your comment directly above the code that needs to be improved, without making any changes to the original code.
+    - Your response should be the complete original code with your added comments. Do not make any other modifications.
+    - Do not comment on code that is not certain to have issues.
+    - Do not comment on code that is well-written or simple enough to understand.
+    - Do not add any explanations, do not format the output, and do not output markdown.
+    - Conclude your response with "//${Copilot.DEFAULT_END_MARK}".
+    Remember, your aim is to enhance the code using compatible new features from used Java versions.
     `;
-    public static readonly EXAMPLE_USER_MESSAGE = `
+    public static readonly EXAMPLE_USER_MESSAGE = this.FORMAT_CODE({ javaVersion: '17' }, `
     @Entity
     public class EmployeePojo implements Employee {
-        public final String name;
+        private final String name;
         public EmployeePojo(String name) {
             this.name = name;
         }
+        public String getName() {
+            return name;
+        }
         public String getRole() {
-            String result = '';
+            String result = "";
             if (this.name.equals("Miller")) {
                 result = "Senior";
             } else if (this.name.equals("Mike")) {
@@ -54,23 +55,25 @@ export default class InspectionCopilot extends Copilot {
             }
             return result;
         }
-    }
-    `;
+    }`);
     public static readonly EXAMPLE_ASSISTANT_MESSAGE = `
     @Entity
-    // @PROBLEM: Using a traditional POJO
-    // @SOLUTION: transform into a record
+    // @PROBLEM: Using traditional POJO
+    // @SOLUTION: Use record
     // @INDICATOR: EmployeePojo
     // @SEVERITY: MIDDLE
     public class EmployeePojo implements Employee {
-        public final String name;
+        private final String name;
         public EmployeePojo(String name) {
             this.name = name;
         }
+        public String getName() {
+            return name;
+        }
         public String getRole() {
-            String result = '';
-            // @PROBLEM: Using if-else statements to check the type of animal
-            // @SOLUTION: Use switch expression
+            String result = "";
+            // @PROBLEM: Using multiple if-else
+            // @SOLUTION: Use enhanced switch expression
             // @INDICATOR: if
             // @SEVERITY: MIDDLE
             if (this.name.equals("Miller")) {
@@ -102,7 +105,11 @@ export default class InspectionCopilot extends Copilot {
     public constructor(
         private readonly maxConcurrencies: number = InspectionCopilot.DEFAULT_MAX_CONCURRENCIES,
     ) {
-        super();
+        super([
+            LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE),
+            LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
+            LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
+        ]);
     }
 
     public get busy(): boolean {
@@ -231,12 +238,7 @@ export default class InspectionCopilot extends Copilot {
             return Promise.resolve([]);
         }
 
-        const messages: LanguageModelChatMessage[] = [
-            LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE(context)),
-            LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
-            LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
-        ];
-        const codeWithInspectionComments = await this.send(messages, codeLinesContent);
+        const codeWithInspectionComments = await this.send(InspectionCopilot.FORMAT_CODE(context, codeLinesContent));
         const inspections = this.extractInspections(codeWithInspectionComments, codeLines);
         // add properties for telemetry
         sendInfo('java.copilot.inspect.code', {
