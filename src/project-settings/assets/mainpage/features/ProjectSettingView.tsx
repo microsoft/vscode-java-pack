@@ -14,6 +14,8 @@ import SideBar from "./component/SideBar";
 import MavenConfigurationView from "../../maven/features/MavenConfigurationView";
 import { SectionId } from "../../../types";
 import { initializeMavenData } from "../../maven/features/mavenConfigurationViewSlice";
+import CompilerConfigurationView from "../../compiler/features/CompilerConfigurationView";
+import { initializeCompilerData } from "../../compiler/features/compilerConfigurationViewSlice";
 
 const ProjectSettingView = (): JSX.Element => {
   const activeSection: string = useSelector((state: any) => state.commonConfig.ui.activeSection);
@@ -29,6 +31,8 @@ const ProjectSettingView = (): JSX.Element => {
   const getSectionContent = () => {
     if (activeSection === SectionId.Classpath) {
       return <ClasspathConfigurationView />;
+    } else if (activeSection === SectionId.Compiler) {
+      return <CompilerConfigurationView />;
     } else if (activeSection === SectionId.Maven) {
       return <MavenConfigurationView />;
     }
@@ -51,8 +55,12 @@ const ProjectSettingView = (): JSX.Element => {
         }
       }
     } else if (data.command === "main.onDidListProjects") {
-      dispatch(initializeClasspathData({ projectsNum: data.projectInfo?.length }));
-      dispatch(initializeMavenData({ projectsNum: data.projectInfo?.length }));
+      const length = data.projectInfo?.length;
+      if (length) {
+        dispatch(initializeClasspathData({ projectsNum: length }));
+        dispatch(initializeCompilerData({ projectsNum: length }));
+        dispatch(initializeMavenData({ projectsNum: length }));
+      }
       dispatch(listProjects(data.projectInfo));
     }
   }

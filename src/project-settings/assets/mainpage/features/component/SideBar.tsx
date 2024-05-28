@@ -32,6 +32,9 @@ const SideBar = (): JSX.Element => {
           <div className={`section-link ${activeSection === SectionId.Classpath ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Classpath)}>
             Classpath
           </div>
+          <div className={`section-link ${activeSection === SectionId.Compiler ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Compiler)}>
+            Compiler
+          </div>
           {
             projectType === ProjectType.Maven && (
               <div className={`section-link ${activeSection === SectionId.Maven ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Maven)}>

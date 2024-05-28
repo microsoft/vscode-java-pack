@@ -39,4 +39,12 @@
     align-items: center;
 }
 
+.invisible {
+    display: none;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
 @import "~@vscode/codicons/dist/codicon.css";
