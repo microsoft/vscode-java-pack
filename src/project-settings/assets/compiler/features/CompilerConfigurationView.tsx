@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeCheckbox, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
+import { VSCodeCheckbox, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeDropdown, VSCodeLink, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import React, { Dispatch, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCompilerSettings, updateAvailableComplianceLevels } from "./compilerConfigurationViewSlice";
 import { CompilerRequest } from "../../vscode/utils";
 import { VmInstall } from "../../../types";
+import { updateActiveSection } from "../../mainpage/features/commonSlice";
+import { updateActiveTab } from "../../classpath/features/classpathConfigurationViewSlice";
 
 const CompilerConfigurationView = (): JSX.Element | null => {
 
@@ -14,9 +16,9 @@ const CompilerConfigurationView = (): JSX.Element | null => {
 
   const projects: any[] = useSelector((state: any) => state.commonConfig.data.projects);
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
-  let complianceLevel: string = useSelector((state: any) => state.compilerConfig.data.complianceLevel[activeProjectIndex]);
-  let sourceLevel: string = useSelector((state: any) => state.compilerConfig.data.sourceLevel[activeProjectIndex]);
-  let targetLevel: string = useSelector((state: any) => state.compilerConfig.data.targetLevel[activeProjectIndex]);
+  const complianceLevel: string = useSelector((state: any) => state.compilerConfig.data.complianceLevel[activeProjectIndex]);
+  const sourceLevel: string = useSelector((state: any) => state.compilerConfig.data.sourceLevel[activeProjectIndex]);
+  const targetLevel: string = useSelector((state: any) => state.compilerConfig.data.targetLevel[activeProjectIndex]);
 
   // Find the version of current JDK to determine the max compliance level that can be set.
   const vmInstalls: VmInstall[] = useSelector((state: any) => state.classpathConfig.data.vmInstalls);
@@ -25,25 +27,6 @@ const CompilerConfigurationView = (): JSX.Element | null => {
   let currentJdkComplianceLevel: number = Number.MAX_SAFE_INTEGER;
   if (activeVmInstall?.version) {
     currentJdkComplianceLevel = parseJavaVersion(activeVmInstall.version);
-  }
-
-  const correctedLevels: {[key: string]: string} = {};
-  // compliance/source/target level cannot be higher than current jdk level.
-  if (Number(complianceLevel) > currentJdkComplianceLevel) {
-    correctedLevels.complianceLevel = currentJdkComplianceLevel.toString();
-  }
-  if (Number(sourceLevel) > currentJdkComplianceLevel) {
-    correctedLevels.sourceLevel = currentJdkComplianceLevel.toString();
-  }
-  if (Number(targetLevel) > currentJdkComplianceLevel) {
-    correctedLevels.targetLevel = currentJdkComplianceLevel.toString();
-  }
-
-  if (Object.keys(correctedLevels).length > 0) {
-    dispatch(updateCompilerSettings({
-        activeProjectIndex,
-        ...correctedLevels,
-    }));
   }
 
   const useRelease: boolean = useSelector((state: any) => state.compilerConfig.data.useRelease[activeProjectIndex]);
@@ -61,6 +44,9 @@ const CompilerConfigurationView = (): JSX.Element | null => {
   }) === undefined) || enablePreview;
 
   const showSourceTargetWarning: boolean = !useRelease && (sourceLevel !== "" && targetLevel !== "" && Number(sourceLevel) > Number(targetLevel));
+  const showJdkLevelWarning: boolean = Number(complianceLevel) > currentJdkComplianceLevel ||
+      Number(sourceLevel) > currentJdkComplianceLevel ||
+      Number(targetLevel) > currentJdkComplianceLevel;
 
   const onMessage = (event: any) => {
     const message = event.data;
@@ -97,9 +83,6 @@ const CompilerConfigurationView = (): JSX.Element | null => {
 
   const jdkLevels = (selectedLevel: string, label: string, onClick: (value: string) => void) => {
     return availableComplianceLevels.map((level) => {
-      if (Number(level) > currentJdkComplianceLevel) {
-        return null;
-      }
 
       return (
         <VSCodeOption
@@ -112,7 +95,7 @@ const CompilerConfigurationView = (): JSX.Element | null => {
           <span>{level}</span>
         </VSCodeOption>
       );
-    }).filter((option) => option !== null);
+    });
   };
 
   const onClickUseRelease = (e: any) => {
@@ -164,6 +147,11 @@ const CompilerConfigurationView = (): JSX.Element | null => {
     }));
   };
 
+  const onClickChangeJdk = () => {
+    dispatch(updateActiveSection("classpath"));
+    dispatch(updateActiveTab("jdk"));
+  };
+
   return (
     <div className="setting-section">
       <div className={showReleaseFlag ? "" : "invisible"}>
@@ -203,9 +191,14 @@ const CompilerConfigurationView = (): JSX.Element | null => {
           </VSCodeDataGridRow>
         </VSCodeDataGrid>
       </div>
-      <div className={`mb-2 ${showSourceTargetWarning ? "" : "invisible"}`}>
+      <div className={`mt-2 mb-2 ${showSourceTargetWarning ? "" : "invisible"}`}>
         <span className="setting-section-warning">
           Target compatibility must be equal or greater than source compatibility.
+        </span>
+      </div>
+      <div className={`mt-2 mb-2 ${showJdkLevelWarning ? "" : "invisible"}`}>
+        <span className="setting-section-warning">
+          Please make sure to have a compatible JDK configured (currently {currentJdkComplianceLevel}). You can change the JDK under the <VSCodeLink href="" onClick={() => onClickChangeJdk()}>JDK Runtime</VSCodeLink> tab.
         </span>
       </div>
       <div className={showPreviewFlag ? "" : "invisible"}>
