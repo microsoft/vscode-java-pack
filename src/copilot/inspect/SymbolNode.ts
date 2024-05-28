@@ -50,6 +50,6 @@ export class SymbolNode {
     }
 
     public toString(): string {
-        return `${SymbolKind[this.kind]} ${this.qualifiedName}`;
+        return `${SymbolKind[this.kind].toLowerCase()} ${this.symbol.name}`;
     }
 }

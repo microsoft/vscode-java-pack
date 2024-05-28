@@ -117,15 +117,15 @@ export default class InspectionCopilot extends Copilot {
 
     public async inspectClass(document: TextDocument, clazz: SymbolNode): Promise<Inspection[]> {
         logger.info('inspecting class:', clazz.qualifiedName);
-        return this.inspectRange(document, clazz.range);
+        return this.inspectRange(document, clazz.range, clazz);
     }
 
     public async inspectSymbol(document: TextDocument, symbol: SymbolNode): Promise<Inspection[]> {
         logger.info(`inspecting symbol ${SymbolKind[symbol.kind]} ${symbol.qualifiedName}`);
-        return this.inspectRange(document, symbol.range);
+        return this.inspectRange(document, symbol.range, symbol);
     }
 
-    public async inspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
+    public async inspectRange(document: TextDocument, range: Range, symbol?: SymbolNode): Promise<Inspection[]> {
         if (this.busy) {
             logger.warn('Copilot is busy, please retry after current inspecting tasks is finished.');
             void window.showWarningMessage(`Copilot is busy, please retry after current inspecting tasks are finished.`);
@@ -136,7 +136,7 @@ export default class InspectionCopilot extends Copilot {
         }
         try {
             this.inspecting.add(document);
-            // ajust the range to the minimal container class or (multiple) method symbols
+            // ajust the range to the minimal container class or method symbols
             const methodAndFields: SymbolNode[] = await getIntersectionSymbolsOfRange(range, document);
             const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
             const symbols: SymbolNode[] = [...classes, ...methodAndFields];
@@ -149,9 +149,7 @@ export default class InspectionCopilot extends Copilot {
             const expandedRange: Range = getUnionRange(symbols);
 
             // inspect the expanded union range
-            const symbolName = symbols[0].symbol.name.split('(')[0];
-            const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
-            const target = symbols.length > 1 ? `${symbolKind} ${symbolName}, etc.` : `${symbolKind} ${symbolName}`;
+            const target = symbol ? symbol.toString() : (symbols[0].toString() + (symbols.length > 1 ? ", etc." : ""));
             const inspections = await window.withProgress({
                 location: ProgressLocation.Notification,
                 title: `Inspecting ${target}...`,

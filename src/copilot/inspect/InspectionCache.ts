@@ -24,8 +24,8 @@ export default class InspectionCache {
         const symbols = await getSymbolsContainedInRange(symbol.range, document);
         for (const s of symbols) {
             const snapshotInspections = symbolInspections?.get(s.qualifiedName);
-            if (snapshotInspections?.[0] === s.snapshotId) {
-                return snapshotInspections[1].length > 0;
+            if (snapshotInspections?.[0] === s.snapshotId && snapshotInspections[1].length > 0) {
+                return true;
             }
         }
         return false;
