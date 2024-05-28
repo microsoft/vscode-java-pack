@@ -48,4 +48,8 @@ export class SymbolNode {
         const body = document.getText(symbol.range);
         return crypto.createHash('md5').update(body).digest("hex")
     }
+
+    public toString(): string {
+        return `${SymbolKind[this.kind]} ${this.qualifiedName}`;
+    }
 }

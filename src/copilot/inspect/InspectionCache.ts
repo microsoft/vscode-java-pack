@@ -1,5 +1,5 @@
 import { SymbolKind, TextDocument } from 'vscode';
-import { METHOD_KINDS, getClassesAndMethodsContainedInRange, getClassesAndMethodsOfDocument, logger } from '../utils';
+import { METHOD_KINDS, getSymbolsContainedInRange, getSymbolsOfDocument, logger } from '../utils';
 import { Inspection } from './Inspection';
 import { SymbolNode } from './SymbolNode';
 
@@ -21,7 +21,7 @@ export default class InspectionCache {
         }
         const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
         // check if the symbol or its contained symbols are cached
-        const symbols = await getClassesAndMethodsContainedInRange(symbol.range, document);
+        const symbols = await getSymbolsContainedInRange(symbol.range, document);
         for (const s of symbols) {
             const snapshotInspections = symbolInspections?.get(s.qualifiedName);
             if (snapshotInspections?.[0] === s.snapshotId) {
@@ -37,7 +37,7 @@ export default class InspectionCache {
      * their content has changed.
      */
     public static async getCachedInspectionsOfDoc(document: TextDocument): Promise<Inspection[]> {
-        const symbols: SymbolNode[] = await getClassesAndMethodsOfDocument(document);
+        const symbols: SymbolNode[] = await getSymbolsOfDocument(document);
         const inspections: Inspection[] = [];
         // we don't get cached inspections directly from the cache, because we need to filter out outdated symbols
         for (const symbol of symbols) {
@@ -75,7 +75,7 @@ export default class InspectionCache {
                 return isMethod ?
                     // NOTE: method inspections are inspections whose `position.line` is within the method's range
                     inspectionLine >= symbol.range.start.line && inspectionLine <= symbol.range.end.line :
-                    // NOTE: class inspections are inspections whose `position.line` is exactly the first line number of the class
+                    // NOTE: class/field inspections are inspections whose `position.line` is exactly the first line number of the class/field
                     inspectionLine === symbol.range.start.line;
             });
             // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method

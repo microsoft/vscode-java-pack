@@ -1,6 +1,6 @@
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
-import { fixedInstrumentSimpleOperation, getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
+import { fixedInstrumentSimpleOperation, getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
 import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatMessage } from "vscode";
 import { COMMAND_FIX_INSPECTION } from "./commands";
@@ -137,9 +137,9 @@ export default class InspectionCopilot extends Copilot {
         try {
             this.inspecting.add(document);
             // ajust the range to the minimal container class or (multiple) method symbols
-            const methods: SymbolNode[] = await getIntersectionMethodsOfRange(range, document);
+            const methodAndFields: SymbolNode[] = await getIntersectionSymbolsOfRange(range, document);
             const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
-            const symbols: SymbolNode[] = [...classes, ...methods];
+            const symbols: SymbolNode[] = [...classes, ...methodAndFields];
             if (symbols.length < 1) {
                 const containingClass: SymbolNode = await getInnermostClassContainsRange(range, document);
                 symbols.push(containingClass);
@@ -149,7 +149,7 @@ export default class InspectionCopilot extends Copilot {
             const expandedRange: Range = getUnionRange(symbols);
 
             // inspect the expanded union range
-            const symbolName = symbols[0].symbol.name;
+            const symbolName = symbols[0].symbol.name.split('(')[0];
             const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
             const target = symbols.length > 1 ? `${symbolKind} ${symbolName}, etc.` : `${symbolKind} ${symbolName}`;
             const inspections = await window.withProgress({

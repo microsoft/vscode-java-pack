@@ -2,8 +2,8 @@
 import { CancellationToken, CodeAction, CodeActionContext, CodeActionKind, Diagnostic, DiagnosticCollection, DiagnosticSeverity, ExtensionContext, Range, Selection, TextDocument, languages } from "vscode";
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
-import { logger, uncapitalize } from "../../../copilot/utils";
-import { COMMAND_IGNORE_INSPECTIONS, COMMAND_FIX_INSPECTION } from "../commands";
+import { logger } from "../../../copilot/utils";
+import { COMMAND_FIX_INSPECTION } from "../commands";
 import _ from "lodash";
 
 const DIAGNOSTICS_GROUP = 'java.copilot.inspection.diagnostics';
