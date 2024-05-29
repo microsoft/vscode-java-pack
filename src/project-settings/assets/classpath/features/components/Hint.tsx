@@ -30,7 +30,7 @@ const Hint = (): JSX.Element | null => {
 
   useEffect(() => {
     updateMaxHeight();
-  }, [projectType, libraries, effectiveLibraries]);
+  }, [projectType, classpathModified]);
 
   useEffect(() => {
     window.addEventListener('resize', updateMaxHeight);

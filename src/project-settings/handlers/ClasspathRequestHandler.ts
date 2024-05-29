@@ -120,7 +120,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         return true;
     };
 
-    private listProjects = instrumentOperation("classpath.listProjects", async (operationId: string) => {
+    private listProjects = instrumentOperation("projectSettings.classpath.listProjects", async (operationId: string) => {
         // listProjects() will be called when the component is mounted,
         // we first check the requirement here in case user triggers 'reload webview'
         if (!(await this.checkRequirement())) {
@@ -149,7 +149,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         });
     });
 
-    private listVmInstalls = instrumentOperation("classpath.listVmInstalls", async (operationId: string) => {
+    private listVmInstalls = instrumentOperation("projectSettings.classpath.listVmInstalls", async (operationId: string) => {
         let vmInstalls: VmInstall[] = await this.getVmInstallsFromLS();
         vmInstalls = vmInstalls.sort((vmA: VmInstall, vmB: VmInstall) => {
             return vmA.name.localeCompare(vmB.name);
@@ -169,7 +169,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
 
     private debounceListVmInstalls = _.debounce(this.listVmInstalls, 3000 /*ms*/);
 
-    private loadProjectClasspath = instrumentOperation("classpath.loadClasspath", async (operationId: string, currentProjectRoot: vscode.Uri) => {
+    private loadProjectClasspath = instrumentOperation("projectSettings.classpath.loadClasspath", async (operationId: string, currentProjectRoot: vscode.Uri) => {
         const classpath = await this.getProjectClasspathFromLS(currentProjectRoot);
         if (classpath) {
             this.webview.postMessage({
@@ -215,7 +215,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         return undefined;
     }
 
-    private addSourcePathForUnmanagedFolder = instrumentOperation("classpath.addSourcePathForUnmanagedFolder", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
+    private addSourcePathForUnmanagedFolder = instrumentOperation("projectSettings.classpath.addSourcePathForUnmanagedFolder", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
         const relativePath: string | undefined = await this.selectSourceFolderPath(currentProjectRoot);
         if (!relativePath) {
             return;
@@ -232,7 +232,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         });
     });
 
-    private updateSourcePathsForUnmanagedFolder = instrumentOperation("classpath.updateSourcePathsForUnmanagedFolder", async (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: string[]) => {
+    private updateSourcePathsForUnmanagedFolder = instrumentOperation("projectSettings.classpath.updateSourcePathsForUnmanagedFolder", async (_operationId: string, currentProjectRoot: vscode.Uri, sourcePaths: string[]) => {
         vscode.workspace.getConfiguration("java", currentProjectRoot).update(
             "project.sourcePaths",
             sourcePaths,
@@ -240,7 +240,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         );
     });
 
-    private selectFolder = instrumentOperation("classpath.selectFolder", async (_operationId: string, currentProjectRoot: vscode.Uri, type: string) => {
+    private selectFolder = instrumentOperation("projectSettings.classpath.selectFolder", async (_operationId: string, currentProjectRoot: vscode.Uri, type: string) => {
         const relativePath: string | undefined = await this.selectSourceFolderPath(currentProjectRoot);
         if (!relativePath) {
             return;
@@ -252,7 +252,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         });
     });
 
-    private updateClassPaths = instrumentOperation("classpath.updateClassPaths", async (_operationId: string, rootPath: string, projectType: ProjectType, sourcePaths: ClasspathEntry[], defaultOutputPath: string, vmInstallPath: string, libraries: ClasspathEntry[]) => {
+    private updateClassPaths = instrumentOperation("projectSettings.classpath.updateClassPaths", async (_operationId: string, rootPath: string, projectType: ProjectType, sourcePaths: ClasspathEntry[], defaultOutputPath: string, vmInstallPath: string, libraries: ClasspathEntry[]) => {
         this.webview.postMessage({
             command: "classpath.onDidChangeLoadingState",
             loading: true,
@@ -301,7 +301,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         });
     });
 
-    private selectOutputPath = instrumentOperation("classpath.selectOutputPath", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
+    private selectOutputPath = instrumentOperation("projectSettings.classpath.selectOutputPath", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
         const outputFolder: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
             openLabel: "Select Output Folder",
@@ -332,7 +332,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
     });
 
-    private setOutputPath = instrumentOperation("classpath.setOutputPath", async (operationId: string, currentProjectRoot: vscode.Uri, outputRelativePath: string) => {
+    private setOutputPath = instrumentOperation("projectSettings.classpath.setOutputPath", async (operationId: string, currentProjectRoot: vscode.Uri, outputRelativePath: string) => {
         if (vscode.workspace.getConfiguration("java", currentProjectRoot).get<string>("project.outputPath") === outputRelativePath) {
             return;
         }
@@ -357,7 +357,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         );
     });
 
-    private addNewJdk = instrumentOperation("classpath.addNewJdk", async (operationId: string, currentProjectRoot: vscode.Uri) => {
+    private addNewJdk = instrumentOperation("projectSettings.classpath.addNewJdk", async (operationId: string, currentProjectRoot: vscode.Uri) => {
         const actionResult: Record<string, string> = {
             name: "classpath.configuration",
             kind: "add-new-jdk"
@@ -404,7 +404,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
     });
 
-    private changeJdk = instrumentOperation("classpath.changeJdk", async (operationId: string, currentProjectRoot: vscode.Uri, jdkPath: string) => {
+    private changeJdk = instrumentOperation("projectSettings.classpath.changeJdk", async (operationId: string, currentProjectRoot: vscode.Uri, jdkPath: string) => {
         const actionResult: Record<string, string> = {
             name: "classpath.configuration",
             kind: "use-existing-jdk"
@@ -439,7 +439,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
     });
 
-    private selectLibraries = instrumentOperation("classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
+    private selectLibraries = instrumentOperation("projectSettings.classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
         const jarFiles: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
             openLabel: "Select Jar File",
@@ -469,13 +469,13 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
     });
 
-    private updateUnmanagedFolderLibraries = instrumentOperation("classpath.updateUnmanagedFolderLibraries", async (_operationId: string, jarFilePaths: string[]) => {
+    private updateUnmanagedFolderLibraries = instrumentOperation("projectSettings.classpath.updateUnmanagedFolderLibraries", async (_operationId: string, jarFilePaths: string[]) => {
         const setting = this.getReferencedLibrariesSetting();
         setting.include = jarFilePaths;
         this.updateReferencedLibraries(setting);
     });
 
-    private gotoProjectConfigurationFile = instrumentOperation("classpath.gotoProjectConfigurationFile", (operationId: string, rootUri: string, projectType: ProjectType) => {
+    private gotoProjectConfigurationFile = instrumentOperation("projectSettings.classpath.gotoProjectConfigurationFile", (operationId: string, rootUri: string, projectType: ProjectType) => {
         const rootPath: string = vscode.Uri.parse(rootUri).fsPath;
         let configurationPath: string = "";
         if (projectType === ProjectType.Gradle) {
