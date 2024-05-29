@@ -26,7 +26,7 @@ export class MavenRequestHandler implements vscode.Disposable {
         }));
     }
 
-    private onWillGetSelectedProfiles = instrumentOperation("maven.onWillGetSelectedProfiles", async (_operationId: string, uri: any): Promise<void> => {
+    private onWillGetSelectedProfiles = instrumentOperation("projectSettings.maven.onWillGetSelectedProfiles", async (_operationId: string, uri: any): Promise<void> => {
         const response: any = await vscode.commands.executeCommand<Object>("java.execute.workspaceCommand",
                 "java.project.getSettings", uri, [M2E_SELECTED_PROFILES]);
         const selectedProfiles: string = response?.[M2E_SELECTED_PROFILES];
@@ -39,7 +39,7 @@ export class MavenRequestHandler implements vscode.Disposable {
         }
     });
 
-    private onWillUpdateSelectProfiles = instrumentOperation("maven.onWillUpdateSelectProfiles", async (_operationId: string, uri: any, selectedProfiles: string[]): Promise<void> => {
+    private onWillUpdateSelectProfiles = instrumentOperation("projectSettings.maven.onWillUpdateSelectProfiles", async (_operationId: string, uri: any, selectedProfiles: string[]): Promise<void> => {
         await vscode.commands.executeCommand("java.execute.workspaceCommand",
             "java.project.updateSettings", uri, { [M2E_SELECTED_PROFILES]: selectedProfiles });
     });

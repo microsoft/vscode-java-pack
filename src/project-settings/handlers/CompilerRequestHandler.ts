@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
-import { instrumentOperation, sendError, setUserError } from "vscode-extension-telemetry-wrapper";
+import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 
 const ADD_VARIABlLE_ATTRIBUTE = "org.eclipse.jdt.core.compiler.debug.localVariable";
 const ADD_LINE_NUMBER_ATTRIBUTE = "org.eclipse.jdt.core.compiler.debug.lineNumber";
@@ -75,7 +75,7 @@ export class CompilerRequestHandler implements vscode.Disposable {
         });
     });
 
-    private onWillUpdateCompilerSettings = instrumentOperation("projectSettings.compiler.onWillUpdateCompilerSettings", async (_operationId: string,
+    private onWillUpdateCompilerSettings = instrumentOperation("projectSettings.compiler.onWillUpdateCompilerSettings", async (operationId: string,
             uri: string, useRelease: boolean, enablePreview: boolean, complianceLevel: string, sourceLevel: string, targetLevel: string,
             generateDebugInfo: boolean, storeMethodParamNames: boolean): Promise<void> => {
         const compilerSettings: Map<string, string> = new Map<string, string>();
@@ -106,6 +106,12 @@ export class CompilerRequestHandler implements vscode.Disposable {
             complianceLevel: compilerSettings.get(COMPLIANCE_LEVEL),
             sourceLevel: compilerSettings.get(SOURCE_COMPATIBILITY),
             targetLevel: compilerSettings.get(TARGET_COMPATIBILITY),
+        });
+
+        sendInfo(operationId, {
+            operationName: "projectSettings.updateCompilerSettings",
+            // remove the common prefix to reduce the payload.
+            arg: JSON.stringify([...compilerSettings]).replace(/org\.eclipse\.jdt\.core\.compiler\./g, ""),
         });
     });
 
