@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.27.0
+### Added
+- Add new project settings page, where users can edit project classpath, compiler settings, Maven settings and more. The page can be accessed by clicking the Java status bar item and selecting `Open Project Settings`. Or trigger the command `Java: Open Project Settings` from the command palette.
+
+### Changed
+- `Java: Configure Java Runtime` command now opens the new project settings page.
+
+### Fixed
+- Avoid duplicated entries displayed in classpath page. [#1314](https://github.com/microsoft/vscode-java-pack/issues/1314)
+
 ## 0.26.0
 ### Changed
 - Improve the classpath configuration page so that it can update the classpath for Maven and Gradle projects.
