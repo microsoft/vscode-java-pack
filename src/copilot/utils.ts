@@ -1,9 +1,11 @@
-import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, ProgressLocation, version } from "vscode";
+import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, version } from "vscode";
 import { SymbolNode } from "./inspect/SymbolNode";
 import { SemVer } from "semver";
+import { createUuid, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
 
 export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
+export const FIELD_KINDS: SymbolKind[] = [SymbolKind.Field, SymbolKind.Property, SymbolKind.Constant];
 
 export const logger: LogOutputChannel = window.createOutputChannel("Java Rewriting Suggestions", { log: true });
 
@@ -11,13 +13,13 @@ export const logger: LogOutputChannel = window.createOutputChannel("Java Rewriti
  * get all the class symbols contained in the `range` in the `document`
  */
 export async function getClassesContainedInRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
-    const symbols = await getClassesAndMethodsOfDocument(document);
+    const symbols = await getSymbolsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         .filter(clazz => range.contains(clazz.range));
 }
 
-export async function getClassesAndMethodsContainedInRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
-    const symbols = await getClassesAndMethodsOfDocument(document);
+export async function getSymbolsContainedInRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
+    const symbols = await getSymbolsOfDocument(document);
     return symbols.filter(symbol => range.contains(symbol.range));
 }
 
@@ -25,18 +27,18 @@ export async function getClassesAndMethodsContainedInRange(range: Range | Select
  * get the innermost class symbol that completely contains the `range` in the `document`
  */
 export async function getInnermostClassContainsRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode> {
-    const symbols = await getClassesAndMethodsOfDocument(document);
+    const symbols = await getSymbolsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         // reverse the classes to get the innermost class first
         .reverse().filter(clazz => clazz.range.contains(range))[0];
 }
 
 /**
- * get all the method symbols that are completely or partially contained in the `range` in the `document`
+ * get all the method/field symbols that are completely or partially contained in the `range` in the `document`
  */
-export async function getIntersectionMethodsOfRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
-    const symbols = await getClassesAndMethodsOfDocument(document);
-    return symbols.filter(symbol => METHOD_KINDS.includes(symbol.kind))
+export async function getIntersectionSymbolsOfRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
+    const symbols = await getSymbolsOfDocument(document);
+    return symbols.filter(symbol => METHOD_KINDS.includes(symbol.kind) || FIELD_KINDS.includes(symbol.kind))
         .filter(method => method.range.intersection(range));
 }
 
@@ -51,8 +53,8 @@ export function getUnionRange(symbols: SymbolNode[]): Range {
 /**
  * get all classes (classes inside methods are not considered) and methods of a document in a pre-order traversal manner
  */
-export async function getClassesAndMethodsOfDocument(document: TextDocument): Promise<SymbolNode[]> {
-    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse().map(symbol => new SymbolNode(symbol));
+export async function getSymbolsOfDocument(document: TextDocument): Promise<SymbolNode[]> {
+    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse().map(symbol => new SymbolNode(document, symbol));
 
     const result: SymbolNode[] = [];
     while (stack.length > 0) {
@@ -60,7 +62,7 @@ export async function getClassesAndMethodsOfDocument(document: TextDocument): Pr
         if (CLASS_KINDS.includes(symbol.kind)) {
             result.push(symbol);
             stack.push(...symbol.children.reverse());
-        } else if (METHOD_KINDS.includes(symbol.kind)) {
+        } else if (METHOD_KINDS.includes(symbol.kind) || FIELD_KINDS.includes(symbol.kind)) {
             result.push(symbol);
         }
     }
@@ -69,7 +71,7 @@ export async function getClassesAndMethodsOfDocument(document: TextDocument): Pr
 
 export async function getTopLevelClassesOfDocument(document: TextDocument): Promise<SymbolNode[]> {
     const symbols = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []);
-    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind)).map(symbol => new SymbolNode(symbol));
+    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind)).map(symbol => new SymbolNode(document, symbol));
 }
 
 export function uncapitalize(str: string): string {
@@ -83,14 +85,14 @@ export function isCodeLensDisabled(): boolean {
     return enabled === false;
 }
 
-export async function getProjectJavaVersion(document: TextDocument): Promise<number> {
+export async function getProjectJavaVersion(document: TextDocument): Promise<string> {
     const uri = document.uri.toString();
     const key = "org.eclipse.jdt.core.compiler.source";
     try {
         const settings: { [key]: string } = await retryOnFailure(async () => {
             return await commands.executeCommand("java.project.getSettings", uri, [key]);
         });
-        return parseInt(settings[key]) || 17;
+        return settings[key] ?? '17';
     } catch (e) {
         throw new Error(`Failed to get Java version, please check if the project is loaded normally: ${e}`);
     }
@@ -114,4 +116,39 @@ export async function retryOnFailure<T>(task: () => Promise<T>, timeout: number 
 
 export function isLlmApiReady(): boolean {
     return new SemVer(version).compare(new SemVer("1.90.0-insider")) >= 0;
+}
+
+/**
+ * copied from vscode-extension-telemetry-wrapper, the only difference is we re-throw the error to the caller but the original one doesn't.
+ */
+export function fixedInstrumentOperation(
+    operationName: string,
+    cb: (operationId: string, ...args: any[]) => any,
+    thisArg?: any,
+): (...args: any[]) => any {
+    return async (...args: any[]) => {
+        let error;
+        const operationId = createUuid();
+        const startAt: number = Date.now();
+
+        try {
+            sendOperationStart(operationId, operationName);
+            return await cb.apply(thisArg, [operationId, ...args]);
+        } catch (e) {
+            error = e as Error;
+            sendOperationError(operationId, operationName, error);
+            // NOTE: re-throw the error to the caller
+            throw e;
+        } finally {
+            const duration = Date.now() - startAt;
+            sendOperationEnd(operationId, operationName, duration, error);
+        }
+    };
+}
+
+/**
+ * copied from vscode-extension-telemetry-wrapper, the only difference is we re-throw the error to the caller but the original one doesn't.
+ */
+export function fixedInstrumentSimpleOperation(operationName: string, cb: (...args: any[]) => any, thisArg?: any): (...args: any[]) => any {
+    return fixedInstrumentOperation(operationName, async (_operationId, ...args) => await cb.apply(thisArg, args), thisArg /** unnecessary */);
 }

@@ -22,7 +22,7 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
         const topLevelCodeLenses: CodeLens[] = [];
         const classes = await getTopLevelClassesOfDocument(document);
         classes.map(clazz => new CodeLens(clazz.range, {
-            title: "Rewrite with new Java syntax",
+            title: "✨ Rewrite with new Java syntax",
             command: COMMAND_INSPECT_CLASS,
             arguments: [document, clazz]
         })).forEach(codeLens => topLevelCodeLenses.push(codeLens));

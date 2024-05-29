@@ -1,8 +1,7 @@
-import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
-import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionMethodsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
+import { fixedInstrumentSimpleOperation, getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
 import { Inspection } from "./Inspection";
-import path from "path";
 import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatMessage } from "vscode";
 import { COMMAND_FIX_INSPECTION } from "./commands";
 import InspectionCache from "./InspectionCache";
@@ -10,37 +9,44 @@ import { SymbolNode } from "./SymbolNode";
 import { randomUUID } from "crypto";
 
 export default class InspectionCopilot extends Copilot {
-
-    public static readonly SYSTEM_MESSAGE = (context: ProjectContext) => `
-    You are expert at Java and code refactoring. Please identify code blocks that can be rewritten with
-    new features/syntaxes/grammar sugar of Java ${context.javaVersion} and earlier versions to make them more **readable**,
-    **efficient** and **concise** for given code.
-    I prefer \`Stream\` to loop, \`Optional\` to null, \`record\` to POJO, \`switch\` to if-else, etc.
-    Please comment on the rewritable code directly in the original source code in the following format:
+    public static readonly FORMAT_CODE = (context: ProjectContext, code: string) => `
+    Current project uses Java ${context.javaVersion}. please suggest improvements compatible with this version for code below (do not format the reponse, and do not respond markdown):    
+    ${code}
+    `;
+    public static readonly SYSTEM_MESSAGE = `
+    **You are expert at Java and promoting newer built-in features of Java.**
+    Your identify and suggest improvements for Java code blocks that can be optimized using newer features of Java. Keep the following guidelines in mind:
+    - Focus on utilizing built-in features from recent Java versions (Java 8 and onwards) to make the code more readable, efficient, and concise.
+    - Do not suggest the use of third-party libraries or frameworks.
+    - Comment directly on the code that can be improved. Use the following format for comments:
     \`\`\`
     other code...
-    // @PROBLEM: problem of the code in less than 10 words, should be as short as possible, starts with a gerund/noun word, e.g., "Using".
-    // @SOLUTION: solution to fix the problem in less than 10 words, should be as short as possible, starts with a verb.
-    // @INDICATOR: indicator of the problematic code block, must be a single word contained by the problematic code. it's usually a Java keyword, a method/field/variable name, or a value(e.g. magic number)... but NOT multiple, '<null>' if cannot be identified
-    // @SEVERITY: severity of the problem, must be one of **[HIGH, MIDDLE, LOW]**, *HIGH* for Probable bugs, Security risks, Exception handling or Resource management(e.g. memory leaks); *MIDDLE* for Error handling, Performance, Reflective accesses issues and Verbose or redundant code; *LOW* for others
-    the original problematic code...
+    // @PROBLEM: Briefly describe the issue in the code, preferably in less than 10 words. Start with a gerund/noun word, e.g., "Using".
+    // @SOLUTION: Suggest a solution to the problem in less than 10 words. Start with a verb.
+    // @INDICATOR: Identify the problematic code block with a single word contained in the block. It could be a Java keyword, a method/field/variable name, or a value (e.g., magic number). Use '<null>' if cannot be identified.
+    // @SEVERITY: Rate the severity of the problem as either HIGH, MIDDLE, or LOW.
+    the original code that can be improved...
     \`\`\`
-    The comment must be placed directly above the problematic code, and the problematic code must be kept unchanged.
-    Your reply must be the complete original code sent to you plus your comments, without any other modifications.
-    Never comment on undertermined problems.
-    Never comment on code that is well-written or simple enough.
-    Don't add any explanation, don't format logger. Don't output markdown.
-    You must end your response with "//${Copilot.DEFAULT_END_MARK}".
+    - Place your comment directly above the code that needs to be improved, without making any changes to the original code.
+    - Your response should be the complete original code with your added comments. Do not make any other modifications.
+    - Do not comment on code that is not certain to have issues.
+    - Do not comment on code that is well-written or simple enough to understand.
+    - Do not add any explanations, do not format the output, and do not output markdown.
+    - Conclude your response with "//${Copilot.DEFAULT_END_MARK}".
+    Remember, your aim is to enhance the code, and promote the use of newer built-in Java features at the same time!
     `;
-    public static readonly EXAMPLE_USER_MESSAGE = `
+    public static readonly EXAMPLE_USER_MESSAGE = this.FORMAT_CODE({ javaVersion: '17' }, `
     @Entity
     public class EmployeePojo implements Employee {
-        public final String name;
+        private final String name;
         public EmployeePojo(String name) {
             this.name = name;
         }
+        public String getName() {
+            return name;
+        }
         public String getRole() {
-            String result = '';
+            String result = "";
             if (this.name.equals("Miller")) {
                 result = "Senior";
             } else if (this.name.equals("Mike")) {
@@ -50,30 +56,25 @@ export default class InspectionCopilot extends Copilot {
             }
             return result;
         }
-        public void test(String[] arr) {
-            try {
-                Integer.parseInt(arr[0]);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-    `;
+    }`);
     public static readonly EXAMPLE_ASSISTANT_MESSAGE = `
     @Entity
-    // @PROBLEM: Using a traditional POJO
-    // @SOLUTION: transform into a record
+    // @PROBLEM: Using traditional POJO
+    // @SOLUTION: Use record
     // @INDICATOR: EmployeePojo
     // @SEVERITY: MIDDLE
     public class EmployeePojo implements Employee {
-        public final String name;
+        private final String name;
         public EmployeePojo(String name) {
             this.name = name;
         }
+        public String getName() {
+            return name;
+        }
         public String getRole() {
-            String result = '';
-            // @PROBLEM: Using if-else statements to check the type of animal
-            // @SOLUTION: Use switch expression
+            String result = "";
+            // @PROBLEM: Using multiple if-else
+            // @SOLUTION: Use enhanced switch expression
             // @INDICATOR: if
             // @SEVERITY: MIDDLE
             if (this.name.equals("Miller")) {
@@ -85,40 +86,35 @@ export default class InspectionCopilot extends Copilot {
             }
             return result;
         }
-        public void test(String[] arr) {
-            try {
-                Integer.parseInt(arr[0]);
-            } catch (Exception e) {
-                // @PROBLEM: Print stack trace in case of an exception
-                // @SOLUTION: Log errors to a logger
-                // @INDICATOR: ex.printStackTrace
-                // @SEVERITY: LOW
-                e.printStackTrace();
-            }
-        }
     }
     //${Copilot.DEFAULT_END_MARK}
     `;
 
     // Initialize regex patterns
+    private static readonly COMMENT_PATTERN: RegExp = /\/\/ @[A-Z]+: (.*)/;
     private static readonly PROBLEM_PATTERN: RegExp = /\/\/ @PROBLEM: (.*)/;
     private static readonly SOLUTION_PATTERN: RegExp = /\/\/ @SOLUTION: (.*)/;
     private static readonly INDICATOR_PATTERN: RegExp = /\/\/ @INDICATOR: (.*)/;
     private static readonly LEVEL_PATTERN: RegExp = /\/\/ @SEVERITY: (.*)/;
+    private static readonly INSPECTION_COMMENT_LINE_COUNT = 4;
 
     private static readonly DEFAULT_MAX_CONCURRENCIES: number = 3;
 
     private readonly debounceMap = new Map<string, NodeJS.Timeout>();
-    private concurrencies: number = 0;
+    private readonly inspecting: Set<TextDocument> = new Set<TextDocument>();
 
     public constructor(
         private readonly maxConcurrencies: number = InspectionCopilot.DEFAULT_MAX_CONCURRENCIES,
     ) {
-        super();
+        super([
+            LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE),
+            LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
+            LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
+        ]);
     }
 
     public get busy(): boolean {
-        return this.concurrencies >= this.maxConcurrencies;
+        return this.inspecting.size >= this.maxConcurrencies;
     }
 
     public async inspectDocument(document: TextDocument): Promise<Inspection[]> {
@@ -129,26 +125,29 @@ export default class InspectionCopilot extends Copilot {
 
     public async inspectClass(document: TextDocument, clazz: SymbolNode): Promise<Inspection[]> {
         logger.info('inspecting class:', clazz.qualifiedName);
-        return this.inspectRange(document, clazz.range);
+        return this.inspectRange(document, clazz.range, clazz);
     }
 
     public async inspectSymbol(document: TextDocument, symbol: SymbolNode): Promise<Inspection[]> {
         logger.info(`inspecting symbol ${SymbolKind[symbol.kind]} ${symbol.qualifiedName}`);
-        return this.inspectRange(document, symbol.range);
+        return this.inspectRange(document, symbol.range, symbol);
     }
 
-    public async inspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
+    public async inspectRange(document: TextDocument, range: Range, symbol?: SymbolNode): Promise<Inspection[]> {
         if (this.busy) {
             logger.warn('Copilot is busy, please retry after current inspecting tasks is finished.');
             void window.showWarningMessage(`Copilot is busy, please retry after current inspecting tasks are finished.`);
             return Promise.resolve([]);
         }
+        if (this.inspecting.has(document)) {
+            return Promise.resolve([]);
+        }
         try {
-            this.concurrencies++;
-            // ajust the range to the minimal container class or (multiple) method symbols
-            const methods: SymbolNode[] = await getIntersectionMethodsOfRange(range, document);
+            this.inspecting.add(document);
+            // ajust the range to the minimal container class or method symbols
+            const methodAndFields: SymbolNode[] = await getIntersectionSymbolsOfRange(range, document);
             const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
-            const symbols: SymbolNode[] = [...classes, ...methods];
+            const symbols: SymbolNode[] = [...classes, ...methodAndFields];
             if (symbols.length < 1) {
                 const containingClass: SymbolNode = await getInnermostClassContainsRange(range, document);
                 symbols.push(containingClass);
@@ -158,11 +157,10 @@ export default class InspectionCopilot extends Copilot {
             const expandedRange: Range = getUnionRange(symbols);
 
             // inspect the expanded union range
-            const symbolName = symbols[0].symbol.name;
-            const symbolKind = SymbolKind[symbols[0].kind].toLowerCase();
+            const target = symbol ? symbol.toString() : (symbols[0].toString() + (symbols.length > 1 ? ", etc." : ""));
             const inspections = await window.withProgress({
                 location: ProgressLocation.Notification,
-                title: `Inspecting ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}"`,
+                title: `Inspecting ${target}...`,
                 cancellable: false
             }, (_progress) => {
                 return this.doInspectRange(document, expandedRange);
@@ -170,20 +168,21 @@ export default class InspectionCopilot extends Copilot {
 
             // show message based on the number of inspections
             if (inspections.length < 1) {
-                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}" and got 0 suggestions.`);
+                void window.showInformationMessage(`Inspected ${target}, and got 0 suggestions.`);
             } else if (inspections.length == 1) {
                 // apply the only suggestion automatically
-                void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0].problem, inspections[0].solution, 'auto');
+                void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0], 'auto');
             } else {
                 // show message to go to the first suggestion
-                void window.showInformationMessage(`Inspected ${symbolKind} ${symbolName}... of "${path.basename(document.fileName)}" and got ${inspections.length} suggestions.`, "Go to").then(selection => {
+                // inspected a, ..., etc. and got n suggestions.
+                void window.showInformationMessage(`Inspected ${target}, and got ${inspections.length} suggestions.`, "Go to").then(selection => {
                     selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
                 });
             }
             InspectionCache.cache(document, symbols, inspections);
             return inspections;
         } finally {
-            this.concurrencies--;
+            this.inspecting.delete(document);
         }
     }
 
@@ -197,7 +196,7 @@ export default class InspectionCopilot extends Copilot {
      * @returns inspections provided by copilot
      */
     public inspectCode(code: string, context: ProjectContext, key?: string, wait: number = 3000): Promise<Inspection[]> {
-        const _doInspectCode: (code: string, context: ProjectContext) => Promise<Inspection[]> = instrumentSimpleOperation("java.copilot.inspect.code", this.doInspectCode.bind(this));
+        const _doInspectCode: (code: string, context: ProjectContext) => Promise<Inspection[]> = fixedInstrumentSimpleOperation("java.copilot.inspect.code", this.doInspectCode.bind(this));
         if (!key) { // inspect code immediately without debounce
             return this.doInspectCode(code, context);
         }
@@ -240,12 +239,7 @@ export default class InspectionCopilot extends Copilot {
             return Promise.resolve([]);
         }
 
-        const messages: LanguageModelChatMessage[] = [
-            LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE(context)),
-            LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
-            LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
-        ];
-        const codeWithInspectionComments = await this.send(messages, codeLinesContent);
+        const codeWithInspectionComments = await this.send(InspectionCopilot.FORMAT_CODE(context, codeLinesContent));
         const inspections = this.extractInspections(codeWithInspectionComments, codeLines);
         // add properties for telemetry
         sendInfo('java.copilot.inspect.code', {
@@ -269,20 +263,24 @@ export default class InspectionCopilot extends Copilot {
     private extractInspections(codeWithInspectionComments: string, codeLines: { originalLineIndex: number, content: string }[]): Inspection[] {
         const lines = codeWithInspectionComments.split('\n').filter(line => line.trim().length > 0);
         const inspections: Inspection[] = [];
-        let inspectionCommentLineCount = 0;
+        let commentLineCount = 0;
 
         for (let i = 0; i < lines.length;) {
-            const problemMatch = lines[i].match(InspectionCopilot.PROBLEM_PATTERN);
-            if (problemMatch) {
-                const inspection: Inspection = this.extractInspection(i, lines);
-                const codeLineIndex = i - inspectionCommentLineCount;
-                // relative line number to the start of the code inspected, which will be ajusted relative to the start of container symbol later when caching.
-                inspection.problem.position.relativeLine = codeLines[codeLineIndex].originalLineIndex ?? -1;
-                inspection.problem.position.code = codeLines[codeLineIndex].content;
-                inspections.push(inspection);
-                i += 4; // inspection comment has 4 lines
-                inspectionCommentLineCount += 4;
-                continue;
+            const commentMatch = lines[i].match(InspectionCopilot.COMMENT_PATTERN);
+            if (commentMatch) {
+                const inspection: Inspection | undefined = this.extractInspection(i, lines);
+                if (inspection) {
+                    const codeLineIndex = i - commentLineCount;
+                    // relative line number to the start of the code inspected, which will be ajusted relative to the start of container symbol later when caching.
+                    inspection.problem.position.relativeLine = codeLines[codeLineIndex].originalLineIndex ?? -1;
+                    inspection.problem.position.code = codeLines[codeLineIndex].content;
+                    inspections.push(inspection);
+                    i += InspectionCopilot.INSPECTION_COMMENT_LINE_COUNT; // inspection comment has 4 lines
+                    commentLineCount += InspectionCopilot.INSPECTION_COMMENT_LINE_COUNT;
+                    continue;
+                } else {
+                    commentLineCount++;
+                }
             }
             i++;
         }
@@ -296,34 +294,26 @@ export default class InspectionCopilot extends Copilot {
      * @param lines all lines of the code with inspection comments
      * @returns inspection object
      */
-    private extractInspection(index: number, lines: string[]): Inspection {
-        const inspection: Inspection = {
-            id: randomUUID().toString(),
-            problem: {
-                description: '',
-                position: { line: -1, relativeLine: -1, code: '' },
-                indicator: ''
-            },
-            solution: '',
-            severity: ''
-        };
+    private extractInspection(index: number, lines: string[]): Inspection | undefined {
         const problemMatch = lines[index + 0].match(InspectionCopilot.PROBLEM_PATTERN);
         const solutionMatch = lines[index + 1].match(InspectionCopilot.SOLUTION_PATTERN);
         const indicatorMatch = lines[index + 2].match(InspectionCopilot.INDICATOR_PATTERN);
         const severityMatch = lines[index + 3].match(InspectionCopilot.LEVEL_PATTERN);
-        if (problemMatch) {
-            inspection.problem.description = problemMatch[1].trim();
+        if (problemMatch && solutionMatch && indicatorMatch && severityMatch) {
+            return {
+                id: randomUUID().toString(),
+                problem: {
+                    description: problemMatch[1].trim(),
+                    position: { line: -1, relativeLine: -1, code: '' },
+                    indicator: indicatorMatch[1].trim()
+                },
+                solution: solutionMatch[1].trim(),
+                severity: severityMatch[1].trim()
+            };
+        } else {
+            logger.error('Failed to extract inspection from the lines:', lines.slice(index, index + 4));
+            return undefined;
         }
-        if (solutionMatch) {
-            inspection.solution = solutionMatch[1].trim();
-        }
-        if (indicatorMatch) {
-            inspection.problem.indicator = indicatorMatch[1].trim();
-        }
-        if (severityMatch) {
-            inspection.severity = severityMatch[1].trim();
-        }
-        return inspection;
     }
 
     /**
@@ -356,11 +346,13 @@ export default class InspectionCopilot extends Copilot {
     }
 
     async collectProjectContext(document: TextDocument): Promise<ProjectContext> {
+        logger.info('colleteting project context info (java version)...');
         const javaVersion = await getProjectJavaVersion(document);
+        logger.info('project java version:', javaVersion);
         return { javaVersion };
     }
 }
 
 export interface ProjectContext {
-    javaVersion: number;
+    javaVersion: string;
 }
