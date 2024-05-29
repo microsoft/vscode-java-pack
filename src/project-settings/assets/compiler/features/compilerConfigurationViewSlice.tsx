@@ -10,6 +10,15 @@ export const compilerConfigurationViewSlice = createSlice({
       availableComplianceLevels: [] as string[],
     },
     data: {
+      effective: {
+        useRelease: [] as boolean[],
+        enablePreview: [] as boolean[],
+        complianceLevel: [] as string[],
+        sourceLevel: [] as string[],
+        targetLevel: [] as string[],
+        generateDebugInfo: [] as boolean[],
+        storeMethodParamNames: [] as boolean[],
+      },
       useRelease: [] as boolean[],
       enablePreview: [] as boolean[],
       complianceLevel: [] as string[],
@@ -21,6 +30,8 @@ export const compilerConfigurationViewSlice = createSlice({
   },
   reducers: {
     initializeCompilerData: (state, action) => {
+      state.ui.availableComplianceLevels = [];
+
       const projectNum = action.payload.projectsNum;
       state.data.useRelease = Array(projectNum).fill(false);
       state.data.enablePreview = Array(projectNum).fill(false);
@@ -29,7 +40,14 @@ export const compilerConfigurationViewSlice = createSlice({
       state.data.targetLevel = Array(projectNum).fill("");
       state.data.generateDebugInfo = Array(projectNum).fill(false);
       state.data.storeMethodParamNames = Array(projectNum).fill(false);
-      state.ui.availableComplianceLevels = [];
+
+      state.data.effective.useRelease = Array(projectNum).fill(false);
+      state.data.effective.enablePreview = Array(projectNum).fill(false);
+      state.data.effective.complianceLevel = Array(projectNum).fill("");
+      state.data.effective.sourceLevel = Array(projectNum).fill("");
+      state.data.effective.targetLevel = Array(projectNum).fill("");
+      state.data.effective.generateDebugInfo = Array(projectNum).fill(false);
+      state.data.effective.storeMethodParamNames = Array(projectNum).fill(false);
     },
     updateAvailableComplianceLevels: (state, action) => {
       state.ui.availableComplianceLevels = action.payload.availableComplianceLevels;
@@ -58,6 +76,16 @@ export const compilerConfigurationViewSlice = createSlice({
         state.data.storeMethodParamNames[activeProjectIndex] = action.payload.storeMethodParamNames;
       }
     },
+    flushCompilerSettingsToEffective: (state, action) => {
+      const activeProjectIndex = action.payload.activeProjectIndex;
+      state.data.effective.useRelease[activeProjectIndex] = state.data.useRelease[activeProjectIndex];
+      state.data.effective.enablePreview[activeProjectIndex] = state.data.enablePreview[activeProjectIndex];
+      state.data.effective.complianceLevel[activeProjectIndex] = state.data.complianceLevel[activeProjectIndex];
+      state.data.effective.sourceLevel[activeProjectIndex] = state.data.sourceLevel[activeProjectIndex];
+      state.data.effective.targetLevel[activeProjectIndex] = state.data.targetLevel[activeProjectIndex];
+      state.data.effective.generateDebugInfo[activeProjectIndex] = state.data.generateDebugInfo[activeProjectIndex];
+      state.data.effective.storeMethodParamNames[activeProjectIndex] = state.data.storeMethodParamNames[activeProjectIndex];
+    },
   },
 });
 
@@ -65,6 +93,7 @@ export const {
   initializeCompilerData,
   updateAvailableComplianceLevels,
   updateCompilerSettings,
+  flushCompilerSettingsToEffective,
 } = compilerConfigurationViewSlice.actions;
 
 export default compilerConfigurationViewSlice.reducer;

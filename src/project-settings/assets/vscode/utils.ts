@@ -42,14 +42,14 @@ export namespace ClasspathRequest {
         });
     }
 
-    export function onWillUpdateClassPaths(rootPaths: string[], projectTypes: ProjectType[], sourcePaths: ClasspathEntry[][], defaultOutputPaths: string[], vmInstallPaths: string[], libraries: ClasspathEntry[][]) {
+    export function onWillUpdateClassPaths(rootPath: string, projectType: ProjectType, sourcePaths: ClasspathEntry[], defaultOutputPath: string, vmInstallPath: string, libraries: ClasspathEntry[]) {
         vscode.postMessage({
             command: "classpath.onWillUpdateClassPaths",
-            rootPaths,
-            projectTypes,
+            rootPath,
+            projectType,
             sourcePaths,
-            defaultOutputPaths,
-            vmInstallPaths,
+            defaultOutputPath,
+            vmInstallPath,
             libraries
         });
 

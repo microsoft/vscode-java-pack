@@ -8,6 +8,9 @@ export const mavenConfigurationViewSlice = createSlice({
   name: "mavenConfig",
   initialState: {
     data: {
+      effective: {
+        activeProfiles: [] as string[],
+      },
       activeProfiles: [] as string[],
     },
   },
@@ -19,13 +22,19 @@ export const mavenConfigurationViewSlice = createSlice({
     initializeMavenData: (state, action) => {
       const projectNum = action.payload.projectsNum;
       state.data.activeProfiles = Array(projectNum).fill(undefined);
+      state.data.effective.activeProfiles = Array(projectNum).fill(undefined);
     },
+    flushMavenSettingsToEffective: (state, action) => {
+      const activeProjectIndex = action.payload.activeProjectIndex;
+      state.data.effective.activeProfiles[activeProjectIndex] = state.data.activeProfiles[activeProjectIndex];
+    }
   },
 });
 
 export const {
   updateActiveProfiles,
   initializeMavenData,
+  flushMavenSettingsToEffective,
 } = mavenConfigurationViewSlice.actions;
 
 export default mavenConfigurationViewSlice.reducer;
