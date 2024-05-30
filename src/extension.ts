@@ -83,6 +83,10 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
       vscode.commands.executeCommand("java.runtime");
     });
   }
+
+  if (isLlmApiReady()) {
+    activateCopilotInspection(context);
+  }
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
