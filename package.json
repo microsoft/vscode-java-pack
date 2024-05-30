@@ -256,6 +256,32 @@
           "default": false,
           "description": "Whether to send back detailed information from error logs for diagnostic purpose.",
           "scope": "window"
+        },
+        "java.copilot.inspection.renderer": {
+            "type": "object",
+            "description": "How to display rewriting suggestions.",
+            "properties": {
+                "diagnostics": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Hints (Diagnostics)"
+                },
+                "guttericons": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Gutter Icons"
+                },
+                "codelenses": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Code Lenses"
+                },
+                "rulerhighlights": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Ruler Highlights (Scrollbar)"
+                }
+            }
         }
       }
     },
