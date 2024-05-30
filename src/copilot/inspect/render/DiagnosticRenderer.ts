@@ -51,7 +51,7 @@ export class DiagnosticRenderer implements InspectionRenderer {
 class InspectionDiagnostic extends Diagnostic {
     public constructor(public readonly inspection: Inspection) {
         const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
-        const severiy = inspection.severity.toUpperCase() === 'HIGH' ? DiagnosticSeverity.Information : DiagnosticSeverity.Hint;
+        const severiy = DiagnosticSeverity.Hint;
         super(range, inspection.problem.description, severiy);
         this.source = DIAGNOSTICS_GROUP;
     }
