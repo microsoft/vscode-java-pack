@@ -45,9 +45,9 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         void commands.executeCommand('vscode.editorChat.start', {
             autoSend: true,
             message: `/fix ${problem.description}, maybe ${uncapitalize(solution)}`,
-            position: range?.start,
-            initialSelection: new Selection(range!.start, range!.start),
-            initialRange: new Range(range!.start, range!.start)
+            position: range.start,
+            initialSelection: new Selection(range.start, range.start),
+            initialRange: new Range(range.start, range.start)
         });
     });
 

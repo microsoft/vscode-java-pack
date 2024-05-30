@@ -43,6 +43,9 @@ export async function getIntersectionSymbolsOfRange(range: Range | Selection, do
 }
 
 export function getUnionRange(symbols: SymbolNode[]): Range {
+    if (symbols.length === 0) {
+        throw new Error("No symbols provided");
+    }
     let result: Range = new Range(symbols[0].range.start, symbols[0].range.end);
     for (const symbol of symbols) {
         result = result.union(symbol.range);
