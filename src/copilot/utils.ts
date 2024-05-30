@@ -26,7 +26,7 @@ export async function getSymbolsContainedInRange(range: Range | Selection, docum
 /**
  * get the innermost class symbol that completely contains the `range` in the `document`
  */
-export async function getInnermostClassContainsRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode> {
+export async function getInnermostClassContainsRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode | undefined> {
     const symbols = await getSymbolsOfDocument(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
         // reverse the classes to get the innermost class first

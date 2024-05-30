@@ -149,8 +149,14 @@ export default class InspectionCopilot extends Copilot {
             const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
             const symbols: SymbolNode[] = [...classes, ...methodAndFields];
             if (symbols.length < 1) {
-                const containingClass: SymbolNode = await getInnermostClassContainsRange(range, document);
-                symbols.push(containingClass);
+                const containingClass: SymbolNode | undefined = await getInnermostClassContainsRange(range, document);
+                containingClass && symbols.push(containingClass);
+            }
+
+            if (symbols.length < 1) {
+                logger.warn('No symbol found in the range, inspecting the whole document.');
+                this.inspecting.delete(document);
+                return this.inspectDocument(document);
             }
 
             // get the union range of the container symbols, which will be insepcted by copilot
@@ -244,7 +250,7 @@ export default class InspectionCopilot extends Copilot {
         // add properties for telemetry
         sendInfo('java.copilot.inspect.code', {
             javaVersion: context.javaVersion,
-            codeLength: code.length,
+            codeWords: code.split(/\s+/).length,
             codeLines: codeLines.length,
             insectionsCount: inspections.length,
             inspections: `[${inspections.map(i => JSON.stringify({
