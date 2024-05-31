@@ -25,8 +25,6 @@ export const classpathConfigurationViewSlice = createSlice({
         output: [] as string[],
         libraries: [] as ClasspathEntry[][],
       },
-      loadingState: false, // TODO: move to common?
-      exception: undefined,
     },
     reducers: {
       updateActiveTab: (state, action) => {
@@ -107,12 +105,6 @@ export const classpathConfigurationViewSlice = createSlice({
         newLibs = _.uniq(newLibs);
         state.data.libraries[activeProjectIndex] = _.uniqBy(newLibs, "path");
       },
-      catchException: (state, action) => {
-        state.exception = action.payload;
-      },
-      updateLoadingState: (state, action) => {
-        state.loadingState = action.payload;
-      },
     },
 });
 
@@ -130,8 +122,6 @@ export const {
   setJdks,
   removeReferencedLibrary,
   addLibraries,
-  catchException,
-  updateLoadingState,
   flushClasspathToEffective,
 } = classpathConfigurationViewSlice.actions;
 

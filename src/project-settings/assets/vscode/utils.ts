@@ -8,6 +8,12 @@ declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi();
 
 export namespace CommonRequest {
+    export function onWillListProjects() {
+        vscode.postMessage({
+            command: "common.onWillListProjects",
+        });
+    }
+
     export function onWillExecuteCommand(id: string) {
         vscode.postMessage({
             command: "common.onWillExecuteCommand",
@@ -17,12 +23,6 @@ export namespace CommonRequest {
 }
 
 export namespace ClasspathRequest {
-    export function onWillListProjects() {
-        vscode.postMessage({
-            command: "classpath.onWillListProjects",
-        });
-    }
-
     export function onWillListVmInstalls() {
         vscode.postMessage({
             command: "classpath.onWillListVmInstalls",

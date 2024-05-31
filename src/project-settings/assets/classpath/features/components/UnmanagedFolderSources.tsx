@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
@@ -15,6 +15,11 @@ const UnmanagedFolderSources = (): JSX.Element => {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const activeProjectIndexRef = useRef(activeProjectIndex);
+  useEffect(() => {
+    activeProjectIndexRef.current = activeProjectIndex;
+  }, [activeProjectIndex]);
+
   const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.sources[activeProjectIndex]);
   const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
   const dispatch: Dispatch<any> = useDispatch();
@@ -41,7 +46,7 @@ const UnmanagedFolderSources = (): JSX.Element => {
     const {data} = event;
     if (data.command === "classpath.onDidUpdateSourceFolder") {
       dispatch(updateSource({
-        activeProjectIndex,
+        activeProjectIndex: activeProjectIndexRef.current,
         sources: data.sourcePaths.map(sp => {
           return {
             path: sp,

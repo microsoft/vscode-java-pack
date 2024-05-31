@@ -3,14 +3,23 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import { instrumentOperation, sendError, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 import { getExtensionContext, getNonce } from "../utils";
 import { ClasspathRequestHandler } from "./handlers/ClasspathRequestHandler";
 import { MavenRequestHandler } from "./handlers/MavenRequestHandler";
 import { CompilerRequestHandler } from "./handlers/CompilerRequestHandler";
+import { ProjectSettingsException, ProjectInfo } from "./types";
+import _ from "lodash";
+import { getProjectNameFromUri, isDefaultProject } from "../utils/jdt";
+import compareVersions from "compare-versions";
 
 let projectSettingsPanel: vscode.WebviewPanel | undefined;
+let lsApi: LanguageServerAPI | undefined;
+
+const MINIMUM_JAVA_EXTENSION_VERSION: string = "1.31.0";
 class ProjectSettingView {
+
+    private classpathRequestHandler: ClasspathRequestHandler | undefined = undefined;
 
     public async showProjectSettingsPage(sectionId: string = "classpath"): Promise<void> {
         const context: vscode.ExtensionContext = getExtensionContext();
@@ -25,18 +34,24 @@ class ProjectSettingView {
             );
 
             await this.initializeWebview(context);
-        }
-
-        projectSettingsPanel.reveal();
-        const oneTimeHook = projectSettingsPanel.webview.onDidReceiveMessage(() => {
-            // send the route change msg once react component is ready.
-            // and dispose it once it's done.
-            projectSettingsPanel!.webview.postMessage({
+            const oneTimeHook = projectSettingsPanel.webview.onDidReceiveMessage(() => {
+                // send the route change msg once react component is ready.
+                // and dispose it once it's done.
+                projectSettingsPanel?.webview.postMessage({
+                    command: "main.onWillChangeRoute",
+                    route: sectionId
+                });
+                oneTimeHook.dispose();
+            });
+        } else {
+            // if the panel is already opened, we just send the route change msg.
+            projectSettingsPanel?.webview.postMessage({
                 command: "main.onWillChangeRoute",
                 route: sectionId
             });
-            oneTimeHook.dispose();
-        })
+        }
+        projectSettingsPanel.reveal();
+        
     }
 
     public async initializeWebview(context: vscode.ExtensionContext): Promise<void> {
@@ -62,11 +77,14 @@ class ProjectSettingView {
         };
 
         context.subscriptions.push(
-            new ClasspathRequestHandler(projectSettingsPanel.webview),
+            this.classpathRequestHandler = new ClasspathRequestHandler(projectSettingsPanel.webview),
             new CompilerRequestHandler(projectSettingsPanel.webview),
             new MavenRequestHandler(projectSettingsPanel.webview),
             projectSettingsPanel.webview.onDidReceiveMessage(async (message) => {
                 switch (message.command) {
+                    case "common.onWillListProjects":
+                        await this.listProjects();
+                        break;
                     case "common.onWillExecuteCommand":
                         this.executeCommand(message.id);
                         break;
@@ -77,6 +95,98 @@ class ProjectSettingView {
         );
 
         projectSettingsPanel.webview.html = this.getHtmlForWebview(projectSettingsPanel.webview, context.asAbsolutePath("./out/assets/project-settings/index.js"));
+    }
+
+    private listProjects = instrumentOperation("projectSettings.classpath.listProjects", async (operationId: string) => {
+        // listProjects() will be called when the component is mounted,
+        // we first check the requirement here in case user triggers 'reload webview'
+        if (!(await this.checkRequirement())) {
+            return;
+        }
+        let projects: ProjectInfo[] = await this.getProjectsFromLS();
+
+        _.remove(projects, (p: ProjectInfo) => {
+            return isDefaultProject(p.rootPath);
+        });
+
+        if (projects.length === 0) {
+            projectSettingsPanel?.webview.postMessage({
+                command: "main.onException",
+                exception: ProjectSettingsException.NoJavaProjects,
+            });
+        } else {
+            projectSettingsPanel?.webview.postMessage({
+                command: "main.onDidListProjects",
+                projectInfo: projects,
+            });
+        }
+
+        sendInfo(operationId, {
+            projectNumber: projects.length,
+        });
+    });
+
+    private checkRequirement = async (): Promise<boolean> => {
+        if (lsApi) {
+            return true;
+        }
+        const javaExt = vscode.extensions.getExtension("redhat.java");
+        if (!javaExt) {
+            projectSettingsPanel?.webview.postMessage({
+                command: "main.onException",
+                exception: ProjectSettingsException.JavaExtensionNotInstalled,
+            });
+            const err: Error = new Error("The extension 'redhat.java' is not installed.");
+            setUserError(err);
+            sendError(err);
+            return false;
+        }
+
+        const javaExtVersion: string = javaExt.packageJSON.version;
+        if (compareVersions(javaExtVersion, MINIMUM_JAVA_EXTENSION_VERSION) < 0) {
+            projectSettingsPanel?.webview.postMessage({
+                command: "main.onException",
+                exception: ProjectSettingsException.StaleJavaExtension,
+            });
+            const err: Error = new Error(`The extension version of 'redhat.java' (${javaExtVersion}) is too stale.`);
+            setUserError(err);
+            sendError(err);
+            return false;
+        }
+
+        await javaExt.activate();
+        lsApi = javaExt.exports;
+
+        if (lsApi) {
+            getExtensionContext().subscriptions.push(
+                lsApi.onDidProjectsImport(() => {
+                    this.listProjects();
+                }),
+                lsApi.onDidClasspathUpdate((uri: vscode.Uri) => {
+                    this.classpathRequestHandler?.debounceLoadProjectClasspath(uri);
+                }),
+            );
+        }
+
+        return true;
+    };
+
+    private async getProjectsFromLS(): Promise<ProjectInfo[]> {
+        const ret: ProjectInfo[] = [];
+        let projects: string[] = [];
+        try {
+            projects = await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.getAll") || [];
+        } catch (error) {
+            // LS not ready
+        }
+
+        for (const projectRoot of projects) {
+            ret.push({
+                name: getProjectNameFromUri(projectRoot),
+                rootPath: projectRoot,
+            });
+        }
+        return ret;
     }
 
     private getHtmlForWebview(webview: vscode.Webview, scriptPath: string) {
@@ -116,6 +226,11 @@ export class ProjectSettingsViewSerializer implements vscode.WebviewPanelSeriali
         projectSettingsPanel = webviewPanel;
         await projectSettingView.initializeWebview(getExtensionContext());
     }
+}
+
+interface LanguageServerAPI {
+    onDidProjectsImport: vscode.Event<vscode.Uri>;
+    onDidClasspathUpdate: vscode.Event<vscode.Uri>;
 }
 
 export const projectSettingView = new ProjectSettingView();

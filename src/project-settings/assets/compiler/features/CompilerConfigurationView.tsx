@@ -4,7 +4,7 @@
 import { VSCodeCheckbox, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeDropdown, VSCodeLink, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import React, { Dispatch, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateCompilerSettings, updateAvailableComplianceLevels, flushCompilerSettingsToEffective } from "./compilerConfigurationViewSlice";
+import { updateCompilerSettings, updateAvailableComplianceLevels } from "./compilerConfigurationViewSlice";
 import { CompilerRequest } from "../../vscode/utils";
 import { VmInstall } from "../../../types";
 import { updateActiveSection } from "../../mainpage/features/commonSlice";
@@ -15,7 +15,6 @@ const CompilerConfigurationView = (): JSX.Element | null => {
 
   const dispatch: Dispatch<any> = useDispatch();
 
-  const projects: any[] = useSelector((state: any) => state.commonConfig.data.projects);
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
   const complianceLevel: string = useSelector((state: any) => state.compilerConfig.data.complianceLevel[activeProjectIndex]);
   const sourceLevel: string = useSelector((state: any) => state.compilerConfig.data.sourceLevel[activeProjectIndex]);
@@ -36,9 +35,6 @@ const CompilerConfigurationView = (): JSX.Element | null => {
   const storeMethodParamNames: boolean = useSelector((state: any) => state.compilerConfig.data.storeMethodParamNames[activeProjectIndex]);
   const availableComplianceLevels: string[] = useSelector((state: any) => state.compilerConfig.ui.availableComplianceLevels);
 
-  // Release flag only supported on Java 9+.
-  const showReleaseFlag: boolean = currentJdkComplianceLevel >= 9;
-
   // Hide the preview checkbox if the current JDK version is not latest & preview flag is already disabled.
   const showPreviewFlag: boolean = !!(availableComplianceLevels.find((level) => {
     return Number(level) > currentJdkComplianceLevel;
@@ -55,20 +51,6 @@ const CompilerConfigurationView = (): JSX.Element | null => {
       dispatch(updateAvailableComplianceLevels({
         availableComplianceLevels: message.complianceLevels
       }));
-    } else if (message.command === "compiler.onDidGetCompilerSettings") {
-      dispatch(updateCompilerSettings({
-        activeProjectIndex,
-        useRelease: message.useRelease,
-        enablePreview: message.enablePreview,
-        complianceLevel: message.complianceLevel,
-        sourceLevel: message.sourceLevel,
-        targetLevel: message.targetLevel,
-        generateDebugInfo: message.generateDebugInfo,
-        storeMethodParamNames: message.storeMethodParamNames
-      }));
-      dispatch(flushCompilerSettingsToEffective({
-        activeProjectIndex,
-      }));
     }
   };
 
@@ -76,9 +58,6 @@ const CompilerConfigurationView = (): JSX.Element | null => {
     window.addEventListener("message", onMessage);
     if (availableComplianceLevels?.length === 0) {
       CompilerRequest.onWillGetAvailableComplianceLevels();
-    }
-    if (sourceLevel === "") {
-      CompilerRequest.onWillGetCompilerSettings(projects[activeProjectIndex].rootPath);
     }
     return () => {
       window.removeEventListener("message", onMessage);
@@ -159,12 +138,12 @@ const CompilerConfigurationView = (): JSX.Element | null => {
   return (
     <div className="root">
       <div className="setting-section">
-        <div className={showReleaseFlag ? "" : "invisible"}>
+        <div>
           <VSCodeCheckbox checked={useRelease} onClick={onClickUseRelease}>Use '--release' option for cross-compilation (Java 9 and later)</VSCodeCheckbox>
         </div>
         <div>
           <VSCodeDataGrid gridTemplateColumns="40% 60%">
-            <VSCodeDataGridRow className={showReleaseFlag && useRelease ? "" : "invisible"}>
+            <VSCodeDataGridRow className={useRelease ? "" : "invisible"}>
               <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
                 <span>Bytecode version:</span>
               </VSCodeDataGridCell>
@@ -174,7 +153,7 @@ const CompilerConfigurationView = (): JSX.Element | null => {
                 </VSCodeDropdown>
               </VSCodeDataGridCell>
             </VSCodeDataGridRow>
-            <VSCodeDataGridRow className={showReleaseFlag && useRelease ? "invisible" : ""}>
+            <VSCodeDataGridRow className={useRelease ? "invisible" : ""}>
               <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
                 <span>Source compatibility:</span>
               </VSCodeDataGridCell>
@@ -184,7 +163,7 @@ const CompilerConfigurationView = (): JSX.Element | null => {
                 </VSCodeDropdown>
               </VSCodeDataGridCell>
             </VSCodeDataGridRow>
-            <VSCodeDataGridRow className={showReleaseFlag && useRelease ? "invisible" : ""}>
+            <VSCodeDataGridRow className={useRelease ? "invisible" : ""}>
               <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
                 <span>Target compatibility:</span>
               </VSCodeDataGridCell>

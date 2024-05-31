@@ -38,15 +38,10 @@ export enum ClasspathEntryKind {
     Container = 5,
 }
 
-export enum ClasspathViewException {
+export enum ProjectSettingsException {
     JavaExtensionNotInstalled = "javaExtensionNotInstalled",
     StaleJavaExtension = "staleJavaExtension",
     NoJavaProjects = "noJavaProjects",
-}
-
-export enum ProjectState {
-    Unloaded = "unloaded",
-    Loaded = "loaded",
 }
 
 export enum SectionId {

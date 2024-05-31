@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
@@ -12,6 +12,11 @@ import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
 const Sources = (): JSX.Element => {
 
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const activeProjectIndexRef = useRef(activeProjectIndex);
+  useEffect(() => {
+    activeProjectIndexRef.current = activeProjectIndex;
+  }, [activeProjectIndex]);
+
   const sources: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.sources[activeProjectIndex]);
   const defaultOutput: string = useSelector((state: any) => state.classpathConfig.data.output[activeProjectIndex]);
 
@@ -110,7 +115,7 @@ const Sources = (): JSX.Element => {
        * }
        */
       dispatch(updateSource({
-        activeProjectIndex,
+        activeProjectIndex: activeProjectIndexRef.current,
         sources: data.sourcePaths
       }));
     }
