@@ -128,7 +128,7 @@ const Footer = (): JSX.Element => {
     }, []);
 
   return (
-    <div id="footer" className="pt-1 pb-2">
+    <div id="footer" className="pt-1">
         {loadingState && <VSCodeButton className="ml-1" disabled>Applying...</VSCodeButton>}
         {!loadingState &&
           <VSCodeButton
