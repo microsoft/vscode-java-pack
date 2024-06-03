@@ -23,6 +23,8 @@ import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
+import { activateCopilotInspection } from "./copilot/inspect";
+import { isLlmApiReady } from "./copilot/utils";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
