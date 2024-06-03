@@ -34,7 +34,7 @@ export class MavenRequestHandler implements vscode.Disposable {
             this.webview.postMessage({
                 command: "maven.onDidGetSelectedProfiles",
                 uri,
-                selectedProfiles: selectedProfiles.split(","),
+                selectedProfiles,
             });
         }
     });

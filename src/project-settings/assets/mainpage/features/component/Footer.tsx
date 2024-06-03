@@ -7,11 +7,12 @@ import React, { useEffect } from "react";
 import { ClasspathEntry, ProjectInfo } from "../../../../types";
 import { useDispatch, useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
-import { flushClasspathToEffective, updateLoadingState } from "../../../classpath/features/classpathConfigurationViewSlice";
+import { flushClasspathToEffective } from "../../../classpath/features/classpathConfigurationViewSlice";
 import { ClasspathRequest, CompilerRequest, MavenRequest } from "../../../vscode/utils";
 import _ from "lodash";
 import { flushMavenSettingsToEffective } from "../../../maven/features/mavenConfigurationViewSlice";
 import { flushCompilerSettingsToEffective } from "../../../compiler/features/compilerConfigurationViewSlice";
+import { updateLoadingState } from "../commonSlice";
 
 const Footer = (): JSX.Element => {
 
@@ -34,7 +35,7 @@ const Footer = (): JSX.Element => {
 
   const activeProfiles: string = useSelector((state: any) => state.mavenConfig.data.activeProfiles[activeProjectIndex]);
   const effectiveProfiles: string = useSelector((state: any) => state.mavenConfig.data.effective.activeProfiles[activeProjectIndex]);
-  const mavenModified: boolean = !_.isEqual(activeProfiles, effectiveProfiles);
+  const mavenModified: boolean = activeProfiles !== effectiveProfiles;
 
   const useRelease: boolean = useSelector((state: any) => state.compilerConfig.data.useRelease[activeProjectIndex]);
   const effectiveUseRelease: boolean = useSelector((state: any) => state.compilerConfig.data.effective.useRelease[activeProjectIndex]);
@@ -58,7 +59,7 @@ const Footer = (): JSX.Element => {
       generateDebugInfo !== effectiveGenerateDebugInfo ||
       storeMethodParamNames !== effectiveStoreMethodParamNames;
 
-  const loadingState: boolean = useSelector((state: any) => state.classpathConfig.loadingState);
+  const loadingState: boolean = useSelector((state: any) => state.commonConfig.ui.loadingState);
 
   const dispatch: Dispatch<any> = useDispatch();
 
@@ -114,7 +115,7 @@ const Footer = (): JSX.Element => {
 
   const onDidChangeLoadingState = (event: OnDidChangeLoadingStateEvent) => {
     const {data} = event;
-    if (data.command === "classpath.onDidChangeLoadingState") {
+    if (data.command === "main.onDidChangeLoadingState") {
       dispatch(updateLoadingState(data.loading));
     }
   }
@@ -127,7 +128,7 @@ const Footer = (): JSX.Element => {
     }, []);
 
   return (
-    <div id="footer" className="pt-1 pb-2">
+    <div id="footer" className="pt-1">
         {loadingState && <VSCodeButton className="ml-1" disabled>Applying...</VSCodeButton>}
         {!loadingState &&
           <VSCodeButton

@@ -3,16 +3,15 @@
 
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { ProjectInfo, ProjectState } from "../../../../types";
+import { ProjectInfo } from "../../../../types";
 import { Dispatch } from "@reduxjs/toolkit";
-import { ClasspathRequest } from "../../../vscode/utils";
 import { VSCodeDropdown, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
 import { activeProjectChange } from "../../../mainpage/features/commonSlice";
+import { ClasspathRequest, CompilerRequest, MavenRequest } from "../../../vscode/utils";
 
 const ProjectSelector = (): JSX.Element | null => {
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
   const projects: ProjectInfo[] = useSelector((state: any) => state.commonConfig.data.projects);
-  const projectState: ProjectState[] = useSelector((state: any) => state.commonConfig.data.projectState);
 
   const dispatch: Dispatch<any> = useDispatch();
 
@@ -20,18 +19,14 @@ const ProjectSelector = (): JSX.Element | null => {
     dispatch(activeProjectChange(index));
   };
 
-  const loadProjectClasspath = (rootPath: string) => {
-    if (projectState[activeProjectIndex] === ProjectState.Unloaded) {
-      ClasspathRequest.onWillLoadProjectClasspath(rootPath);
-    }
-  }
-
   useEffect(() => {
     if (projects.length === 0) {
       return;
     }
 
-    loadProjectClasspath(projects[activeProjectIndex].rootPath);
+    ClasspathRequest.onWillLoadProjectClasspath(projects[activeProjectIndex].rootPath);
+    CompilerRequest.onWillGetCompilerSettings(projects[activeProjectIndex].rootPath);
+    MavenRequest.onWillGetSelectedProfiles(projects[activeProjectIndex].rootPath);
   }, [activeProjectIndex, projects]);
 
   const projectSelections = projects.map((project, index) => {

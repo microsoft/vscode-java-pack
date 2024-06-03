@@ -3,14 +3,12 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { getExtensionContext } from "../../utils";
 import * as fse from "fs-extra";
-import { ProjectInfo, ClasspathComponent, ClasspathViewException, VmInstall, ClasspathEntry, ClasspathEntryKind } from "../types";
+import { ClasspathComponent, VmInstall, ClasspathEntry, ClasspathEntryKind } from "../types";
 import _ from "lodash";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
-import { getProjectNameFromUri, getProjectType, isDefaultProject } from "../../utils/jdt";
+import { getProjectType } from "../../utils/jdt";
 import { ProjectType } from "../../utils/webview";
-import compareVersions from "compare-versions";
 
 export class ClasspathRequestHandler implements vscode.Disposable {
     private webview: vscode.Webview;
@@ -37,9 +35,6 @@ export class ClasspathRequestHandler implements vscode.Disposable {
 
     private async handleClasspathPanelRequest(message: any): Promise<void> {
         switch (message.command) {
-            case "classpath.onWillListProjects":
-                await this.listProjects();
-                break;
             case "classpath.onWillListVmInstalls":
                 await this.listVmInstalls();
                 break;
@@ -72,83 +67,6 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
     }
 
-    private checkRequirement = async (): Promise<boolean> => {
-        if (lsApi) {
-            return true;
-        }
-        const javaExt = vscode.extensions.getExtension("redhat.java");
-        if (!javaExt) {
-            this.webview.postMessage({
-                command: "classpath.onException",
-                exception: ClasspathViewException.JavaExtensionNotInstalled,
-            });
-            const err: Error = new Error("The extension 'redhat.java' is not installed.");
-            setUserError(err);
-            sendError(err);
-            return false;
-        }
-
-        const javaExtVersion: string = javaExt.packageJSON.version;
-        if (compareVersions(javaExtVersion, MINIMUM_JAVA_EXTENSION_VERSION) < 0) {
-            this.webview.postMessage({
-                command: "onException",
-                exception: ClasspathViewException.StaleJavaExtension,
-            });
-            const err: Error = new Error(`The extension version of 'redhat.java' (${javaExtVersion}) is too stale.`);
-            setUserError(err);
-            sendError(err);
-            return false;
-        }
-
-        await javaExt.activate();
-        lsApi = javaExt.exports;
-
-        if (lsApi) {
-            getExtensionContext().subscriptions.push(
-                lsApi.onDidProjectsImport(() => {
-                    this.listProjects();
-                }),
-                lsApi.onDidClasspathUpdate((uri: vscode.Uri) => {
-                    if (this.currentProjectRoot && !path.relative(uri.fsPath, this.currentProjectRoot.fsPath)) {
-                        // Use debounced function to avoid UI jittery
-                        this.debounceLoadProjectClasspath(uri);
-                    }
-                }),
-            );
-        }
-
-        return true;
-    };
-
-    private listProjects = instrumentOperation("projectSettings.classpath.listProjects", async (operationId: string) => {
-        // listProjects() will be called when the component is mounted,
-        // we first check the requirement here in case user triggers 'reload webview'
-        if (!(await this.checkRequirement())) {
-            return;
-        }
-        let projects: ProjectInfo[] = await this.getProjectsFromLS();
-
-        _.remove(projects, (p: ProjectInfo) => {
-            return isDefaultProject(p.rootPath);
-        });
-
-        if (projects.length === 0) {
-            this.webview.postMessage({
-                command: "classpath.onException",
-                exception: ClasspathViewException.NoJavaProjects,
-            });
-        } else {
-            this.webview.postMessage({
-                command: "main.onDidListProjects", // TODO: move it out of the classpath section
-                projectInfo: projects,
-            });
-        }
-
-        sendInfo(operationId, {
-            projectNumber: projects.length,
-        });
-    });
-
     private listVmInstalls = instrumentOperation("projectSettings.classpath.listVmInstalls", async (operationId: string) => {
         let vmInstalls: VmInstall[] = await this.getVmInstallsFromLS();
         vmInstalls = vmInstalls.sort((vmA: VmInstall, vmB: VmInstall) => {
@@ -169,8 +87,12 @@ export class ClasspathRequestHandler implements vscode.Disposable {
 
     private debounceListVmInstalls = _.debounce(this.listVmInstalls, 3000 /*ms*/);
 
-    private loadProjectClasspath = instrumentOperation("projectSettings.classpath.loadClasspath", async (operationId: string, currentProjectRoot: vscode.Uri) => {
-        const classpath = await this.getProjectClasspathFromLS(currentProjectRoot);
+    private loadProjectClasspath = instrumentOperation("projectSettings.classpath.loadClasspath", async (operationId: string, uri: vscode.Uri) => {
+        if (!this.currentProjectRoot || path.relative(uri.fsPath, this.currentProjectRoot.fsPath)) {
+            return;
+        }
+
+        const classpath = await this.getProjectClasspathFromLS(uri);
         if (classpath) {
             this.webview.postMessage({
                 command: "classpath.onDidLoadProjectClasspath",
@@ -187,7 +109,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         });
     });
 
-    private debounceLoadProjectClasspath = _.debounce(this.loadProjectClasspath, 3000 /*ms*/);
+    public debounceLoadProjectClasspath = _.debounce(this.loadProjectClasspath, 3000 /*ms*/);
 
     private async selectSourceFolderPath(currentProjectRoot: vscode.Uri): Promise<string | undefined> {
         const sourceFolder: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
@@ -254,7 +176,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
 
     private updateClassPaths = instrumentOperation("projectSettings.classpath.updateClassPaths", async (_operationId: string, rootPath: string, projectType: ProjectType, sourcePaths: ClasspathEntry[], defaultOutputPath: string, vmInstallPath: string, libraries: ClasspathEntry[]) => {
         this.webview.postMessage({
-            command: "classpath.onDidChangeLoadingState",
+            command: "main.onDidChangeLoadingState",
             loading: true,
         });
 
@@ -296,7 +218,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
 
         this.webview.postMessage({
-            command: "classpath.onDidChangeLoadingState",
+            command: "main.onDidChangeLoadingState",
             loading: false,
         });
     });
@@ -495,24 +417,6 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         });
     });
 
-    private async getProjectsFromLS(): Promise<ProjectInfo[]> {
-        const ret: ProjectInfo[] = [];
-        let projects: string[] = [];
-        try {
-            projects = await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.getAll") || [];
-        } catch (error) {
-            // LS not ready
-        }
-
-        for (const projectRoot of projects) {
-            ret.push({
-                name: getProjectNameFromUri(projectRoot),
-                rootPath: projectRoot,
-            });
-        }
-        return ret;
-    }
-
     private async getVmInstallsFromLS(): Promise<VmInstall[]> {
         const ret: VmInstall[] = [];
         try {
@@ -530,7 +434,8 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             CLASSPATH_ENTRIES_KEY,
         ];
 
-        const response = await lsApi!.getProjectSettings(
+        const response: any = await vscode.commands.executeCommand("java.execute.workspaceCommand",
+            "java.project.getSettings",
             uri.toString(),
             queryKeys
         );
@@ -549,14 +454,9 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
 
         classpath.libraries = classpath.libraries.map(l => {
-            let normalizedPath: string = vscode.Uri.file(l.path).fsPath;
-            if (normalizedPath.startsWith(baseFsPath)) {
-                normalizedPath = path.relative(baseFsPath, normalizedPath);
-            }
-
             return {
                 ...l,
-                path: normalizedPath,
+                path: vscode.Uri.file(l.path).fsPath,
             };
         });
         return classpath;
@@ -635,20 +535,10 @@ export class ClasspathRequestHandler implements vscode.Disposable {
     }
 }
 
-let lsApi: LanguageServerAPI | undefined;
 const NATURE_IDS: string = "org.eclipse.jdt.ls.core.natureIds"
 const OUTPUT_PATH_KEY: string = "org.eclipse.jdt.ls.core.outputPath";
 const VM_LOCATION_KEY: string = "org.eclipse.jdt.ls.core.vm.location";
 const CLASSPATH_ENTRIES_KEY: string = "org.eclipse.jdt.ls.core.classpathEntries";
-const MINIMUM_JAVA_EXTENSION_VERSION: string = "0.77.0";
-
-
-
-interface LanguageServerAPI {
-    onDidProjectsImport: vscode.Event<vscode.Uri>;
-    onDidClasspathUpdate: vscode.Event<vscode.Uri>;
-    getProjectSettings: (uri: string, SettingKeys: string[]) => Promise<any>;
-}
 
 interface IReferencedLibraries {
     include: string[];

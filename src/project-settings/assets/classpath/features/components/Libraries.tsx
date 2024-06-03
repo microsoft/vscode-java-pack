@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Dispatch } from "@reduxjs/toolkit";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeReferencedLibrary, addLibraries } from "../classpathConfigurationViewSlice";
 import { ClasspathRequest } from "../../../vscode/utils";
@@ -13,6 +13,11 @@ const Libraries = (): JSX.Element => {
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const activeProjectIndexRef = useRef(activeProjectIndex);
+  useEffect(() => {
+    activeProjectIndexRef.current = activeProjectIndex;
+  }, [activeProjectIndex]);
+
   const libraries: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.libraries[activeProjectIndex]);
   const dispatch: Dispatch<any> = useDispatch();
 
@@ -31,11 +36,18 @@ const Libraries = (): JSX.Element => {
     const {data} = event;
     if (data.command === "classpath.onDidAddLibraries") {
       dispatch(addLibraries({
-        activeProjectIndex,
+        activeProjectIndex: activeProjectIndexRef.current,
         libraries:data.jars
-    }));
+      }));
     }
   };
+
+  useEffect(() => {
+    window.addEventListener("message", onDidAddLibraries);
+    return () => {
+      window.removeEventListener("message", onDidAddLibraries);
+    }
+  }, []);
 
   const resolveLibPath = (entry: ClasspathEntry): string => {
     if (entry.kind === ClasspathEntryKind.Project) {
@@ -67,13 +79,6 @@ const Libraries = (): JSX.Element => {
     const pathComponents = path.split(/[\\/]/);
     return pathComponents[pathComponents.length - 1];
   }
-
-  useEffect(() => {
-    window.addEventListener("message", onDidAddLibraries);
-    return () => {
-      window.removeEventListener("message", onDidAddLibraries);
-    }
-  }, []);
 
   let librariesSections: JSX.Element | JSX.Element[];
   if (libraries.length === 0) {

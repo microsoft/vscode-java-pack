@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { Dispatch, useEffect, useState } from "react";
+import React, { Dispatch, useEffect, useRef, useState } from "react";
 import { ClasspathRequest, CommonRequest } from "../../../vscode/utils";
 import { VSCodeDivider, VSCodeDropdown, VSCodeOption, } from "@vscode/webview-ui-toolkit/react";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +11,11 @@ import { setJdks } from "../classpathConfigurationViewSlice";
 const JdkRuntime = (): JSX.Element => {
 
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
+  const activeProjectIndexRef = useRef(activeProjectIndex);
+  useEffect(() => {
+    activeProjectIndexRef.current = activeProjectIndex;
+  }, [activeProjectIndex]);
+
   const vmInstalls: VmInstall[] = useSelector((state: any) => state.classpathConfig.data.vmInstalls);
   const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.data.activeVmInstallPath[activeProjectIndex]);
 
@@ -35,11 +40,25 @@ const JdkRuntime = (): JSX.Element => {
     const {data} = event;
     if (data.command === "classpath.onDidChangeJdk") {
       dispatch(setJdks({
-        activeProjectIndex,
+        activeProjectIndex: activeProjectIndexRef.current,
         ...data
       }));
     }
   }
+
+  useEffect(() => {
+    window.addEventListener("message", onDidChangeJdk);
+    // the dropdown list has a fixed height by default, which makes the list jitter
+    // when the jdk path changes. We set the max-height to initial to fix this issue.
+    // Note that the list box is rendered inside a shadow dom so this is the only way
+    // to change its style.
+    document.querySelector("#jdk-dropdown")?.shadowRoot
+        ?.querySelector(".listbox")?.setAttribute("style", "max-height: initial;");
+    if (vmInstalls.length === 0) {
+      ClasspathRequest.onWillListVmInstalls();
+    }
+    return () => window.removeEventListener("message", onDidChangeJdk);
+  }, []);
 
   const jdkSelections = vmInstalls.map((vmInstall) => {
     return (
@@ -88,20 +107,6 @@ const JdkRuntime = (): JSX.Element => {
         </div>
       </VSCodeOption>
     );
-
-  useEffect(() => {
-    window.addEventListener("message", onDidChangeJdk);
-    // the dropdown list has a fixed height by default, which makes the list jitter
-    // when the jdk path changes. We set the max-height to initial to fix this issue.
-    // Note that the list box is rendered inside a shadow dom so this is the only way
-    // to change its style.
-    document.querySelector("#jdk-dropdown")?.shadowRoot
-        ?.querySelector(".listbox")?.setAttribute("style", "max-height: initial;");
-    if (vmInstalls.length === 0) {
-      ClasspathRequest.onWillListVmInstalls();
-    }
-    return () => window.removeEventListener("message", onDidChangeJdk);
-  }, []);
 
   return (
     <div className="setting-section">

@@ -2,41 +2,15 @@
 // Licensed under the MIT license.
 
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
-import React, { Dispatch, useEffect } from "react";
+import React, { Dispatch } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { flushMavenSettingsToEffective, updateActiveProfiles } from "../mavenConfigurationViewSlice";
-import { MavenRequest } from "../../../vscode/utils";
+import { updateActiveProfiles } from "../mavenConfigurationViewSlice";
 
 const Profile = (): JSX.Element => {
-
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
-  const projects: any[] = useSelector((state: any) => state.commonConfig.data.projects);
   const activeProfiles: string | undefined = useSelector((state: any) => state.mavenConfig.data.activeProfiles[activeProjectIndex]);
 
   const dispatch: Dispatch<any> = useDispatch();
-
-  const onMessage = (event: any) => {
-    const message = event.data;
-    if (message.command === "maven.onDidGetSelectedProfiles") {
-      dispatch(updateActiveProfiles({
-        activeProjectIndex,
-        activeProfiles: message.selectedProfiles
-      }));
-      dispatch(flushMavenSettingsToEffective({
-        activeProjectIndex
-      }));
-    }
-  }
-
-  useEffect(() => {
-    window.addEventListener("message", onMessage);
-    if (activeProfiles === undefined) {
-      MavenRequest.onWillGetSelectedProfiles(projects[activeProjectIndex].rootPath);
-    }
-    return () => {
-      window.removeEventListener("message", onMessage);
-    }
-  }, []);
 
   const handleInput = (e: any) => {
     dispatch(updateActiveProfiles({
