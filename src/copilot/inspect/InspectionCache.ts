@@ -59,7 +59,7 @@ export default class InspectionCache {
             const inspections = snapshotInspections[1];
             inspections.forEach(s => {
                 s.document = document;
-                s.problem.position.line = s.problem.position.relativeLine + symbol.range.start.line;
+                s.problem.position.startLine = s.problem.position.relativeStartLine + symbol.range.start.line;
             });
             return inspections;
         }
@@ -71,7 +71,7 @@ export default class InspectionCache {
         for (const symbol of symbols) {
             const isMethod = METHOD_KINDS.includes(symbol.kind);
             const symbolInspections: Inspection[] = inspections.filter(inspection => {
-                const inspectionLine = inspection.problem.position.line;
+                const inspectionLine = inspection.problem.position.startLine;
                 return isMethod ?
                     // NOTE: method inspections are inspections whose `position.line` is within the method's range
                     inspectionLine >= symbol.range.start.line && inspectionLine <= symbol.range.end.line :
@@ -79,7 +79,7 @@ export default class InspectionCache {
                     inspectionLine === symbol.range.start.line;
             });
             // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method
-            symbolInspections.forEach(inspection => inspection.problem.position.relativeLine = inspection.problem.position.line - symbol.range.start.line);
+            symbolInspections.forEach(inspection => inspection.problem.position.relativeStartLine = inspection.problem.position.startLine - symbol.range.start.line);
             InspectionCache.cacheSymbolInspections(document, symbol, symbolInspections);
         }
     }

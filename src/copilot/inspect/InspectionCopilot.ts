@@ -230,7 +230,7 @@ export default class InspectionCopilot extends Copilot {
         inspections.forEach(s => {
             s.document = document;
             // real line index to the start of the document
-            s.problem.position.line = s.problem.position.relativeLine + startLine;
+            s.problem.position.startLine = s.problem.position.relativeStartLine + startLine;
         });
         return inspections;
     }
@@ -278,7 +278,7 @@ export default class InspectionCopilot extends Copilot {
                 if (inspection) {
                     const codeLineIndex = i - commentLineCount;
                     // relative line number to the start of the code inspected, which will be ajusted relative to the start of container symbol later when caching.
-                    inspection.problem.position.relativeLine = codeLines[codeLineIndex].originalLineIndex ?? -1;
+                    inspection.problem.position.relativeStartLine = codeLines[codeLineIndex].originalLineIndex ?? -1;
                     inspection.problem.position.code = codeLines[codeLineIndex].content;
                     inspections.push(inspection);
                     i += InspectionCopilot.INSPECTION_COMMENT_LINE_COUNT; // inspection comment has 4 lines
@@ -291,7 +291,7 @@ export default class InspectionCopilot extends Copilot {
             i++;
         }
 
-        return inspections.filter(i => i.problem.indicator.trim() !== '<null>').sort((a, b) => a.problem.position.relativeLine - b.problem.position.relativeLine);
+        return inspections.filter(i => i.problem.identity.trim() !== '<null>').sort((a, b) => a.problem.position.relativeStartLine - b.problem.position.relativeStartLine);
     }
 
     /**
@@ -310,8 +310,8 @@ export default class InspectionCopilot extends Copilot {
                 id: randomUUID().toString(),
                 problem: {
                     description: problemMatch[1].trim(),
-                    position: { line: -1, relativeLine: -1, code: '' },
-                    indicator: indicatorMatch[1].trim()
+                    position: { startLine: -1, relativeStartLine: -1, code: '' },
+                    identity: indicatorMatch[1].trim()
                 },
                 solution: solutionMatch[1].trim(),
                 severity: severityMatch[1].trim()

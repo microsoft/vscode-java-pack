@@ -10,11 +10,11 @@ export interface InspectionProblem {
         /**
          * real line number to the start of the document, will change
          */
-        line: number;
+        startLine: number;
         /**
          * relative line number to the start of the symbol(method/class), won't change
          */
-        relativeLine: number;
+        relativeStartLine: number;
         /**
          * code of the first line of the problematic code block
          */
@@ -23,7 +23,7 @@ export interface InspectionProblem {
     /**
      * indicator of the problematic code block, e.g. method name/class name, keywork, etc.
      */
-    indicator: string;
+    identity: string;
 }
 
 export interface Inspection {
@@ -52,16 +52,16 @@ export namespace Inspection {
      */
     export function getIndicatorRangeOfInspection(problem: InspectionProblem): Range {
         const position = problem.position;
-        const startLine: number = position.line;
-        let startColumn: number = position.code.indexOf(problem.indicator), endLine: number = -1, endColumn: number = -1;
+        const startLine: number = position.startLine;
+        let startColumn: number = position.code.indexOf(problem.identity), endLine: number = -1, endColumn: number = -1;
         if (startColumn > -1) {
             // highlight only the symbol
-            endLine = position.line;
-            endColumn = startColumn + problem.indicator?.length;
+            endLine = position.startLine;
+            endColumn = startColumn + problem.identity?.length;
         } else {
             // highlight entire first line
             startColumn = position.code.search(/\S/) ?? 0; // first non-whitespace character
-            endLine = position.line;
+            endLine = position.startLine;
             endColumn = position.code.length; // last character
         }
         return new Range(new Position(startLine, startColumn), new Position(endLine, endColumn));
