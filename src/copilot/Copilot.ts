@@ -1,6 +1,5 @@
 import { LanguageModelChatMessage, lm, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatMessageRole, LanguageModelChatSelector } from "vscode";
-import { fixedInstrumentSimpleOperation, logger } from "./utils";
-import { sendInfo } from "vscode-extension-telemetry-wrapper";
+import { fixedInstrumentSimpleOperation, logger, sendEvent } from "./utils";
 
 export default class Copilot {
     public static readonly DEFAULT_END_MARK = '<|endofresponse|>';
@@ -23,6 +22,15 @@ export default class Copilot {
         modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
+        sendEvent("java.copilot.lm.chatStarted");
+        const model = (await lm.selectChatModels(this.modelSelector))?.[0];
+        if (!model) {
+            const models = await lm.selectChatModels();
+            sendEvent("java.copilot.lm.noSuitableModelFound", { models: models.map(m => m.name).join(', ') });
+            throw new Error(`No suitable model, available models: [${models.map(m => m.name).join(', ')}]. Please make sure you have installed the latest "GitHub Copilot Chat" (v0.16.0 or later).`);
+        }
+        sendEvent("java.copilot.lm.modelSelected", { model: model.name });
+
         let answer: string = '';
         let rounds: number = 0;
         const messages = [...this.systemMessagesOrSamples];
@@ -35,11 +43,7 @@ export default class Copilot {
 
             let rawAnswer: string = '';
             try {
-                const model = (await lm.selectChatModels(this.modelSelector))?.[0];
-                if (!model) {
-                    const models = await lm.selectChatModels();
-                    throw new Error(`No suitable model, available models: [${models.map(m => m.name).join(', ')}]. Please make sure you have installed the latest "GitHub Copilot Chat" (v0.16.0 or later).`);
-                }
+                sendEvent("java.copilot.lm.requestSent");
                 const response = await model.sendRequest(messages, modelOptions ?? this.modelOptions, cancellationToken);
                 for await (const item of response.text) {
                     rawAnswer += item;
@@ -47,12 +51,13 @@ export default class Copilot {
             } catch (e) {
                 //@ts-ignore
                 const cause = e.cause || e;
+                sendEvent("java.copilot.lm.requestFailed", { error: cause });
                 logger.error(`Failed to chat with copilot`, cause);
                 throw cause;
             }
             messages.push(new LanguageModelChatMessage(LanguageModelChatMessageRole.Assistant, rawAnswer));
             logger.debug(`Copilot: \n`, rawAnswer);
-            logger.info(`Copilot: ${rawAnswer.split('\n')[0]}...`);
+            logger.info(`Copilot: ${rawAnswer.trim().split('\n')[0]}...`);
             answer += rawAnswer;
             return answer.trim().endsWith(this.endMark);
         };
@@ -61,7 +66,7 @@ export default class Copilot {
             complete = await _send('continue where you left off.');
         }
         logger.debug('rounds', rounds);
-        sendInfo('java.copilot.sendRequest.info', { rounds: rounds });
+        sendEvent("java.copilot.lm.chatCompleted", { rounds: rounds });
         return answer.replace(this.endMark, "");
     }
 

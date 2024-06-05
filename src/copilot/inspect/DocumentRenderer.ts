@@ -5,8 +5,7 @@ import { DiagnosticRenderer } from "./render/DiagnosticRenderer";
 import { GutterIconRenderer } from "./render/GutterIconRenderer";
 import { RulerHighlightRenderer } from "./render/RulerHighlightRenderer";
 import { InspectionRenderer } from "./render/InspectionRenderer";
-import { sendInfo } from "vscode-extension-telemetry-wrapper";
-import { isCodeLensDisabled, logger } from "../utils";
+import { isCodeLensDisabled, logger, sendEvent } from "../utils";
 import { InspectActionCodeLensProvider } from "./InspectActionCodeLensProvider";
 import { debounce } from "lodash";
 import InspectionCache from "./InspectionCache";
@@ -41,7 +40,7 @@ export class DocumentRenderer {
         workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('java.copilot.inspection.renderer')) {
                 const settings = this.reloadInspectionRenderers(context);
-                sendInfo('java.copilot.inspection.renderer.changed', { 'settings': `${settings.join(',')}` });
+                sendEvent('java.copilot.inspection.rendererChanged', { 'settings': settings.join(',') });
             }
         });
         this.reloadInspectionRenderers(context);
@@ -109,6 +108,9 @@ export class DocumentRenderer {
                 logger.warn('CodeLens is disabled, fallback to GutterIcons');
             }
             settings.push(disabled ? 'guttericons' : 'codelenses');
+            if (disabled) {
+                sendEvent('java.copilot.inspection.codeLensDisabled', { settings: settings.join(',') });
+            }
         }
         return settings;
     }

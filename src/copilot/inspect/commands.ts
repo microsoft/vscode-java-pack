@@ -1,8 +1,8 @@
 import { TextDocument, Range, Selection, commands, window, Uri, env } from "vscode";
-import { instrumentOperationAsVsCodeCommand, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
 import InspectionCopilot from "./InspectionCopilot";
 import { Inspection, InspectionProblem } from "./Inspection";
-import { logger, uncapitalize } from "../utils";
+import { logger, sendEvent, uncapitalize } from "../utils";
 import { SymbolNode } from "./SymbolNode";
 import { DocumentRenderer } from "./DocumentRenderer";
 import InspectionCache from "./InspectionCache";
@@ -18,19 +18,24 @@ const LEARN_MORE_RESPONSE_FILTERED = 'https://docs.github.com/en/copilot/configu
 export function registerCommands(copilot: InspectionCopilot, renderer: DocumentRenderer) {
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_CLASS, async (document: TextDocument, clazz: SymbolNode) => {
         try {
+            sendEvent('java.copilot.inspection.classInspectingStarted');
             await copilot.inspectClass(document, clazz);
+            sendEvent('java.copilot.inspection.classInspectingDone');
         } catch (e) {
+            sendEvent('java.copilot.inspection.classInspectingFailed');
             showErrorMessage(e, document, clazz);
             logger.error(`Failed to inspect class "${clazz.symbol.name}".`, e);
             throw e;
         }
         renderer.rerender(document);
     });
-
-    instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range | Selection) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range) => {
         try {
+            sendEvent('java.copilot.inspection.rangeInspectingStarted');
             await copilot.inspectRange(document, range);
+            sendEvent('java.copilot.inspection.rangeInspectingDone');
         } catch (e) {
+            sendEvent('java.copilot.inspection.rangeInspectingFailed');
             showErrorMessage(e, document, range);
             logger.error(`Failed to inspect range of "${path.basename(document.fileName)}".`, e);
             throw e;
@@ -41,7 +46,7 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
     instrumentOperationAsVsCodeCommand(COMMAND_FIX_INSPECTION, async (problem: InspectionProblem, solution: string, source: string) => {
         // source is where is this command triggered from, e.g. "gutter", "codelens", "diagnostic"
         const range = Inspection.getIndicatorRangeOfInspection(problem);
-        sendInfo(`${COMMAND_FIX_INSPECTION}.info`, { problem: problem.description, solution, source });
+        sendEvent('java.copilot.inspection.fixingTriggered', { code: problem.code, problem: problem.description, solution, source });
         void commands.executeCommand('vscode.editorChat.start', {
             autoSend: true,
             message: `/fix ${problem.description}, maybe ${uncapitalize(solution)}`,
@@ -52,10 +57,8 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
     });
 
     instrumentOperationAsVsCodeCommand(COMMAND_IGNORE_INSPECTIONS, async (document: TextDocument, symbol?: SymbolNode, inspection?: Inspection) => {
-        if (inspection) {
-            sendInfo(`${COMMAND_IGNORE_INSPECTIONS}.info`, { problem: inspection.problem.description, solution: inspection.solution });
-        }
         InspectionCache.invalidateInspectionCache(document, symbol, inspection);
+        sendEvent('java.copilot.inspection.inspectionIgnored', inspection ? { problem: inspection.problem.description, solution: inspection.solution } : {});
         renderer.rerender(document);
     });
 }

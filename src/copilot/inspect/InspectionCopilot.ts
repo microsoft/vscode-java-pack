@@ -1,9 +1,7 @@
-import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import Copilot from "../Copilot";
-import { fixedInstrumentSimpleOperation, getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getUnionRange, logger } from "../utils";
+import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getUnionRange, logger, sendEvent } from "../utils";
 import { Inspection } from "./Inspection";
-import { TextDocument, SymbolKind, ProgressLocation, commands, Position, Range, Selection, window, LanguageModelChatMessage } from "vscode";
-import { COMMAND_FIX_INSPECTION } from "./commands";
+import { TextDocument, SymbolKind, ProgressLocation, Position, Range, window, LanguageModelChatMessage } from "vscode";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
 import { randomUUID } from "crypto";
@@ -100,7 +98,6 @@ export default class InspectionCopilot extends Copilot {
 
     private static readonly DEFAULT_MAX_CONCURRENCIES: number = 3;
 
-    private readonly debounceMap = new Map<string, NodeJS.Timeout>();
     private readonly inspecting: Set<TextDocument> = new Set<TextDocument>();
 
     public constructor(
@@ -135,14 +132,17 @@ export default class InspectionCopilot extends Copilot {
 
     public async inspectRange(document: TextDocument, range: Range, symbol?: SymbolNode): Promise<Inspection[]> {
         if (this.busy) {
+            sendEvent('java.copilot.inspection.inspectingCancelledBusy', { concurrency: this.inspecting.size });
             logger.warn('Copilot is busy, please retry after current inspecting tasks is finished.');
             void window.showWarningMessage(`Copilot is busy, please retry after current inspecting tasks are finished.`);
             return Promise.resolve([]);
         }
         if (this.inspecting.has(document)) {
+            sendEvent('java.copilot.inspection.inspectingCancelledDuplicate');
             return Promise.resolve([]);
         }
         try {
+            sendEvent('java.copilot.inspection.inspectingStarted');
             this.inspecting.add(document);
             // ajust the range to the minimal container class or method symbols
             const methodAndFields: SymbolNode[] = await getIntersectionSymbolsOfRange(range, document);
@@ -164,20 +164,17 @@ export default class InspectionCopilot extends Copilot {
 
             // inspect the expanded union range
             const target = symbol ? symbol.toString() : (symbols[0].toString() + (symbols.length > 1 ? ", etc." : ""));
-            const inspections = await window.withProgress({
+            const inspections: Inspection[] = await window.withProgress({
                 location: ProgressLocation.Notification,
                 title: `Inspecting ${target}...`,
                 cancellable: false
             }, (_progress) => {
-                return this.doInspectRange(document, expandedRange);
+                return this.inspectCode(document, expandedRange);
             });
 
             // show message based on the number of inspections
             if (inspections.length < 1) {
                 void window.showInformationMessage(`Inspected ${target}, and got 0 suggestions.`);
-            } else if (inspections.length == 1) {
-                // apply the only suggestion automatically
-                void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0].problem, 'auto');
             } else {
                 // show message to go to the first suggestion
                 // inspected a, ..., etc. and got n suggestions.
@@ -186,56 +183,18 @@ export default class InspectionCopilot extends Copilot {
                 });
             }
             InspectionCache.cache(document, symbols, inspections);
+            sendEvent('java.copilot.inspection.inspectingDone');
             return inspections;
         } finally {
             this.inspecting.delete(document);
         }
     }
 
-    /**
-     * inspect the given code (debouncely if `key` is provided) using copilot and return the inspections
-     * @param code code to inspect
-     * @param key key to debounce the inspecting, which is used to support multiple debouncing. Consider 
-     *  the case that we have multiple documents, and we only want to debounce the method calls on the 
-     *  same document (identified by `key`).
-     * @param wait debounce time in milliseconds, default is 3000ms
-     * @returns inspections provided by copilot
-     */
-    public inspectCode(code: string, context: ProjectContext, key?: string, wait: number = 3000): Promise<Inspection[]> {
-        const _doInspectCode: (code: string, context: ProjectContext) => Promise<Inspection[]> = fixedInstrumentSimpleOperation("java.copilot.inspect.code", this.doInspectCode.bind(this));
-        if (!key) { // inspect code immediately without debounce
-            return this.doInspectCode(code, context);
-        }
-        // inspect code with debounce if key is provided
-        if (this.debounceMap.has(key)) {
-            clearTimeout(this.debounceMap.get(key) as NodeJS.Timeout);
-            logger.trace(`debounced`, key);
-        }
-        return new Promise<Inspection[]>((resolve) => {
-            this.debounceMap.set(key, setTimeout(() => {
-                void _doInspectCode(code, context).then(inspections => {
-                    this.debounceMap.delete(key);
-                    resolve(inspections);
-                });
-            }, wait <= 0 ? 3000 : wait));
-        });
-    }
-
-    private async doInspectRange(document: TextDocument, range: Range | Selection): Promise<Inspection[]> {
+    private async inspectCode(document: TextDocument, range: Range): Promise<Inspection[]> {
         const adjustedRange = new Range(new Position(range.start.line, 0), new Position(range.end.line, document.lineAt(range.end.line).text.length));
-        const content: string = document.getText(adjustedRange);
+        const code: string = document.getText(adjustedRange);
         const startLine = range.start.line;
         const projectContext = await this.collectProjectContext(document);
-        const inspections = await this.inspectCode(content, projectContext);
-        inspections.forEach(s => {
-            s.document = document;
-            // real line index to the start of the document
-            s.problem.position.startLine = s.problem.position.relativeStartLine + startLine;
-        });
-        return inspections;
-    }
-
-    private async doInspectCode(code: string, context: ProjectContext): Promise<Inspection[]> {
         const originalLines: string[] = code.split(/\r?\n/);
         // code lines without empty lines and comments
         const codeLines: { originalLineIndex: number, content: string }[] = this.extractCodeLines(originalLines)
@@ -245,18 +204,23 @@ export default class InspectionCopilot extends Copilot {
             return Promise.resolve([]);
         }
 
-        const codeWithInspectionComments = await this.send(InspectionCopilot.FORMAT_CODE(context, codeLinesContent));
+        const codeWithInspectionComments = await this.send(InspectionCopilot.FORMAT_CODE(projectContext, codeLinesContent));
         const inspections = this.extractInspections(codeWithInspectionComments, codeLines);
+        inspections.forEach(s => {
+            s.document = document;
+            // real line index to the start of the document
+            s.problem.position.startLine = s.problem.position.relativeStartLine + startLine;
+        });
         // add properties for telemetry
-        sendInfo('java.copilot.inspect.code', {
-            javaVersion: context.javaVersion,
+        sendEvent('java.copilot.inspection.inspectionsReceived', {
+            javaVersion: projectContext.javaVersion,
             codeWords: code.split(/\s+/).length,
             codeLines: codeLines.length,
             insectionsCount: inspections.length,
-            inspections: `[${inspections.map(i => JSON.stringify({
+            inspections: inspections.map(i => JSON.stringify({
                 problem: i.problem.description,
                 solution: i.solution,
-            })).join(',')}]`,
+            })).join(','),
         });
         return inspections;
     }
@@ -306,9 +270,11 @@ export default class InspectionCopilot extends Copilot {
         const indicatorMatch = lines[index + 2].match(InspectionCopilot.INDICATOR_PATTERN);
         const severityMatch = lines[index + 3].match(InspectionCopilot.LEVEL_PATTERN);
         if (problemMatch && solutionMatch && indicatorMatch && severityMatch) {
+            const id = randomUUID().toString();
             return {
-                id: randomUUID().toString(),
+                id,
                 problem: {
+                    code: id, //TODO: categorize the problem, and use the category as the code. use the id as the code for temp.
                     description: problemMatch[1].trim(),
                     position: { startLine: -1, relativeStartLine: -1, code: '' },
                     identity: indicatorMatch[1].trim()
@@ -352,7 +318,7 @@ export default class InspectionCopilot extends Copilot {
     }
 
     async collectProjectContext(document: TextDocument): Promise<ProjectContext> {
-        logger.info('colleteting project context info (java version)...');
+        logger.info('collecting project context info (java version)...');
         const javaVersion = await getProjectJavaVersion(document);
         logger.info('project java version:', javaVersion);
         return { javaVersion };

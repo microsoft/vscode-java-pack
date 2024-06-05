@@ -20,6 +20,7 @@ export interface InspectionProblem {
          */
         code: string;
     };
+    code: string;
     /**
      * indicator of the problematic code block, e.g. method name/class name, keywork, etc.
      */
@@ -53,15 +54,15 @@ export namespace Inspection {
     export function getIndicatorRangeOfInspection(problem: InspectionProblem): Range {
         const position = problem.position;
         const startLine: number = position.startLine;
-        let startColumn: number = position.code.indexOf(problem.identity), endLine: number = -1, endColumn: number = -1;
+        let startColumn: number = position.code?.indexOf(problem.identity) ?? -1, endLine: number = -1, endColumn: number = -1;
         if (startColumn > -1) {
             // highlight only the symbol
-            endLine = position.startLine;
+            endLine = startLine;
             endColumn = startColumn + problem.identity?.length;
         } else {
             // highlight entire first line
             startColumn = position.code.search(/\S/) ?? 0; // first non-whitespace character
-            endLine = position.startLine;
+            endLine = startLine;
             endColumn = position.code.length; // last character
         }
         return new Range(new Position(startLine, startColumn), new Position(endLine, endColumn));

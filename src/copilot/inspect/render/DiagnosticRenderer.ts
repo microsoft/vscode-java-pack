@@ -54,6 +54,7 @@ class InspectionDiagnostic extends Diagnostic {
         const severiy = DiagnosticSeverity.Hint;
         super(range, inspection.problem.description, severiy);
         this.source = DIAGNOSTICS_GROUP;
+        this.code = inspection.problem.code;
     }
 }
 

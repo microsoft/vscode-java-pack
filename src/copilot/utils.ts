@@ -1,7 +1,8 @@
 import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, version } from "vscode";
 import { SymbolNode } from "./inspect/SymbolNode";
 import { SemVer } from "semver";
-import { createUuid, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
+import { createUuid, sendInfo, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
+import path from "path";
 
 export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
@@ -57,7 +58,7 @@ export function getUnionRange(symbols: SymbolNode[]): Range {
  * get all classes (classes inside methods are not considered) and methods of a document in a pre-order traversal manner
  */
 export async function getSymbolsOfDocument(document: TextDocument): Promise<SymbolNode[]> {
-    const stack = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []).reverse().map(symbol => new SymbolNode(document, symbol));
+    const stack = (await getDocumentSymbols(document)).reverse().map(symbol => new SymbolNode(document, symbol));
 
     const result: SymbolNode[] = [];
     while (stack.length > 0) {
@@ -73,7 +74,7 @@ export async function getSymbolsOfDocument(document: TextDocument): Promise<Symb
 }
 
 export async function getTopLevelClassesOfDocument(document: TextDocument): Promise<SymbolNode[]> {
-    const symbols = ((await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? []);
+    const symbols = await getDocumentSymbols(document);
     return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind)).map(symbol => new SymbolNode(document, symbol));
 }
 
@@ -154,4 +155,15 @@ export function fixedInstrumentOperation(
  */
 export function fixedInstrumentSimpleOperation(operationName: string, cb: (...args: any[]) => any, thisArg?: any): (...args: any[]) => any {
     return fixedInstrumentOperation(operationName, async (_operationId, ...args) => await cb.apply(thisArg, args), thisArg /** unnecessary */);
+}
+
+export function sendEvent(eventName: string, info?: { [key: string]: any }): void {
+    sendInfo('', { isEvent: "true", operationName: eventName, eventName, ...info });
+}
+
+export async function getDocumentSymbols(document: TextDocument): Promise<DocumentSymbol[]> {
+    logger.debug(`Getting document symbols of ${path.basename(document.uri.toString())}`);
+    const symbols = (await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? [];
+    logger.debug(`Got ${symbols.length} document symbols of ${path.basename(document.uri.toString())}`);
+    return symbols;
 }
