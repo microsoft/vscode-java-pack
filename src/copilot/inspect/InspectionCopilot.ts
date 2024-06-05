@@ -177,7 +177,7 @@ export default class InspectionCopilot extends Copilot {
                 void window.showInformationMessage(`Inspected ${target}, and got 0 suggestions.`);
             } else if (inspections.length == 1) {
                 // apply the only suggestion automatically
-                void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0], 'auto');
+                void commands.executeCommand(COMMAND_FIX_INSPECTION, inspections[0].problem, 'auto');
             } else {
                 // show message to go to the first suggestion
                 // inspected a, ..., etc. and got n suggestions.
