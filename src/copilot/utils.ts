@@ -167,3 +167,37 @@ export async function getDocumentSymbols(document: TextDocument): Promise<Docume
     logger.debug(`Got ${symbols.length} document symbols of ${path.basename(document.uri.toString())}`);
     return symbols;
 }
+
+export function shrinkStartLineIndex(codeLines: string[], startIndex: number): number {
+    let inBlockComment = false;
+    for (let i = startIndex; i < codeLines.length; i++) {
+        const trimmedLine = codeLines[i].trim();
+        if (trimmedLine.startsWith('/*')) {
+            inBlockComment = true;
+        }
+        if (trimmedLine.endsWith('*/')) {
+            inBlockComment = false;
+        }
+        if (trimmedLine !== '' && !inBlockComment && !trimmedLine.startsWith('//')) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+export function shrinkEndLineIndex(codeLines: string[], endIndex: number): number {
+    let inBlockComment = false;
+    for (let i = endIndex; i >= 0; i--) {
+        const trimmedLine = codeLines[i].trim();
+        if (trimmedLine.endsWith('*/')) {
+            inBlockComment = true;
+        }
+        if (trimmedLine.startsWith('/*')) {
+            inBlockComment = false;
+        }
+        if (trimmedLine !== '' && !inBlockComment && !trimmedLine.startsWith('//')) {
+            return i;
+        }
+    }
+    return -1;
+}

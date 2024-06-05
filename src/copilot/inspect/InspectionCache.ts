@@ -61,6 +61,7 @@ export default class InspectionCache {
             inspections.forEach(s => {
                 s.document = document;
                 s.problem.position.startLine = s.problem.position.relativeStartLine + symbol.range.start.line;
+                s.problem.position.endLine = s.problem.position.relativeEndLine + symbol.range.start.line;
             });
             return inspections;
         }
@@ -80,7 +81,10 @@ export default class InspectionCache {
                     inspectionLine === symbol.range.start.line;
             });
             // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method
-            symbolInspections.forEach(inspection => inspection.problem.position.relativeStartLine = inspection.problem.position.startLine - symbol.range.start.line);
+            symbolInspections.forEach(inspection => {
+                inspection.problem.position.relativeStartLine = inspection.problem.position.startLine - symbol.range.start.line;
+                inspection.problem.position.relativeEndLine = inspection.problem.position.endLine - symbol.range.start.line;
+            });
             InspectionCache.cacheSymbolInspections(document, symbol, symbolInspections);
         }
     }

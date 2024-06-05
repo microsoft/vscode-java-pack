@@ -63,11 +63,11 @@ export default class Copilot {
         };
         let complete: boolean = await _send(userMessage);
         while (!complete && rounds < this.maxRounds) {
-            complete = await _send('continue where you left off.');
+            complete = await _send(`continue where you left off, or end your response with "${this.endMark}" to finish the conversation.`);
         }
         logger.debug('rounds', rounds);
         sendEvent("java.copilot.lm.chatCompleted", { rounds: rounds });
-        return answer.replace(this.endMark, "");
+        return answer.replace(`//${this.endMark}`, '').replace(this.endMark, '');
     }
 
     public async send(

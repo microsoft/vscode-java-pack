@@ -11,10 +11,12 @@ export interface InspectionProblem {
          * real line number to the start of the document, will change
          */
         startLine: number;
+        endLine: number;
         /**
          * relative line number to the start of the symbol(method/class), won't change
          */
         relativeStartLine: number;
+        relativeEndLine: number;
         /**
          * code of the first line of the problematic code block
          */
@@ -33,7 +35,7 @@ export interface Inspection {
     symbol?: SymbolNode;
     problem: InspectionProblem;
     solution: string;
-    severity: string;
+    severity?: string;
 }
 
 export namespace Inspection {
