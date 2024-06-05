@@ -4,7 +4,7 @@ import { sendInfo } from "vscode-extension-telemetry-wrapper";
 
 export default class Copilot {
     public static readonly DEFAULT_END_MARK = '<|endofresponse|>';
-    public static readonly DEFAULT_MAX_ROUNDS = 10;
+    public static readonly DEFAULT_MAX_ROUNDS = 3;
     public static readonly DEFAULT_MODEL = { family: 'gpt-4' };
     public static readonly DEFAULT_MODEL_OPTIONS: LanguageModelChatRequestOptions = { modelOptions: {} };
     public static readonly NOT_CANCELLABEL: CancellationToken = { isCancellationRequested: false, onCancellationRequested: () => Disposable.from() };
