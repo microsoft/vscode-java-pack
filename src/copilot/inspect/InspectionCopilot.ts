@@ -209,7 +209,7 @@ export default class InspectionCopilot extends Copilot {
         // inspect code with debounce if key is provided
         if (this.debounceMap.has(key)) {
             clearTimeout(this.debounceMap.get(key) as NodeJS.Timeout);
-            logger.debug(`debounced`, key);
+            logger.trace(`debounced`, key);
         }
         return new Promise<Inspection[]>((resolve) => {
             this.debounceMap.set(key, setTimeout(() => {

@@ -2,6 +2,7 @@ import { SymbolKind, TextDocument } from 'vscode';
 import { METHOD_KINDS, getSymbolsContainedInRange, getSymbolsOfDocument, logger } from '../utils';
 import { Inspection } from './Inspection';
 import { SymbolNode } from './SymbolNode';
+import path from 'path';
 
 /**
  * A map based cache for inspections of a document.
@@ -55,7 +56,7 @@ export default class InspectionCache {
         const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
         const snapshotInspections = symbolInspections?.get(symbol.qualifiedName);
         if (snapshotInspections?.[0] === symbol.snapshotId) {
-            logger.debug(`cache hit for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
+            logger.trace(`cache hit for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
             const inspections = snapshotInspections[1];
             inspections.forEach(s => {
                 s.document = document;
@@ -63,7 +64,7 @@ export default class InspectionCache {
             });
             return inspections;
         }
-        logger.debug(`cache miss for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
+        logger.trace(`cache miss for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
         return [];
     }
 
@@ -118,7 +119,7 @@ export default class InspectionCache {
     }
 
     private static cacheSymbolInspections(document: TextDocument, symbol: SymbolNode, inspections: Inspection[]): void {
-        logger.debug(`cache ${inspections.length} inspections for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${document.uri.fsPath}`);
+        logger.debug(`cache ${inspections.length} inspections for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
         const documentKey = document.uri.fsPath;
         const cachedSymbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey) ?? new Map();
         inspections.forEach(s => {

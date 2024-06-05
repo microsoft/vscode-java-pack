@@ -18,7 +18,7 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
 
     public async rerender(document: TextDocument) {
         if (document.languageId !== 'java') return;
-        logger.debug('[InspectCodeLensProvider] rerender inspect codelenses...');
+        logger.trace('[InspectCodeLensProvider] generate inspect codelenses...');
         const topLevelCodeLenses: CodeLens[] = [];
         const classes = await getTopLevelClassesOfDocument(document);
         classes.map(clazz => new CodeLens(clazz.range, {
@@ -34,6 +34,7 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
             arguments: [document, clazz]
         })).forEach(codeLens => topLevelCodeLenses.push(codeLens));
 
+        logger.trace('[InspectCodeLensProvider] show inspect codelenses...');
         this.inspectCodeLenses.set(document.uri, topLevelCodeLenses);
         this.emitter.fire();
     }
