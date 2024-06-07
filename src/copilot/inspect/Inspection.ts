@@ -36,6 +36,7 @@ export interface Inspection {
     problem: InspectionProblem;
     solution: string;
     severity?: string;
+    ignored?: boolean;
 }
 
 export namespace Inspection {

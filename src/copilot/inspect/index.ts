@@ -31,7 +31,7 @@ export function doActivate(context: ExtensionContext): void {
         workspace.onDidOpenTextDocument(doc => renderer.rerender(doc)), // Rerender class codelens and cached suggestions on document open
         workspace.onDidChangeTextDocument(e => renderer.rerender(e.document, true)), // Rerender class codelens and cached suggestions debouncely on document change
         window.onDidChangeVisibleTextEditors(editors => editors.forEach(editor => renderer.rerender(editor.document))), // rerender in case of renderers changed.
-        workspace.onDidCloseTextDocument(doc => InspectionCache.invalidateInspectionCache(doc)), // Rerender class codelens and cached suggestions debouncely on document change
+        workspace.onDidCloseTextDocument(doc => InspectionCache.clearInspections(doc)), // Rerender class codelens and cached suggestions debouncely on document change
     );
     window.visibleTextEditors.forEach(editor => renderer.rerender(editor.document));
 }

@@ -57,7 +57,7 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
     });
 
     instrumentOperationAsVsCodeCommand(COMMAND_IGNORE_INSPECTIONS, async (document: TextDocument, symbol?: SymbolNode, inspection?: Inspection) => {
-        InspectionCache.invalidateInspectionCache(document, symbol, inspection);
+        InspectionCache.ignoreInspections(document, symbol, inspection);
         sendEvent('java.copilot.inspection.inspectionIgnored', inspection ? { problem: inspection.problem.description, solution: inspection.solution } : {});
         renderer.rerender(document);
     });

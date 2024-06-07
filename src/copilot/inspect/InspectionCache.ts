@@ -1,5 +1,5 @@
 import { SymbolKind, TextDocument } from 'vscode';
-import { METHOD_KINDS, getSymbolsContainedInRange, getSymbolsOfDocument, logger } from '../utils';
+import { getSymbolsContainedInRange, getSymbolsOfDocument, logger } from '../utils';
 import { Inspection } from './Inspection';
 import { SymbolNode } from './SymbolNode';
 import path from 'path';
@@ -16,76 +16,51 @@ export default class InspectionCache {
      * if the symbol is provided, check if the symbol or its contained symbols are cached.
      */
     public static async hasCache(document: TextDocument, symbol?: SymbolNode): Promise<boolean> {
-        const documentKey = document.uri.fsPath;
+        const inspections = await InspectionCache.getValidInspections(document, symbol, true);
+        return inspections.filter(insp => !insp.ignored).length > 0;
+    }
+
+    /**
+     * invalidate the cache of a document, a symbol, or an inspection.
+     * NOTE: the cached inspections of the symbol and its contained symbols will be removed when invalidating a symbol.
+     */
+    public static async ignoreInspections(document: TextDocument, symbol?: SymbolNode, inspection?: Inspection): Promise<void> {
+        if (!inspection) {
+            const inspections = await this.getValidInspections(document, symbol, true);
+            inspections.forEach(insp => insp.ignored = true);
+        } else {
+            inspection.ignored = true;
+        }
+    }
+
+    /**
+     * Get cached valid inspections. Inspection is invalid iff its symbol is modified.
+     */
+    public static async getValidInspections(document: TextDocument, symbol?: SymbolNode, includeContainedSymbols: boolean = false): Promise<Inspection[]> {
         if (!symbol) {
-            return DOC_SYMBOL_SNAPSHOT_INSPECTIONS.has(documentKey);
-        }
-        const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
-        // check if the symbol or its contained symbols are cached
-        const symbols = await getSymbolsContainedInRange(symbol.range, document);
-        for (const s of symbols) {
-            const snapshotInspections = symbolInspections?.get(s.qualifiedName);
-            if (snapshotInspections?.[0] === s.snapshotId && snapshotInspections[1].length > 0) {
-                return true;
+            // we don't get cached inspections directly from the cache, because we need to filter out invalid inspections
+            const symbols: SymbolNode[] = await getSymbolsOfDocument(document);
+            return (await Promise.all(symbols.map(symbol => InspectionCache.getValidInspections(document, symbol)))).flat();
+        } else if (symbol && includeContainedSymbols) {
+            // get valid inspections of the symbol and its contained symbols
+            const symbols = await getSymbolsContainedInRange(symbol.range, document);
+            return (await Promise.all(symbols.map(symbol => InspectionCache.getValidInspections(document, symbol)))).flat();
+        } else {
+            const documentKey = document.uri.fsPath;
+            const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
+            const snapshotInspections = symbolInspections?.get(symbol.qualifiedName);
+            if (snapshotInspections?.[0] === symbol.snapshotId) { // check if valid
+                logger.trace(`cache hit for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
+                const inspections = snapshotInspections[1];
+                inspections.forEach(s => {
+                    s.symbol = symbol; // set to the latest symbol instance
+                    s.problem.position.startLine = s.problem.position.relativeStartLine + symbol.range.start.line;
+                    s.problem.position.endLine = s.problem.position.relativeEndLine + symbol.range.start.line;
+                });
+                return inspections;
             }
-        }
-        return false;
-    }
-
-    /**
-     * Get cached inspections of a document, if the document is not cached, return an empty array.
-     * Cached inspections of outdated symbols are filtered out.Symbols are considered outdated if 
-     * their content has changed.
-     */
-    public static async getCachedInspectionsOfDoc(document: TextDocument): Promise<Inspection[]> {
-        const symbols: SymbolNode[] = await getSymbolsOfDocument(document);
-        const inspections: Inspection[] = [];
-        // we don't get cached inspections directly from the cache, because we need to filter out outdated symbols
-        for (const symbol of symbols) {
-            const cachedInspections = InspectionCache.getCachedInspectionsOfSymbol(document, symbol);
-            inspections.push(...cachedInspections);
-        }
-        return inspections;
-    }
-
-    /**
-     * @returns the cached inspections, or undefined if not found
-     */
-    public static getCachedInspectionsOfSymbol(document: TextDocument, symbol: SymbolNode): Inspection[] {
-        const documentKey = document.uri.fsPath;
-        const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
-        const snapshotInspections = symbolInspections?.get(symbol.qualifiedName);
-        if (snapshotInspections?.[0] === symbol.snapshotId) {
-            logger.trace(`cache hit for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
-            const inspections = snapshotInspections[1];
-            inspections.forEach(s => {
-                s.document = document;
-                s.problem.position.startLine = s.problem.position.relativeStartLine + symbol.range.start.line;
-                s.problem.position.endLine = s.problem.position.relativeEndLine + symbol.range.start.line;
-            });
-            return inspections;
-        }
-        logger.trace(`cache miss for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
-        return [];
-    }
-
-    public static cache(document: TextDocument, symbols: SymbolNode[], inspections: Inspection[]): void {
-        for (const symbol of symbols) {
-            const isMethod = METHOD_KINDS.includes(symbol.kind);
-            const symbolInspections: Inspection[] = inspections.filter(inspection => {
-                const inspectionLine = inspection.problem.position.startLine;
-                return isMethod ?
-                    // NOTE: method inspections are inspections whose `position.line` is within the method's range
-                    inspectionLine >= symbol.range.start.line && inspectionLine <= symbol.range.end.line :
-                    // NOTE: class/field inspections are inspections whose `position.line` is exactly the first line number of the class/field
-                    inspectionLine === symbol.range.start.line;
-            });
-            // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method
-            symbolInspections.forEach(inspection => {
-                inspection.problem.position.relativeStartLine = inspection.problem.position.startLine - symbol.range.start.line;
-                inspection.problem.position.relativeEndLine = inspection.problem.position.endLine - symbol.range.start.line;
-            });
-            InspectionCache.cacheSymbolInspections(document, symbol, symbolInspections);
+            logger.trace(`cache miss for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
+            return [];
         }
     }
 
@@ -93,7 +68,7 @@ export default class InspectionCache {
      * invalidate the cache of a document, a symbol, or an inspection.
      * NOTE: the cached inspections of the symbol and its contained symbols will be removed when invalidating a symbol.
      */
-    public static invalidateInspectionCache(document?: TextDocument, symbol?: SymbolNode, inspeciton?: Inspection): void {
+    public static clearInspections(document?: TextDocument, symbol?: SymbolNode, inspeciton?: Inspection): void {
         if (!document) {
             DOC_SYMBOL_SNAPSHOT_INSPECTIONS.clear();
         } else if (!symbol) {
@@ -102,8 +77,6 @@ export default class InspectionCache {
         } else if (!inspeciton) {
             const documentKey = document.uri.fsPath;
             const symbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey);
-            // remove the cached inspections of the symbol
-            symbolInspections?.delete(symbol.qualifiedName);
             // remove the cached inspections of contained symbols
             symbolInspections?.forEach((_, key) => {
                 if (key.startsWith(symbol.qualifiedName)) {
@@ -122,16 +95,20 @@ export default class InspectionCache {
         }
     }
 
-    private static cacheSymbolInspections(document: TextDocument, symbol: SymbolNode, inspections: Inspection[]): void {
+    public static cacheInspections(document: TextDocument, symbol: SymbolNode, inspections: Inspection[], append: boolean = false): void {
         logger.debug(`cache ${inspections.length} inspections for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
         const documentKey = document.uri.fsPath;
         const cachedSymbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey) ?? new Map();
-        inspections.forEach(s => {
-            s.document = document;
-            s.symbol = symbol;
-        });
-        // use qualified name to prevent conflicts between symbols with the same signature in same document
-        cachedSymbolInspections.set(symbol.qualifiedName, [symbol.snapshotId, inspections]);
+        if (append) {
+            const symbolInspections = cachedSymbolInspections.get(symbol.qualifiedName);
+            if (symbolInspections?.[0] === symbol.snapshotId) {
+                symbolInspections[1].push(...inspections);
+            } else {
+                cachedSymbolInspections.set(symbol.qualifiedName, [symbol.snapshotId, inspections]);
+            }
+        } else {
+            cachedSymbolInspections.set(symbol.qualifiedName, [symbol.snapshotId, inspections]);
+        }
         DOC_SYMBOL_SNAPSHOT_INSPECTIONS.set(documentKey, cachedSymbolInspections);
     }
 }

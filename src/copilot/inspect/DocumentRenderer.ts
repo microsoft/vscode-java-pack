@@ -72,7 +72,7 @@ export class DocumentRenderer {
     }
 
     private async rerenderInspections(document: TextDocument): Promise<void> {
-        const inspections = await InspectionCache.getCachedInspectionsOfDoc(document);
+        const inspections = await InspectionCache.getValidInspections(document);
         this.installedRenderers.forEach(r => r.clear(document));
         this.installedRenderers.forEach(r => {
             r.renderInspections(document, inspections);

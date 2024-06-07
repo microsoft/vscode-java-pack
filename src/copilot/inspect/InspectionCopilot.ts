@@ -1,5 +1,5 @@
 import Copilot from "../Copilot";
-import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getSymbolsOfDocument, getUnionRange, logger, sendEvent, shrinkEndLineIndex, shrinkStartLineIndex } from "../utils";
+import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getSymbolsOfDocument, getUnionRange, logger, METHOD_KINDS, sendEvent, shrinkEndLineIndex, shrinkStartLineIndex } from "../utils";
 import { Inspection } from "./Inspection";
 import { TextDocument, SymbolKind, ProgressLocation, Range, window, LanguageModelChatMessage } from "vscode";
 import InspectionCache from "./InspectionCache";
@@ -163,6 +163,8 @@ export default class InspectionCopilot extends Copilot {
             }, (_progress) => {
                 return this.inspectCode(document, expandedRange);
             });
+            this.updateAndCacheInspections(document, symbols, inspections);
+            sendEvent('java.copilot.inspection.inspectingDone');
 
             // show message based on the number of inspections
             if (inspections.length < 1) {
@@ -174,11 +176,34 @@ export default class InspectionCopilot extends Copilot {
                     selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
                 });
             }
-            InspectionCache.cache(document, symbols, inspections);
-            sendEvent('java.copilot.inspection.inspectingDone');
             return inspections;
         } finally {
             this.inspecting.delete(document);
+        }
+    }
+
+    /**
+     * Update the symbol, document, and relative line number of the inspections.
+     */
+    private updateAndCacheInspections(document: TextDocument, symbols: SymbolNode[], inspections: Inspection[]) {
+        for (const symbol of symbols) {
+            const isMethod = METHOD_KINDS.includes(symbol.kind);
+            const symbolInspections: Inspection[] = inspections.filter(inspection => {
+                const inspectionLine = inspection.problem.position.startLine;
+                return isMethod ?
+                    // NOTE: method inspections are inspections whose `position.line` is within the method's range
+                    inspectionLine >= symbol.range.start.line && inspectionLine <= symbol.range.end.line :
+                    // NOTE: class/field inspections are inspections whose `position.line` is exactly the first line number of the class/field
+                    inspectionLine === symbol.range.start.line;
+            });
+            // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method
+            symbolInspections.forEach(inspection => {
+                inspection.symbol = symbol;
+                inspection.document = document;
+                inspection.problem.position.relativeStartLine = inspection.problem.position.startLine - symbol.range.start.line;
+                inspection.problem.position.relativeEndLine = inspection.problem.position.endLine - symbol.range.start.line;
+            });
+            InspectionCache.cacheInspections(document, symbol, symbolInspections);
         }
     }
 
@@ -197,7 +222,6 @@ export default class InspectionCopilot extends Copilot {
         const projectContext = await this.collectProjectContext(document);
         const rawResponse = await this.send(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode));
         const inspections = this.extractInspections(rawResponse, documentCodeLines);
-        inspections.forEach(s => s.document = document);
         // add properties for telemetry
         sendEvent('java.copilot.inspection.inspectionsReceived', {
             javaVersion: projectContext.javaVersion,
