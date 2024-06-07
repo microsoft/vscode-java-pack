@@ -36,10 +36,11 @@ export default class Copilot {
         const history = [...this.systemMessagesOrSamples];
         const _send = async (userMessages: LanguageModelChatMessage[]): Promise<boolean> => {
             rounds++;
-            const userMessageContent = userMessages[userMessages.length - 1].content;
-            logger.debug(`User: \n`, userMessageContent);
-            logger.info(`User: ${userMessageContent.split('\n')[0]}...`);
             history.push(...userMessages);
+            history.forEach(message => {
+                logger.debug(`${message.name}: \n`, message.content);
+            });
+            logger.info(`User: ${userMessages[userMessages.length - 1].content.split('\n')[0]}...`);
             logger.info('Copilot: thinking...');
 
             let rawAnswer: string = '';

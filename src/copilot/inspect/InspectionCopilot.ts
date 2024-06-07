@@ -240,7 +240,7 @@ export default class InspectionCopilot extends Copilot {
                     },
                     solution: i.solution,
                 }
-            }));
+            }), null, 2);
             if (existingInspections.length < 1) {
                 sendEvent('java.copilot.inspection.moreInspectingCancelledNoInspections');
                 logger.warn('No existing inspections found, inspecting the document first.');
@@ -345,7 +345,7 @@ export default class InspectionCopilot extends Copilot {
             }
             return validInspections.sort((a, b) => a.problem.position.startLine - b.problem.position.startLine);
         } catch (e) {
-            logger.error('Failed to parse the response:', e);
+            logger.warn('Failed to parse the response:', e);
             return [];
         }
     }

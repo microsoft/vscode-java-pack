@@ -75,7 +75,7 @@ export class DocumentRenderer {
         const inspections = await InspectionCache.getValidInspections(document);
         this.installedRenderers.forEach(r => r.clear(document));
         this.installedRenderers.forEach(r => {
-            r.renderInspections(document, inspections);
+            r.renderInspections(document, inspections.filter(i => !i.ignored));
         });
     }
 
