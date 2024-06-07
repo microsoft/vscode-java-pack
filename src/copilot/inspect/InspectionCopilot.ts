@@ -18,7 +18,7 @@ export default class InspectionCopilot extends Copilot {
     Please analyze the given code and its context (including Java version, imports/dependencies, etc.) to 
     identify possible enhancements using modern built-in Java features. 
     Keep these rules in mind:
-    - The code has been annotated with line numbers as comments (e.g., /* 1 */, /* 2 */, etc.) at the beginning of each line for reference. The code may be part of a Java file, so the line numbers may not start from 1.
+    - The code has been annotated with zero-based line numbers as comments (e.g., /* 0 */, /* 1 */, etc.) at the beginning of each line for reference. The code may be part of a Java file, so the line numbers may not start from 1.
     - Focus on leveraging built-in features from modern Java (Java 8 and onwards) to make the code more concise, readable, and efficient.
     - Avoid suggesting the use of third-party libraries or frameworks.
     - Do not suggest improvements for commented-out code.
@@ -211,11 +211,11 @@ export default class InspectionCopilot extends Copilot {
         const startLine = range.start.line;
         const endLine = range.end.line;
 
-        // add line numbers to the code
+        // add 0-based line numbers to the code
         const documentCode: string = document.getText();
         const documentCodeLines: string[] = documentCode.split(/\r?\n/);
         const linedDocumentCode = documentCodeLines
-            .map((line, index) => `/* ${index + 1} */ ${line}`)
+            .map((line, index) => `/* ${index} */ ${line}`)
             .filter((_, index) => index >= startLine && index <= endLine)
             .join('\n');
 
@@ -248,9 +248,9 @@ export default class InspectionCopilot extends Copilot {
             } else {
                 const position = inspection.problem.position;
                 inspection.id = randomUUID();
-                // line number in the response is 1-based, adjust to 0-based, and shrink to the actual code lines
-                position.startLine = shrinkStartLineIndex(codeLines, position.startLine - 1);
-                position.endLine = shrinkEndLineIndex(codeLines, position.endLine - 1);
+                // shrink to the actual code lines
+                position.startLine = shrinkStartLineIndex(codeLines, position.startLine);
+                position.endLine = shrinkEndLineIndex(codeLines, position.endLine);
                 position.relativeStartLine = position.startLine;
                 position.relativeEndLine = position.endLine;
                 position.code = codeLines[position.startLine];
