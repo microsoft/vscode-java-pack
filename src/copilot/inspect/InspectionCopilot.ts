@@ -1,7 +1,7 @@
 import Copilot from "../Copilot";
 import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getSymbolsOfDocument, getUnionRange, logger, sendEvent, shrinkEndLineIndex, shrinkStartLineIndex } from "../utils";
 import { Inspection } from "./Inspection";
-import { TextDocument, SymbolKind, ProgressLocation, Position, Range, window, LanguageModelChatMessage } from "vscode";
+import { TextDocument, SymbolKind, ProgressLocation, Range, window, LanguageModelChatMessage } from "vscode";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
 import { randomUUID } from "crypto";
@@ -15,19 +15,16 @@ export default class InspectionCopilot extends Copilot {
     `;
     public static readonly SYSTEM_MESSAGE = `
     **You are expert at Java and promoting newer built-in features of Java.**
-    please examine the provided code and any other context like java version, imports/dependencies...,ect. and then 
-    identify and suggest improvements for selected code lines that can be optimized using newer features of Java. 
-    Keep the following rules in mind:
-    - Focus on utilizing built-in features from recent Java versions (Java 8 and onwards) to make the code more readable, efficient, and concise.
+    Please analyze the given code and its context (including Java version, imports/dependencies, etc.) to 
+    identify possible enhancements using modern built-in Java features. 
+    Keep these rules in mind:
+    - The code has been annotated with line numbers as comments (e.g., /* 1 */, /* 2 */, etc.) at the beginning of each line for reference. The code may be part of a Java file, so the line numbers may not start from 1.
+    - Focus on leveraging built-in features from modern Java (Java 8 and onwards) to make the code more concise, readable, and efficient.
     - Avoid suggesting the use of third-party libraries or frameworks.
-    - Avoid suggesting on correct code, unless there is a better way to write it.
-    - Avoid suggesting on code that is not certain to have issues.
-    - Avoid suggesting on short/simple code that is easy to read.
-    - Avoid suggesting on commented out code.
-    - Avoid suggesting changes that would change the behavior of the code.
+    - Do not suggest improvements for commented-out code.
+    - Avoid repeated suggestions for the same code block.
     - Keep scoping rules in mind. 
-    - The provided code has been added line numbers as comments for your reference.
-    - Reply with an RFC8259 compliant JSON array following the format below without deviation. Each array item represents a suggestion.
+    - Provide suggestions in an RFC8259 compliant JSON array, each item representing a suggestion. Follow the given format strictly:
     \`\`\`json
     [{
         "problem": {
@@ -35,25 +32,20 @@ export default class InspectionCopilot extends Copilot {
                 "startLine": "start line number of the rewritable code block",
                 "endLine": "end line number of the rewritable code block",
             },
-            "description":"Brief description of the issue in the code, preferably in less than 10 words. Start with a gerund/noun word, e.g., 'Using'.",
+            "description":"Brief description of the issue in the code, preferably in less than 10 words, starting with a gerund/noun word, e.g., 'Using'.",
             "identity": "Identifity of the rewritable code block, a single word in the block. It could be a Java keyword, a method/field/variable name, or a value (e.g., magic number). Use '<null>' if cannot be identified."
         },
-        "solution": "Brief description of the solution to the problem, preferably in less than 10 words. Start with a verb."
+        "solution": "Brief description of the solution to the problem, preferably in less than 10 words, starting with a verb."
     }]
     \`\`\`
-
-    - Focus on being clear, helpful, and thorough.
-    - Use developer-friendly terms and analogies in your explanations.
-    - Keep your answers short and impersonal.
+    - Maintain clarity, helpfulness, and thoroughness in your suggestions and keep them short and impersonal.
+    - Use developer-friendly terms and analogies in your suggestions.
     - Avoid wrapping the whole response in triple backticks.
-    - Always conclude your response with "${Copilot.DEFAULT_END_MARK}". This will help Copilot to identify the end of your response.
-
-    Remember, your aim is to enhance the code, and promote the use of newer built-in Java features at the same time!
+    - Always conclude your response with "${Copilot.DEFAULT_END_MARK}" to indicate the end of your response.
+    Your primary aim is to enhance the code while promoting the use of modern built-in Java features.
     `;
-    public static readonly EXAMPLE_USER_MESSAGE = this.FORMAT_CODE({ javaVersion: '17' }, `
-    /* 1 */ package com.example;
-    /* 2 */
-    /* 3 */ public class EmployeePojo implements Employee {
+    public static readonly EXAMPLE_USER_MESSAGE = this.FORMAT_CODE({ javaVersion: '17' },
+   `/* 3 */ public class EmployeePojo implements Employee {
     /* 4 */ 
     /* 5 */     private final String name;
     /* 6 */
@@ -61,36 +53,27 @@ export default class InspectionCopilot extends Copilot {
     /* 8 */         this.name = name;
     /* 9 */     }
     /* 10 */
-    /* 11 */     public String getName() {
-    /* 12 */         return name;
-    /* 13 */     }
-    /* 14 */
-    /* 15 */     public String getRole() {
-    /* 16 */         String result = "";
-    /* 17 */         if (this.name.equals("John")) {
-    /* 18 */             result = "Senior";
-    /* 19 */         } else if (this.name.equals("Mike")) {
-    /* 20 */             result = "HR";
-    /* 21 */         } else {
-    /* 22 */             result = "FTE";
-    /* 23 */         }
-    /* 26 */         return result;
-    /* 27 */     }
-    /* 28 */ }
-    `);
+    /* 11 */     public String getRole() {
+    /* 12 */         String result = "";
+    /* 13 */         if (this.name.equals("John")) {
+    /* 14 */             result = "Senior";
+    /* 15 */         } else if (this.name.equals("Mike")) {
+    /* 16 */             result = "HR";
+    /* 17 */         } else {
+    /* 18 */             result = "FTE";
+    /* 19 */         }
+    /* 20 */         return result;
+    /* 21 */     }
+    /* 22 */
+    /* 23 */     public String getName() {
+    /* 24 */         return name;
+    /* 25 */     }
+    /* 26 */ }`);
     public static readonly EXAMPLE_ASSISTANT_MESSAGE =
         `[
         {
             "problem": {
-                "position": { "startLine": 3, "endLine": 28 },
-                "description": "Using traditional POJO",
-                "identity": "EmployeePojo"
-            }
-            "solution": "Use record",
-        },
-        {
-            "problem": {
-                "position": { "startLine": 17, "endLine": 23 },
+                "position": { "startLine": 13, "endLine": 19 },
                 "problem": "Using multiple if-else",
                 "identity": "if"
             }
@@ -124,13 +107,14 @@ export default class InspectionCopilot extends Copilot {
             logger.warn('No symbol found in the document, skipping inspection.');
             return [];
         }
-        const range = new Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end);
-        return this.inspectRange(document, range);
+        const documentRange = new Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end);
+        return this.inspectRange(document, documentRange);
     }
 
     public async inspectClass(document: TextDocument, clazz: SymbolNode): Promise<Inspection[]> {
         logger.info('inspecting class:', clazz.qualifiedName);
-        return this.inspectRange(document, clazz.range, clazz);
+        const documentRange = new Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end);
+        return this.inspectRange(document, documentRange, clazz);
     }
 
     public async inspectSymbol(document: TextDocument, symbol: SymbolNode): Promise<Inspection[]> {
@@ -168,7 +152,7 @@ export default class InspectionCopilot extends Copilot {
             }
 
             // get the union range of the container symbols, which will be insepcted by copilot
-            const expandedRange: Range = getUnionRange(symbols);
+            const expandedRange: Range = getUnionRange(symbols).union(range);
 
             // inspect the expanded union range
             const target = symbol ? symbol.toString() : (symbols[0].toString() + (symbols.length > 1 ? ", etc." : ""));
@@ -199,32 +183,33 @@ export default class InspectionCopilot extends Copilot {
     }
 
     private async inspectCode(document: TextDocument, range: Range): Promise<Inspection[]> {
-        const adjustedRange = new Range(new Position(range.start.line, 0), new Position(range.end.line, document.lineAt(range.end.line).text.length));
-        const code: string = document.getText(adjustedRange);
         const startLine = range.start.line;
-        const projectContext = await this.collectProjectContext(document);
-        const codeLines: string[] = code.split(/\r?\n/);
-        const linedCode = codeLines.map((line, index) => `/* ${index + 1} */ ${line}`).join('\n');
+        const endLine = range.end.line;
 
-        const rawResponse = await this.send(InspectionCopilot.FORMAT_CODE(projectContext, linedCode));
-        const inspections = this.extractInspections(rawResponse, codeLines);
-        inspections.forEach(s => {
-            s.document = document;
-            // real line index to the start of the document
-            s.problem.position.startLine = s.problem.position.relativeStartLine + startLine;
-            s.problem.position.endLine = s.problem.position.relativeEndLine + startLine;
-        });
+        // add line numbers to the code
+        const documentCode: string = document.getText();
+        const documentCodeLines: string[] = documentCode.split(/\r?\n/);
+        const linedDocumentCode = documentCodeLines
+            .map((line, index) => `/* ${index + 1} */ ${line}`)
+            .filter((_, index) => index >= startLine && index <= endLine)
+            .join('\n');
+
+        const projectContext = await this.collectProjectContext(document);
+        const rawResponse = await this.send(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode));
+        const inspections = this.extractInspections(rawResponse, documentCodeLines);
+        inspections.forEach(s => s.document = document);
         // add properties for telemetry
         sendEvent('java.copilot.inspection.inspectionsReceived', {
             javaVersion: projectContext.javaVersion,
-            codeWords: code.split(/\s+/).length,
-            codeLines: codeLines.length,
+            codeWords: linedDocumentCode.split(/\s+/).length,
+            codeLines: documentCodeLines.length,
             insectionsCount: inspections.length,
             inspections: inspections.map(i => JSON.stringify({
                 problem: i.problem.description,
                 solution: i.solution,
             })).join(','),
         });
+
         return inspections;
     }
 
