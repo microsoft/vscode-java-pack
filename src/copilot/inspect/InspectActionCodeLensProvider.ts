@@ -1,6 +1,6 @@
 import { CodeLens, CodeLensProvider, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
 import { getTopLevelClassesOfDocument, logger } from "../utils";
-import { COMMAND_IGNORE_INSPECTIONS, COMMAND_INSPECT_CLASS } from "./commands";
+import { COMMAND_IGNORE_INSPECTIONS, COMMAND_INSPECT_CLASS, COMMAND_INSPECT_MORE } from "./commands";
 import InspectionCache from "./InspectionCache";
 
 export class InspectActionCodeLensProvider implements CodeLensProvider {
@@ -19,23 +19,36 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
     public async rerender(document: TextDocument) {
         if (document.languageId !== 'java') return;
         logger.trace('[InspectCodeLensProvider] generate inspect codelenses...');
-        const topLevelCodeLenses: CodeLens[] = [];
+        const documentCodeLenses: CodeLens[] = [];
         const classes = await getTopLevelClassesOfDocument(document);
-        classes.map(clazz => new CodeLens(clazz.range, {
-            title: "✨ Rewrite with new Java syntax",
-            command: COMMAND_INSPECT_CLASS,
-            arguments: [document, clazz]
-        })).forEach(codeLens => topLevelCodeLenses.push(codeLens));
+        const clazz = classes?.[0];
+        const hasInspections = await InspectionCache.hasCache(document);
 
-        const results = await Promise.all(classes.map(clazz => InspectionCache.hasCache(document, clazz)));
-        classes.filter((_, i) => results[i]).map(clazz => new CodeLens(clazz.range, {
-            title: "Ignore all",
-            command: COMMAND_IGNORE_INSPECTIONS,
-            arguments: [document, clazz]
-        })).forEach(codeLens => topLevelCodeLenses.push(codeLens));
+        if (hasInspections) {
+            documentCodeLenses.push(
+                new CodeLens(clazz.range, {
+                    title: "✨ Get more suggestions",
+                    command: COMMAND_INSPECT_MORE,
+                    arguments: [document]
+                }),
+                new CodeLens(clazz.range, {
+                    title: "Ignore all suggestions",
+                    command: COMMAND_IGNORE_INSPECTIONS,
+                    arguments: [document, clazz]
+                })
+            );
+        } else {
+            documentCodeLenses.push(
+                new CodeLens(clazz.range, {
+                    title: "✨ Rewrite with new Java syntax",
+                    command: COMMAND_INSPECT_CLASS,
+                    arguments: [document, clazz]
+                })
+            );
+        }
 
         logger.trace('[InspectCodeLensProvider] show inspect codelenses...');
-        this.inspectCodeLenses.set(document.uri, topLevelCodeLenses);
+        this.inspectCodeLenses.set(document.uri, documentCodeLenses);
         this.emitter.fire();
     }
 

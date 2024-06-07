@@ -162,9 +162,9 @@ export function sendEvent(eventName: string, info?: { [key: string]: any }): voi
 }
 
 export async function getDocumentSymbols(document: TextDocument): Promise<DocumentSymbol[]> {
-    logger.debug(`Getting document symbols of ${path.basename(document.uri.toString())}`);
+    logger.debug(`Getting document symbols of ${path.basename(document.fileName)}`);
     const symbols = (await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? [];
-    logger.debug(`Got ${symbols.length} document symbols of ${path.basename(document.uri.toString())}`);
+    logger.debug(`Got ${symbols.length} document symbols of ${path.basename(document.fileName)}`);
     return symbols;
 }
 

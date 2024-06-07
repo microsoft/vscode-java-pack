@@ -24,7 +24,7 @@ import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
 import { DEPENDENT_EXTENSIONS, activateCopilot } from "./copilot/inspect";
-import { fixedInstrumentSimpleOperation, isLlmApiReady, sendEvent } from "./copilot/utils";
+import { fixedInstrumentSimpleOperation, isLlmApiReady, logger, sendEvent } from "./copilot/utils";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -84,13 +84,16 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
     });
   }
   sendEvent("java.copilot.installed", {});
+  logger.info("Installed");
   if (isLlmApiReady()) {
+    logger.info("vscode.lm is ready.");
     const notInstalledExtensionIds = DEPENDENT_EXTENSIONS.filter(id => !vscode.extensions.getExtension(id));
     const llmModels = (await vscode.lm?.selectChatModels?.()) ?? [];
     sendEvent("java.copilot.lmReady", {
       notInstalledExtensionIds: notInstalledExtensionIds.join(","),
       availableLlmModels: llmModels.map(m => m.name).join(","),
     });
+    logger.info("activating Java copilot.");
     await fixedInstrumentSimpleOperation('java.copilot.activate', activateCopilot)(context);
   }
 }

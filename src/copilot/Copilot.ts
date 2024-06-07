@@ -1,4 +1,4 @@
-import { LanguageModelChatMessage, lm, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatMessageRole, LanguageModelChatSelector } from "vscode";
+import { LanguageModelChatMessage, lm, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatSelector } from "vscode";
 import { fixedInstrumentSimpleOperation, logger, sendEvent } from "./utils";
 
 export default class Copilot {
@@ -18,7 +18,7 @@ export default class Copilot {
     }
 
     private async doSend(
-        userMessage: string,
+        newMessages: LanguageModelChatMessage[],
         modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
@@ -33,18 +33,19 @@ export default class Copilot {
 
         let answer: string = '';
         let rounds: number = 0;
-        const messages = [...this.systemMessagesOrSamples];
-        const _send = async (message: string): Promise<boolean> => {
+        const history = [...this.systemMessagesOrSamples];
+        const _send = async (userMessages: LanguageModelChatMessage[]): Promise<boolean> => {
             rounds++;
-            logger.debug(`User: \n`, message);
-            logger.info(`User: ${message.split('\n')[0]}...`);
-            messages.push(new LanguageModelChatMessage(LanguageModelChatMessageRole.User, message));
+            const userMessageContent = userMessages[userMessages.length - 1].content;
+            logger.debug(`User: \n`, userMessageContent);
+            logger.info(`User: ${userMessageContent.split('\n')[0]}...`);
+            history.push(...userMessages);
             logger.info('Copilot: thinking...');
 
             let rawAnswer: string = '';
             try {
                 sendEvent("java.copilot.lm.requestSent");
-                const response = await model.sendRequest(messages, modelOptions ?? this.modelOptions, cancellationToken);
+                const response = await model.sendRequest(history, modelOptions ?? this.modelOptions, cancellationToken);
                 for await (const item of response.text) {
                     rawAnswer += item;
                 }
@@ -55,15 +56,15 @@ export default class Copilot {
                 logger.error(`Failed to chat with copilot`, cause);
                 throw cause;
             }
-            messages.push(new LanguageModelChatMessage(LanguageModelChatMessageRole.Assistant, rawAnswer));
+            history.push(LanguageModelChatMessage.Assistant(rawAnswer));
             logger.debug(`Copilot: \n`, rawAnswer);
             logger.info(`Copilot: ${rawAnswer.trim().split('\n')[0]}...`);
             answer += rawAnswer;
             return answer.trim().endsWith(this.endMark);
         };
-        let complete: boolean = await _send(userMessage);
+        let complete: boolean = await _send(newMessages);
         while (!complete && rounds < this.maxRounds) {
-            complete = await _send(`continue where you left off, or end your response with "${this.endMark}" to finish the conversation.`);
+            complete = await _send([LanguageModelChatMessage.User(`continue where you left off, or end your response with "${this.endMark}" to finish the conversation.`)]);
         }
         logger.debug('rounds', rounds);
         sendEvent("java.copilot.lm.chatCompleted", { rounds: rounds });
@@ -71,10 +72,10 @@ export default class Copilot {
     }
 
     public async send(
-        userMessage: string,
+        newMessages: LanguageModelChatMessage[],
         modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
-        return fixedInstrumentSimpleOperation("java.copilot.sendRequest", this.doSend.bind(this))(userMessage, modelOptions, cancellationToken);
+        return fixedInstrumentSimpleOperation("java.copilot.sendRequest", this.doSend.bind(this))(newMessages, modelOptions, cancellationToken);
     }
 }

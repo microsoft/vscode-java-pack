@@ -5,6 +5,7 @@ import { TextDocument, SymbolKind, ProgressLocation, Range, window, LanguageMode
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
 import { randomUUID } from "crypto";
+import path from "path";
 
 export default class InspectionCopilot extends Copilot {
     public static readonly FORMAT_CODE = (context: ProjectContext, code: string) => `
@@ -38,6 +39,7 @@ export default class InspectionCopilot extends Copilot {
         "solution": "Brief description of the solution to the problem, preferably in less than 10 words, starting with a verb."
     }]
     \`\`\`
+    - Reply an empty array if no suggestions can be made.
     - Maintain clarity, helpfulness, and thoroughness in your suggestions and keep them short and impersonal.
     - Use developer-friendly terms and analogies in your suggestions.
     - Avoid wrapping the whole response in triple backticks.
@@ -45,7 +47,7 @@ export default class InspectionCopilot extends Copilot {
     Your primary aim is to enhance the code while promoting the use of modern built-in Java features.
     `;
     public static readonly EXAMPLE_USER_MESSAGE = this.FORMAT_CODE({ javaVersion: '17' },
-   `/* 3 */ public class EmployeePojo implements Employee {
+        `/* 3 */ public class EmployeePojo implements Employee {
     /* 4 */ 
     /* 5 */     private final String name;
     /* 6 */
@@ -74,7 +76,7 @@ export default class InspectionCopilot extends Copilot {
         {
             "problem": {
                 "position": { "startLine": 13, "endLine": 19 },
-                "problem": "Using multiple if-else",
+                "description": "Using multiple if-else",
                 "identity": "if"
             }
             "solution": "Use enhanced switch expression",
@@ -89,11 +91,7 @@ export default class InspectionCopilot extends Copilot {
     public constructor(
         private readonly maxConcurrencies: number = InspectionCopilot.DEFAULT_MAX_CONCURRENCIES,
     ) {
-        super([
-            LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE),
-            LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
-            LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
-        ]);
+        super([LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE)]);
     }
 
     public get busy(): boolean {
@@ -101,7 +99,7 @@ export default class InspectionCopilot extends Copilot {
     }
 
     public async inspectDocument(document: TextDocument): Promise<Inspection[]> {
-        logger.info('inspecting document:', document.fileName);
+        logger.info('inspecting document:', path.basename(document.fileName));
         const documentSymbols = await getSymbolsOfDocument(document);
         if (documentSymbols.length < 1) {
             logger.warn('No symbol found in the document, skipping inspection.');
@@ -185,7 +183,7 @@ export default class InspectionCopilot extends Copilot {
     /**
      * Update the symbol, document, and relative line number of the inspections.
      */
-    private updateAndCacheInspections(document: TextDocument, symbols: SymbolNode[], inspections: Inspection[]) {
+    private updateAndCacheInspections(document: TextDocument, symbols: SymbolNode[], inspections: Inspection[], append: boolean = false) {
         for (const symbol of symbols) {
             const isMethod = METHOD_KINDS.includes(symbol.kind);
             const symbolInspections: Inspection[] = inspections.filter(inspection => {
@@ -203,7 +201,87 @@ export default class InspectionCopilot extends Copilot {
                 inspection.problem.position.relativeStartLine = inspection.problem.position.startLine - symbol.range.start.line;
                 inspection.problem.position.relativeEndLine = inspection.problem.position.endLine - symbol.range.start.line;
             });
-            InspectionCache.cacheInspections(document, symbol, symbolInspections);
+            InspectionCache.cacheInspections(document, symbol, symbolInspections, append);
+        }
+    }
+
+    public async inspectMore(document: TextDocument): Promise<Inspection[]> {
+        if (this.busy) {
+            sendEvent('java.copilot.inspection.moreInspectingCancelledBusy', { concurrency: this.inspecting.size });
+            logger.warn('Copilot is busy, please retry after current inspecting tasks is finished.');
+            void window.showWarningMessage(`Copilot is busy, please retry after current inspecting tasks are finished.`);
+            return Promise.resolve([]);
+        }
+        if (this.inspecting.has(document)) {
+            sendEvent('java.copilot.inspection.moreInspectingCancelledDuplicate');
+            return Promise.resolve([]);
+        }
+        const symbols = await getSymbolsOfDocument(document);
+        if (symbols.length < 1) {
+            logger.warn('No symbol found in the document, skipping inspection.');
+            return [];
+        }
+        try {
+            logger.info('inspecting more:', path.basename(document.fileName));
+            sendEvent('java.copilot.inspection.moreInspectingStarted');
+            const documentCode: string = document.getText();
+            const documentCodeLines: string[] = documentCode.split(/\r?\n/);
+            const linedDocumentCode = documentCodeLines
+                .map((line, index) => `/* ${index} */ ${line}`)
+                .join('\n');
+            const projectContext = await this.collectProjectContext(document);
+            const existingInspections = await InspectionCache.getValidInspections(document);
+            const existingInspectionsStr = JSON.stringify(existingInspections.map(i => {
+                return {
+                    problem: {
+                        position: { startLine: i.problem.position.startLine, endLine: i.problem.position.endLine },
+                        description: i.problem.description,
+                        identity: i.problem.identity,
+                    },
+                    solution: i.solution,
+                }
+            }));
+            if (existingInspections.length < 1) {
+                sendEvent('java.copilot.inspection.moreInspectingCancelledNoInspections');
+                logger.warn('No existing inspections found, inspecting the document first.');
+                return this.inspectDocument(document);
+            }
+            const inspections: Inspection[] = await window.withProgress({
+                location: ProgressLocation.Notification,
+                title: `Getting more suggestions for ${path.basename(document.fileName)}...`,
+                cancellable: false
+            }, async (_progress) => {
+                sendEvent('java.copilot.inspection.moreInspectingRequested');
+                const rawResponse = await this.send([
+                    LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode)),
+                    LanguageModelChatMessage.Assistant(existingInspectionsStr + `\n//${Copilot.DEFAULT_END_MARK}`),
+                    LanguageModelChatMessage.User("any more?"),
+                ]);
+                const rawInspections = this.extractInspections(rawResponse, documentCodeLines);
+                // add properties for telemetry
+                sendEvent('java.copilot.inspection.moreInspectionsReceived', {
+                    insectionsCount: rawInspections.length,
+                    inspections: rawInspections.map(i => JSON.stringify({
+                        problem: i.problem.description,
+                        solution: i.solution,
+                    })).join(','),
+                });
+                return rawInspections;
+            });
+            this.updateAndCacheInspections(document, symbols, inspections, true);
+            sendEvent('java.copilot.inspection.moreInspectingDone');
+
+            // show message based on the number of inspections
+            if (inspections.length < 1) {
+                void window.showInformationMessage(`No more suggestions for ${path.basename(document.fileName)}.`);
+            } else {
+                void window.showInformationMessage(`Got ${inspections.length} more suggestions for ${path.basename(document.fileName)}.`, "Go to").then(selection => {
+                    selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
+                });
+            }
+            return inspections;
+        } finally {
+            this.inspecting.delete(document);
         }
     }
 
@@ -220,13 +298,19 @@ export default class InspectionCopilot extends Copilot {
             .join('\n');
 
         const projectContext = await this.collectProjectContext(document);
-        const rawResponse = await this.send(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode));
-        const inspections = this.extractInspections(rawResponse, documentCodeLines);
-        // add properties for telemetry
-        sendEvent('java.copilot.inspection.inspectionsReceived', {
+        sendEvent('java.copilot.inspection.inspectingRequested', {
             javaVersion: projectContext.javaVersion,
             codeWords: linedDocumentCode.split(/\s+/).length,
             codeLines: documentCodeLines.length,
+        });
+        const rawResponse = await this.send([
+            LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
+            LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
+            LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode))
+        ]);
+        const inspections = this.extractInspections(rawResponse, documentCodeLines);
+        // add properties for telemetry
+        sendEvent('java.copilot.inspection.inspectionsReceived', {
             insectionsCount: inspections.length,
             inspections: inspections.map(i => JSON.stringify({
                 problem: i.problem.description,
@@ -238,27 +322,32 @@ export default class InspectionCopilot extends Copilot {
     }
 
     private extractInspections(rawResponse: string, codeLines: string[]): Inspection[] {
-        const rawInspections: Inspection[] = JSON.parse(rawResponse);
-        const validInspections = [];
-        // filter out invalid inspection that miss required fields and log.
-        for (let i = 0; i < rawInspections.length; i++) {
-            const inspection: Inspection = rawInspections[i];
-            if (!inspection.problem?.position?.startLine || !inspection.problem.description || !inspection.solution) {
-                logger.warn(`Invalid inspection: ${JSON.stringify(inspection)}`);
-            } else {
-                const position = inspection.problem.position;
-                inspection.id = randomUUID();
-                // shrink to the actual code lines
-                position.startLine = shrinkStartLineIndex(codeLines, position.startLine);
-                position.endLine = shrinkEndLineIndex(codeLines, position.endLine);
-                position.relativeStartLine = position.startLine;
-                position.relativeEndLine = position.endLine;
-                position.code = codeLines[position.startLine];
+        try {
+            const rawInspections: Inspection[] = JSON.parse(rawResponse);
+            const validInspections = [];
+            // filter out invalid inspection that miss required fields and log.
+            for (let i = 0; i < rawInspections.length; i++) {
+                const inspection: Inspection = rawInspections[i];
+                if (!inspection.problem?.position?.startLine || !inspection.problem.description || !inspection.solution) {
+                    logger.warn(`Invalid inspection: ${JSON.stringify(inspection)}`);
+                } else {
+                    const position = inspection.problem.position;
+                    inspection.id = randomUUID();
+                    // shrink to the actual code lines
+                    position.startLine = shrinkStartLineIndex(codeLines, position.startLine);
+                    position.endLine = shrinkEndLineIndex(codeLines, position.endLine);
+                    position.relativeStartLine = position.startLine;
+                    position.relativeEndLine = position.endLine;
+                    position.code = codeLines[position.startLine];
 
-                validInspections.push(inspection);
+                    validInspections.push(inspection);
+                }
             }
+            return validInspections.sort((a, b) => a.problem.position.startLine - b.problem.position.startLine);
+        } catch (e) {
+            logger.error('Failed to parse the response:', e);
+            return [];
         }
-        return validInspections.sort((a, b) => a.problem.position.startLine - b.problem.position.startLine);
     }
 
     async collectProjectContext(document: TextDocument): Promise<ProjectContext> {

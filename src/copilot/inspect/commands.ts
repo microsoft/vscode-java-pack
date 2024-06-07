@@ -9,6 +9,7 @@ import InspectionCache from "./InspectionCache";
 import path from "path";
 
 export const COMMAND_INSPECT_CLASS = 'java.copilot.inspect.class';
+export const COMMAND_INSPECT_MORE = 'java.copilot.inspect.more';
 export const COMMAND_INSPECT_RANGE = 'java.copilot.inspect.range';
 export const COMMAND_FIX_INSPECTION = 'java.copilot.inspection.fix';
 export const COMMAND_IGNORE_INSPECTIONS = 'java.copilot.inspection.ignore';
@@ -29,6 +30,21 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         }
         renderer.rerender(document);
     });
+
+    instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_MORE, async (document: TextDocument) => {
+        try {
+            sendEvent('java.copilot.inspection.moreInspectingStarted');
+            await copilot.inspectMore(document);
+            sendEvent('java.copilot.inspection.moreInspectingDone');
+        } catch (e) {
+            sendEvent('java.copilot.inspection.moreInspectingFailed');
+            showErrorMessage(e, document);
+            logger.error(`Failed to get more suggestions for document "${document.fileName}".`, e);
+            throw e;
+        }
+        renderer.rerender(document);
+    });
+
     instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_RANGE, async (document: TextDocument, range: Range) => {
         try {
             sendEvent('java.copilot.inspection.rangeInspectingStarted');
@@ -63,10 +79,12 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
     });
 }
 
-function showErrorMessage(e: unknown, document: TextDocument, target: SymbolNode | Range) {
-    let message = target instanceof Range ?
-        `Failed to inspect range of "${path.basename(document.fileName)}", ${e}` :
-        `Failed to inspect class "${target.symbol.name}", ${e}`;
+function showErrorMessage(e: unknown, document: TextDocument, target?: SymbolNode | Range) {
+    let message = !target ?
+        `Failed to inspect document "${path.basename(document.fileName)}", ${e}` :
+        target instanceof Range ?
+            `Failed to inspect range of "${path.basename(document.fileName)}", ${e}` :
+            `Failed to inspect class "${target.symbol.name}", ${e}`;
 
     const actions = new Map<string, () => void>();
     if (e instanceof Error && e.message.toLowerCase().includes('response got filtered')) {
