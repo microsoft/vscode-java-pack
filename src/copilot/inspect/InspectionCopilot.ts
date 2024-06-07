@@ -1,5 +1,5 @@
 import Copilot from "../Copilot";
-import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getUnionRange, logger, sendEvent } from "../utils";
+import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getSymbolsOfDocument, getUnionRange, logger, sendEvent } from "../utils";
 import { Inspection } from "./Inspection";
 import { TextDocument, SymbolKind, ProgressLocation, Position, Range, window, LanguageModelChatMessage } from "vscode";
 import InspectionCache from "./InspectionCache";
@@ -116,6 +116,11 @@ export default class InspectionCopilot extends Copilot {
 
     public async inspectDocument(document: TextDocument): Promise<Inspection[]> {
         logger.info('inspecting document:', document.fileName);
+        const documentSymbols = await getSymbolsOfDocument(document);
+        if (documentSymbols.length < 1) {
+            logger.warn('No symbol found in the document, skipping inspection.');
+            return [];
+        }
         const range = new Range(document.lineAt(0).range.start, document.lineAt(document.lineCount - 1).range.end);
         return this.inspectRange(document, range);
     }

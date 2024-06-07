@@ -28,11 +28,7 @@ export function doActivate(context: ExtensionContext): void {
     context.subscriptions.push(
         languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: fixDiagnostic }), // Fix using Copilot
         languages.registerCodeActionsProvider({ language: 'java' }, { provideCodeActions: rewrite }), // Inspect using Copilot
-        workspace.onDidOpenTextDocument(doc => {
-            if (doc.languageId !== 'java') return;
-            sendEvent('java.copilot.javaDocumentOpened');
-            renderer.rerender(doc);
-        }), // Rerender class codelens and cached suggestions on document open
+        workspace.onDidOpenTextDocument(doc => renderer.rerender(doc)), // Rerender class codelens and cached suggestions on document open
         workspace.onDidChangeTextDocument(e => renderer.rerender(e.document, true)), // Rerender class codelens and cached suggestions debouncely on document change
         window.onDidChangeVisibleTextEditors(editors => editors.forEach(editor => renderer.rerender(editor.document))), // rerender in case of renderers changed.
         workspace.onDidCloseTextDocument(doc => InspectionCache.invalidateInspectionCache(doc)), // Rerender class codelens and cached suggestions debouncely on document change
