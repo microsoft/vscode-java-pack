@@ -1,6 +1,6 @@
 import { CodeLens, CodeLensProvider, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
 import { getTopLevelClassesOfDocument, logger } from "../utils";
-import { COMMAND_IGNORE_INSPECTIONS, COMMAND_INSPECT_CLASS, COMMAND_INSPECT_MORE } from "./commands";
+import { COMMAND_IGNORE_INSPECTIONS, COMMAND_INSPECT_DOCUMENT, COMMAND_INSPECT_MORE } from "./commands";
 import InspectionCache from "./InspectionCache";
 
 export class InspectActionCodeLensProvider implements CodeLensProvider {
@@ -41,8 +41,8 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
             documentCodeLenses.push(
                 new CodeLens(clazz.range, {
                     title: "✨ Rewrite with new Java syntax",
-                    command: COMMAND_INSPECT_CLASS,
-                    arguments: [document, clazz]
+                    command: COMMAND_INSPECT_DOCUMENT,
+                    arguments: [document]
                 })
             );
         }

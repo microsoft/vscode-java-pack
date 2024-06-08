@@ -9,6 +9,7 @@ import InspectionCache from "./InspectionCache";
 import path from "path";
 
 export const COMMAND_INSPECT_CLASS = 'java.copilot.inspect.class';
+export const COMMAND_INSPECT_DOCUMENT = 'java.copilot.inspect.document';
 export const COMMAND_INSPECT_MORE = 'java.copilot.inspect.more';
 export const COMMAND_INSPECT_RANGE = 'java.copilot.inspect.range';
 export const COMMAND_FIX_INSPECTION = 'java.copilot.inspection.fix';
@@ -26,6 +27,20 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
             sendEvent('java.copilot.inspection.classInspectingFailed');
             showErrorMessage(e, document, clazz);
             logger.error(`Failed to inspect class "${clazz.symbol.name}".`, e);
+            throw e;
+        }
+        renderer.rerender(document);
+    });
+
+    instrumentOperationAsVsCodeCommand(COMMAND_INSPECT_DOCUMENT, async (document: TextDocument) => {
+        try {
+            sendEvent('java.copilot.inspection.docInspectingStarted');
+            await copilot.inspectDocument(document);
+            sendEvent('java.copilot.inspection.docInspectingDone');
+        } catch (e) {
+            sendEvent('java.copilot.inspection.docInspectingFailed');
+            showErrorMessage(e, document);
+            logger.error(`Failed to inspecting document "${document.fileName}".`, e);
             throw e;
         }
         renderer.rerender(document);
