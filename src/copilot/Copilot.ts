@@ -1,4 +1,4 @@
-import { LanguageModelChatMessage, lm, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatSelector } from "vscode";
+import { LanguageModelChatMessage, lm, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatSelector, LanguageModelChatMessageRole } from "vscode";
 import { fixedInstrumentSimpleOperation, logger, sendEvent } from "./utils";
 
 export default class Copilot {
@@ -38,7 +38,7 @@ export default class Copilot {
             rounds++;
             history.push(...userMessages);
             history.forEach(message => {
-                logger.debug(`${message.name}: \n`, message.content);
+                logger.debug(`${LanguageModelChatMessageRole[message.role]}: \n`, message.content);
             });
             logger.info(`User: ${userMessages[userMessages.length - 1].content.split('\n')[0]}...`);
             logger.info('Copilot: thinking...');
