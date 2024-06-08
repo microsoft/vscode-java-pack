@@ -66,7 +66,7 @@ export class DocumentRenderer {
             this.rerenderDebouncelyMap[key] = debounce((document: TextDocument) => {
                 this.inspectActionCodeLensProvider.rerender(document);
                 this.rerenderInspections(document);
-            });
+            }, 500);
         }
         this.rerenderDebouncelyMap[key](document);
     }
