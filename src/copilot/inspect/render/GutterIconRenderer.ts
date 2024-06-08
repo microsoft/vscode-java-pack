@@ -60,8 +60,9 @@ export class GutterIconRenderer implements InspectionRenderer {
     }
 
     private static toGutterIcon(inspection: Inspection): InspectionGutterIcon {
-        const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
-        const args = [inspection.problem, inspection.solution, 'guttericons'];
+        const range = Inspection.getCodeBlockRangeOfInspection(inspection);
+        const inspectionPath = `${inspection.document?.uri.fsPath}#${inspection.symbol?.qualifiedName}#${inspection.id}`
+        const args = [inspectionPath, 'guttericons'];
         const commandUri = Uri.parse(`command:${COMMAND_FIX_INSPECTION}?${encodeURIComponent(JSON.stringify(args))}`);
         const hoverMessage = new MarkdownString(`${inspection.problem.description}\n\n$(copilot) [${inspection.solution}](${commandUri})`, true);
         hoverMessage.isTrusted = true;

@@ -50,7 +50,7 @@ export class DiagnosticRenderer implements InspectionRenderer {
 
 class InspectionDiagnostic extends Diagnostic {
     public constructor(public readonly inspection: Inspection) {
-        const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
+        const range = Inspection.getCodeBlockRangeOfInspection(inspection);
         const severiy = DiagnosticSeverity.Hint;
         super(range, inspection.problem.description, severiy);
         this.source = DIAGNOSTICS_GROUP;
@@ -76,7 +76,7 @@ export async function fixDiagnostic(document: TextDocument, _range: Range | Sele
             command: {
                 title: diagnostic.message,
                 command: COMMAND_FIX_INSPECTION,
-                arguments: [inspection.problem, inspection.solution, 'diagnostics']
+                arguments: [inspection, 'diagnostics']
             }
         };
         actions.push(fixAction);

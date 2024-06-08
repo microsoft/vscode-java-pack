@@ -17,10 +17,6 @@ export interface InspectionProblem {
          */
         relativeStartLine: number;
         relativeEndLine: number;
-        /**
-         * code of the first line of the problematic code block
-         */
-        code: string;
     };
     code: string;
     /**
@@ -43,7 +39,7 @@ export namespace Inspection {
     export function revealFirstLineOfInspection(inspection: Inspection) {
         inspection.document && void workspace.openTextDocument(inspection.document.uri).then(document => {
             void window.showTextDocument(document).then(editor => {
-                const range = getIndicatorRangeOfInspection(inspection.problem);
+                const range = getCodeBlockRangeOfInspection(inspection);
                 editor.selection = new Selection(range.start, range.end);
                 editor.revealRange(range);
             });
@@ -54,20 +50,40 @@ export namespace Inspection {
      * get the range of the indicator of the inspection.
      * `indicator` will be used as the position of code lens/diagnostics and also used as initial selection for fix commands.
      */
-    export function getIndicatorRangeOfInspection(problem: InspectionProblem): Range {
+    export function getIndicatorRangeOfInspection(inspection: Inspection): Range {
+        const problem = inspection.problem;
         const position = problem.position;
         const startLine: number = position.startLine;
-        let startColumn: number = position.code?.indexOf(problem.identity) ?? -1, endLine: number = -1, endColumn: number = -1;
+        const startLineText = inspection.document?.lineAt(inspection.problem.position.startLine).text;
+        let startColumn: number = startLineText?.indexOf(problem.identity) ?? -1, endLine: number = -1, endColumn: number = -1;
         if (startColumn > -1) {
             // highlight only the symbol
             endLine = startLine;
             endColumn = startColumn + problem.identity?.length;
         } else {
             // highlight entire first line
-            startColumn = position.code.search(/\S/) ?? 0; // first non-whitespace character
+            startColumn = startLineText?.search(/\S/) ?? 0; // first non-whitespace character
             endLine = startLine;
-            endColumn = position.code.length; // last character
+            endColumn = startLineText?.length ?? 0; // last character
         }
         return new Range(new Position(startLine, startColumn), new Position(endLine, endColumn));
+    }
+
+    /**
+     * get the range of the rewritable code of the inspection.
+     */
+    export function getCodeBlockRangeOfInspection(inspection: Inspection): Range {
+        const startLine = inspection.problem.position.startLine;
+        const endLine = inspection.problem.position.endLine;
+        const startLineText = inspection.document?.lineAt(inspection.problem.position.startLine).text;
+        const endLineText = inspection.document?.lineAt(inspection.problem.position.endLine).text;
+        // get index of first non-empty character
+        const startLineStartColumn: number = startLineText?.search(/\S/) ?? 0; // index of first non-empty character
+
+        // get index of last non-empty character
+        const matchOfLastLineLastChar = endLineText?.match(/\S(?=\s*$)/);
+        const endLineEndColumn: number = matchOfLastLineLastChar?.index ?? 0; // index of last non-empty character
+
+        return new Range(new Position(startLine, startLineStartColumn), new Position(endLine, endLineEndColumn + 1));
     }
 }

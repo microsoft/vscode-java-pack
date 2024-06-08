@@ -111,4 +111,21 @@ export default class InspectionCache {
         }
         DOC_SYMBOL_SNAPSHOT_INSPECTIONS.set(documentKey, cachedSymbolInspections);
     }
+
+    public static getInspection(inspectionId: string): Inspection | undefined {
+        for (const [, symbolInspections] of DOC_SYMBOL_SNAPSHOT_INSPECTIONS) {
+            for (const [, inspections] of symbolInspections) {
+                const inspection = inspections[1].find(insp => insp.id === inspectionId);
+                if (inspection) {
+                    return inspection;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    public static getInspectionByPath(inspectionPath: string): Inspection | undefined {
+        const [documentKey, symbolKey, inspectionId] = inspectionPath.split('#');
+        return DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey)?.get(symbolKey)?.[1].find(insp => insp.id === inspectionId);
+    }
 }

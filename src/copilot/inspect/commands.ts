@@ -1,7 +1,7 @@
 import { TextDocument, Range, Selection, commands, window, Uri, env } from "vscode";
 import { instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
 import InspectionCopilot from "./InspectionCopilot";
-import { Inspection, InspectionProblem } from "./Inspection";
+import { Inspection } from "./Inspection";
 import { logger, sendEvent, uncapitalize } from "../utils";
 import { SymbolNode } from "./SymbolNode";
 import { DocumentRenderer } from "./DocumentRenderer";
@@ -74,9 +74,16 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         renderer.rerender(document);
     });
 
-    instrumentOperationAsVsCodeCommand(COMMAND_FIX_INSPECTION, async (problem: InspectionProblem, solution: string, source: string) => {
+    instrumentOperationAsVsCodeCommand(COMMAND_FIX_INSPECTION, async (inspectionOrPath: Inspection | string, source: string) => {
         // source is where is this command triggered from, e.g. "gutter", "codelens", "diagnostic"
-        const range = Inspection.getIndicatorRangeOfInspection(problem);
+        const inspection = typeof inspectionOrPath === 'string' ? InspectionCache.getInspectionByPath(inspectionOrPath) : inspectionOrPath;
+        if (!inspection) {
+            window.showErrorMessage(`Failed to find the target inspection`);
+            logger.error(`Failed to find inspection by path "${inspectionOrPath}"`);
+            return;
+        }
+        const [problem, solution] = [inspection.problem, inspection.solution];
+        const range = Inspection.getCodeBlockRangeOfInspection(inspection);
         sendEvent('java.copilot.inspection.fixingTriggered', { code: problem.code, problem: problem.description, solution, source });
         void commands.executeCommand('vscode.editorChat.start', {
             autoSend: true,

@@ -338,8 +338,6 @@ export default class InspectionCopilot extends Copilot {
                     position.endLine = shrinkEndLineIndex(codeLines, position.endLine);
                     position.relativeStartLine = position.startLine;
                     position.relativeEndLine = position.endLine;
-                    position.code = codeLines[position.startLine];
-
                     validInspections.push(inspection);
                 }
             }

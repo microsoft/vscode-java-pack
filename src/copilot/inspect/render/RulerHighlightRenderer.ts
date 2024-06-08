@@ -57,7 +57,7 @@ export class RulerHighlightRenderer implements InspectionRenderer {
     }
 
     private static toRulerHighlight(inspection: Inspection): InspectionRulerHighlight {
-        const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
+        const range = Inspection.getCodeBlockRangeOfInspection(inspection);
         return { range, inspection };
     }
 }

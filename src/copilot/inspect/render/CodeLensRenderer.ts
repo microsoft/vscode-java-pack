@@ -54,12 +54,12 @@ export class CodeLensRenderer implements InspectionRenderer {
 
     private static toCodeLenses(document: TextDocument, inspection: Inspection): InspectionCodeLens[] {
         const codeLenses = [];
-        const range = Inspection.getIndicatorRangeOfInspection(inspection.problem);
+        const range = Inspection.getCodeBlockRangeOfInspection(inspection);
         const inspectionCodeLens = new InspectionCodeLens(inspection, range, {
             title: capitalize(inspection.solution),
             tooltip: inspection.problem.description,
             command: COMMAND_FIX_INSPECTION,
-            arguments: [inspection.problem, inspection.solution, 'codelenses']
+            arguments: [inspection, 'codelenses']
         });
         codeLenses.push(inspectionCodeLens);
 
