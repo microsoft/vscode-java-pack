@@ -24,6 +24,10 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
             await copilot.inspectClass(document, clazz);
             sendEvent('java.copilot.inspection.classInspectingDone');
         } catch (e) {
+            if (e instanceof Error && e.message.toLowerCase().includes('network request aborted')) {
+                sendEvent('java.copilot.inspection.classInspectingCancelled');
+                return;
+            }
             sendEvent('java.copilot.inspection.classInspectingFailed');
             showErrorMessage(e, document, clazz);
             logger.error(`Failed to inspect class "${clazz.symbol.name}".`, e);
@@ -38,6 +42,10 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
             await copilot.inspectDocument(document);
             sendEvent('java.copilot.inspection.docInspectingDone');
         } catch (e) {
+            if (e instanceof Error && e.message.toLowerCase().includes('network request aborted')) {
+                sendEvent('java.copilot.inspection.docInspectingCancelled');
+                return;
+            }
             sendEvent('java.copilot.inspection.docInspectingFailed');
             showErrorMessage(e, document);
             logger.error(`Failed to inspecting document "${document.fileName}".`, e);
@@ -52,6 +60,10 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
             await copilot.inspectMore(document);
             sendEvent('java.copilot.inspection.moreInspectingDone');
         } catch (e) {
+            if (e instanceof Error && e.message.toLowerCase().includes('network request aborted')) {
+                sendEvent('java.copilot.inspection.moreInspectingCancelled');
+                return;
+            }
             sendEvent('java.copilot.inspection.moreInspectingFailed');
             showErrorMessage(e, document);
             logger.error(`Failed to get more suggestions for document "${document.fileName}".`, e);
@@ -66,6 +78,10 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
             await copilot.inspectRange(document, range);
             sendEvent('java.copilot.inspection.rangeInspectingDone');
         } catch (e) {
+            if (e instanceof Error && e.message.toLowerCase().includes('network request aborted')) {
+                sendEvent('java.copilot.inspection.rangeInspectingCancelled');
+                return;
+            }
             sendEvent('java.copilot.inspection.rangeInspectingFailed');
             showErrorMessage(e, document, range);
             logger.error(`Failed to inspect range of "${path.basename(document.fileName)}".`, e);
