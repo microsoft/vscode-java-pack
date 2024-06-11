@@ -1,7 +1,7 @@
 import Copilot from "../Copilot";
 import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getSymbolsOfDocument, getUnionRange, logger, METHOD_KINDS, sendEvent, shrinkEndLineIndex, shrinkStartLineIndex } from "../utils";
 import { Inspection } from "./Inspection";
-import { TextDocument, SymbolKind, ProgressLocation, Range, window, LanguageModelChatMessage } from "vscode";
+import { TextDocument, SymbolKind, ProgressLocation, Range, window, LanguageModelChatMessage, CancellationToken } from "vscode";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
 import { randomUUID } from "crypto";
@@ -125,15 +125,15 @@ export default class InspectionCopilot extends Copilot {
             sendEvent('java.copilot.inspection.inspectingCancelledBusy', { concurrency: this.inspecting.size });
             logger.warn('Copilot is busy, please retry after current inspecting tasks is finished.');
             void window.showWarningMessage(`Copilot is busy, please retry after current inspecting tasks are finished.`);
-            return Promise.resolve([]);
+            return [];
         }
         if (this.inspecting.has(document)) {
             sendEvent('java.copilot.inspection.inspectingCancelledDuplicate');
-            return Promise.resolve([]);
+            return [];
         }
         try {
-            sendEvent('java.copilot.inspection.inspectingStarted');
             this.inspecting.add(document);
+            sendEvent('java.copilot.inspection.inspectingStarted');
             // ajust the range to the minimal container class or method symbols
             const methodAndFields: SymbolNode[] = await getIntersectionSymbolsOfRange(range, document);
             const classes: SymbolNode[] = await getClassesContainedInRange(range, document);
@@ -145,8 +145,8 @@ export default class InspectionCopilot extends Copilot {
 
             if (symbols.length < 1) {
                 logger.warn('No symbol found in the range, inspecting the whole document.');
-                this.inspecting.delete(document);
-                return this.inspectDocument(document);
+                void window.showWarningMessage(`Nothing to inspect.`);
+                return [];
             }
 
             // get the union range of the container symbols, which will be insepcted by copilot
@@ -157,9 +157,9 @@ export default class InspectionCopilot extends Copilot {
             const inspections: Inspection[] = await window.withProgress({
                 location: ProgressLocation.Notification,
                 title: `Inspecting ${target}...`,
-                cancellable: false
-            }, (_progress) => {
-                return this.inspectCode(document, expandedRange);
+                cancellable: true
+            }, (_progress, token: CancellationToken) => {
+                return this.inspectCode(document, expandedRange, token);
             });
             this.updateAndCacheInspections(document, symbols, inspections);
             sendEvent('java.copilot.inspection.inspectingDone');
@@ -250,13 +250,13 @@ export default class InspectionCopilot extends Copilot {
                 location: ProgressLocation.Notification,
                 title: `Getting more suggestions for ${path.basename(document.fileName)}...`,
                 cancellable: false
-            }, async (_progress) => {
+            }, async (_progress, token: CancellationToken) => {
                 sendEvent('java.copilot.inspection.moreInspectingRequested');
                 const rawResponse = await this.send([
                     LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode)),
                     LanguageModelChatMessage.Assistant(existingInspectionsStr + `\n//${Copilot.DEFAULT_END_MARK}`),
                     LanguageModelChatMessage.User("any more?"),
-                ]);
+                ], Copilot.DEFAULT_MODEL_OPTIONS, token);
                 const rawInspections = this.extractInspections(rawResponse, documentCodeLines);
                 // add properties for telemetry
                 sendEvent('java.copilot.inspection.moreInspectionsReceived', {
@@ -285,7 +285,7 @@ export default class InspectionCopilot extends Copilot {
         }
     }
 
-    private async inspectCode(document: TextDocument, range: Range): Promise<Inspection[]> {
+    private async inspectCode(document: TextDocument, range: Range, token: CancellationToken): Promise<Inspection[]> {
         const startLine = range.start.line;
         const endLine = range.end.line;
 
@@ -307,7 +307,7 @@ export default class InspectionCopilot extends Copilot {
             LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
             LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
             LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode))
-        ]);
+        ], Copilot.DEFAULT_MODEL_OPTIONS, token);
         const inspections = this.extractInspections(rawResponse, documentCodeLines);
         // add properties for telemetry
         sendEvent('java.copilot.inspection.inspectionsReceived', {
