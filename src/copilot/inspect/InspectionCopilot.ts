@@ -166,7 +166,9 @@ export default class InspectionCopilot extends Copilot {
 
             // show message based on the number of inspections
             if (inspections.length < 1) {
-                void window.showInformationMessage(`Inspected ${target}, and got 0 suggestions.`);
+                void window.showInformationMessage(`Inspected ${target}, but got no suggestions.`, 'Retry').then(selection => {
+                    selection === "Retry" && void this.inspectRange(document, range, symbol);
+                });
             } else {
                 // show message to go to the first suggestion
                 // inspected a, ..., etc. and got n suggestions.
@@ -273,7 +275,9 @@ export default class InspectionCopilot extends Copilot {
 
             // show message based on the number of inspections
             if (inspections.length < 1) {
-                void window.showInformationMessage(`No more suggestions for ${path.basename(document.fileName)}.`);
+                void window.showInformationMessage(`No more suggestions for ${path.basename(document.fileName)}.`, 'Retry').then(selection => {
+                    selection === "Retry" && void this.inspectMore(document);
+                });
             } else {
                 void window.showInformationMessage(`Got ${inspections.length} more suggestions for ${path.basename(document.fileName)}.`, "Go to").then(selection => {
                     selection === "Go to" && void Inspection.revealFirstLineOfInspection(inspections[0]);
