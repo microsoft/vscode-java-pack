@@ -1,16 +1,15 @@
-import { LanguageModelChatMessage, lm, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatSelector, LanguageModelChatMessageRole } from "vscode";
+import { LanguageModelChatMessage, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatMessageRole, LanguageModelChat } from "vscode";
 import { fixedInstrumentSimpleOperation, logger, sendEvent } from "./utils";
 
 export default class Copilot {
     public static readonly DEFAULT_END_MARK = '<|endofresponse|>';
     public static readonly DEFAULT_MAX_ROUNDS = 3;
-    public static readonly DEFAULT_MODEL = { family: 'gpt-4' };
     public static readonly DEFAULT_MODEL_OPTIONS: LanguageModelChatRequestOptions = { modelOptions: {} };
     public static readonly NOT_CANCELLABEL: CancellationToken = { isCancellationRequested: false, onCancellationRequested: () => Disposable.from() };
 
     public constructor(
+        private readonly model: LanguageModelChat,
         private readonly systemMessagesOrSamples: LanguageModelChatMessage[],
-        private readonly modelSelector: LanguageModelChatSelector = Copilot.DEFAULT_MODEL,
         private readonly modelOptions: LanguageModelChatRequestOptions = Copilot.DEFAULT_MODEL_OPTIONS,
         private readonly maxRounds: number = Copilot.DEFAULT_MAX_ROUNDS,
         private readonly endMark: string = Copilot.DEFAULT_END_MARK
@@ -23,14 +22,6 @@ export default class Copilot {
         cancellationToken: CancellationToken = Copilot.NOT_CANCELLABEL
     ): Promise<string> {
         sendEvent("java.copilot.lm.chatStarted");
-        const model = (await lm.selectChatModels(this.modelSelector))?.[0];
-        if (!model) {
-            const models = await lm.selectChatModels();
-            sendEvent("java.copilot.lm.noSuitableModelFound", { models: models.map(m => m.name).join(', ') });
-            throw new Error(`No suitable model, available models: [${models.map(m => m.name).join(', ')}]. Please make sure you have installed the latest "GitHub Copilot Chat" (v0.16.0 or later).`);
-        }
-        sendEvent("java.copilot.lm.modelSelected", { model: model.name });
-
         let answer: string = '';
         let rounds: number = 0;
         const history = [...this.systemMessagesOrSamples];
@@ -46,7 +37,7 @@ export default class Copilot {
             let rawAnswer: string = '';
             try {
                 sendEvent("java.copilot.lm.requestSent");
-                const response = await model.sendRequest(history, modelOptions ?? this.modelOptions, cancellationToken);
+                const response = await this.model.sendRequest(history, modelOptions ?? this.modelOptions, cancellationToken);
                 for await (const item of response.text) {
                     rawAnswer += item;
                 }

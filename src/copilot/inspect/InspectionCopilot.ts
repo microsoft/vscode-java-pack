@@ -1,13 +1,14 @@
 import Copilot from "../Copilot";
 import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getSymbolsOfDocument, getUnionRange, logger, METHOD_KINDS, sendEvent, shrinkEndLineIndex, shrinkStartLineIndex } from "../utils";
 import { Inspection } from "./Inspection";
-import { TextDocument, SymbolKind, ProgressLocation, Range, window, LanguageModelChatMessage, CancellationToken } from "vscode";
+import { TextDocument, SymbolKind, ProgressLocation, Range, window, LanguageModelChatMessage, CancellationToken, LanguageModelChat } from "vscode";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
 import { randomUUID } from "crypto";
 import path from "path";
 
 export default class InspectionCopilot extends Copilot {
+    public static readonly DEFAULT_MODEL = { family: 'gpt-4' };
     public static readonly FORMAT_CODE = (context: ProjectContext, code: string) => `
     Current project uses Java ${context.javaVersion}. please suggest improvements compatible with this version for code below (do not format the reponse, and do not respond markdown):    
     \`\`\`java
@@ -89,9 +90,10 @@ export default class InspectionCopilot extends Copilot {
     private readonly inspecting: Set<TextDocument> = new Set<TextDocument>();
 
     public constructor(
+        model: LanguageModelChat,
         private readonly maxConcurrencies: number = InspectionCopilot.DEFAULT_MAX_CONCURRENCIES,
     ) {
-        super([LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE)]);
+        super(model, [LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE)]);
     }
 
     public get busy(): boolean {
