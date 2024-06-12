@@ -1,6 +1,6 @@
 import { CodeLens, CodeLensProvider, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
 import { getTopLevelClassesOfDocument, logger } from "../utils";
-import { COMMAND_IGNORE_INSPECTIONS, COMMAND_INSPECT_DOCUMENT, COMMAND_INSPECT_MORE } from "./commands";
+import { COMMAND_IGNORE_INSPECTIONS, COMMAND_INSPECT_DOCUMENT } from "./commands";
 import InspectionCache from "./InspectionCache";
 
 export class InspectActionCodeLensProvider implements CodeLensProvider {
@@ -24,25 +24,19 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
         const clazz = classes?.[0];
         const hasInspections = await InspectionCache.hasCache(document);
 
+        documentCodeLenses.push(
+            new CodeLens(clazz.range, {
+                title: "✨ Rewrite with new Java syntax",
+                command: COMMAND_INSPECT_DOCUMENT,
+                arguments: [document]
+            })
+        );
         if (hasInspections) {
             documentCodeLenses.push(
-                new CodeLens(clazz.range, {
-                    title: "✨ Get more suggestions",
-                    command: COMMAND_INSPECT_MORE,
-                    arguments: [document]
-                }),
                 new CodeLens(clazz.range, {
                     title: "Ignore all suggestions",
                     command: COMMAND_IGNORE_INSPECTIONS,
                     arguments: [document, clazz]
-                })
-            );
-        } else {
-            documentCodeLenses.push(
-                new CodeLens(clazz.range, {
-                    title: "✨ Rewrite with new Java syntax",
-                    command: COMMAND_INSPECT_DOCUMENT,
-                    arguments: [document]
                 })
             );
         }
