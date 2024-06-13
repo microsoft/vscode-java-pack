@@ -79,8 +79,8 @@ export default class InspectionCopilot extends Copilot {
                 "position": { "startLine": 13, "endLine": 19 },
                 "description": "Using multiple if-else",
                 "identity": "if"
-            }
-            "solution": "Use enhanced switch expression",
+            },
+            "solution": "Use enhanced switch expression"
         }
     ]
     ${Copilot.DEFAULT_END_MARK}`;
