@@ -95,17 +95,13 @@ export default class InspectionCache {
         }
     }
 
-    public static cacheInspections(document: TextDocument, symbol: SymbolNode, inspections: Inspection[], append: boolean = false): void {
+    public static cacheInspections(document: TextDocument, symbol: SymbolNode, inspections: Inspection[]): void {
         logger.debug(`cache ${inspections.length} inspections for ${SymbolKind[symbol.kind]} ${symbol.qualifiedName} of ${path.basename(document.uri.fsPath)}`);
         const documentKey = document.uri.fsPath;
         const cachedSymbolInspections = DOC_SYMBOL_SNAPSHOT_INSPECTIONS.get(documentKey) ?? new Map();
-        if (append) {
-            const symbolInspections = cachedSymbolInspections.get(symbol.qualifiedName);
-            if (symbolInspections?.[0] === symbol.snapshotId) {
-                symbolInspections[1].push(...inspections);
-            } else {
-                cachedSymbolInspections.set(symbol.qualifiedName, [symbol.snapshotId, inspections]);
-            }
+        const symbolInspections = cachedSymbolInspections.get(symbol.qualifiedName);
+        if (symbolInspections?.[0] === symbol.snapshotId) {
+            symbolInspections[1].push(...inspections);
         } else {
             cachedSymbolInspections.set(symbol.qualifiedName, [symbol.snapshotId, inspections]);
         }

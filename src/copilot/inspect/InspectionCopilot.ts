@@ -21,9 +21,10 @@ export default class InspectionCopilot extends Copilot {
     identify possible enhancements using modern built-in Java features. 
     Keep these rules in mind:
     - Provided code is from a Java file, zero-based line numbers are added as comments (e.g., /* 0 */, /* 1 */, etc.) at the beginning of each line for reference.
-    - Only suggest built-in Java features, don't identify problems or provide suggestions related to 3rd-party libraries/frameworks.
-    - Only suggest built-in Java features added in Java 8 or later, your suggestions should always be compatible with the given Java version. 
+    - Only suggest built-in Java features/grammar sugars added in Java 8 or later, e.g., Stream API, Optional, if-else to enhanced switch expressions, POJO to records, etc.
+    - Your suggestions should always be compatible with the given Java version. 
     - Your suggestions should make the code more concise, readable, and efficient.
+    - Don't identify problems or provide suggestions related to 3rd-party libraries/frameworks.
     - Don't suggest improvements for commented-out code.
     - Avoid repeated suggestions for the same code block.
     - Keep scoping rules in mind. 
@@ -188,24 +189,32 @@ export default class InspectionCopilot extends Copilot {
      * Update the symbol, document, and relative line number of the inspections.
      */
     private updateAndCacheInspections(document: TextDocument, symbols: SymbolNode[], inspections: Inspection[], append: boolean = false) {
-        for (const symbol of symbols) {
-            const isMethod = METHOD_KINDS.includes(symbol.kind);
-            const symbolInspections: Inspection[] = inspections.filter(inspection => {
-                const inspectionLine = inspection.problem.position.startLine;
-                return isMethod ?
+        if (!append) {
+            symbols.forEach(symbol => InspectionCache.clearInspections(document, symbol));
+        }
+        for (const inspection of inspections) {
+            const inspectionLine = inspection.problem.position.startLine;
+            let located = false;
+            for (const symbol of symbols) {
+                located = METHOD_KINDS.includes(symbol.kind) ?
                     // NOTE: method inspections are inspections whose `position.line` is within the method's range
                     inspectionLine >= symbol.range.start.line && inspectionLine <= symbol.range.end.line :
                     // NOTE: class/field inspections are inspections whose `position.line` is exactly the first line number of the class/field
                     inspectionLine === symbol.range.start.line;
-            });
-            // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method
-            symbolInspections.forEach(inspection => {
-                inspection.symbol = symbol;
-                inspection.document = document;
-                inspection.problem.position.relativeStartLine = inspection.problem.position.startLine - symbol.range.start.line;
-                inspection.problem.position.relativeEndLine = inspection.problem.position.endLine - symbol.range.start.line;
-            });
-            InspectionCache.cacheInspections(document, symbol, symbolInspections, append);
+                if (located) {
+                    logger.info(`set symbol "${SymbolKind[symbol.kind]} ${symbol.qualifiedName}" for inspection: "${inspection.problem.description}"`)
+                    // re-calculate `relativeLine` of method inspections, `relativeLine` is the relative line number to the start of the method
+                    inspection.symbol = symbol;
+                    inspection.document = document;
+                    inspection.problem.position.relativeStartLine = inspection.problem.position.startLine - symbol.range.start.line;
+                    inspection.problem.position.relativeEndLine = inspection.problem.position.endLine - symbol.range.start.line;
+                    InspectionCache.cacheInspections(document, symbol, [inspection]);
+                    break;
+                }
+            }
+            if (!located) {
+                logger.warn(`failed to locate the symbol for inspection: ${JSON.stringify(inspection, null, 2)}`);
+            }
         }
     }
 
@@ -335,7 +344,7 @@ export default class InspectionCopilot extends Copilot {
             for (let i = 0; i < rawInspections.length; i++) {
                 const inspection: Inspection = rawInspections[i];
                 if (!inspection.problem?.position?.startLine || !inspection.problem.description || !inspection.solution) {
-                    logger.warn(`Invalid inspection: ${JSON.stringify(inspection)}`);
+                    logger.warn(`Invalid inspection: ${JSON.stringify(inspection, null, 2)}`);
                 } else {
                     const position = inspection.problem.position;
                     inspection.id = randomUUID();
