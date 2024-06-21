@@ -22,6 +22,7 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
         const documentCodeLenses: CodeLens[] = [];
         const classes = await getTopLevelClassesOfDocument(document);
         const clazz = classes?.[0];
+        if(clazz === undefined) return;
         const hasInspections = await InspectionCache.hasCache(document);
 
         if (hasInspections) {
