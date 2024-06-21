@@ -21,7 +21,7 @@ export default class InspectionCopilot extends Copilot {
     identify possible enhancements using modern built-in Java features. 
     Keep these rules in mind:
     - Provided code is from a Java file, zero-based line numbers are added as comments (e.g., /* 0 */, /* 1 */, etc.) at the beginning of each line for reference.
-    - Only suggest built-in Java features/grammar sugars added in Java 8 or later, e.g., Stream API, Optional, if-else to enhanced switch expressions, POJO to records, etc.
+    - Only suggest built-in Java features/grammar sugars added in Java 8 or later, e.g., Stream API, Optional, Text block, if-else to enhanced switch expressions, POJO to records, etc.
     - Your suggestions should always be compatible with the given Java version. 
     - Your suggestions should make the code more concise, readable, and efficient.
     - Don't identify problems or provide suggestions related to 3rd-party libraries/frameworks.
