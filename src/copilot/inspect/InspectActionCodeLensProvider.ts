@@ -34,7 +34,7 @@ export class InspectActionCodeLensProvider implements CodeLensProvider {
                 new CodeLens(clazz.range, {
                     title: "Ignore all suggestions",
                     command: COMMAND_IGNORE_INSPECTIONS,
-                    arguments: [document, clazz]
+                    arguments: [document]
                 })
             );
         } else {

@@ -4,7 +4,7 @@ import { SemVer } from "semver";
 import { createUuid, sendInfo, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
 import path from "path";
 
-export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
+export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
 export const FIELD_KINDS: SymbolKind[] = [SymbolKind.Field, SymbolKind.Property, SymbolKind.Constant];
 
