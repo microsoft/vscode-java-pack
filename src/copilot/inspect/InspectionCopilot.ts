@@ -10,7 +10,9 @@ import path from "path";
 export default class InspectionCopilot extends Copilot {
     public static readonly DEFAULT_MODEL = { family: 'gpt-4' };
     public static readonly FORMAT_CODE = (context: ProjectContext, code: string) => `
-    Current project uses Java ${context.javaVersion}. please suggest improvements compatible with this version for code below (do not format the reponse, and do not respond markdown):    
+    Current project uses "Java ${context.javaVersion}". please suggest improvements compatible with "Java ${context.javaVersion}" for code below.
+    - Only suggest features that are available in "Java ${context.javaVersion}".
+    - do not format the reponse, and do not respond markdown    
     \`\`\`java
     ${code}
     \`\`\`
@@ -21,7 +23,8 @@ export default class InspectionCopilot extends Copilot {
     identify possible enhancements using modern built-in Java features. 
     Keep these rules in mind:
     - Provided code is from a Java file, zero-based line numbers are added as comments (e.g., /* 0 */, /* 1 */, etc.) at the beginning of each line for reference.
-    - Only suggest built-in Java features/grammar sugars added in Java 8 or later, e.g., Stream API, Optional, Text block, if-else to enhanced switch expressions, POJO to records, etc.
+    - Only suggest built-in Java features/grammar sugars.
+    - Only suggest features that are compatible with the given Java version, e.g. Text blocks feature is added in Java 15. You should not suggest it if the given Java version is 14 or below. 
     - Your suggestions should always be compatible with the given Java version. 
     - Your suggestions should make the code more concise, readable, and efficient.
     - Don't identify problems or provide suggestions related to 3rd-party libraries/frameworks.
@@ -359,6 +362,7 @@ export default class InspectionCopilot extends Copilot {
             return validInspections.sort((a, b) => a.problem.position.startLine - b.problem.position.startLine);
         } catch (e) {
             logger.warn('Failed to parse the response:', e);
+            logger.warn(rawResponse);
             return [];
         }
     }
