@@ -56,7 +56,12 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     }
 
     public async showFormatterSettingsEditor(): Promise<void> {
-        if (this.webviewPanel || !await this.checkProfileSettings() || !this.settingsUrl) {
+        if (this.webviewPanel) {
+            this.webviewPanel.reveal();
+            return;
+        }
+
+        if (!await this.checkProfileSettings() || !this.settingsUrl) {
             return;
         }
         const filePath = this.readOnly ? vscode.Uri.parse(this.settingsUrl).with({ scheme: RemoteProfileProvider.scheme }) : vscode.Uri.file(this.profilePath);
