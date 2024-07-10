@@ -12,7 +12,7 @@ import { WEBVIEW_ID } from "../utils";
 export default class SocialMediaPanel extends React.Component {
     render() {
         const links = [
-            { name: "Document", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-tutorial"], icon: bookIcon },
+            { name: "Documentation", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-tutorial"], icon: bookIcon },
             { name: "Questions & Issues", command: "java.helper.openUrl", args: ["https://github.com/microsoft/vscode-java-pack/issues"], icon: githubIcon },
         ];
         const elements = links.map(link => (
