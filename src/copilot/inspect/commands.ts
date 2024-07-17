@@ -2,11 +2,12 @@ import { TextDocument, Range, Selection, commands, window, Uri, env } from "vsco
 import { instrumentOperationAsVsCodeCommand } from "vscode-extension-telemetry-wrapper";
 import InspectionCopilot from "./InspectionCopilot";
 import { Inspection } from "./Inspection";
-import { logger, sendEvent, uncapitalize } from "../utils";
+import { sendEvent, uncapitalize } from "../utils";
 import { SymbolNode } from "./SymbolNode";
 import { DocumentRenderer } from "./DocumentRenderer";
 import InspectionCache from "./InspectionCache";
 import path from "path";
+import { logger } from "../logger";
 
 export const COMMAND_INSPECT_CLASS = 'java.copilot.inspect.class';
 export const COMMAND_INSPECT_DOCUMENT = 'java.copilot.inspect.document';

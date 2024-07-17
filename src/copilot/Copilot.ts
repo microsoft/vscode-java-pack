@@ -1,5 +1,6 @@
 import { LanguageModelChatMessage, Disposable, CancellationToken, LanguageModelChatRequestOptions, LanguageModelChatMessageRole, LanguageModelChat } from "vscode";
-import { fixedInstrumentSimpleOperation, logger, sendEvent } from "./utils";
+import { fixedInstrumentSimpleOperation, sendEvent } from "./utils";
+import { logger } from "./logger";
 
 export default class Copilot {
     public static readonly DEFAULT_END_MARK = '<|endofresponse|>';

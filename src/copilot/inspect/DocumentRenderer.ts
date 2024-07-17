@@ -5,10 +5,11 @@ import { DiagnosticRenderer } from "./render/DiagnosticRenderer";
 import { GutterIconRenderer } from "./render/GutterIconRenderer";
 import { RulerHighlightRenderer } from "./render/RulerHighlightRenderer";
 import { InspectionRenderer } from "./render/InspectionRenderer";
-import { isCodeLensDisabled, logger, sendEvent } from "../utils";
+import { isCodeLensDisabled, sendEvent } from "../utils";
 import { InspectActionCodeLensProvider } from "./InspectActionCodeLensProvider";
 import { debounce } from "lodash";
 import InspectionCache from "./InspectionCache";
+import { logger } from "../logger";
 
 /**
  * `DocumentRenderer` is responsible for 

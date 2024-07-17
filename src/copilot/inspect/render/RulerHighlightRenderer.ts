@@ -2,8 +2,8 @@
 import { DecorationOptions, ExtensionContext, OverviewRulerLane, TextDocument, TextEditorDecorationType, ThemeColor, Uri, window } from "vscode";
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
-import { logger } from "../../../copilot/utils";
 import _ from "lodash";
+import { logger } from "../../logger";
 
 export class RulerHighlightRenderer implements InspectionRenderer {
     private readonly rulerHighlights: Map<Uri, InspectionRulerHighlight[]> = new Map();

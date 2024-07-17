@@ -2,10 +2,11 @@
 import { CodeLens, CodeLensProvider, Command, Range, Disposable, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
-import { logger, uncapitalize } from "../../../copilot/utils";
+import { uncapitalize } from "../../../copilot/utils";
 import { COMMAND_IGNORE_INSPECTIONS, COMMAND_FIX_INSPECTION } from "../commands";
 import { capitalize } from "lodash";
 import _ from "lodash";
+import { logger } from "../../logger";
 
 export class CodeLensRenderer implements InspectionRenderer {
     private readonly codeLenses: Map<Uri, InspectionCodeLens[]> = new Map();

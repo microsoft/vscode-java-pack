@@ -2,10 +2,10 @@
 import { DecorationOptions, ExtensionContext, MarkdownString, TextDocument, TextEditorDecorationType, Uri, window } from "vscode";
 import { Inspection } from "../Inspection";
 import { InspectionRenderer } from "./InspectionRenderer";
-import { logger } from "../../../copilot/utils";
 import path = require("path");
 import { COMMAND_FIX_INSPECTION } from "../commands";
 import _ from "lodash";
+import { logger } from "../../logger";
 
 export class GutterIconRenderer implements InspectionRenderer {
     private readonly gutterIcons: Map<Uri, InspectionGutterIcon[]> = new Map();

@@ -1,8 +1,9 @@
 import { SymbolKind, TextDocument } from 'vscode';
-import { getSymbolsContainedInRange, getSymbolsOfDocument, logger } from '../utils';
 import { Inspection } from './Inspection';
 import { SymbolNode } from './SymbolNode';
 import path from 'path';
+import { getSymbolsOfDocument, getSymbolsContainedInRange } from './utils.symbol';
+import { logger } from '../logger';
 
 /**
  * A map based cache for inspections of a document.

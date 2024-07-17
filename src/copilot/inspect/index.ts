@@ -3,13 +3,14 @@ import { COMMAND_INSPECT_RANGE, registerCommands } from "./commands";
 import { DocumentRenderer } from "./DocumentRenderer";
 import { fixDiagnostic } from "./render/DiagnosticRenderer";
 import InspectionCache from "./InspectionCache";
-import { isLlmApiReady, logger, sendEvent } from "../utils";
+import { isNewerThan, sendEvent } from "../utils";
 import InspectionCopilot from "./InspectionCopilot";
+import { logger } from "../logger";
 
 export const DEPENDENT_EXTENSIONS = ['github.copilot-chat', 'redhat.java'];
 
-export async function activateCopilot(context: ExtensionContext): Promise<void> {
-    if (!isLlmApiReady()) {
+export async function activateCopilotInspecting(context: ExtensionContext): Promise<void> {
+    if (!isNewerThan("1.90.0-insider")) { // lm API is available since 1.90.0-insider
         return;
     }
     logger.info("vscode.lm is ready.");

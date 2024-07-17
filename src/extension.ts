@@ -23,8 +23,9 @@ import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
-import {  activateCopilot } from "./copilot/inspect";
-import { fixedInstrumentSimpleOperation, logger, sendEvent } from "./copilot/utils";
+import { activateCopilotInspecting } from "./copilot/inspect";
+import { fixedInstrumentSimpleOperation, sendEvent } from "./copilot/utils";
+import { logger } from "./copilot/logger";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -86,7 +87,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   sendEvent("java.copilot.installed", {});
   logger.info("Installed");
   logger.info("activating Java copilot.");
-  await fixedInstrumentSimpleOperation('java.copilot.activate', activateCopilot)(context);
+  await fixedInstrumentSimpleOperation('java.copilot.inspecting.activate', activateCopilotInspecting)(context);
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {

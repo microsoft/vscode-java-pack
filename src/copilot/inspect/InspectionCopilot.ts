@@ -1,15 +1,19 @@
 import Copilot from "../Copilot";
-import { getClassesContainedInRange, getInnermostClassContainsRange, getIntersectionSymbolsOfRange, getProjectJavaVersion, getSymbolsOfDocument, getUnionRange, logger, METHOD_KINDS, sendEvent, shrinkEndLineIndex, shrinkStartLineIndex } from "../utils";
 import { Inspection } from "./Inspection";
 import { TextDocument, SymbolKind, ProgressLocation, Range, window, LanguageModelChatMessage, CancellationToken, LanguageModelChat } from "vscode";
 import InspectionCache from "./InspectionCache";
 import { SymbolNode } from "./SymbolNode";
-import { randomUUID } from "crypto";
 import path from "path";
+import { sendEvent, } from "../utils";
+import { getSymbolsOfDocument, getIntersectionSymbolsOfRange, getClassesContainedInRange, getInnermostClassContainsRange, getUnionRange, METHOD_KINDS } from "./utils.symbol";
+import { extractInspections } from "./extractInspections";
+import { JavaProjectContext } from "../context/JavaProject";
+import { JavaDocument } from "../context/JavaDocument";
+import { logger } from "../logger";
 
 export default class InspectionCopilot extends Copilot {
     public static readonly DEFAULT_MODEL = { family: 'gpt-4' };
-    public static readonly FORMAT_CODE = (context: ProjectContext, code: string) => `
+    public static readonly FORMAT_CODE = (context: JavaProjectContext, code: string) => `
     Current project uses "Java ${context.javaVersion}". please suggest improvements compatible with "Java ${context.javaVersion}" for code below.
     - Only suggest features that are available in "Java ${context.javaVersion}".
     - do not format the reponse, and do not respond markdown    
@@ -245,7 +249,8 @@ export default class InspectionCopilot extends Copilot {
             const linedDocumentCode = documentCodeLines
                 .map((line, index) => `/* ${index} */ ${line}`)
                 .join('\n');
-            const projectContext = await this.collectProjectContext(document);
+            const doc = await JavaDocument.from(document)
+            const context = await doc.collectContext({ javaVersion: true });
             const existingInspections = await InspectionCache.getValidInspections(document);
             const existingInspectionsStr = JSON.stringify(existingInspections.map(i => {
                 return {
@@ -269,11 +274,11 @@ export default class InspectionCopilot extends Copilot {
             }, async (_progress, token: CancellationToken) => {
                 sendEvent('java.copilot.inspection.moreInspectingRequested');
                 const rawResponse = await this.send([
-                    LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode)),
+                    LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(context, linedDocumentCode)),
                     LanguageModelChatMessage.Assistant(existingInspectionsStr + `\n//${Copilot.DEFAULT_END_MARK}`),
                     LanguageModelChatMessage.User("any more?"),
                 ], Copilot.DEFAULT_MODEL_OPTIONS, token);
-                const rawInspections = this.extractInspections(rawResponse, documentCodeLines);
+                const rawInspections = extractInspections(rawResponse, documentCodeLines);
                 // add properties for telemetry
                 sendEvent('java.copilot.inspection.moreInspectionsReceived', {
                     insectionsCount: rawInspections.length,
@@ -308,25 +313,30 @@ export default class InspectionCopilot extends Copilot {
         const endLine = range.end.line;
 
         // add 0-based line numbers to the code
-        const documentCode: string = document.getText();
+        const documentCode: string = document.getText().trim();
+        if (documentCode.length < 1) {
+            logger.warn('Empty document, skipping inspection.');
+            return [];
+        }
         const documentCodeLines: string[] = documentCode.split(/\r?\n/);
         const linedDocumentCode = documentCodeLines
             .map((line, index) => `/* ${index} */ ${line}`)
             .filter((_, index) => index >= startLine && index <= endLine)
             .join('\n');
 
-        const projectContext = await this.collectProjectContext(document);
+        const doc = await JavaDocument.from(document)
+        const context = await doc.collectContext({ javaVersion: true });
         sendEvent('java.copilot.inspection.inspectingRequested', {
-            javaVersion: projectContext.javaVersion,
+            javaVersion: context.javaVersion,
             codeWords: linedDocumentCode.split(/\s+/).length,
             codeLines: documentCodeLines.length,
         });
         const rawResponse = await this.send([
             LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
             LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
-            LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(projectContext, linedDocumentCode))
+            LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(context, linedDocumentCode))
         ], Copilot.DEFAULT_MODEL_OPTIONS, token);
-        const inspections = this.extractInspections(rawResponse, documentCodeLines);
+        const inspections = extractInspections(rawResponse, documentCodeLines);
         // add properties for telemetry
         sendEvent('java.copilot.inspection.inspectionsReceived', {
             insectionsCount: inspections.length,
@@ -338,43 +348,4 @@ export default class InspectionCopilot extends Copilot {
 
         return inspections;
     }
-
-    private extractInspections(rawResponse: string, codeLines: string[]): Inspection[] {
-        try {
-            const rawInspections: Inspection[] = JSON.parse(rawResponse);
-            const validInspections = [];
-            // filter out invalid inspection that miss required fields and log.
-            for (let i = 0; i < rawInspections.length; i++) {
-                const inspection: Inspection = rawInspections[i];
-                if (!inspection.problem?.position?.startLine || !inspection.problem.description || !inspection.solution) {
-                    logger.warn(`Invalid inspection: ${JSON.stringify(inspection, null, 2)}`);
-                } else {
-                    const position = inspection.problem.position;
-                    inspection.id = randomUUID();
-                    // shrink to the actual code lines
-                    position.startLine = shrinkStartLineIndex(codeLines, position.startLine);
-                    position.endLine = shrinkEndLineIndex(codeLines, position.endLine);
-                    position.relativeStartLine = position.startLine;
-                    position.relativeEndLine = position.endLine;
-                    validInspections.push(inspection);
-                }
-            }
-            return validInspections.sort((a, b) => a.problem.position.startLine - b.problem.position.startLine);
-        } catch (e) {
-            logger.warn('Failed to parse the response:', e);
-            logger.warn(rawResponse);
-            return [];
-        }
-    }
-
-    async collectProjectContext(document: TextDocument): Promise<ProjectContext> {
-        logger.info('collecting project context info (java version)...');
-        const javaVersion = await getProjectJavaVersion(document);
-        logger.info('project java version:', javaVersion);
-        return { javaVersion };
-    }
-}
-
-export interface ProjectContext {
-    javaVersion: string;
 }

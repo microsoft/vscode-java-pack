@@ -1,82 +1,7 @@
-import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, version } from "vscode";
-import { SymbolNode } from "./inspect/SymbolNode";
+import { workspace, version, Uri } from "vscode";
 import { SemVer } from "semver";
 import { createUuid, sendInfo, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
 import path from "path";
-
-export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Enum];
-export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
-export const FIELD_KINDS: SymbolKind[] = [SymbolKind.Field, SymbolKind.Property, SymbolKind.Constant];
-
-export const logger: LogOutputChannel = window.createOutputChannel("Java Rewriting Suggestions", { log: true });
-
-/**
- * get all the class symbols contained in the `range` in the `document`
- */
-export async function getClassesContainedInRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
-    const symbols = await getSymbolsOfDocument(document);
-    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
-        .filter(clazz => range.contains(clazz.range));
-}
-
-export async function getSymbolsContainedInRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
-    const symbols = await getSymbolsOfDocument(document);
-    return symbols.filter(symbol => range.contains(symbol.range));
-}
-
-/**
- * get the innermost class symbol that completely contains the `range` in the `document`
- */
-export async function getInnermostClassContainsRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode | undefined> {
-    const symbols = await getSymbolsOfDocument(document);
-    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind))
-        // reverse the classes to get the innermost class first
-        .reverse().filter(clazz => clazz.range.contains(range))[0];
-}
-
-/**
- * get all the method/field symbols that are completely or partially contained in the `range` in the `document`
- */
-export async function getIntersectionSymbolsOfRange(range: Range | Selection, document: TextDocument): Promise<SymbolNode[]> {
-    const symbols = await getSymbolsOfDocument(document);
-    return symbols.filter(symbol => METHOD_KINDS.includes(symbol.kind) || FIELD_KINDS.includes(symbol.kind))
-        .filter(method => method.range.intersection(range));
-}
-
-export function getUnionRange(symbols: SymbolNode[]): Range {
-    if (symbols.length === 0) {
-        throw new Error("No symbols provided");
-    }
-    let result: Range = new Range(symbols[0].range.start, symbols[0].range.end);
-    for (const symbol of symbols) {
-        result = result.union(symbol.range);
-    }
-    return result;
-}
-
-/**
- * get all classes (classes inside methods are not considered) and methods of a document in a pre-order traversal manner
- */
-export async function getSymbolsOfDocument(document: TextDocument): Promise<SymbolNode[]> {
-    const stack = (await getDocumentSymbols(document)).reverse().map(symbol => new SymbolNode(document, symbol));
-
-    const result: SymbolNode[] = [];
-    while (stack.length > 0) {
-        const symbol = stack.pop() as SymbolNode;
-        if (CLASS_KINDS.includes(symbol.kind)) {
-            result.push(symbol);
-            stack.push(...symbol.children.reverse());
-        } else if (METHOD_KINDS.includes(symbol.kind) || FIELD_KINDS.includes(symbol.kind)) {
-            result.push(symbol);
-        }
-    }
-    return result;
-}
-
-export async function getTopLevelClassesOfDocument(document: TextDocument): Promise<SymbolNode[]> {
-    const symbols = await getDocumentSymbols(document);
-    return symbols.filter(symbol => CLASS_KINDS.includes(symbol.kind)).map(symbol => new SymbolNode(document, symbol));
-}
 
 export function uncapitalize(str: string): string {
     return str.charAt(0).toLowerCase() + str.slice(1);
@@ -89,20 +14,7 @@ export function isCodeLensDisabled(): boolean {
     return enabled === false;
 }
 
-export async function getProjectJavaVersion(document: TextDocument): Promise<string> {
-    const uri = document.uri.toString();
-    const key = "org.eclipse.jdt.core.compiler.source";
-    try {
-        const settings: { [key]: string } = await retryOnFailure(async () => {
-            return await commands.executeCommand("java.project.getSettings", uri, [key]);
-        });
-        return settings[key] ?? '17';
-    } catch (e) {
-        throw new Error(`Failed to get Java version, please check if the project is loaded normally: ${e}`);
-    }
-}
-
-export async function retryOnFailure<T>(task: () => Promise<T>, timeout: number = 15000, retryInterval: number = 3000): Promise<T> {
+export async function retryOnFailure<T>(task: () => Promise<T>, timeout: number = 30000, retryInterval: number = 3000): Promise<T> {
     const startTime = Date.now();
 
     while (true) {
@@ -118,8 +30,8 @@ export async function retryOnFailure<T>(task: () => Promise<T>, timeout: number 
     }
 }
 
-export function isLlmApiReady(): boolean {
-    return new SemVer(version).compare(new SemVer("1.90.0-insider")) >= 0;
+export function isNewerThan(v: string): boolean {
+    return new SemVer(version).compare(new SemVer(v)) >= 0;
 }
 
 /**
@@ -161,43 +73,20 @@ export function sendEvent(eventName: string, info?: { [key: string]: any }): voi
     sendInfo('', { isEvent: "true", operationName: eventName, eventName, ...info });
 }
 
-export async function getDocumentSymbols(document: TextDocument): Promise<DocumentSymbol[]> {
-    logger.debug(`Getting document symbols of ${path.basename(document.fileName)}`);
-    const symbols = (await commands.executeCommand<DocumentSymbol[]>('vscode.executeDocumentSymbolProvider', document.uri)) ?? [];
-    logger.debug(`Got ${symbols.length} document symbols of ${path.basename(document.fileName)}`);
-    return symbols;
+/**
+ * Checks if the parentUri is a parent of childUri.
+ * 
+ * @param parentUri The potential parent URI.
+ * @param childUri The child URI to check.
+ * @returns true if parentUri is a parent of childUri, false otherwise.
+ */
+export function isParentUri(parentUri: Uri, childUri: Uri): boolean {
+    // Use path.relative to find the relative path from parentUri to childUri
+    const relativePath = path.relative(parentUri.fsPath, childUri.fsPath);
+    // If the relative path starts with '..' or is empty, parentUri is not a parent of childUri
+    return !(relativePath.startsWith('..') || path.isAbsolute(relativePath));
 }
 
-export function shrinkStartLineIndex(codeLines: string[], startIndex: number): number {
-    let inBlockComment = false;
-    for (let i = startIndex; i < codeLines.length; i++) {
-        const trimmedLine = codeLines[i].trim();
-        if (trimmedLine.startsWith('/*')) {
-            inBlockComment = true;
-        }
-        if (trimmedLine.endsWith('*/')) {
-            inBlockComment = false;
-        }
-        if (trimmedLine !== '' && !inBlockComment && !trimmedLine.startsWith('//')) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-export function shrinkEndLineIndex(codeLines: string[], endIndex: number): number {
-    let inBlockComment = false;
-    for (let i = endIndex; i >= 0; i--) {
-        const trimmedLine = codeLines[i].trim();
-        if (trimmedLine.endsWith('*/')) {
-            inBlockComment = true;
-        }
-        if (trimmedLine.startsWith('/*')) {
-            inBlockComment = false;
-        }
-        if (trimmedLine !== '' && !inBlockComment && !trimmedLine.startsWith('//')) {
-            return i;
-        }
-    }
-    return -1;
+export async function fileExists(uri: Uri): Promise<boolean> {
+    return workspace.fs.stat(uri).then(() => true, () => false);
 }

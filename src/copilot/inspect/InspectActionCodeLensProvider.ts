@@ -1,7 +1,8 @@
 import { CodeLens, CodeLensProvider, Event, EventEmitter, ExtensionContext, TextDocument, Uri, languages } from "vscode";
-import { getTopLevelClassesOfDocument, logger } from "../utils";
 import { COMMAND_IGNORE_INSPECTIONS, COMMAND_INSPECT_DOCUMENT, COMMAND_INSPECT_MORE } from "./commands";
 import InspectionCache from "./InspectionCache";
+import { getTopLevelClassesOfDocument } from "./utils.symbol";
+import { logger } from "../logger";
 
 export class InspectActionCodeLensProvider implements CodeLensProvider {
     private inspectCodeLenses: Map<Uri, CodeLens[]> = new Map();
