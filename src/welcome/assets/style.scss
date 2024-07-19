@@ -6,6 +6,11 @@ $nav-tabs-link-active-bg: transparent;
 $nav-tabs-link-active-border-color: transparent;
 $nav-tabs-link-hover-border-color: transparent;
 $nav-tabs-border-color: transparent;
+
+$list-group-bg: var(--vscode-peekViewTitle-background);
+$list-group-border-color: var(--vscode-peekViewTitle-background);
+$list-group-action-active-bg: $list-group-bg;
+
 @import "~bootstrap/scss/bootstrap";
 
 .nav-link,

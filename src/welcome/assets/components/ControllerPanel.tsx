@@ -12,7 +12,7 @@ export default class ControllerPanel extends React.Component<{
     let {showWhenUsingJava} = this.props;
 
     return <Form>
-        <Form.Check defaultChecked={showWhenUsingJava} label="Show welcome page when using Java" onChange={toggleVisibility}/>
+        <Form.Check defaultChecked={showWhenUsingJava} label="Show Help Center when using Java" onChange={toggleVisibility}/>
     </Form>;
   }
 

@@ -7,7 +7,7 @@
 
     "walkthrough.java.projects.inactive": "Java Project Explorer helps you to manage your projects and dependencies. Create a new project or open an existing folder to see the full features.\n[Open Command Palette](command:workbench.action.quickOpen?%22>java%22)\n__Try searching for 'Create Java Project' or 'Open Folder'__",
 
-    "walkthrough.java.debugAndTest":"Run and debug your application using the debugger. [Learn More...](https://aka.ms/java-walkthrough-debug)\nThe [Testing Explorer](command:testExplorer.focus) allows you to view, run and manage all test cases in your project. [Learn More...](https://aka.ms/java-walkthrough-test)\n[Show Run and Debug View](command:workbench.view.debug)",
+    "walkthrough.java.debugAndTest":"Run and debug your application using the debugger. [Learn More...](https://aka.ms/java-walkthrough-debug)\nThe [Testing Explorer](command:workbench.view.testing.focus) allows you to view, run and manage all test cases in your project. [Learn More...](https://aka.ms/java-walkthrough-test)\n[Show Run and Debug View](command:workbench.view.debug)",
 
     "walkthrough.java.extensions": "Install extensions to support additional frameworks such as Spring Boot, Application Servers, key mappings and so on.\n[Browse Recommended Extensions](command:toSide:java.extGuide)",
 

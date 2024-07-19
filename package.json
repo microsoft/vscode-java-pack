@@ -78,6 +78,10 @@
       {
         "title": "$(project) Open Project Settings",
         "command": "java.projectSettings"
+      },
+      {
+        "title": "$(info) Open Help Center",
+        "command": "java.welcome"
       }
     ],
     "walkthroughs": [
