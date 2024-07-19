@@ -27,30 +27,29 @@ export default class InspectionCopilot extends Copilot {
     identify possible enhancements using modern built-in Java features. 
     Keep these rules in mind:
     - Provided code is from a Java file, zero-based line numbers are added as comments (e.g., /* 0 */, /* 1 */, etc.) at the beginning of each line for reference.
-    - Only suggest built-in Java features/grammar sugars.
+    - Only suggest newer syntax, new built-in APIs or other newer Java features.
     - Only suggest features that are compatible with the given Java version, e.g. Text blocks feature is added in Java 15. You should not suggest it if the given Java version is 14 or below. 
-    - Your suggestions should always be compatible with the given Java version. 
-    - Your suggestions should make the code more concise, readable, and efficient.
     - Don't identify problems or provide suggestions related to 3rd-party libraries/frameworks.
+    - Don't identify problems or provide suggestions for code that can't be fixed with new syntax or new built-in APIs.
+    - Don't offer suggestions not making use of new syntax or new built-in APIs. 
     - Don't suggest improvements for commented-out code.
     - Avoid repeated suggestions for the same code block.
     - Keep scoping rules in mind. 
     - Maintain clarity, helpfulness, and thoroughness in your suggestions and keep them short and impersonal.
     - Use developer-friendly terms and analogies in your suggestions.
     - Provide suggestions in an RFC8259 compliant JSON array, each item representing a suggestion. Follow the given format strictly:
-    \`\`\`json
-    [{
+      \`\`\`
+      [{
         "problem": {
-            "position": {
-                "startLine": "start line number of the rewritable code block",
-                "endLine": "end line number of the rewritable code block",
-            },
-            "description":"Brief description of the issue in the code, preferably in less than 10 words, as short as possible, starting with a gerund/noun word, e.g., 'Using'.",
-            "identity": "Identifity of the rewritable code block, a single word in the block. It could be a Java keyword, a method/field/variable name, or a value (e.g., magic number). Use '<null>' if cannot be identified."
+          "position": {
+            "startLine": $start_line_number, // start line number of the rewritable code block
+            "endLine": $end_line_number, // end line number of the rewritable code block
+          },
+          "description": "...", // Brief description of the issue in the code, preferably in less than 10 words, as short as possible
         },
-        "solution": "Brief description of the solution to the problem, preferably in less than 10 words, as short as possible, starting with a verb."
-    }]
-    \`\`\`
+        "solution": "Use $name_of_the_new_syntax_or_builtin_feature ($java_version_this_feature_introduced)", // Brief description of the solution, including the name of the used new builtin feature and the Java versoin since which this new feature is introduced, preferably in less than 10 words, as short as possible
+      }]
+      \`\`\`
     - Reply an empty array if no suggestions can be made.
     - Avoid wrapping the whole response in triple backticks.
     - Always conclude your response with "//${Copilot.DEFAULT_END_MARK}" to indicate the end of your response.
@@ -86,12 +85,11 @@ export default class InspectionCopilot extends Copilot {
             "problem": {
                 "position": { "startLine": 13, "endLine": 19 },
                 "description": "Using multiple if-else",
-                "identity": "if"
             },
-            "solution": "Use enhanced switch expression"
+            "solution": "Use enhanced switch expression (Java 17)"
         }
     ]
-    ${Copilot.DEFAULT_END_MARK}`;
+    //${Copilot.DEFAULT_END_MARK}`;
 
     private static readonly DEFAULT_MAX_CONCURRENCIES: number = 3;
 
@@ -257,7 +255,6 @@ export default class InspectionCopilot extends Copilot {
                     problem: {
                         position: { startLine: i.problem.position.startLine, endLine: i.problem.position.endLine },
                         description: i.problem.description,
-                        identity: i.problem.identity,
                     },
                     solution: i.solution,
                 }

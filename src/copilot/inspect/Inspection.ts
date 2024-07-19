@@ -19,10 +19,6 @@ export interface InspectionProblem {
         relativeEndLine: number;
     };
     code: string;
-    /**
-     * indicator of the problematic code block, e.g. method name/class name, keywork, etc.
-     */
-    identity: string;
 }
 
 export interface Inspection {
@@ -44,29 +40,6 @@ export namespace Inspection {
                 editor.revealRange(range);
             });
         });
-    }
-
-    /**
-     * get the range of the indicator of the inspection.
-     * `indicator` will be used as the position of code lens/diagnostics and also used as initial selection for fix commands.
-     */
-    export function getIndicatorRangeOfInspection(inspection: Inspection): Range {
-        const problem = inspection.problem;
-        const position = problem.position;
-        const startLine: number = position.startLine;
-        const startLineText = inspection.document?.lineAt(inspection.problem.position.startLine).text;
-        let startColumn: number = startLineText?.indexOf(problem.identity) ?? -1, endLine: number = -1, endColumn: number = -1;
-        if (startColumn > -1) {
-            // highlight only the symbol
-            endLine = startLine;
-            endColumn = startColumn + problem.identity?.length;
-        } else {
-            // highlight entire first line
-            startColumn = startLineText?.search(/\S/) ?? 0; // first non-whitespace character
-            endLine = startLine;
-            endColumn = startLineText?.length ?? 0; // last character
-        }
-        return new Range(new Position(startLine, startColumn), new Position(endLine, endColumn));
     }
 
     /**
