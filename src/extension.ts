@@ -25,7 +25,6 @@ import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
 import { activateCopilotInspecting } from "./copilot/inspect";
 import { fixedInstrumentSimpleOperation, sendEvent } from "./copilot/utils";
-import { activateChatVariable } from "./copilot/context";
 import { logger } from "./copilot/logger";
 
 let cleanJavaWorkspaceIndicator: string;
@@ -89,7 +88,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   logger.info("Installed");
   logger.info("activating Java copilot.");
   await fixedInstrumentSimpleOperation('java.copilot.inspecting.activate', activateCopilotInspecting)(context);
-  fixedInstrumentSimpleOperation('java.copilot.context.activate', activateChatVariable)(context);
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
