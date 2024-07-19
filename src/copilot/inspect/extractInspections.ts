@@ -14,6 +14,7 @@ export function extractInspections(rawResponse: string, codeLines: string[]): In
             } else {
                 const position = inspection.problem.position;
                 inspection.id = randomUUID();
+                inspection.problem.code = inspection.problem.code || inspection.id;
                 // shrink to the actual code lines
                 position.startLine = shrinkStartLineIndex(codeLines, position.startLine);
                 position.endLine = shrinkEndLineIndex(codeLines, position.endLine);

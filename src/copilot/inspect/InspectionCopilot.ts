@@ -341,6 +341,7 @@ export default class InspectionCopilot extends Copilot {
         sendEvent('java.copilot.inspection.inspectionsReceived', {
             insectionsCount: inspections.length,
             inspections: inspections.map(i => JSON.stringify({
+                id: i.id,
                 problem: i.problem.description,
                 solution: i.solution,
             })).join(','),
