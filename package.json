@@ -38,9 +38,6 @@
   "capabilities": {
     "virtualWorkspaces": false
   },
-  "enabledApiProposals": [
-    "chatVariableResolver"
-  ],
   "activationEvents": [
     "onLanguage:java",
     "workspaceContains:pom.xml",
