@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as vscode from "vscode";
 import * as fs from 'fs';
 import { logger } from "../logger";
+import { groupBy } from "lodash";
 
 export class JavaProject {
     public constructor(public readonly root: vscode.Uri) { }
@@ -85,7 +86,18 @@ export class JavaProject {
             dependencies = await this.getDependenciesFromGradle(gradleKts);
         }
         // filter out the dependencies that has same groupId and artifactId
-        return dependencies.filter((dep, index, self) => self.findIndex(d => d.groupId === dep.groupId && d.artifactId === dep.artifactId) === index);
+        dependencies = dependencies.filter((dep, index, self) => self.findIndex(d => d.groupId === dep.groupId && d.artifactId === dep.artifactId) === index);
+        while (dependencies.length > 10) {
+            logger.debug('Compressing dependencies...');
+            const originalLength = dependencies.length;
+            dependencies = this.compressDependencies(dependencies);
+            if (originalLength === dependencies.length) {
+                break;
+            }
+            logger.debug(`Compressed dependencies from ${originalLength} to ${dependencies.length}`);
+            logger.debug(`\n${Dependency.dependeciesToString(dependencies, ' - ')}`);
+        }
+        return dependencies;
     }
 
     public async getLayout(): Promise<string> {
@@ -163,6 +175,53 @@ export class JavaProject {
         while (dc = LOOSE.exec(content)) { dependencies.push({ groupId: dc[1], artifactId: dc[2], version: dc[3] }) }
         return dependencies;
     }
+
+    private compressDependencies(deps: Dependency[]): Dependency[] {
+        const result: Dependency[] = [];
+        const groupedByGroupId = groupBy(deps, (dep) => dep.groupId);
+        for (let groupId in groupedByGroupId) {
+            const dependenciesWithSameGroupId = groupedByGroupId[groupId];
+            if (dependenciesWithSameGroupId.length > 1) { // compress dependencies with same groupId
+                const commonArtifactPrefx = this.getLongestCommonPrefix(dependenciesWithSameGroupId.map(dep => dep.artifactId));
+                if (commonArtifactPrefx.length > 8) {
+                    const uncompressedDependencies = dependenciesWithSameGroupId.filter(dep => !dep.artifactId.startsWith(commonArtifactPrefx))
+                    result.push({ groupId: groupId, artifactId: `${commonArtifactPrefx}*` });
+                    result.push(...uncompressedDependencies);
+                } else {
+                    result.push(...dependenciesWithSameGroupId);
+                }
+            } else {
+                result.push(dependenciesWithSameGroupId[0]);
+            }
+        }
+        return result;
+    }
+
+    private getLongestCommonPrefix(arr: string[]): string {
+        let longestCommonPrefix = '';
+        for (let i = 0; i < arr.length - 1; i++) {
+            for (let j = i + 1; j < arr.length - 1; j++) {
+                let commonPrefix = this.getCommonPrefix(arr[i], arr[j]);
+                if (commonPrefix.length > longestCommonPrefix.length) {
+                    longestCommonPrefix = commonPrefix;
+                }
+            }
+        }
+        return longestCommonPrefix;
+    }
+
+    private getCommonPrefix(str1: string, str2: string): string {
+        let match = '';
+        let len = str1.length < str2.length ? str1.length : str2.length;
+        for (let i = 0; i < len; i++) {
+            if (str1[i] === str2[i]) {
+                match += str1[i];
+            } else {
+                break;
+            }
+        }
+        return match;
+    }
 }
 
 export interface JavaProjectContext {
@@ -197,15 +256,15 @@ export namespace Dependency {
 
 export namespace JavaProjectContext {
     export function toString(context: JavaProjectContext): string {
-        let contextStr = "I am working on a Java project of the following nature:\n";
+        let contextStr = "This is a Java project of the following natures:\n";
         if (context.javaVersion) {
-            contextStr += ` - Using Java ${context.javaVersion}. Prefer solutions using the new and more recent features introduced in Java ${context.javaVersion}. Call out which version you are using in the answer.\n`;
+            contextStr += ` - Using Java ${context.javaVersion}. So I would prefer solutions using the new and more recent features introduced in Java ${context.javaVersion}.\n`;
         }
         if ((context.buildTools?.length ?? 0) > 0) {
             contextStr += ` - Using ${context.buildTools?.join(",")} as build tools.\n`;
         }
         if ((context.dependencies?.length ?? 0) > 0) {
-            contextStr += ` - Available Dependencies: \n`;
+            contextStr += ` - Dependencies: \n`;
             context.dependencies?.forEach(dep => contextStr += `   - ${Dependency.dependecyToString(dep)}\n`);
         }
         if (context.layout) {
