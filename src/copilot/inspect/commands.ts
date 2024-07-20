@@ -101,7 +101,7 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
         }
         const [problem, solution, id] = [inspection.problem, inspection.solution, inspection.id];
         const range = Inspection.getCodeBlockRangeOfInspection(inspection);
-        sendEvent('java.copilot.inspection.fixingTriggered', { id, code: problem.code, problem: problem.description, solution, source });
+        sendEvent('java.copilot.inspection.fixingTriggered', { inspectionId: id, code: problem.code, problem: problem.description, solution, source });
         void commands.executeCommand('vscode.editorChat.start', {
             autoSend: true,
             message: `/fix ${problem.description}, maybe ${uncapitalize(solution)}`,
@@ -113,7 +113,7 @@ export function registerCommands(copilot: InspectionCopilot, renderer: DocumentR
 
     instrumentOperationAsVsCodeCommand(COMMAND_IGNORE_INSPECTIONS, async (document: TextDocument, symbol?: SymbolNode, inspection?: Inspection) => {
         InspectionCache.ignoreInspections(document, symbol, inspection);
-        sendEvent('java.copilot.inspection.inspectionIgnored', inspection ? { id: inspection.id, problem: inspection.problem.description, solution: inspection.solution } : {});
+        sendEvent('java.copilot.inspection.inspectionIgnored', inspection ? { inspectionId: inspection.id, problem: inspection.problem.description, solution: inspection.solution } : {});
         renderer.rerender(document);
     });
 }
