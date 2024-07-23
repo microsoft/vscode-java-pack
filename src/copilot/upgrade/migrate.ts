@@ -104,16 +104,15 @@ export class MigrationJob {
                 this.tasks.pop();
             } else {
                 stream.markdown(`Failed to run the migration, below is the stacks: \n`);
-                stream.markdown(`\`\`\`\n${result.errorStack}\n\`\`\``);
+                stream.markdown(`\`\`\`\n${result.errorStack || result.output}\n\`\`\``);
                 // summary error provide users solution with text
                 stream.progress('analyzing exception with AI...');
 
                 try {
-                    const analysis = await this.analyzeFailureTask(result.errorStack ?? '', token);
+                    const analysis = await this.analyzeFailureTask(result.errorStack || result.output || '', token);
                     stream.markdown(`${analysis.description}`);
                     return {
                         ...result,
-                        errorStack: result.errorStack,
                         errorAnalysis: analysis
                     };
                 } catch (err: any) {

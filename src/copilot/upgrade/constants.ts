@@ -311,6 +311,7 @@ export interface MigrationTaskResult {
     success: boolean;
     errorStack?: string;
     errorAnalysis?: ErrorAnalysis;
+    output?: string;
 }
 
 export interface MigrateChatResult extends vscode.ChatResult {
