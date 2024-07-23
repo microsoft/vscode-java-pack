@@ -71,6 +71,19 @@
     "onWalkthrough:javaWelcome"
   ],
   "contributes": {
+    "chatParticipants": [
+      {
+        "name": "GitHubCopilotforJava",
+        "id": "GitHubCopilotforJava",
+        "description": "An ai based java assist to help you migrate your project",
+        "commands": [
+          {
+            "name": "upgrade",
+            "description": "Upgrade your project language level/dependencies"
+          }
+        ]
+      }
+    ],
     "javaShortcuts": [
       {
         "title": "$(project) Open Project Settings",

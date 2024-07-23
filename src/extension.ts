@@ -26,6 +26,7 @@ import { ProjectSettingsViewSerializer } from "./project-settings/projectSetting
 import { activateCopilotInspecting } from "./copilot/inspect";
 import { fixedInstrumentSimpleOperation, sendEvent } from "./copilot/utils";
 import { logger } from "./copilot/logger";
+import { activateChatProviders } from "./copilot/upgrade";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -88,6 +89,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   logger.info("Installed");
   logger.info("activating Java copilot.");
   await fixedInstrumentSimpleOperation('java.copilot.inspecting.activate', activateCopilotInspecting)(context);
+  void activateChatProviders(context);
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
