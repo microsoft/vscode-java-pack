@@ -116,6 +116,15 @@
             "when": "!java:projectManagerActivated || workspaceFolderCount == 0"
           },
           {
+            "id": "java.codeActions",
+            "title": "View code actions and source actions",
+            "description": "%walkthrough.java.codeActions%",
+            "media": {
+              "svg": "walkthrough/codeAction.svg",
+              "altText": "Code actions and source actions"
+            }
+          },
+          {
             "id": "java.debugAndTest",
             "title": "Launch, debug and test",
             "description": "%walkthrough.java.debugAndTest%",
