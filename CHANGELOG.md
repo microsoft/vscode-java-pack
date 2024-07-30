@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.28.0
+* enhancement - Improve the help center content by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1363
+* enhancement - Add help center into shortcuts by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1365
+* enhancement - Add code action section into walkthrough by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1372
+* fix - Jump to formatter page when it's opened by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1362
+* build - Bump braces from 3.0.2 to 3.0.3 by @dependabot in https://github.com/microsoft/vscode-java-pack/pull/1355
+* build - Update telemetry wrapper by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1367
+
 ## 0.27.0
 ### Added
 - Add new project settings page, where users can edit project classpath, compiler settings, Maven settings and more. The page can be accessed by clicking the Java status bar item and selecting `Open Project Settings`. Or trigger the command `Java: Open Project Settings` from the command palette.
