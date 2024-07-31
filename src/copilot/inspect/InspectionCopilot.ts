@@ -13,7 +13,7 @@ import { logger } from "../logger";
 
 export default class InspectionCopilot extends Copilot {
     public static readonly DEFAULT_MODEL = { family: 'gpt-4' };
-    public static readonly FORMAT_CODE = (context: JavaProjectContext, code: string) => `
+    private static readonly FORMAT_CODE = (context: JavaProjectContext, code: string) => `
     Current project uses "Java ${context.javaVersion}". please suggest improvements compatible with "Java ${context.javaVersion}" for code below.
     - Only suggest features that are available in "Java ${context.javaVersion}".
     - do not format the reponse, and do not respond markdown    
@@ -21,7 +21,7 @@ export default class InspectionCopilot extends Copilot {
     ${code}
     \`\`\`
     `;
-    public static readonly SYSTEM_MESSAGE = `
+    private static readonly SYSTEM_MESSAGE = `
     **You are expert at Java. You are tasked to promote new syntax and new built-in APIs of Java.** 
     Please analyze the given code to identify code that can be enhanced by using new syntax or new built-in APIs 
     of Java, and give suggestions. Keep these rules in mind:
@@ -55,7 +55,7 @@ export default class InspectionCopilot extends Copilot {
     - Avoid wrapping the whole response in triple backticks.
     - Always conclude your response with "//${Copilot.DEFAULT_END_MARK}" to indicate the end of your response.
     `;
-    public static readonly EXAMPLE_USER_MESSAGE = this.FORMAT_CODE({ javaVersion: '17' },
+    private static readonly EXAMPLE_USER_MESSAGE = this.FORMAT_CODE({ javaVersion: '17' },
         `/* 3 */ public class EmployeePojo implements Employee {
     /* 4 */ 
     /* 5 */     private final String name;
@@ -80,7 +80,7 @@ export default class InspectionCopilot extends Copilot {
     /* 24 */         return name;
     /* 25 */     }
     /* 26 */ }`);
-    public static readonly EXAMPLE_ASSISTANT_MESSAGE =
+    private static readonly EXAMPLE_ASSISTANT_MESSAGE =
         `[
         {
             "problem": {
@@ -96,11 +96,17 @@ export default class InspectionCopilot extends Copilot {
 
     private readonly inspecting: Set<TextDocument> = new Set<TextDocument>();
 
+    public static readonly defaultConfig = {
+        systemMessage: InspectionCopilot.SYSTEM_MESSAGE,
+        exampleAssistantMessage: InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE
+    };
+
     public constructor(
         model: LanguageModelChat,
+        private readonly config: Config = InspectionCopilot.defaultConfig,
         private readonly maxConcurrencies: number = InspectionCopilot.DEFAULT_MAX_CONCURRENCIES,
     ) {
-        super(model, [LanguageModelChatMessage.User(InspectionCopilot.SYSTEM_MESSAGE)]);
+        super(model, [LanguageModelChatMessage.User(config.systemMessage)]);
     }
 
     public get busy(): boolean {
@@ -332,7 +338,7 @@ export default class InspectionCopilot extends Copilot {
         });
         const rawResponse = await this.send([
             LanguageModelChatMessage.User(InspectionCopilot.EXAMPLE_USER_MESSAGE),
-            LanguageModelChatMessage.Assistant(InspectionCopilot.EXAMPLE_ASSISTANT_MESSAGE),
+            LanguageModelChatMessage.Assistant(this.config.exampleAssistantMessage),
             LanguageModelChatMessage.User(InspectionCopilot.FORMAT_CODE(context, linedDocumentCode))
         ], Copilot.DEFAULT_MODEL_OPTIONS, token);
         const inspections = extractInspections(rawResponse, documentCodeLines);
@@ -348,4 +354,9 @@ export default class InspectionCopilot extends Copilot {
 
         return inspections;
     }
+}
+
+export interface Config{
+    systemMessage: string;
+    exampleAssistantMessage: string;
 }
