@@ -18,6 +18,9 @@ By installing Extension Pack for Java, the following extensions are installed:
 - [📦 Maven for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-maven)
     - Project Scaffolding
     - Custom Goals
+- [📦 Gradle for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-gradle)
+    - View Gradle tasks and project dependencies
+    - Gradle file authoring
 - [📦 Project Manager for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
     - Manage Java projects, referenced libraries, resource files, packages, classes, and class members
 - [📦 Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode)
