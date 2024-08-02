@@ -56,6 +56,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
                 break;
             case "classpath.onWillAddNewJdk":
                 await this.addNewJdk(this.currentProjectRoot);
+                break;
             case "classpath.onWillSelectLibraries":
                 await this.selectLibraries(this.currentProjectRoot);
                 break;
