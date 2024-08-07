@@ -26,6 +26,9 @@
     "Snippets",
     "Extension Packs"
   ],
+  "enabledApiProposals": [
+    "chatVariableResolver"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Microsoft/vscode-java-pack"
