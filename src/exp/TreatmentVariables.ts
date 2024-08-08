@@ -7,4 +7,5 @@ export class TreatmentVariables {
     public static readonly JavaWalkthroughEnabled = "gettingStarted.overrideCategory.vscjava.vscode-java-pack.javaWelcome.when";
     public static readonly JavaCompletionSampling = "javaCompletionSampling";
     public static readonly JavaCopilotInspectionShowJavaVersion = "java.copilot.inspection.show_feature_version";
+    public static readonly JavaCopilotEnableContextVariable = "java.copilot.context.enable_context_variable";
 }
