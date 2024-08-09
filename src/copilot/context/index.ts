@@ -6,6 +6,10 @@ import { TreatmentVariables } from "../../exp/TreatmentVariables";
 import { getExpService } from "../../exp";
 
 export async function activateChatVariable(context: vscode.ExtensionContext): Promise<void> {
+    if(!vscode?.chat?.registerChatVariableResolver) {
+        sendEvent("java.copilot.context.chatVariable.versionNotSupported");
+        return
+    }
     try {
         const enableContextVariable = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCopilotEnableContextVariable, true /*checkCache*/)
         if (!enableContextVariable) {
