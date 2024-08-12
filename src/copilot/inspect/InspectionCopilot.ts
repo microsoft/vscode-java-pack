@@ -43,12 +43,12 @@ export default class InspectionCopilot extends Copilot {
       [{
         "problem": {
           "position": {
-            "startLine": $start_line_number, // start line number of the rewritable code block
-            "endLine": $end_line_number, // end line number of the rewritable code block
+            "startLine": "start line number of the rewritable code block",
+            "endLine": "end line number of the rewritable code block"
           },
-          "description": "...", // Brief description of the issue in the code, preferably in less than 10 words, as short as possible
+          "description": "Brief description of the issue in the code, preferably in less than 10 words, as short as possible"
         },
-        "solution": "Use $name_of_the_new_syntax_or_feature ($Java_Version_this_feature_introduced)", // Brief description of the solution, including the name of the used new builtin feature and the Java versoin since which this new feature is introduced, preferably in less than 10 words, as short as possible
+        "solution": "Brief description of the solution in format 'Use $name_of_the_new_syntax_or_feature ($Java_Version_this_feature_introduced)', e.g. 'Use enhanced switch expression (Java 17)', as short as possible" 
       }]
       \`\`\`
     - Reply an empty array if no suggestions can be made.
@@ -85,7 +85,7 @@ export default class InspectionCopilot extends Copilot {
         {
             "problem": {
                 "position": { "startLine": 13, "endLine": 19 },
-                "description": "Using multiple if-else",
+                "description": "Using multiple if-else"
             },
             "solution": "Use enhanced switch expression (Java 17)"
         }
