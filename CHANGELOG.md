@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.29.0
+* enhancement - Add gradle extension into pack by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1374
+* fix - Dialog pops up twice when adding new jdk by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1378
+
 ## 0.28.0
 * enhancement - Improve the help center content by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1363
 * enhancement - Add help center into shortcuts by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1365
