@@ -87,10 +87,11 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   }
   sendEvent("java.copilot.installed", {});
   logger.info("Installed");
+  logger.info("activating chat variable.");
+  await fixedInstrumentSimpleOperation('java.copilot.context.chatVariable.activate', activateChatVariable)(context);
   logger.info("activating Java copilot.");
   fixedInstrumentSimpleOperation('java.copilot.inspecting.activate', activateCopilotInspecting)(context);
   await fixedInstrumentSimpleOperation('java.copilot.inspecting.activate', activateCopilotInspecting)(context);
-  await fixedInstrumentSimpleOperation('java.copilot.context.chatVariable.activate', activateChatVariable)(context);
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
