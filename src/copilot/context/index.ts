@@ -2,8 +2,21 @@ import { JavaProject, JavaProjectContext } from "./JavaProject";
 import * as vscode from "vscode";
 import { logger } from "../logger";
 import { fixedInstrumentSimpleOperation, sendEvent } from "../utils";
+import { TreatmentVariables } from "../../exp/TreatmentVariables";
+import { getExpService } from "../../exp";
 
 export async function activateChatVariable(context: vscode.ExtensionContext): Promise<void> {
+    try {
+        const enableContextVariable = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCopilotEnableContextVariable, true /*checkCache*/)
+        if (!enableContextVariable) {
+            sendEvent("java.copilot.exp.context.context_variable_disabled");
+            return;
+        }
+        sendEvent("java.copilot.exp.context.context_variable_enabled");
+    } catch (e) {
+        sendEvent("java.copilot.exp.context.loadTreatmentVariableFailed");
+        return;
+    }
     const subscription = vscode.chat.registerChatVariableResolver("context_for_java", "context_for_java", "Context info of current Java Project", "Java Context", false, {
         async resolve(_name: string, _context: vscode.ChatVariableContext, _token: vscode.CancellationToken): Promise<vscode.ChatVariableValue[]> {
             return fixedInstrumentSimpleOperation("java.copilot.context.resolve", async (_name: string, _context: vscode.ChatVariableContext, _token: vscode.CancellationToken) => {

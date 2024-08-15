@@ -38,9 +38,9 @@ export async function activateCopilotInspecting(context: ExtensionContext): Prom
     try {
         const showJavaVersion = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCopilotInspectionShowJavaVersion, true /*checkCache*/)
         config = showJavaVersion === false ? ControlledInspectionCopilot.config : InspectionCopilot.defaultConfig;
-        sendEvent("java.copilot.inspection.exp.showJavaVersion", { showJavaVersion });
+        sendEvent("java.copilot.exp.inspection.showJavaVersion", { showJavaVersion });
     } catch (e) {
-        sendEvent("java.copilot.inspection.exp.loadTreatmentVariableFailed");
+        sendEvent("java.copilot.exp.inspection.loadTreatmentVariableFailed");
     }
     const copilot = new InspectionCopilot(model, config);
     logger.info('Activating Java Copilot features...');
