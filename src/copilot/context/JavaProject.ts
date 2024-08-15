@@ -258,14 +258,15 @@ export namespace JavaProjectContext {
     export function toString(context: JavaProjectContext): string {
         let contextStr = "This is a Java project of the following natures:\n";
         if (context.javaVersion) {
-            contextStr += ` - Using Java ${context.javaVersion}. So I would prefer solutions using the new and more recent features introduced in Java ${context.javaVersion}.\n`;
+            contextStr += ` - Using Java ${context.javaVersion}. I would prefer solutions using the new and more recent features introduced in Java ${context.javaVersion}.\n`;
         }
         if ((context.buildTools?.length ?? 0) > 0) {
             contextStr += ` - Using ${context.buildTools?.join(",")} as build tools.\n`;
         }
         if ((context.dependencies?.length ?? 0) > 0) {
-            contextStr += ` - Dependencies: \n`;
+            contextStr += ` - Declared dependencies: \n`;
             context.dependencies?.forEach(dep => contextStr += `   - ${Dependency.dependecyToString(dep)}\n`);
+            contextStr += `   (I would prefer solutions provided by these dependency libs. Don't ask me to add these already declared dependencies)\n`;
         }
         if (context.layout) {
             contextStr +=
