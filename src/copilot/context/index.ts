@@ -1,24 +1,16 @@
 import { JavaProject, JavaProjectContext } from "./JavaProject";
 import * as vscode from "vscode";
 import { logger } from "../logger";
-import { fixedInstrumentSimpleOperation, sendEvent } from "../utils";
+import { fixedInstrumentSimpleOperation, isInTreatmentGroup, sendEvent } from "../utils";
 import { TreatmentVariables } from "../../exp/TreatmentVariables";
-import { getExpService } from "../../exp";
 
 export async function activateChatVariable(context: vscode.ExtensionContext): Promise<void> {
-    if(!vscode?.chat?.registerChatVariableResolver) {
+    if (!vscode?.chat?.registerChatVariableResolver) {
         sendEvent("java.copilot.context.chatVariable.versionNotSupported");
         return
     }
-    try {
-        const enableContextVariable = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCopilotEnableContextVariable, true /*checkCache*/)
-        if (!enableContextVariable) {
-            sendEvent("java.copilot.exp.context.chatVariableDisabled");
-            return;
-        }
-        sendEvent("java.copilot.exp.context.chatVariableEnabled");
-    } catch (e) {
-        sendEvent("java.copilot.exp.context.loadTreatmentVariableFailed");
+    const enableChatVariable = await isInTreatmentGroup(TreatmentVariables.JavaCopilotEnableContextVariable);
+    if (!enableChatVariable) {
         return;
     }
     const subscription = vscode.chat.registerChatVariableResolver("context_for_java", "context_for_java", "Context info of current Java Project", "Java Context", false, {
