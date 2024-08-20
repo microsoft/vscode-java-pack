@@ -20,12 +20,11 @@ export async function activateCopilotInspecting(context: ExtensionContext): Prom
     const llmModels = (await lm?.selectChatModels?.()) ?? [];
     sendEvent("java.copilot.lmReady", { availableLlmModels: llmModels.map(m => m.name).join(",") });
 
+    logger.info('Waiting for dependent extensions to be ready...');
     await waitUntilExtensionsInstalled(DEPENDENT_EXTENSIONS);
     sendEvent("java.copilot.dependentExtensionsInstalled", {});
-
     await waitUntilExtensionsActivated(DEPENDENT_EXTENSIONS);
     sendEvent("java.copilot.dependentExtensionsActivated", {});
-
     const model = (await lm.selectChatModels(InspectionCopilot.DEFAULT_MODEL))?.[0];
     if (!model) {
         const models = await lm.selectChatModels();
