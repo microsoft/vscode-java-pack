@@ -19,12 +19,8 @@ export async function activateCopilotInspecting(context: ExtensionContext): Prom
     logger.info("vscode.lm is ready.");
     const llmModels = (await lm?.selectChatModels?.()) ?? [];
     sendEvent("java.copilot.lmReady", { availableLlmModels: llmModels.map(m => m.name).join(",") });
-    const requiredExtensionInstalled = checkRequiredExtensionsInstalled(DEPENDENT_EXTENSIONS);
-    if (!requiredExtensionInstalled) {
-        logger.error(`Dependent extensions [${DEPENDENT_EXTENSIONS.join(', ')}] are not installed. Please make sure you have installed them before using Java Copilot.`);
-        sendEvent("java.copilot.dependentExtensionsNotInstalled", { });
-        return;
-    }
+
+    await waitUntilExtensionsInstalled(DEPENDENT_EXTENSIONS);
     sendEvent("java.copilot.dependentExtensionsInstalled", {});
 
     await waitUntilExtensionsActivated(DEPENDENT_EXTENSIONS);
@@ -82,12 +78,30 @@ async function rewrite(document: TextDocument, range: Range | Selection, _contex
     return [action];
 }
 
+async function waitUntilExtensionsInstalled(extensionIds: string[]) {
+    const start = Date.now();
+    return new Promise<void>((resolve) => {
+        const notInstalledExtensionIds = extensionIds.filter(id => !extensions.getExtension(id));
+        if (notInstalledExtensionIds.length == 0) {
+            logger.info(`All dependent extensions [${extensionIds.join(', ')}] are installed.`);
+            return resolve();
+        }
+        sendEvent('java.copilot.dependentExtensionsNotInstalled', { notInstalledExtensionIds: notInstalledExtensionIds.join(',') });
+        logger.info(`Dependent extensions [${notInstalledExtensionIds.join(', ')}] are not installed, waiting...`);
+
+        const disposable = extensions.onDidChange(() => {
+            if (extensionIds.every(id => extensions.getExtension(id))) {
+                disposable.dispose();
+                sendEvent('java.copilot.waitDependentExtensionsInstalled', { waitedTime: Date.now() - start, notInstalledExtensionIds: notInstalledExtensionIds.join(',') });
+                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be installed.`);
+                resolve();
+            }
+        });
+    });
+}
+
 async function waitUntilExtensionsActivated(extensionIds: string[]) {
     return Promise.all(extensionIds.map(id => {
         return extensions.getExtension(id)?.activate();
     }));
-}
-
-function checkRequiredExtensionsInstalled(extensionIds: string[]): boolean {
-    return extensionIds.filter(id => !extensions.getExtension(id)).length == 0;
 }

@@ -87,7 +87,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   sendEvent("java.copilot.installed", {});
   logger.info("Installed");
   logger.info("activating Java copilot.");
-  await fixedInstrumentSimpleOperation('java.copilot.inspecting.activate', activateCopilotInspecting)(context);
+  fixedInstrumentSimpleOperation('java.copilot.inspecting.activate', activateCopilotInspecting)(context);
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
