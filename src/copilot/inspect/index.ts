@@ -19,11 +19,17 @@ export async function activateCopilotInspecting(context: ExtensionContext): Prom
     logger.info("vscode.lm is ready.");
     const llmModels = (await lm?.selectChatModels?.()) ?? [];
     sendEvent("java.copilot.lmReady", { availableLlmModels: llmModels.map(m => m.name).join(",") });
-    logger.info('Waiting for dependent extensions to be ready...');
-    await waitUntilExtensionsInstalled(DEPENDENT_EXTENSIONS);
+    const requiredExtensionInstalled = checkRequiredExtensionsInstalled(DEPENDENT_EXTENSIONS);
+    if (!requiredExtensionInstalled) {
+        logger.error(`Dependent extensions [${DEPENDENT_EXTENSIONS.join(', ')}] are not installed. Please make sure you have installed them before using Java Copilot.`);
+        sendEvent("java.copilot.dependentExtensionsNotInstalled", { });
+        return;
+    }
     sendEvent("java.copilot.dependentExtensionsInstalled", {});
+
     await waitUntilExtensionsActivated(DEPENDENT_EXTENSIONS);
     sendEvent("java.copilot.dependentExtensionsActivated", {});
+
     const model = (await lm.selectChatModels(InspectionCopilot.DEFAULT_MODEL))?.[0];
     if (!model) {
         const models = await lm.selectChatModels();
@@ -76,45 +82,12 @@ async function rewrite(document: TextDocument, range: Range | Selection, _contex
     return [action];
 }
 
-async function waitUntilExtensionsActivated(extensionIds: string[], interval: number = 1500) {
-    const start = Date.now();
-    return new Promise<void>((resolve) => {
-        const notActivatedExtensionIds = extensionIds.filter(id => !extensions.getExtension(id)?.isActive);
-        if (notActivatedExtensionIds.length == 0) {
-            logger.info(`All dependent extensions [${extensionIds.join(', ')}] are activated.`);
-            return resolve();
-        }
-        sendEvent('java.copilot.dependentExtensionsNotActivated', { notActivatedExtensionIds: notActivatedExtensionIds.join(',') });
-        logger.info(`Dependent extensions [${notActivatedExtensionIds.join(', ')}] are not activated, waiting...`);
-        const id = setInterval(() => {
-            if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
-                clearInterval(id);
-                sendEvent('java.copilot.waitDependentExtensionsActivated', { waitedTime: Date.now() - start, notActivatedExtensionIds: notActivatedExtensionIds.join(',') });
-                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be activated.`);
-                resolve();
-            }
-        }, interval);
-    });
+async function waitUntilExtensionsActivated(extensionIds: string[]) {
+    return Promise.all(extensionIds.map(id => {
+        return extensions.getExtension(id)?.activate();
+    }));
 }
 
-async function waitUntilExtensionsInstalled(extensionIds: string[]) {
-    const start = Date.now();
-    return new Promise<void>((resolve) => {
-        const notInstalledExtensionIds = extensionIds.filter(id => !extensions.getExtension(id));
-        if (notInstalledExtensionIds.length == 0) {
-            logger.info(`All dependent extensions [${extensionIds.join(', ')}] are installed.`);
-            return resolve();
-        }
-        sendEvent('java.copilot.dependentExtensionsNotInstalled', { notInstalledExtensionIds: notInstalledExtensionIds.join(',') });
-        logger.info(`Dependent extensions [${notInstalledExtensionIds.join(', ')}] are not installed, waiting...`);
-
-        const disposable = extensions.onDidChange(() => {
-            if (extensionIds.every(id => extensions.getExtension(id))) {
-                disposable.dispose();
-                sendEvent('java.copilot.waitDependentExtensionsInstalled', { waitedTime: Date.now() - start, notInstalledExtensionIds: notInstalledExtensionIds.join(',') });
-                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be installed.`);
-                resolve();
-            }
-        });
-    });
+function checkRequiredExtensionsInstalled(extensionIds: string[]): boolean {
+    return extensionIds.filter(id => !extensions.getExtension(id)).length == 0;
 }
