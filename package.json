@@ -27,7 +27,7 @@
     "Extension Packs"
   ],
   "enabledApiProposals": [
-    "chatVariableResolver"
+    "lmTools"
   ],
   "repository": {
     "type": "git",
@@ -71,7 +71,8 @@
     "onCommand:java.projectSettings",
     "onWebviewPanel:java.projectSettings",
     "onCommand:java.formatterSettings",
-    "onWalkthrough:javaWelcome"
+    "onWalkthrough:javaWelcome",
+    "onLanguageModelTool:vscodeJavaContextTool"
   ],
   "contributes": {
     "javaShortcuts": [
@@ -359,6 +360,18 @@
       {
         "command": "java.welcome",
         "key": "shift+f1"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "canBeInvokedManually": true,
+        "displayName": "Context of Java",
+        "icon": "$(coffee)",
+        "id": "vscodeJavaContextTool",
+        "name": "ContextOfJava",
+        "userDescription": "Provide context information for Java projects.",
+        "modelDescription": "Provide context information for current Java project such as its Java version, dependencies and build tool name.",
+        "parametersSchema": {}
       }
     ]
   },

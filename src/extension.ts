@@ -26,7 +26,7 @@ import { ProjectSettingsViewSerializer } from "./project-settings/projectSetting
 import { activateCopilotInspecting } from "./copilot/inspect";
 import { fixedInstrumentSimpleOperation, sendEvent } from "./copilot/utils";
 import { logger } from "./copilot/logger";
-import { activateChatVariable } from "./copilot/context";
+import { activateLmTools } from "./copilot/context";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -88,7 +88,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   sendEvent("java.copilot.installed", {});
   logger.info("Installed");
   logger.info("activating chat variable.");
-  await fixedInstrumentSimpleOperation('java.copilot.context.chatVariable.activate', activateChatVariable)(context);
+  await fixedInstrumentSimpleOperation('java.copilot.lmTools.activate', activateLmTools)(context);
   logger.info("activating Java copilot.");
   await fixedInstrumentSimpleOperation('java.copilot.inspecting.activate', activateCopilotInspecting)(context);
 }
