@@ -9,9 +9,12 @@ export class JavaDocument {
     public static async from(document: TextDocument): Promise<JavaDocument> {
         return new JavaDocument(document);
     }
-    public async collectContext(options?: { [P in keyof JavaDocumentContext]?: boolean }): Promise<JavaDocumentContext> {
+    public async collectContext(options?: { [P in keyof JavaDocumentContext]?: boolean }): Promise<JavaDocumentContext | undefined> {
         logger.info('collecting document context info...');
         const project = await JavaProject.ofDocument(this.document);
+        if (!project) {
+            return undefined;
+        }
         const projectContext = await project.collectContext(options);
         const defaultExclude = Object.values(options ?? {}).every(v => v === true);
         const include = (opt: boolean | undefined) => (defaultExclude && opt === true) || (!defaultExclude && opt !== false);

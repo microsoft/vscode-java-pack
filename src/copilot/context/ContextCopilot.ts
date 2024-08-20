@@ -66,14 +66,14 @@ export default class ContextCopilot extends Copilot {
 
     public async collectContext(token: vscode.CancellationToken, document?: vscode.TextDocument): Promise<JavaProjectContext> {
         document = document ?? vscode.window.activeTextEditor?.document ?? vscode.workspace.textDocuments[0];
-        if (document) {
-            const project = await JavaProject.ofDocument(document);
-            const layout = await project.getLayout();
-            const rawResponse = await this.send([
-                vscode.LanguageModelChatMessage.User(ContextCopilot.FORMAT_LAYOUT(layout)),
-            ], Copilot.DEFAULT_MODEL_OPTIONS, token);
-            return JSON.parse(rawResponse);
+        const project = await JavaProject.ofDocument(document);
+        if (!project) {
+            return {};
         }
-        return {};
+        const layout = await project.getLayout();
+        const rawResponse = await this.send([
+            vscode.LanguageModelChatMessage.User(ContextCopilot.FORMAT_LAYOUT(layout)),
+        ], Copilot.DEFAULT_MODEL_OPTIONS, token);
+        return JSON.parse(rawResponse);
     }
 }
