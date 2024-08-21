@@ -19,6 +19,7 @@ export async function activateCopilotInspecting(context: ExtensionContext): Prom
     logger.info("vscode.lm is ready.");
     const llmModels = (await lm?.selectChatModels?.()) ?? [];
     sendEvent("java.copilot.lmReady", { availableLlmModels: llmModels.map(m => m.name).join(",") });
+
     logger.info('Waiting for dependent extensions to be ready...');
     await waitUntilExtensionsInstalled(DEPENDENT_EXTENSIONS);
     sendEvent("java.copilot.dependentExtensionsInstalled", {});
@@ -76,27 +77,6 @@ async function rewrite(document: TextDocument, range: Range | Selection, _contex
     return [action];
 }
 
-async function waitUntilExtensionsActivated(extensionIds: string[], interval: number = 1500) {
-    const start = Date.now();
-    return new Promise<void>((resolve) => {
-        const notActivatedExtensionIds = extensionIds.filter(id => !extensions.getExtension(id)?.isActive);
-        if (notActivatedExtensionIds.length == 0) {
-            logger.info(`All dependent extensions [${extensionIds.join(', ')}] are activated.`);
-            return resolve();
-        }
-        sendEvent('java.copilot.dependentExtensionsNotActivated', { notActivatedExtensionIds: notActivatedExtensionIds.join(',') });
-        logger.info(`Dependent extensions [${notActivatedExtensionIds.join(', ')}] are not activated, waiting...`);
-        const id = setInterval(() => {
-            if (extensionIds.every(id => extensions.getExtension(id)?.isActive)) {
-                clearInterval(id);
-                sendEvent('java.copilot.waitDependentExtensionsActivated', { waitedTime: Date.now() - start, notActivatedExtensionIds: notActivatedExtensionIds.join(',') });
-                logger.info(`waited for ${Date.now() - start}ms for all dependent extensions [${extensionIds.join(', ')}] to be activated.`);
-                resolve();
-            }
-        }, interval);
-    });
-}
-
 async function waitUntilExtensionsInstalled(extensionIds: string[]) {
     const start = Date.now();
     return new Promise<void>((resolve) => {
@@ -117,4 +97,10 @@ async function waitUntilExtensionsInstalled(extensionIds: string[]) {
             }
         });
     });
+}
+
+async function waitUntilExtensionsActivated(extensionIds: string[]) {
+    return Promise.all(extensionIds.map(id => {
+        return extensions.getExtension(id)?.activate();
+    }));
 }
