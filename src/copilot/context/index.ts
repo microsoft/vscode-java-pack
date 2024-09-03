@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import { logger } from "../logger";
 import { isInTreatmentGroup, sendEvent } from "../utils";
 import { TreatmentVariables } from "../../exp/TreatmentVariables";
-import { JavaContextProvider } from "./JavaLanguageModelTool";
+import { JavaContextProvider } from "./JavaContextProvider";
 
 export async function activateLmTools(context: vscode.ExtensionContext): Promise<void> {
     if (!vscode?.lm?.registerTool) {
