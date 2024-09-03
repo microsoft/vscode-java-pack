@@ -9,8 +9,8 @@ import { JavaProjectContextResult } from "./results/JavaProjectContextResult";
 import { EmptyContextResult } from "./results/EmptyContextResult";
 
 export class JavaContextProvider implements vscode.LanguageModelTool {
-    invoke(_parameters: any, _token: vscode.CancellationToken): Thenable<vscode.LanguageModelToolResult> {
-        return fixedInstrumentSimpleOperation("java.copilot.vscodeJavaContextTool.invoke", async (_name: string, _context: vscode.ChatVariableContext, _token: vscode.CancellationToken) => {
+    invoke(_options: vscode.LanguageModelToolInvocationOptions, _token: vscode.CancellationToken): Thenable<vscode.LanguageModelToolResult> {
+        return fixedInstrumentSimpleOperation("java.copilot.vscodeJavaContextTool.invoke", async () => {
             logger.info(`Invoking LM Tool "vscodeJavaContextTool"...`);
             const document = vscode.window.activeTextEditor?.document ?? vscode.workspace.textDocuments[0];
             const project = await JavaProject.ofDocument(document);
@@ -33,6 +33,6 @@ export class JavaContextProvider implements vscode.LanguageModelTool {
                 buildTools: context?.buildTools,
             });
             return result;
-        })(_parameters, _token);
+        })(_options, _token);
     }
 }

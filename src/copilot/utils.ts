@@ -93,7 +93,6 @@ export async function fileExists(uri: Uri): Promise<boolean> {
     return workspace.fs.stat(uri).then(() => true, () => false);
 }
 
-
 export async function isInTreatmentGroup(variable: string, dft: boolean = true): Promise<boolean> {
     try {
         const value = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, variable, true /*checkCache*/)

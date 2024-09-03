@@ -33,9 +33,7 @@ export async function activateCopilotInspecting(context: ExtensionContext): Prom
     }
     sendEvent("java.copilot.suitableModelSelected", { model: model.name });
     logger.info('Initializing Java Inspection Copilot...');
-    const showJavaVersion = await isInTreatmentGroup(TreatmentVariables.JavaCopilotInspectionShowJavaVersion);
-    const config = showJavaVersion ? InspectionCopilot.defaultConfig : ControlledInspectionCopilot.config;
-    const copilot = new InspectionCopilot(model, config);
+    const copilot = new InspectionCopilot(model, InspectionCopilot.defaultConfig);
     logger.info('Activating Java Copilot features...');
     doActivate(context, copilot);
     sendEvent("java.copilot.activated", {});
