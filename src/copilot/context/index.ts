@@ -1,37 +1,22 @@
-import { JavaProject, JavaProjectContext } from "./JavaProject";
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 import * as vscode from "vscode";
 import { logger } from "../logger";
-import { fixedInstrumentSimpleOperation, sendEvent } from "../utils";
+import { isInTreatmentGroup, sendEvent } from "../utils";
+import { TreatmentVariables } from "../../exp/TreatmentVariables";
+import { JavaContextProvider } from "./JavaContextProvider";
 
-export async function activateChatVariable(context: vscode.ExtensionContext): Promise<void> {
-    const subscription = vscode.chat.registerChatVariableResolver("context_for_java", "context_for_java", "Context info of current Java Project", "Java Context", false, {
-        async resolve(_name: string, _context: vscode.ChatVariableContext, _token: vscode.CancellationToken): Promise<vscode.ChatVariableValue[]> {
-            return fixedInstrumentSimpleOperation("java.copilot.context.resolve", async (_name: string, _context: vscode.ChatVariableContext, _token: vscode.CancellationToken) => {
-                sendEvent("java.copilot.context.resolving", {
-                    variableName: _name,
-                });
-                logger.info(`Resolving chat variable "context_for_java"...`);
-                const document = vscode.window.activeTextEditor?.document ?? vscode.workspace.textDocuments[0];
-                const project = await JavaProject.ofDocument(document!);
-                let context: JavaProjectContext | undefined = await project.collectContext({
-                    layout: false
-                });
-                const contextStr: string = JavaProjectContext.toString(context);
-                logger.info(`Resolved chat variable "context_for_java"`);
-                logger.debug(`Context: \n${contextStr}`);
-                sendEvent("java.copilot.context.resolved", {
-                    variableName: _name,
-                    appType: context?.appType,
-                    hosts: context?.hosts,
-                    javaVersion: context?.javaVersion,
-                    dependencies: context?.dependencies?.length,
-                    buildTools: context?.buildTools,
-                });
-                return [{ level: vscode.ChatVariableLevel.Full, value: contextStr, description: '' }];
-            })(_name, _context, _token);
-        }
-    });
-    context.subscriptions.push(subscription);
-    logger.info('Chat variable "context_for_java" registered.');
-    sendEvent("java.copilot.context.activated", {});
+export async function activateLmTools(context: vscode.ExtensionContext): Promise<void> {
+    if (!vscode?.lm?.registerTool) {
+        sendEvent("java.copilot.lmTools.versionNotSupported");
+        return;
+    }
+    const enableChatVariable = await isInTreatmentGroup(TreatmentVariables.JavaCopilotEnableContextVariable);
+    if (!enableChatVariable) {
+        return;
+    }
+
+    context.subscriptions.push(vscode.lm.registerTool("vscodeJavaContextTool", new JavaContextProvider()));
+    logger.info('LM Tool "vscodeJavaContextTool" registered.');
 }

@@ -26,6 +26,9 @@
     "Snippets",
     "Extension Packs"
   ],
+  "enabledApiProposals": [
+    "lmTools"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Microsoft/vscode-java-pack"
@@ -68,7 +71,8 @@
     "onCommand:java.projectSettings",
     "onWebviewPanel:java.projectSettings",
     "onCommand:java.formatterSettings",
-    "onWalkthrough:javaWelcome"
+    "onWalkthrough:javaWelcome",
+    "onLanguageModelTool:vscodeJavaContextTool"
   ],
   "contributes": {
     "javaShortcuts": [
@@ -356,6 +360,18 @@
       {
         "command": "java.welcome",
         "key": "shift+f1"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "canBeInvokedManually": true,
+        "displayName": "Context for Java",
+        "icon": "$(coffee)",
+        "id": "vscodeJavaContextTool",
+        "name": "contextForJava",
+        "userDescription": "Provide context information for Java projects.",
+        "modelDescription": "Provide context information for current Java project such as its Java version, dependencies and build tool name.",
+        "parametersSchema": {}
       }
     ]
   },

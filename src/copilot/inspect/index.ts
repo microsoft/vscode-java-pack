@@ -3,10 +3,9 @@ import { COMMAND_INSPECT_RANGE, registerCommands } from "./commands";
 import { DocumentRenderer } from "./DocumentRenderer";
 import { fixDiagnostic } from "./render/DiagnosticRenderer";
 import InspectionCache from "./InspectionCache";
-import { isNewerThan, sendEvent } from "../utils";
-import InspectionCopilot, { Config } from "./InspectionCopilot";
+import { isInTreatmentGroup, isNewerThan, sendEvent } from "../utils";
+import InspectionCopilot from "./InspectionCopilot";
 import { logger } from "../logger";
-import { getExpService } from "../../exp";
 import { TreatmentVariables } from "../../exp/TreatmentVariables";
 import ControlledInspectionCopilot from "./exp/ControlledInspectionCopilot";
 
@@ -34,15 +33,7 @@ export async function activateCopilotInspecting(context: ExtensionContext): Prom
     }
     sendEvent("java.copilot.suitableModelSelected", { model: model.name });
     logger.info('Initializing Java Inspection Copilot...');
-    let config: Config = InspectionCopilot.defaultConfig;
-    try {
-        const showJavaVersion = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.JavaCopilotInspectionShowJavaVersion, true /*checkCache*/)
-        config = showJavaVersion === false ? ControlledInspectionCopilot.config : InspectionCopilot.defaultConfig;
-        sendEvent("java.copilot.inspection.exp.showJavaVersion", { showJavaVersion });
-    } catch (e) {
-        sendEvent("java.copilot.inspection.exp.loadTreatmentVariableFailed");
-    }
-    const copilot = new InspectionCopilot(model, config);
+    const copilot = new InspectionCopilot(model, InspectionCopilot.defaultConfig);
     logger.info('Activating Java Copilot features...');
     doActivate(context, copilot);
     sendEvent("java.copilot.activated", {});

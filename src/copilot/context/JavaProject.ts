@@ -10,23 +10,29 @@ import { groupBy } from "lodash";
 export class JavaProject {
     public constructor(public readonly root: vscode.Uri) { }
 
-    public static async ofDocument(document: vscode.TextDocument): Promise<JavaProject> {
+    public static async ofDocument(document: vscode.TextDocument): Promise<JavaProject | undefined> {
         const root = await JavaProject.getProjectRoot(document);
-        return new JavaProject(root);
+        return root ? new JavaProject(root) : undefined;
     }
 
-    public static async getProjectRoot(document: vscode.TextDocument): Promise<vscode.Uri> {
+    public static async getProjectRoot(document: vscode.TextDocument | undefined): Promise<vscode.Uri | undefined> {
+        if (!document) {
+            return undefined;
+        }
+
         try {
-            const rootUris: string[] = (await retryOnFailure(async () => {
+            const rootUris: string[] = await retryOnFailure(async () => {
                 return await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.getAll", JSON.stringify({ includeNonJava: false }));
-            })) as string[];
+            });
+            // sort the rootUris by length in descending order, thus nested modules will be checked first
+            rootUris.sort((a, b) => b.length - a.length);
             for (const uri of rootUris) {
                 const root = vscode.Uri.parse(uri);
                 if (document.uri.path.toLowerCase().startsWith(root.path.toLowerCase())) {
                     return root;
                 }
             }
-            return vscode.Uri.parse(rootUris[0]);
+            return undefined;
         } catch (e) {
             throw new Error(`Failed to get project root, please check if the project is loaded normally: ${e}`);
         }
@@ -251,36 +257,5 @@ export namespace Dependency {
         } else {
             return `${dep.groupId}:${dep.artifactId}:${dep.version}`;
         }
-    }
-}
-
-export namespace JavaProjectContext {
-    export function toString(context: JavaProjectContext): string {
-        let contextStr = "This is a Java project of the following natures:\n";
-        if (context.javaVersion) {
-            contextStr += ` - Using Java ${context.javaVersion}. So I would prefer solutions using the new and more recent features introduced in Java ${context.javaVersion}.\n`;
-        }
-        if ((context.buildTools?.length ?? 0) > 0) {
-            contextStr += ` - Using ${context.buildTools?.join(",")} as build tools.\n`;
-        }
-        if ((context.dependencies?.length ?? 0) > 0) {
-            contextStr += ` - Dependencies: \n`;
-            context.dependencies?.forEach(dep => contextStr += `   - ${Dependency.dependecyToString(dep)}\n`);
-        }
-        if (context.layout) {
-            contextStr +=
-                ` - this is the layout of the project files structure:
-                    \`\`\`plaintext
-                    ${context.layout}
-                    \`\`\`            
-                `;
-        }
-        if (context.appType) {
-            contextStr += ` - It's a ${context.appType} project.\n`;
-        }
-        if (context.host) {
-            contextStr += ` - Will be deployed on ${context.host}.\n`;
-        }
-        return contextStr;
     }
 }

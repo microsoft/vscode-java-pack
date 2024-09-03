@@ -2,6 +2,8 @@ import { workspace, version, Uri } from "vscode";
 import { SemVer } from "semver";
 import { createUuid, sendInfo, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
 import path from "path";
+import { getExpService } from "../exp";
+import { TreatmentVariables } from "../exp/TreatmentVariables";
 
 export function uncapitalize(str: string): string {
     return str.charAt(0).toLowerCase() + str.slice(1);
@@ -89,4 +91,20 @@ export function isParentUri(parentUri: Uri, childUri: Uri): boolean {
 
 export async function fileExists(uri: Uri): Promise<boolean> {
     return workspace.fs.stat(uri).then(() => true, () => false);
+}
+
+export async function isInTreatmentGroup(variable: string, dft: boolean = true): Promise<boolean> {
+    try {
+        const value = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, variable, true /*checkCache*/)
+        sendEvent(`exp.${uncapitalize(variable)}`, { value });
+        if (value === false) {
+            return false;
+        } else if (value === true) {
+            return true;
+        }
+        return dft;
+    } catch (e) {
+        sendEvent(`exp.${uncapitalize(variable)}.variableLoadFailed`);
+        return dft;
+    }
 }

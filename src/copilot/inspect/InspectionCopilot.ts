@@ -256,6 +256,10 @@ export default class InspectionCopilot extends Copilot {
                 .join('\n');
             const doc = await JavaDocument.from(document)
             const context = await doc.collectContext({ javaVersion: true });
+            if (!context) {
+                logger.warn('No context found, skipping inspection.');
+                return [];
+            }
             const existingInspections = await InspectionCache.getValidInspections(document);
             const existingInspectionsStr = JSON.stringify(existingInspections.map(i => {
                 return {
@@ -331,6 +335,10 @@ export default class InspectionCopilot extends Copilot {
 
         const doc = await JavaDocument.from(document)
         const context = await doc.collectContext({ javaVersion: true });
+        if (!context) {
+            logger.warn('No context found, skipping inspection.');
+            return [];
+        }
         sendEvent('java.copilot.inspection.inspectingRequested', {
             javaVersion: context.javaVersion,
             codeWords: linedDocumentCode.split(/\s+/).length,
