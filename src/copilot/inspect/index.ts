@@ -3,11 +3,9 @@ import { COMMAND_INSPECT_RANGE, registerCommands } from "./commands";
 import { DocumentRenderer } from "./DocumentRenderer";
 import { fixDiagnostic } from "./render/DiagnosticRenderer";
 import InspectionCache from "./InspectionCache";
-import { isInTreatmentGroup, isNewerThan, sendEvent } from "../utils";
+import { isNewerThan, sendEvent } from "../utils";
 import InspectionCopilot from "./InspectionCopilot";
 import { logger } from "../logger";
-import { TreatmentVariables } from "../../exp/TreatmentVariables";
-import ControlledInspectionCopilot from "./exp/ControlledInspectionCopilot";
 
 export const DEPENDENT_EXTENSIONS = ['github.copilot-chat', 'redhat.java'];
 
