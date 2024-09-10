@@ -30,7 +30,7 @@ export class JavaContextProvider implements vscode.LanguageModelTool {
                 hosts: context?.hosts,
                 javaVersion: context?.javaVersion,
                 dependencies: context?.dependencies?.length,
-                buildTools: context?.buildTools,
+                buildTools: context?.buildTools?.length ? context.buildTools.join(",") : undefined,
             });
             return result;
         })(_options, _token);
