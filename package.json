@@ -371,7 +371,8 @@
         "name": "contextForJava",
         "userDescription": "Provide context information for Java projects.",
         "modelDescription": "Provide context information for current Java project such as its Java version, dependencies and build tool name.",
-        "parametersSchema": {}
+        "parametersSchema": {},
+        "when": "java.lmToolsEnabled"
       }
     ]
   },
