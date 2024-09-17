@@ -12,7 +12,7 @@ export async function activateLmTools(context: vscode.ExtensionContext): Promise
         sendEvent("java.copilot.lmTools.versionNotSupported");
         return;
     }
-    const enableChatVariable = await isInTreatmentGroup(TreatmentVariables.JavaCopilotEnableContextVariable);
+    const enableChatVariable = await isInTreatmentGroup(TreatmentVariables.JavaCopilotEnableContextVariable) ?? true;
     vscode.commands.executeCommand("setContext", "java.lmToolsEnabled", enableChatVariable);
     if (!enableChatVariable) {
         return;
