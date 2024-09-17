@@ -96,7 +96,7 @@ export async function fileExists(uri: Uri): Promise<boolean> {
 export async function isInTreatmentGroup(variable: string, dft: boolean = true): Promise<boolean> {
     try {
         const value = await getExpService()?.getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, variable, true /*checkCache*/)
-        sendEvent(`exp.${uncapitalize(variable)}`, { value });
+        sendEvent(`exp.${uncapitalize(variable)}`, { value: value?.toString() });
         if (value === false) {
             return false;
         } else if (value === true) {
