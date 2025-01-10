@@ -18,7 +18,7 @@ const Exception = (): JSX.Element | null => {
         command = "workbench.action.files.openFileFolder";
       }
       content = (
-        <span>There is no Java projects opened in the current workspace. Please try to <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reload", "workbench.action.webview.reloadWebviewAction")}>reload the page</a> or <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openProject", command)}>open a Java project</a>.</span>
+        <span>There are no Java projects opened in the current workspace. Please try to <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reload", "workbench.action.webview.reloadWebviewAction")}>reload the page</a> or <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openProject", command)}>open a Java project</a>.</span>
       );
       break;
     case ProjectSettingsException.JavaExtensionNotInstalled:
