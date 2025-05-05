@@ -41,7 +41,7 @@ export class ProcessWatcher {
       
       // If user has explicitly configured a Java home, use that
       if (configJavaHome) {
-         if (await this.isValidJdkPath(configJavaHome)) {
+         if (await this.isValidJpsPath(configJavaHome)) {
             jreHome = configJavaHome;
          } else {
             // Log warning but continue with fallback
@@ -56,14 +56,14 @@ export class ProcessWatcher {
             // First look for one marked as default
             const defaultRuntime = runtimes.find(r => r.default === true);
             if (defaultRuntime && defaultRuntime.path) {
-               if (await this.isValidJdkPath(defaultRuntime.path)) {
+               if (await this.isValidJpsPath(defaultRuntime.path)) {
                   jreHome = defaultRuntime.path;
                }
             } 
             
             // If no default is set or default is invalid, try the first one
             if (!jreHome && runtimes[0].path) {
-               if (await this.isValidJdkPath(runtimes[0].path)) {
+               if (await this.isValidJpsPath(runtimes[0].path)) {
                   jreHome = runtimes[0].path;
                }
             }
@@ -134,7 +134,7 @@ export class ProcessWatcher {
       return [y, o].join(os.EOL);
    }
 
-   private async isValidJdkPath(jdkPath: string): Promise<boolean> {
+   private async isValidJpsPath(jdkPath: string): Promise<boolean> {
       try {
          // Check if path exists
          await fs.promises.access(jdkPath, fs.constants.R_OK);
