@@ -99,7 +99,7 @@ export class ProcessWatcher {
    private onDidJdtlsCrash(lastHeartbeat?: string) {
       sendInfo("", {
          name: "jdtls-last-heartbeat",
-         message: lastHeartbeat!
+         message1: lastHeartbeat!
       });
       this.daemon.logWatcher.sendErrorAndStackOnCrash();
    }
@@ -116,7 +116,7 @@ export class ProcessWatcher {
          );
          sendInfo("", {
             name: "client-initialize-time",
-            message: interval.toString()
+            message1: interval.toString()
          });
       }
    }
