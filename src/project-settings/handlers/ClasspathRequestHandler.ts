@@ -304,7 +304,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             javaHome[0].fsPath
         );
 
-        actionResult.message = result.message;
+        actionResult.message1 = result.message;
         actionResult.code = result.success ? "0" : "1";
         sendInfo(operationId, actionResult);
 
@@ -339,7 +339,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             jdkPath
         );
 
-        actionResult.message = result.message;
+        actionResult.message1 = result.message;
         actionResult.code = result.success ? "0" : "1";
         sendInfo(operationId, actionResult);
 

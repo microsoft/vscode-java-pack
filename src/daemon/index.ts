@@ -166,8 +166,8 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
             kind: escapeLspRequestName(traceEvent.type),
             duration,
             code,
-            message: errorMessage,
-            exception,
+            lspmessage: errorMessage,
+            lspexception: exception,
             javaversion: javaExtVersion,
             remark: sampling,
             data: redactDataProperties(traceEvent.data),
@@ -213,6 +213,10 @@ function redactDataProperties(data: any): string {
 async function traceJavaExtension(javaExt: vscode.Extension<any>) {
    const javaExtVersion = javaExt.packageJSON?.version;
    const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
+   const remappedKeys: any = {
+      "message": "lsmessage",
+      "exception": "lsexception"
+   };
    javaExt.exports?.trackEvent?.((event: any) => {
       const metrics: any = {
          name: "javaext-trace",
@@ -229,6 +233,15 @@ async function traceJavaExtension(javaExt: vscode.Extension<any>) {
             metrics[key] = val;
          }
       }
+
+      for (const key of Object.keys(remappedKeys)) {
+         if (metrics[key] !== undefined) {
+            const newKey = remappedKeys[key];
+            metrics[newKey] = metrics[key];
+            delete metrics[key];
+         }
+      }
+
       sendInfo("", metrics);
    });
 }

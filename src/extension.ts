@@ -96,7 +96,14 @@ function initializeTelemetry(_context: vscode.ExtensionContext) {
   const packageInfo = ext ? ext.packageJSON : undefined;
   if (packageInfo) {
     if (packageInfo.aiKey) {
-      initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey);
+      initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey, {
+        replacementOptions: [
+          {
+            lookup: /\s*Bearer\s+[\w-]*\.?[\w-]*\.?[A-Za-z0-9-_]*/,
+            replacementString: "<REDACTED: JWT token>"
+          }
+        ]
+      });
     }
   }
 }
