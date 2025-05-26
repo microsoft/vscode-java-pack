@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.29.1
+### Fixed
+- Fix vulnerabilities in dependencies.
+
 ## 0.29.0
 * enhancement - Add gradle extension into pack by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1374
 * fix - Dialog pops up twice when adding new jdk by @jdneo in https://github.com/microsoft/vscode-java-pack/pull/1378
