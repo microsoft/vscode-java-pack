@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.29.2
+### Changed
+- Update redact rules.
+
 ## 0.29.1
 ### Fixed
 - Fix vulnerabilities in dependencies.

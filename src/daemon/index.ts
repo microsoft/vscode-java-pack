@@ -202,6 +202,8 @@ async function traceLSPPerformance(javaExt: vscode.Extension<any>) {
    });
 }
 
+const SOURCE_REGEX = /\r?\n----------------------------------- SOURCE BEGIN -------------------------------------\r?\n[\s\S]*/;
+
 function redactDataProperties(data: any): string {
    if (data?.triggerKind !== undefined) {
       return JSON.stringify(data);
@@ -214,8 +216,8 @@ async function traceJavaExtension(javaExt: vscode.Extension<any>) {
    const javaExtVersion = javaExt.packageJSON?.version;
    const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
    const remappedKeys: any = {
-      "message": "lsmessage",
-      "exception": "lsexception"
+      "message": "servermessage",
+      "exception": "serverexception"
    };
    javaExt.exports?.trackEvent?.((event: any) => {
       const metrics: any = {
@@ -237,7 +239,7 @@ async function traceJavaExtension(javaExt: vscode.Extension<any>) {
       for (const key of Object.keys(remappedKeys)) {
          if (metrics[key] !== undefined) {
             const newKey = remappedKeys[key];
-            metrics[newKey] = metrics[key];
+            metrics[newKey] = metrics[key].replace(SOURCE_REGEX, "<REDACTED: SOURCE CODE>"); // remove the source code from the message
             delete metrics[key];
          }
       }
