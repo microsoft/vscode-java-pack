@@ -99,7 +99,7 @@ function initializeTelemetry(_context: vscode.ExtensionContext) {
       initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey, {
         replacementOptions: [
           {
-            lookup: /\s*Bearer\s+[\w-]*\.?[\w-]*\.?[A-Za-z0-9-_]*/,
+            lookup: /eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9-_]*/,
             replacementString: "<REDACTED: JWT token>"
           }
         ]
