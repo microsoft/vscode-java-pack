@@ -34,17 +34,55 @@ export class ProcessWatcher {
       if (!javaExt) {
          return false;
       }
-      // get embedded JRE Home
+      
+      // First check java.jdt.ls.java.home setting
       let jreHome: string | undefined;
-      try {
-         const jreFolder = path.join(javaExt.extensionPath, "jre");
-         const jreDistros = await fs.promises.readdir(jreFolder);
-         if (jreDistros.length > 0) {
-            jreHome = path.join(jreFolder, jreDistros[0]);
+      let configJavaHome = vscode.workspace.getConfiguration().get<string>('java.jdt.ls.java.home');
+      
+      // If user has explicitly configured a Java home, use that
+      if (configJavaHome) {
+         if (await this.isValidJpsPath(configJavaHome)) {
+            jreHome = configJavaHome;
+         } else {
+            // Log warning but continue with fallback
+            console.warn(`Configured Java home ${configJavaHome} is not valid or not accessible. Checking other options.`);
          }
-      } catch (error) {
-         // do nothing when jre is not embedded, to avoid spamming logs
       }
+      
+      // If not found, check for default runtime in java.configuration.runtimes
+      if (!jreHome) {
+         const runtimes = vscode.workspace.getConfiguration().get<any[]>('java.configuration.runtimes');
+         if (Array.isArray(runtimes) && runtimes.length > 0) {
+            // First look for one marked as default
+            const defaultRuntime = runtimes.find(r => r.default === true);
+            if (defaultRuntime && defaultRuntime.path) {
+               if (await this.isValidJpsPath(defaultRuntime.path)) {
+                  jreHome = defaultRuntime.path;
+               }
+            } 
+            
+            // If no default is set or default is invalid, try the first one
+            if (!jreHome && runtimes[0].path) {
+               if (await this.isValidJpsPath(runtimes[0].path)) {
+                  jreHome = runtimes[0].path;
+               }
+            }
+         }
+      }
+      
+      // If no valid JDK is found in settings, fall back to embedded JRE
+      if (!jreHome) {
+         try {
+            const jreFolder = path.join(javaExt.extensionPath, "jre");
+            const jreDistros = await fs.promises.readdir(jreFolder);
+            if (jreDistros.length > 0) {
+               jreHome = path.join(jreFolder, jreDistros[0]);
+            }
+         } catch (error) {
+            // do nothing when jre is not embedded, to avoid spamming logs
+         }
+      }
+      
       if (!jreHome) {
          return false;
       }
@@ -94,6 +132,21 @@ export class ProcessWatcher {
       const rold = /ParOldGen\s+total \d+K, used \d+K/;
       const o = execRes.stdout.match(rold)?.toString();
       return [y, o].join(os.EOL);
+   }
+
+   private async isValidJpsPath(jdkPath: string): Promise<boolean> {
+      try {
+         // Check if path exists
+         await fs.promises.access(jdkPath, fs.constants.R_OK);
+         
+         // Check if the jps tool exists in the bin directory
+         const jpsPath = path.join(jdkPath, "bin", "jps" + (os.platform() === 'win32' ? '.exe' : ''));
+         await fs.promises.access(jpsPath, fs.constants.X_OK);
+         
+         return true;
+      } catch (err) {
+         return false;
+      }
    }
 
    private onDidJdtlsCrash(lastHeartbeat?: string) {
