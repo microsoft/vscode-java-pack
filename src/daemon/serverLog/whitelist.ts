@@ -57,7 +57,7 @@ export function redact(rawMessage: string, consentToCollectLogs: boolean): {
 } {
     const matchedMessage = MESSAGE_WHITELIST.find(msg => rawMessage.includes(msg));
     const message = matchedMessage ?? (consentToCollectLogs ? rawMessage : "");
-    const hash = sha1(matchedMessage ?? rawMessage);
+    const hash = sha256(matchedMessage ?? rawMessage);
     const tags = TAGS.filter(tag => rawMessage.toLocaleLowerCase().includes(tag));
 
     return {
@@ -67,8 +67,8 @@ export function redact(rawMessage: string, consentToCollectLogs: boolean): {
     }
 }
 
-function sha1(content: string): string {
-    const hash = createHash("sha1");
+function sha256(content: string): string {
+    const hash = createHash("sha256");
     hash.update(content);
     return hash.digest('hex');
 }
