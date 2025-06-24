@@ -46,7 +46,7 @@ export class SymbolNode {
      */
     private static calculateSymbolSnapshotId(document: TextDocument, symbol: DocumentSymbol): string {
         const body = document.getText(symbol.range);
-        return crypto.createHash('md5').update(body).digest("hex")
+        return crypto.createHash('sha256').update(body).digest("hex")
     }
 
     public toString(): string {
