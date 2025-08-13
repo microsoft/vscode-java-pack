@@ -23,6 +23,7 @@ import { KEY_SHOW_WHEN_USING_JAVA } from "./utils/globalState";
 import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
+import { TelemetryFilter } from "./utils/telemetryFilter";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -98,10 +99,8 @@ function initializeTelemetry(_context: vscode.ExtensionContext) {
     if (packageInfo.aiKey) {
       initialize(packageInfo.id, packageInfo.version, packageInfo.aiKey, {
         replacementOptions: [
-          {
-            lookup: /eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9-_]*/,
-            replacementString: "<REDACTED: JWT token>"
-          }
+          TelemetryFilter.hideUrlOption,
+          TelemetryFilter.hideJwtTokenOption
         ]
       });
     }

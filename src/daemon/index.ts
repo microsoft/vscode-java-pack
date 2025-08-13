@@ -216,8 +216,8 @@ async function traceJavaExtension(javaExt: vscode.Extension<any>) {
    const javaExtVersion = javaExt.packageJSON?.version;
    const isPreReleaseVersion = /^\d+\.\d+\.\d{10}/.test(javaExtVersion);
    const remappedKeys: any = {
-      "message": "servermessage",
-      "exception": "serverexception"
+      "message": "server_message",
+      "exception": "server_exception"
    };
    javaExt.exports?.trackEvent?.((event: any) => {
       const metrics: any = {
