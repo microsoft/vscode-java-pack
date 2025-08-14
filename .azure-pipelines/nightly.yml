@@ -21,6 +21,8 @@ extends:
   parameters:
     pool:
       name: MSEngSS-MicroBuild2022-1ES
+    settings:
+      networkIsolationPolicy: Permissive
     stages:
       - stage: Build
         jobs:
