@@ -1,7 +1,7 @@
 name: AI Triage - Label and Comment on New Issues
 on:
   issues:
-    types: [opened]
+    types: [opened, edited]
 
 permissions:
   issues: write
