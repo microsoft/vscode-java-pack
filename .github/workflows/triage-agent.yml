@@ -36,7 +36,6 @@ jobs:
           # Make the HTTP request
           response=$(curl -s \
               --header "Content-Type: application/json" \
-              --header "x-functions-key: ${{ secrets.TRIAGE_FUNCTION_KEY }}" \
               --request POST \
               --data "$PAYLOAD" \
               ${{ secrets.TRIAGE_FUNCTION_LINK }})
