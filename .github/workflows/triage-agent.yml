@@ -1,7 +1,12 @@
 name: AI Triage - Label and Comment on New Issues
 on:
   issues:
-    types: [opened, edited]
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage (manual run). e.g. 123'
+        required: true
 
 permissions:
   issues: write
@@ -21,7 +26,7 @@ jobs:
           PAYLOAD: >-
             {
               "authToken": "${{ secrets.GITHUB_TOKEN }}",
-              "repoId": "chagong/vscode-java-pack",
+              "repoId": "microsoft/vscode-java-pack",
               "issueData": {
                 "id": ${{ github.event.issue.number }},
                 "user": ${{ toJson(github.event.issue.user.login) }},
