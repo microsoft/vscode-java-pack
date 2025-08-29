@@ -1,0 +1,74 @@
+name: AI Triage - Label and Comment on New Issues
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage (manual run). e.g. 123'
+        required: true
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  label_and_comment:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get issue data
+        id: get_issue
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const eventName = context.eventName;
+            let issue;
+            if (eventName === 'workflow_dispatch') {
+              const inputs = context.payload.inputs || {};
+              const issueNumber = inputs.issue_number || inputs.issueNumber;
+              if (!issueNumber) core.setFailed('Input issue_number is required for manual run.');
+              const { data } = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: parseInt(issueNumber, 10),
+              });
+              issue = data;
+            } else if (context.payload.issue) {
+              issue = context.payload.issue;
+            } else {
+              core.setFailed('No issue information found in the event payload.');
+            }
+            core.setOutput('id', String(issue.number));
+            core.setOutput('user', String((issue.user && issue.user.login) || ''));
+            core.setOutput('title', String(issue.title || ''));
+            core.setOutput('body', String(issue.body || ''));
+            core.setOutput('labels', JSON.stringify(issue.labels || []));
+
+      - name: Call Azure Function
+        id: call_azure_function
+        env:
+          PAYLOAD: >-
+            {
+              "authToken": "${{ secrets.GITHUB_TOKEN }}",
+              "repoId": "microsoft/vscode-java-pack",
+              "issueData": {
+                "id": ${{ steps.get_issue.outputs.id }},
+                "user": ${{ toJson(steps.get_issue.outputs.user) }},
+                "title": ${{ toJson(steps.get_issue.outputs.title) }},
+                "body":  ${{ toJson(steps.get_issue.outputs.body)  }},
+                "labels": ${{ steps.get_issue.outputs.labels }}
+              },
+              "mode": "DirectUpdate"
+            }
+
+        run: |
+          # Make the HTTP request
+          response=$(curl -s \
+              --header "Content-Type: application/json" \
+              --request POST \
+              --data "$PAYLOAD" \
+              ${{ secrets.TRIAGE_FUNCTION_LINK }})
