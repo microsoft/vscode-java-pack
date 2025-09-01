@@ -46,7 +46,8 @@ jobs:
             core.setOutput('user', String((issue.user && issue.user.login) || ''));
             core.setOutput('title', String(issue.title || ''));
             core.setOutput('body', String(issue.body || ''));
-            core.setOutput('labels', JSON.stringify(issue.labels || []));
+            const labelNames = (issue.labels || []).map(label => label.name);
+            core.setOutput('labels', JSON.stringify(labelNames));
 
       - name: Call Azure Function
         id: call_azure_function
