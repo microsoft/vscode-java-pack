@@ -72,7 +72,7 @@ jobs:
 
           # Add timeout handling and better error detection
           set +e  # Don't exit on curl failure
-          response=$(timeout 650 curl \
+          response=$(timeout ${{ vars.TRIAGE_AGENT_TIMEOUT }} curl \
               --max-time 0 \
               --connect-timeout 30 \
               --fail-with-body \
