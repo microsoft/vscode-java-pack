@@ -14,7 +14,8 @@ import {
     getSymbolsOfDocument, 
     getInnermostClassContainsRange,
     getIntersectionSymbolsOfRange,
-    getTopLevelClassesOfDocument 
+    getTopLevelClassesOfDocument,
+    logger 
 } from './utils';
 import { SymbolNode } from './inspect/SymbolNode';
 
@@ -25,7 +26,8 @@ export async function registerCopilotContextProviders(
         const copilotClientApi = await getCopilotClientApi();
         const copilotChatApi = await getCopilotChatApi();
         if (!copilotClientApi && !copilotChatApi) {
-            console.log(
+            console.log('Failed to find compatible version of GitHub Copilot extension installed. Skip registration of Copilot context provider.');
+            logger.error(
                 'Failed to find compatible version of GitHub Copilot extension installed. Skip registration of Copilot context provider.'
             );
             return;
@@ -33,15 +35,16 @@ export async function registerCopilotContextProviders(
 
         const provider: ContextProvider<SupportedContextItem> = {
             id: 'vscjava.vscode-java-pack', // use extension id as provider id for now
-            selector: [{ language: 'java' }],
+            selector: [{ language: "java" }],
             resolver: {
                 resolve: async (request, token) => {
-                    console.log('Copilot context provider invoked for Java ====================');
-                    const items = await resolveJavaContext(request, token);
-                    console.log(`Copilot context provider resolved ${items.length} items`);
+                    console.log('======== java request:', request);
+                    console.log('======== java token:', token);
+                    const items =  await resolveJavaContext(request, token);
+                    console.log('======== java context end ===========')
                     return items;
-                },
-            },
+                }
+            }
         };
 
         let installCount = 0;
@@ -61,21 +64,24 @@ export async function registerCopilotContextProviders(
         }
 
         if (installCount === 0) {
-            console.log(
+            console.log('Incompatible GitHub Copilot extension installed. Skip registration of Java context providers.');
+            logger.info(
                 'Incompatible GitHub Copilot extension installed. Skip registration of Java context providers.'
             );
             return;
         }
         console.log('Registration of Java context provider for GitHub Copilot extension succeeded.');
+        logger.info('Registration of Java context provider for GitHub Copilot extension succeeded.');
     }
     catch (error) {
-        console.error('Error occurred while registering Java context provider for GitHub Copilot extension:', error);
+        console.log('Error occurred while registering Java context provider for GitHub Copilot extension:', error);
+        logger.error('Error occurred while registering Java context provider for GitHub Copilot extension:', error);
     }
 }
 
 async function resolveJavaContext(_request: ResolveRequest, _token: vscode.CancellationToken): Promise<SupportedContextItem[]> {
     const items: SupportedContextItem[] = [];
-    
+    const start = performance.now();
     try {
         // Get current document and position information
         const activeEditor = vscode.window.activeTextEditor;
@@ -116,6 +122,7 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
             id: 'java-package-name',
             origin: 'request'
         });
+        console.log('1. Project basic information (High importance)', performance.now() - start);
 
         // 2. Current class context information (High importance)
         const currentClass = await getInnermostClassContainsRange(currentRange, document);
@@ -147,6 +154,7 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
                 });
             }
         }
+        console.log('2. Current class context information (High importance)', performance.now() - start);
 
         // 3. Symbols information within current range (Medium-High importance)
         const symbolsInRange = await getIntersectionSymbolsOfRange(currentRange, document);
@@ -163,6 +171,7 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
                 origin: 'request'
             });
         }
+        console.log('3. Symbols information within current range (Medium-High importance)', performance.now() - start);
 
         // 4. File-level classes and interfaces information (Medium importance)
         const topLevelClasses = await getTopLevelClassesOfDocument(document);
@@ -179,6 +188,7 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
                 origin: 'request'
             });
         }
+        console.log('4. File-level classes and interfaces information (Medium importance)', performance.now() - start);
 
         // 5. Import information (Medium importance)
         const imports = await getImportStatements(document);
@@ -191,6 +201,7 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
                 origin: 'request'
             });
         }
+        console.log('5. Import information (Medium importance)', performance.now() - start);
 
         // 6. Project dependencies and classpath information (Medium importance)
         const projectDependencies = await getProjectDependencies(document.uri);
@@ -203,6 +214,7 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
                 origin: 'request'
             });
         }
+        console.log('6. Project dependencies and classpath information (Medium importance)', performance.now() - start);
 
         // 7. Compiler and project settings (Medium importance)
         const compilerSettings = await getCompilerSettings(document.uri);
@@ -215,35 +227,38 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
                 origin: 'request'
             });
         }
+        console.log('7. Compiler and project settings (Medium importance)', performance.now() - start);
 
         // 8. Current file content as CodeSnippet for context (High importance)
-        const fileContent = document.getText();
-        if (fileContent.length > 0 && fileContent.length < 10000) { // Limit file size
-            items.push({
-                uri: document.uri.toString(),
-                value: fileContent,
-                importance: 85,
-                id: 'java-current-file-content',
-                origin: 'request'
-            });
-        }
+        // const fileContent = document.getText();
+        // if (fileContent.length > 0 && fileContent.length < 10000) { // Limit file size
+        //     items.push({
+        //         uri: document.uri.toString(),
+        //         value: fileContent,
+        //         importance: 85,
+        //         id: 'java-current-file-content',
+        //         origin: 'request'
+        //     });
+        // }
+        // console.log('8. Current file content as CodeSnippet for context (High importance)', performance.now() - start);
 
         // 9. Current class content as CodeSnippet if available (High importance)
-        if (currentClass) {
-            const classText = document.getText(currentClass.range);
-            if (classText.length > 0 && classText.length < 5000) { // Limit class size
-                items.push({
-                    uri: `${document.uri.toString()}#${currentClass.symbol.name}`,
-                    value: classText,
-                    importance: 90,
-                    id: 'java-current-class-content',
-                    origin: 'request'
-                });
-            }
-        }
-
+        // if (currentClass) {
+        //     const classText = document.getText(currentClass.range);
+        //     if (classText.length > 0 && classText.length < 5000) { // Limit class size
+        //         items.push({
+        //             uri: `${document.uri.toString()}#${currentClass.symbol.name}`,
+        //             value: classText,
+        //             importance: 90,
+        //             id: 'java-current-class-content',
+        //             origin: 'request'
+        //         });
+        //     }
+        // }
+        // console.log('9. Current class content as CodeSnippet for context (High importance)', performance.now() - start);
     } catch (error) {
-        console.error('Error resolving Java context:', error);
+        console.log('Error resolving Java context:', error);
+        logger.error('Error resolving Java context:', error);
         // Add error information as context to help with debugging
         items.push({
             name: 'java.context.error',
@@ -253,7 +268,9 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
             origin: 'request'
         });
     }
-
+    console.log('Total context resolution time:', performance.now() - start);
+    console.log('===== Resolved context items:', JSON.stringify(items));
+    console.log('===== Size of context items:', items.length);
     return items;
 }
 
@@ -262,7 +279,8 @@ async function collectProjectContext(document: vscode.TextDocument): Promise<{ j
         const javaVersion = await getProjectJavaVersion(document);
         return { javaVersion };
     } catch (error) {
-        console.error('Failed to get Java version:', error);
+        console.log('Failed to get Java version:', error);
+        logger.error('Failed to get Java version:', error);
         return { javaVersion: 'unknown' };
     }
 }
@@ -289,6 +307,8 @@ async function getClassContextInfo(document: vscode.TextDocument, classSymbol: S
 
         return info.join('\n');
     } catch (error) {
+        console.log('Failed to get class context info:', error);
+        logger.error('Failed to get class context info:', error);
         return 'Unable to get class context info';
     }
 }
@@ -299,6 +319,8 @@ async function getPackageName(document: vscode.TextDocument): Promise<string> {
         const packageMatch = text.match(/^\s*package\s+([a-zA-Z_][a-zA-Z0-9_.]*)\s*;/m);
         return packageMatch ? packageMatch[1] : 'default package';
     } catch (error) {
+        console.log('Failed to get package name:', error);
+        logger.error('Failed to get package name:', error);
         return 'unknown';
     }
 }
@@ -309,6 +331,8 @@ async function getImportStatements(document: vscode.TextDocument): Promise<strin
         const importMatches = text.match(/^\s*import\s+[^;]+;/gm);
         return importMatches || [];
     } catch (error) {
+        console.log('Failed to get import statements:', error);
+        logger.error('Failed to get import statements:', error);
         return [];
     }
 }
@@ -318,7 +342,6 @@ async function getProjectDependencies(uri: vscode.Uri): Promise<string | null> {
         // Try to get project dependency information
         const dependencies = await vscode.commands.executeCommand<any>(
             "java.execute.workspaceCommand", 
-            "java.project.getDependencies", 
             uri.toString()
         );
         
@@ -329,12 +352,14 @@ async function getProjectDependencies(uri: vscode.Uri): Promise<string | null> {
         }
         return null;
     } catch (error) {
-        console.error('Failed to get project dependencies:', error);
+        console.log('Failed to get project dependencies:', error);
+        logger.error('Failed to get project dependencies:', error);
         return null;
     }
 }
 
 async function getCompilerSettings(uri: vscode.Uri): Promise<string | null> {
+    const start = performance.now();
     try {
         const settings = await vscode.commands.executeCommand<Record<string, string>>(
             "java.execute.workspaceCommand",
@@ -362,8 +387,14 @@ async function getCompilerSettings(uri: vscode.Uri): Promise<string | null> {
         }
         return null;
     } catch (error) {
-        console.error('Failed to get compiler settings:', error);
+        console.log('Failed to get compiler settings:', error);
+        logger.error('Failed to get compiler settings:', error);
         return null;
+    }
+    finally {
+        const duration = performance.now() - start;
+        console.log(`getCompilerSettings took ${duration.toFixed(2)} ms`);
+        logger.info(`getCompilerSettings took ${duration.toFixed(2)} ms`);
     }
 }
 
