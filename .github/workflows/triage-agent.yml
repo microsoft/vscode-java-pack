@@ -55,7 +55,7 @@ jobs:
           PAYLOAD: >-
             {
               "authToken": "${{ secrets.GITHUB_TOKEN }}",
-              "repoId": "chagong/vscode-java-pack",
+              "repoId": "microsoft/vscode-java-pack",
               "issueData": {
                 "id": ${{ steps.get_issue.outputs.id }},
                 "user": ${{ toJson(steps.get_issue.outputs.user) }},
