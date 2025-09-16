@@ -51,10 +51,10 @@ export async function showExtensionCmdHandler(_context: vscode.ExtensionContext,
 
 export async function installExtensionCmdHandler(_context: vscode.ExtensionContext, operationId: string, extensionName: string, displayName: string) {
   sendInfo(operationId, { extName: extensionName });
-  return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `Installing ${displayName||extensionName}...`}, _progress => {
+  return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `Installing ${displayName || extensionName}...` }, _progress => {
     return vscode.commands.executeCommand("workbench.extensions.installExtension", extensionName);
   }).then(() => {
-    vscode.window.showInformationMessage(`Successfully installed ${displayName||extensionName}.`);
+    vscode.window.showInformationMessage(`Successfully installed ${displayName || extensionName}.`);
   });
 }
 
@@ -126,4 +126,18 @@ export async function toggleAwtDevelopmentHandler(context: vscode.ExtensionConte
 
   fetchInitProps(context);
   vscode.window.showInformationMessage(`Java AWT development is ${enable ? "enabled" : "disabled"}.`);
+}
+
+export interface INodeImportClass {
+  uri: string;
+  className: string;  // Changed from 'class' to 'className' to match Java code
+}
+
+export async function resolveLocalImports(fileUri: vscode.Uri): Promise<INodeImportClass[]> {
+  try {
+    const result = await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.getImportClassContent", fileUri) || [];
+    return result as INodeImportClass[];
+  } catch (error) {
+    return [];
+  }
 }
