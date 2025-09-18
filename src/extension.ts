@@ -24,6 +24,7 @@ import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
 import { TelemetryFilter } from "./utils/telemetryFilter";
+import { registerCopilotContextProviders } from "./copilot/contextProvider";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -82,6 +83,8 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
       vscode.commands.executeCommand("java.runtime");
     });
   }
+
+  await registerCopilotContextProviders(context);
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
