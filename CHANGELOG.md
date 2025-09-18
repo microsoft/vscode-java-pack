@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.30.0
+
+- enhancement - Add app moderization extension into pack by @FluoriteCafe-work in https://github.com/microsoft/vscode-java-pack/pull/1483
+- enhancement - Update triage agent workflow to start orchestration by @chagong in https://github.com/microsoft/vscode-java-pack/pull/1486
+- enhancement - Improve HTTP request handling in triage-agent.yml by @chagong in https://github.com/microsoft/vscode-java-pack/pull/1476
+- fix - Update label output to use label names by @chagong in https://github.com/microsoft/vscode-java-pack/pull/1474
+- fix - Supress telemetry event servermessage and serverexception by @wenytang-ms in https://github.com/microsoft/vscode-java-pack/pull/1455
+- fix - Upgrade axios version to fix security vulnerbility by @chagong in https://github.com/microsoft/vscode-java-pack/pull/1453
+- fix - Fix process watcher path detection by @nickbeattie in https://github.com/microsoft/vscode-java-pack/pull/1427
+
 ## 0.29.2
 ### Changed
 - Update redact rules.
