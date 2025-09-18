@@ -149,7 +149,7 @@ export class ContextCache {
         const key = this.generateCacheKey(uri);
         if (this.cache.has(key)) {
             this.cache.delete(key);
-            console.log('======== Cache invalidated for:', uri.toString());
+            console.log('Cache invalidated for:', uri.toString());
         }
     }
     

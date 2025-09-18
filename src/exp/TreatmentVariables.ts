@@ -6,5 +6,5 @@ export class TreatmentVariables {
     public static readonly PresentWelcomePageByDefault = 'presentWelcomePageByDefault';
     public static readonly JavaWalkthroughEnabled = "gettingStarted.overrideCategory.vscjava.vscode-java-pack.javaWelcome.when";
     public static readonly JavaCompletionSampling = "javaCompletionSampling";
-    public static readonly ContextProvider = "ContextProviderIsEnabled";
+    public static readonly ContextProviderEnabled = "ContextProviderIsEnabled";
 }

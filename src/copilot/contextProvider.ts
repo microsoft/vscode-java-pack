@@ -20,7 +20,7 @@ import { getExtensionName } from '../utils/extension';
 export async function registerCopilotContextProviders(
     context: vscode.ExtensionContext
 ) {
-    const contextProviderIsEnabled = await getExpService().getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.ContextProvider, true);
+    const contextProviderIsEnabled = await getExpService().getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.ContextProviderEnabled, true);
     if (!contextProviderIsEnabled) {
         sendInfo("", {
             "contextProviderEnabled": "false",
@@ -52,7 +52,7 @@ export async function registerCopilotContextProviders(
                     if (activeEditor && activeEditor.document.languageId === 'java') {
                         const cachedImports = contextCache.get(activeEditor.document.uri);
                         if (cachedImports) {
-                            logger.info('======== Using cached imports, cache size:', cachedImports.length);
+                            logger.info('Using cached imports, cache size:', cachedImports.length);
                             // Return cached result as context items
                             return cachedImports.map((cls: any) => ({
                                 uri: cls.uri,
@@ -133,10 +133,10 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
             importClass = await CopilotHelper.resolveLocalImports(document.uri);
             if (importClass) {
                 contextCache.set(document.uri, importClass);
-                logger.info('======== Cached new imports, cache size:', importClass.length);
+                logger.info('Cached new imports, cache size:', importClass.length);
             }
         } else {
-            logger.info('======== Using cached imports in resolveJavaContext, cache size:', importClass.length);
+            logger.info('Using cached imports in resolveJavaContext, cache size:', importClass.length);
         }
         
         if (importClass) {

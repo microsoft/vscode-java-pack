@@ -127,7 +127,3 @@ export async function toggleAwtDevelopmentHandler(context: vscode.ExtensionConte
   fetchInitProps(context);
   vscode.window.showInformationMessage(`Java AWT development is ${enable ? "enabled" : "disabled"}.`);
 }
-
-export async function getImportClassContent(uri: string): Promise<INodeImportClass[]> {
-  return await vscode.commands.executeCommand(Commands.EXECUTE_WORKSPACE_COMMAND, Commands.JAVA_PROJECT_GETIMPORTCLASSCONTENT, uri) || [];
-}
