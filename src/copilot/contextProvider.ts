@@ -12,25 +12,12 @@ import * as vscode from 'vscode';
 import { CopilotHelper } from './context/copilotHelper';
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { contextCache } from './context/contextCache';
-import { TreatmentVariables } from '../exp/TreatmentVariables';
-import { getExpService } from '../exp';
 import { logger, getProjectJavaVersion } from './utils';
 import { getExtensionName } from '../utils/extension';
 
 export async function registerCopilotContextProviders(
     context: vscode.ExtensionContext
 ) {
-    const contextProviderIsEnabled = await getExpService().getTreatmentVariableAsync(TreatmentVariables.VSCodeConfig, TreatmentVariables.ContextProviderEnabled, true);
-    if (!contextProviderIsEnabled) {
-        sendInfo("", {
-            "contextProviderEnabled": "false",
-        });
-        return;
-    }
-    sendInfo("", {
-        "contextProviderEnabled": "true",
-    });
-    
     // Initialize the context cache
     contextCache.initialize(context);
     
@@ -89,6 +76,12 @@ export async function registerCopilotContextProviders(
             return;
         }
         logger.info('Registration of Java context provider for GitHub Copilot extension succeeded.');
+        sendInfo("", {
+            "action": "registerCopilotContextProvider",
+            "extension": getExtensionName(),
+            "status": "succeeded",
+            "installCount": installCount
+        });
     }
     catch (error) {
         logger.error('Error occurred while registering Java context provider for GitHub Copilot extension:', error);
