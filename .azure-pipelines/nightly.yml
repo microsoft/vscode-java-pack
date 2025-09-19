@@ -90,6 +90,16 @@ extends:
                 displayName: 'Generate extension manifest'
               - script: copy extension.manifest extension.signature.p7s
                 displayName: 'Prepare manifest for signing'
+              - task: PowerShell@2
+                displayName: 'Edit ddsignfiles config'
+                inputs:
+                  targetType: 'inline'
+                  script: |
+                    $signConfigPath = Join-Path $env:MBSIGN_APPFOLDER "ddsignfilesconfig.xml"
+                    $base64 = "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiID8+DQo8RERTaWduQ29uZmlnU2V0dGluZ3M+DQogIDxBcHByb3ZlcnM+bWlrZWJvbjtieWVuPC9BcHByb3ZlcnM+DQogIDxCYXRjaFNpemU+NzU8L0JhdGNoU2l6ZT4NCiAgPFN1Ym1pc3Npb25UaW1lb3V0SW5NaW51dGVzPjE4MDwvU3VibWlzc2lvblRpbWVvdXRJbk1pbnV0ZXM+DQogIDxUb3RhbE51bWJlck9mUGFyYWxsZWxUaHJlYWRzPjU8L1RvdGFsTnVtYmVyT2ZQYXJhbGxlbFRocmVhZHM+DQogIDxUZXN0U2lnblRocmVhZENvdW50PjEwPC9UZXN0U2lnblRocmVhZENvdW50Pg0KICA8VGVzdFNpZ25Ob0NvcHk+dHJ1ZTwvVGVzdFNpZ25Ob0NvcHk+DQogIDxDb3B5RmlsZVJldHJ5SW50ZXJ2YWxJbk1pbnV0ZXM+NTwvQ29weUZpbGVSZXRyeUludGVydmFsSW5NaW51dGVzPg0KICA8UmV0cnlJbnRlcnZhbEluTWludXRlcz4yPC9SZXRyeUludGVydmFsSW5NaW51dGVzPg0KICA8RXh0ZW5zaW9uTGlzdD5leGU7ZGxsO2NhdDtjYWI7b2N4O3ZicztybGw7dnNpO2pzO21zaTttc3A7eHNuO3BzZjt4bGFtO3hsc2I7eGxzbTt4bHRtO3BvdG07cHBzbTtwcHRtO3BzbTE7ZG9jbTtkb3RtO3R0ZjtvdGY7cHMxO3BzMXhtbDtjcGw7c3RnO211aTt4YXA7YXBweDtvbGI7dnNpeDt2c21hbjt3aW5tZDt4bWw7bnVwa2c7cHk7cHlkO2FwcGxpY2F0aW9uO21hbmlmZXN0PC9FeHRlbnNpb25MaXN0Pg0KICA8UGVuZGluZ0pvYlJldHJ5SW50ZXJ2YWxJblNlY29uZHM+MTU8L1BlbmRpbmdKb2JSZXRyeUludGVydmFsSW5TZWNvbmRzPg0KICA8U2lnbmluZ1NlcnZpY2U+RVNSUENsaWVudDwvU2lnbmluZ1NlcnZpY2U+DQogIDxTaWduaW5nU2VydmljZVR5cGU+TXVsdGlUZW5hbnRTaWduaW5nPC9TaWduaW5nU2VydmljZVR5cGU+DQogIDxTaWduaW5nQXV0aGVudGljYXRpb25UeXBlPkNlcnRpZmljYXRlPC9TaWduaW5nQXV0aGVudGljYXRpb25UeXBlPg0KICA8RVNSUEF6dXJlVGVuYW50PnBtZTwvRVNSUEF6dXJlVGVuYW50Pg0KICA8Q2VydGlmaWNhdGVTaWduaW5nPnRydWU8L0NlcnRpZmljYXRlU2lnbmluZz4NCjwvRERTaWduQ29uZmlnU2V0dGluZ3M+"
+                    $bytes = [Convert]::FromBase64String($base64)
+                    $asciiString = [System.Text.Encoding]::ASCII.GetString($bytes)
+                    Set-Content -Path $signConfigPath -Value $asciiString
               - task: CmdLine@2
                 displayName: Sign extension
                 inputs:
