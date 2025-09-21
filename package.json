@@ -3,7 +3,7 @@
   "displayName": "Extension Pack for Java",
   "description": "Popular extensions for Java development that provides Java IntelliSense, debugging, testing, Maven/Gradle support, project management and more",
   "license": "MIT",
-  "version": "0.29.2",
+  "version": "0.31.0",
   "publisher": "vscjava",
   "preview": false,
   "engines": {
@@ -166,6 +166,11 @@
       }
     ],
     "commands": [
+      {
+        "command": "java.test.getImportClassContent",
+        "title": "Test getImportClassContent Command",
+        "category": "Java"
+      },
       {
         "command": "java.installJdk",
         "category": "Java",
@@ -376,9 +381,7 @@
     "vscjava.vscode-java-test",
     "vscjava.vscode-maven",
     "vscjava.vscode-gradle",
-    "vscjava.vscode-java-dependency",
-    "vscjava.migrate-java-to-azure",
-    "VisualStudioExptTeam.vscodeintellicode"
+    "vscjava.vscode-java-dependency"
   ],
   "dependencies": {
     "@github/copilot-language-server": "^1.316.0",

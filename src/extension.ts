@@ -4,7 +4,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
+import { dispose as disposeTelemetryWrapper, initialize, instrumentOperation, instrumentOperationAsVsCodeCommand, sendInfo } from "vscode-extension-telemetry-wrapper";
 import { BeginnerTipsViewSerializer } from "./beginner-tips";
 import { initialize as initCommands } from "./commands";
 import { initDaemon, sendLSPUsageStats } from "./daemon";
@@ -24,7 +24,8 @@ import { scheduleAction } from "./utils/scheduler";
 import { showWelcomeWebview, WelcomeViewSerializer } from "./welcome";
 import { ProjectSettingsViewSerializer } from "./project-settings/projectSettingsView";
 import { TelemetryFilter } from "./utils/telemetryFilter";
-import { registerCopilotContextProviders } from "./copilot/contextProvider";
+import { commands, workspace } from "vscode";
+// import { registerCopilotContextProviders } from "./copilot/contextProvider";
 
 let cleanJavaWorkspaceIndicator: string;
 let activatedTimestamp: number;
@@ -63,7 +64,12 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.welcome", new WelcomeViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.projectSettings", new ProjectSettingsViewSerializer()));
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer("java.installJdk", new InstallJdkViewSerializer(context)));
-
+  // Register test command for getImportClassContent
+  context.subscriptions.push(instrumentOperationAsVsCodeCommand(
+    'java.test.getImportClassContent', async () => {
+      await testGetImportClassContent();
+    }
+  ));
   const config = vscode.workspace.getConfiguration("java.help");
 
   if (config.get("firstView") !== HelpViewType.None && context.globalState.get(KEY_SHOW_WHEN_USING_JAVA)) {
@@ -84,7 +90,7 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
     });
   }
 
-  await registerCopilotContextProviders(context);
+  // await registerCopilotContextProviders(context);
 }
 
 async function presentFirstView(context: vscode.ExtensionContext) {
@@ -122,4 +128,45 @@ export async function deactivate() {
   sendInfo("", data);
   sendLSPUsageStats();
   await disposeTelemetryWrapper();
+}
+
+async function testGetImportClassContent(): Promise<void> {
+  try {
+    // Get the currently active file
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      vscode.window.showWarningMessage("请先打开一个 Java 文件");
+      return;
+    }
+
+    const document = activeEditor.document;
+    if (!document.fileName.endsWith('.java')) {
+      vscode.window.showWarningMessage("当前文件不是 Java 文件");
+      return;
+    }
+
+    // Show information message
+    vscode.window.showInformationMessage("正在测试 getImportClassContent 命令...");
+
+    // Call the Java command with the current file URI
+    // const args = [document.uri.toString()];
+    // const result = await executeJavaLanguageServerCommand(Commands.JAVA_PROJECT_GET_IMPORT_CLASS_CONTENT, ...args);
+    const result = await commands.executeCommand("_java.project.get.from.getImportClassContent", document.uri.toString());
+
+    // Display the result
+    if (result) {
+      const output = JSON.stringify(result, null, 2);
+      const doc = await workspace.openTextDocument({
+        content: `// getImportClassContent 测试结果\n// 文件: ${document.fileName}\n\n${output}`,
+        language: "javascript"
+      });
+      await vscode.window.showTextDocument(doc);
+      vscode.window.showInformationMessage("getImportClassContent 命令执行成功！结果已在新窗口中显示。");
+    } else {
+      vscode.window.showWarningMessage("getImportClassContent 命令返回了空结果");
+    }
+  } catch (error) {
+    console.error("测试 getImportClassContent 时出错:", error);
+    vscode.window.showErrorMessage(`测试 getImportClassContent 失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }

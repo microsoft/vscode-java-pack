@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { commands, Uri } from "vscode";
-import { logger } from "../utils";
+// import { logger } from "../utils";
 
 export interface INodeImportClass {
     uri: string;
@@ -19,9 +19,10 @@ export namespace CopilotHelper {
      */
     export async function resolveLocalImports(fileUri: Uri): Promise<INodeImportClass[]> {
         try {
-            return await commands.executeCommand("java.execute.workspaceCommand", "java.project.getImportClassContent", fileUri) || [];
+            const res = await commands.executeCommand("_java.project.get.from.getImportClassContent", fileUri.toString()) as INodeImportClass[] || [];
+            return res;
         } catch (error) {
-            logger.error("Error resolving copilot request:", error);
+            console.error("Error resolving copilot request:", error);
             return [];
         }
     }

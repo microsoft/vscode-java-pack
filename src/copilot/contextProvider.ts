@@ -12,20 +12,20 @@ import * as vscode from 'vscode';
 import { CopilotHelper } from './context/copilotHelper';
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { contextCache } from './context/contextCache';
-import { logger, getProjectJavaVersion } from './utils';
+import { getProjectJavaVersion } from './utils';
 import { getExtensionName } from '../utils/extension';
 
 export async function registerCopilotContextProviders(
     context: vscode.ExtensionContext
 ) {
-    // Initialize the context cache
+    // Initialize the context cache with enhanced options
     contextCache.initialize(context);
     
     try {
         const copilotClientApi = await getCopilotClientApi();
         const copilotChatApi = await getCopilotChatApi();
         if (!copilotClientApi || !copilotChatApi) {
-            logger.error('Failed to find compatible version of GitHub Copilot extension installed. Skip registration of Copilot context provider.');
+            console.error('Failed to find compatible version of GitHub Copilot extension installed. Skip registration of Copilot context provider.');
             return;
         }
         // Register the Java completion context provider
@@ -37,9 +37,13 @@ export async function registerCopilotContextProviders(
                     // Check if we have a cached result for the current active editor
                     const activeEditor = vscode.window.activeTextEditor;
                     if (activeEditor && activeEditor.document.languageId === 'java') {
-                        const cachedImports = contextCache.get(activeEditor.document.uri);
+                        // Get current caret offset for position-sensitive caching
+                        const currentCaretOffset = activeEditor.document.offsetAt(activeEditor.selection.active);
+                        
+                        // Try to get cached imports with position validation
+                        const cachedImports = await contextCache.get(activeEditor.document.uri, currentCaretOffset);
                         if (cachedImports) {
-                            logger.info('Using cached imports, cache size:', cachedImports.length);
+                            console.log('Using cached imports, cache size:', cachedImports.length);
                             // Return cached result as context items
                             return cachedImports.map((cls: any) => ({
                                 uri: cls.uri,
@@ -72,10 +76,10 @@ export async function registerCopilotContextProviders(
         }
 
         if (installCount === 0) {
-            logger.warn('Incompatible GitHub Copilot extension installed. Skip registration of Java context providers.');
+            console.log('Incompatible GitHub Copilot extension installed. Skip registration of Java context providers.');
             return;
         }
-        logger.info('Registration of Java context provider for GitHub Copilot extension succeeded.');
+        console.log('Registration of Java context provider for GitHub Copilot extension succeeded.');
         sendInfo("", {
             "action": "registerCopilotContextProvider",
             "extension": getExtensionName(),
@@ -84,7 +88,7 @@ export async function registerCopilotContextProviders(
         });
     }
     catch (error) {
-        logger.error('Error occurred while registering Java context provider for GitHub Copilot extension:', error);
+        console.error('Error occurred while registering Java context provider for GitHub Copilot extension:', error);
     }
 }
 
@@ -120,16 +124,23 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
         });
 
         // Try to get cached imports first
-        let importClass = contextCache.get(document.uri);
+        let importClass = await contextCache.get(document.uri);
         if (!importClass) {
             // If not cached, resolve and cache the result
-            importClass = await CopilotHelper.resolveLocalImports(document.uri);
-            if (importClass) {
-                contextCache.set(document.uri, importClass);
-                logger.info('Cached new imports, cache size:', importClass.length);
+            const resolvedImports = await CopilotHelper.resolveLocalImports(document.uri);
+            console.log('======= Resolved imports count:', resolvedImports);
+            if (resolvedImports) {
+                // Get current caret offset for position-sensitive caching
+                const currentCaretOffset = vscode.window.activeTextEditor?.document.offsetAt(
+                    vscode.window.activeTextEditor.selection.active
+                );
+                
+                await contextCache.set(document.uri, resolvedImports, undefined, currentCaretOffset);
+                importClass = resolvedImports;
+                console.log('Cached new imports, cache size:', importClass.length);
             }
         } else {
-            logger.info('Using cached imports in resolveJavaContext, cache size:', importClass.length);
+            console.log('Using cached imports in resolveJavaContext, cache size:', importClass.length);
         }
         
         if (importClass) {
@@ -143,10 +154,10 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
             }
         }
     } catch (error) {
-        logger.error('Error resolving Java context:', error);
+        console.error('Error resolving Java context:', error);
     }
-    logger.info('Total context resolution time:', performance.now() - start, 'ms', ' ,size:', items.length);
-    logger.info('Context items:', items);
+    console.log('Total context resolution time:', performance.now() - start, 'ms', ' ,size:', items.length);
+    console.log('Context items:', items);
     return items;
 }
 
