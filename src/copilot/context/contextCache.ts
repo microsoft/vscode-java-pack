@@ -5,25 +5,47 @@
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import { INodeImportClass } from './copilotHelper';
-
+import { logger } from "../utils";
 /**
- * Cache entry interface for storing import data with timestamp
+ * Cache entry interface for storing import data with enhanced metadata
  */
 interface CacheEntry {
+    /** Unique cache entry ID for tracking */
+    id: string;
+    /** Cached import data */
     value: INodeImportClass[];
+    /** Creation timestamp */
     timestamp: number;
+    /** Document version when cached */
+    documentVersion?: number;
+    /** Last access timestamp */
+    lastAccess: number;
+    /** File content hash for change detection */
+    contentHash?: string;
+    /** Caret offset when cached (for position-sensitive invalidation) */
+    caretOffset?: number;
 }
 
 /**
  * Configuration options for the context cache
  */
 interface ContextCacheOptions {
-    /** Cache expiry time in milliseconds. Default: 5 minutes */
+    /** Cache expiry time in milliseconds. Default: 10 minutes */
     expiryTime?: number;
     /** Enable automatic cleanup interval. Default: true */
     enableAutoCleanup?: boolean;
     /** Enable file watching for cache invalidation. Default: true */
     enableFileWatching?: boolean;
+    /** Maximum cache size (number of entries). Default: 100 */
+    maxCacheSize?: number;
+    /** Enable content-based invalidation. Default: true */
+    enableContentHashing?: boolean;
+    /** Cleanup interval in milliseconds. Default: 2 minutes */
+    cleanupInterval?: number;
+    /** Maximum distance from cached caret position before cache becomes stale. Default: 8192 */
+    maxCaretDistance?: number;
+    /** Enable position-sensitive cache invalidation. Default: false */
+    enablePositionSensitive?: boolean;
 }
 
 /**
@@ -34,14 +56,25 @@ export class ContextCache {
     private readonly expiryTime: number;
     private readonly enableAutoCleanup: boolean;
     private readonly enableFileWatching: boolean;
+    private readonly maxCacheSize: number;
+    private readonly enableContentHashing: boolean;
+    private readonly cleanupIntervalMs: number;
+    private readonly maxCaretDistance: number;
+    private readonly enablePositionSensitive: boolean;
     
-    private cleanupInterval?: NodeJS.Timeout;
+    private cleanupTimer?: NodeJS.Timeout;
     private fileWatcher?: vscode.FileSystemWatcher;
+    private accessCount = 0; // For statistics tracking
     
     constructor(options: ContextCacheOptions = {}) {
-        this.expiryTime = options.expiryTime ?? 5 * 60 * 1000; // 5 minutes default
+        this.expiryTime = options.expiryTime ?? 10 * 60 * 1000; // 10 minutes default
         this.enableAutoCleanup = options.enableAutoCleanup ?? true;
         this.enableFileWatching = options.enableFileWatching ?? true;
+        this.maxCacheSize = options.maxCacheSize ?? 100;
+        this.enableContentHashing = options.enableContentHashing ?? true;
+        this.cleanupIntervalMs = options.cleanupInterval ?? 2 * 60 * 1000; // 2 minutes
+        this.maxCaretDistance = options.maxCaretDistance ?? 8192; // Same as CopilotCompletionContextProvider
+        this.enablePositionSensitive = options.enablePositionSensitive ?? false;
     }
     
     /**
@@ -79,11 +112,12 @@ export class ContextCache {
     }
     
     /**
-     * Get cached imports for a document URI
+     * Get cached imports for a document URI with enhanced validation
      * @param uri Document URI
-     * @returns Cached imports or null if not found/expired
+     * @param currentCaretOffset Optional current caret offset for position-sensitive validation
+     * @returns Cached imports or null if not found/expired/stale
      */
-    public get(uri: vscode.Uri): INodeImportClass[] | null {
+    public async get(uri: vscode.Uri, currentCaretOffset?: number): Promise<INodeImportClass[] | null> {
         const key = this.generateCacheKey(uri);
         const cached = this.cache.get(key);
         
@@ -91,11 +125,52 @@ export class ContextCache {
             return null;
         }
         
-        // Check if cache is expired
+        // Check if cache is expired or stale
+        if (await this.isExpiredOrStale(uri, cached, currentCaretOffset)) {
+            this.cache.delete(key);
+            return null;
+        }
+        
+        // Update last access time and increment access count
+        cached.lastAccess = Date.now();
+        this.accessCount++;
+        
+        return cached.value;
+    }
+    
+    /**
+     * Get cached imports synchronously (fallback method for compatibility)
+     * @param uri Document URI
+     * @param currentCaretOffset Optional current caret offset for position-sensitive validation
+     * @returns Cached imports or null if not found/expired
+     */
+    public getSync(uri: vscode.Uri, currentCaretOffset?: number): INodeImportClass[] | null {
+        const key = this.generateCacheKey(uri);
+        const cached = this.cache.get(key);
+        
+        if (!cached) {
+            return null;
+        }
+        
+        // Check time-based expiry
         if (this.isExpired(cached)) {
             this.cache.delete(key);
             return null;
         }
+        
+        // Check position-sensitive expiry if enabled and caret offsets available
+        if (this.enablePositionSensitive && 
+            cached.caretOffset !== undefined && 
+            currentCaretOffset !== undefined) {
+            if (this.isStaleCacheHit(currentCaretOffset, cached.caretOffset)) {
+                this.cache.delete(key);
+                return null;
+            }
+        }
+        
+        // Update last access time and increment access count
+        cached.lastAccess = Date.now();
+        this.accessCount++;
         
         return cached.value;
     }
@@ -104,12 +179,37 @@ export class ContextCache {
      * Set cached imports for a document URI
      * @param uri Document URI
      * @param imports Import class array to cache
+     * @param documentVersion Optional document version
+     * @param caretOffset Optional caret offset for position-sensitive caching
      */
-    public set(uri: vscode.Uri, imports: INodeImportClass[]): void {
+    public async set(uri: vscode.Uri, imports: INodeImportClass[], documentVersion?: number, caretOffset?: number): Promise<void> {
         const key = this.generateCacheKey(uri);
+        const now = Date.now();
+        
+        // Check cache size limit and evict if necessary
+        if (this.cache.size >= this.maxCacheSize) {
+            this.evictLeastRecentlyUsed();
+        }
+        
+        // Generate content hash if enabled
+        let contentHash: string | undefined;
+        if (this.enableContentHashing) {
+            try {
+                const document = await vscode.workspace.openTextDocument(uri);
+                contentHash = crypto.createHash('md5').update(document.getText()).digest('hex');
+            } catch (error) {
+                logger.error('Failed to generate content hash:', error);
+            }
+        }
+        
         this.cache.set(key, {
+            id: crypto.randomUUID(),
             value: imports,
-            timestamp: Date.now()
+            timestamp: now,
+            lastAccess: now,
+            documentVersion,
+            contentHash,
+            caretOffset
         });
     }
     
@@ -120,6 +220,89 @@ export class ContextCache {
      */
     private isExpired(entry: CacheEntry): boolean {
         return Date.now() - entry.timestamp > this.expiryTime;
+    }
+    
+    /**
+     * Check if cache is stale based on caret position (similar to CopilotCompletionContextProvider)
+     * @param currentCaretOffset Current caret offset
+     * @param cachedCaretOffset Cached caret offset
+     * @returns True if stale, false otherwise
+     */
+    private isStaleCacheHit(currentCaretOffset: number, cachedCaretOffset: number): boolean {
+        return Math.abs(currentCaretOffset - cachedCaretOffset) > this.maxCaretDistance;
+    }
+    
+    /**
+     * Enhanced expiry check including content changes and position sensitivity
+     * @param uri Document URI
+     * @param entry Cache entry to check
+     * @param currentCaretOffset Optional current caret offset
+     * @returns True if expired or stale
+     */
+    private async isExpiredOrStale(uri: vscode.Uri, entry: CacheEntry, currentCaretOffset?: number): Promise<boolean> {
+        // Check time-based expiry
+        if (this.isExpired(entry)) {
+            return true;
+        }
+        
+        // Check position-sensitive expiry if enabled and caret offsets available
+        if (this.enablePositionSensitive && 
+            entry.caretOffset !== undefined && 
+            currentCaretOffset !== undefined) {
+            if (this.isStaleCacheHit(currentCaretOffset, entry.caretOffset)) {
+                return true;
+            }
+        }
+        
+        // Check content-based changes
+        if (await this.hasContentChanged(uri, entry)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Evict least recently used cache entries when cache is full
+     */
+    private evictLeastRecentlyUsed(): void {
+        if (this.cache.size === 0) return;
+        
+        let oldestTime = Date.now();
+        let oldestKey = '';
+        
+        for (const [key, entry] of this.cache.entries()) {
+            if (entry.lastAccess < oldestTime) {
+                oldestTime = entry.lastAccess;
+                oldestKey = key;
+            }
+        }
+        
+        if (oldestKey) {
+            this.cache.delete(oldestKey);
+            logger.trace('Evicted LRU cache entry:', oldestKey);
+        }
+    }
+    
+    /**
+     * Check if content has changed by comparing hash
+     * @param uri Document URI 
+     * @param entry Cache entry to check
+     * @returns True if content has changed
+     */
+    private async hasContentChanged(uri: vscode.Uri, entry: CacheEntry): Promise<boolean> {
+        if (!this.enableContentHashing || !entry.contentHash) {
+            return false;
+        }
+        
+        try {
+            const document = await vscode.workspace.openTextDocument(uri);
+            const currentHash = crypto.createHash('md5').update(document.getText()).digest('hex');
+            return currentHash !== entry.contentHash;
+        } catch (error) {
+            logger.error('Failed to check content change:', error);
+            return false;
+        }
     }
     
     /**
@@ -149,7 +332,7 @@ export class ContextCache {
         const key = this.generateCacheKey(uri);
         if (this.cache.has(key)) {
             this.cache.delete(key);
-            console.log('Cache invalidated for:', uri.toString());
+            logger.trace('Cache invalidated for:', uri.toString());
         }
     }
     
@@ -157,10 +340,20 @@ export class ContextCache {
      * Get cache statistics
      * @returns Object containing cache size and other statistics
      */
-    public getStats(): { size: number; expiryTime: number } {
+    public getStats(): { 
+        size: number; 
+        expiryTime: number;
+        accessCount: number;
+        maxSize: number;
+        hitRate?: number;
+        positionSensitive: boolean;
+    } {
         return {
             size: this.cache.size,
-            expiryTime: this.expiryTime
+            expiryTime: this.expiryTime,
+            accessCount: this.accessCount,
+            maxSize: this.maxCacheSize,
+            positionSensitive: this.enablePositionSensitive
         };
     }
     
@@ -168,9 +361,9 @@ export class ContextCache {
      * Start periodic cleanup of expired cache entries
      */
     private startPeriodicCleanup(): void {
-        this.cleanupInterval = setInterval(() => {
+        this.cleanupTimer = setInterval(() => {
             this.clearExpired();
-        }, this.expiryTime);
+        }, this.cleanupIntervalMs);
     }
     
     /**
@@ -191,9 +384,9 @@ export class ContextCache {
      * Dispose of all resources (intervals, watchers, etc.)
      */
     public dispose(): void {
-        if (this.cleanupInterval) {
-            clearInterval(this.cleanupInterval);
-            this.cleanupInterval = undefined;
+        if (this.cleanupTimer) {
+            clearInterval(this.cleanupTimer);
+            this.cleanupTimer = undefined;
         }
         
         if (this.fileWatcher) {
@@ -209,3 +402,16 @@ export class ContextCache {
  * Default context cache instance
  */
 export const contextCache = new ContextCache();
+
+/**
+ * Enhanced context cache instance with position-sensitive features enabled
+ * for more precise code completion context
+ */
+export const enhancedContextCache = new ContextCache({
+    expiryTime: 10 * 60 * 1000, // 10 minutes
+    enablePositionSensitive: true,
+    maxCaretDistance: 8192, // Same as CopilotCompletionContextProvider
+    enableContentHashing: true,
+    maxCacheSize: 100,
+    cleanupInterval: 2 * 60 * 1000 // 2 minutes
+});
