@@ -27,6 +27,9 @@ By installing Extension Pack for Java, the following extensions are installed:
 - [📦 Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode)
     - AI-assisted development
     - Completion list ranked by AI
+- [📦 GitHub Copilot app modernization](https://marketplace.visualstudio.com/items?itemName=vscjava.migrate-java-to-azure)
+    - AI assistant that helps developers to modernize legacy Java applications
+    - Runtime and framework upgrades, dependency updates, and cloud migration preparation
 
 ## Other Recommendations
 
