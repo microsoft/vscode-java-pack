@@ -56,13 +56,13 @@ extends:
                 displayName: Replace AI Key
                 inputs:
                   script: npx json@9.0.6 -I -f package.json -e "this.aiKey=\"%AI_KEY%\""
-              - task: PowerShell@2
-                displayName: update version in package json
-                inputs:
-                  targetType: inline
-                  script: |-
-                    node ./scripts/prepare-nightly-build.js
-                    Move-Item -Path "./package.insiders.json" -Destination "./package.json" -Force
+              # - task: PowerShell@2
+              #   displayName: update version in package json
+              #   inputs:
+              #     targetType: inline
+              #     script: |-
+              #       node ./scripts/prepare-nightly-build.js
+              #       Move-Item -Path "./package.insiders.json" -Destination "./package.json" -Force
               - task: CmdLine@2
                 displayName: VSCE package --pre-release
                 inputs:
