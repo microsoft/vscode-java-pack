@@ -66,7 +66,7 @@ extends:
               - task: CmdLine@2
                 displayName: VSCE package --pre-release
                 inputs:
-                  script: npx @vscode/vsce@latest package --pre-release -o extension.vsix
+                  script: npx @vscode/vsce@latest package -o extension.vsix
               ### Copy files for APIScan
               - task: CopyFiles@2
                 displayName: "Copy Files for APIScan"
