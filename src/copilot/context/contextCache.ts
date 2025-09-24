@@ -191,12 +191,15 @@ export class ContextCache {
             this.evictLeastRecentlyUsed();
         }
         
-        // Generate content hash if enabled
+        // Generate lightweight content hash if enabled
         let contentHash: string | undefined;
         if (this.enableContentHashing) {
             try {
                 const document = await vscode.workspace.openTextDocument(uri);
-                contentHash = crypto.createHash('md5').update(document.getText()).digest('hex');
+                // Use document version and file stats for efficient change detection
+                const stats = await vscode.workspace.fs.stat(uri);
+                const hashInput = `${document.version}-${stats.mtime}-${stats.size}`;
+                contentHash = crypto.createHash('md5').update(hashInput).digest('hex');
             } catch (error) {
                 logger.error('Failed to generate content hash:', error);
             }
@@ -285,7 +288,7 @@ export class ContextCache {
     }
     
     /**
-     * Check if content has changed by comparing hash
+     * Check if content has changed by comparing lightweight hash
      * @param uri Document URI 
      * @param entry Cache entry to check
      * @returns True if content has changed
@@ -296,8 +299,16 @@ export class ContextCache {
         }
         
         try {
+            // Fast check using document version first
             const document = await vscode.workspace.openTextDocument(uri);
-            const currentHash = crypto.createHash('md5').update(document.getText()).digest('hex');
+            if (entry.documentVersion !== undefined && document.version !== entry.documentVersion) {
+                return true;
+            }
+            
+            // If document version is the same or not available, check file stats
+            const stats = await vscode.workspace.fs.stat(uri);
+            const hashInput = `${document.version}-${stats.mtime}-${stats.size}`;
+            const currentHash = crypto.createHash('md5').update(hashInput).digest('hex');
             return currentHash !== entry.contentHash;
         } catch (error) {
             logger.error('Failed to check content change:', error);
