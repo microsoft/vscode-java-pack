@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, Uri } from "vscode";
+import { commands, Uri, CancellationToken } from "vscode";
 import { logger } from "../utils";
 import { validateAndRecommendExtension } from "../../recommendation";
 
@@ -16,15 +16,45 @@ export namespace CopilotHelper {
     /**
      * Resolves all local project types imported by the given file
      * @param fileUri The URI of the Java file to analyze
+     * @param cancellationToken Optional cancellation token to abort the operation
      * @returns Array of strings in format "type:fully.qualified.name" where type is class|interface|enum|annotation
      */
-    export async function resolveLocalImports(fileUri: Uri): Promise<INodeImportClass[]> {
+    export async function resolveLocalImports(fileUri: Uri, cancellationToken?: CancellationToken): Promise<INodeImportClass[]> {
+        if (cancellationToken?.isCancellationRequested) {
+            return [];
+        }
+        
         if (!await validateAndRecommendExtension("vscjava.vscode-java-dependency", "Project Manager for Java extension is recommended to provide additional Java project explorer features.", true)) {
             return [];
         }
+        
+        if (cancellationToken?.isCancellationRequested) {
+            return [];
+        }
+        
         try {
-            return await commands.executeCommand("java.execute.workspaceCommand", "java.project.getImportClassContent", fileUri.toString()) || [];
-        } catch (error) {
+            // Create a promise that can be cancelled
+            const commandPromise = commands.executeCommand("java.execute.workspaceCommand", "java.project.getImportClassContent", fileUri.toString()) as Promise<INodeImportClass[]>;
+            
+            if (cancellationToken) {
+                const result = await Promise.race([
+                    commandPromise,
+                    new Promise<INodeImportClass[]>((_, reject) => {
+                        cancellationToken.onCancellationRequested(() => {
+                            reject(new Error('Operation cancelled'));
+                        });
+                    })
+                ]);
+                return result || [];
+            } else {
+                const result = await commandPromise;
+                return result || [];
+            }
+        } catch (error: any) {
+            if (error.message === 'Operation cancelled') {
+                logger.info('Resolve local imports cancelled');
+                return [];
+            }
             logger.error("Error resolving copilot request:", error);
             return [];
         }

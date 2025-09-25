@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import {
-    ContextProviderApiV1,
     ResolveRequest,
     SupportedContextItem,
     type ContextProvider,
@@ -12,7 +11,16 @@ import * as vscode from 'vscode';
 import { CopilotHelper } from './context/copilotHelper';
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { contextCache } from './context/contextCache';
-import { getProjectJavaVersion, logger } from './utils';
+import { 
+    getProjectJavaVersion, 
+    logger, 
+    JavaContextProviderUtils,
+    CancellationError,
+    InternalCancellationError,
+    CopilotCancellationError,
+    ContextResolverFunction,
+    CopilotApi
+} from './utils';
 import { getExtensionName } from '../utils/extension';
 
 export async function registerCopilotContextProviders(
@@ -22,63 +30,26 @@ export async function registerCopilotContextProviders(
     contextCache.initialize(context);
     
     try {
-        const copilotClientApi = await getCopilotClientApi();
-        const copilotChatApi = await getCopilotChatApi();
-        if (!copilotClientApi || !copilotChatApi) {
+        const apis = await JavaContextProviderUtils.getCopilotApis();
+        if (!apis.clientApi || !apis.chatApi) {
             logger.info('Failed to find compatible version of GitHub Copilot extension installed. Skip registration of Copilot context provider.');
             return;
         }
+
         // Register the Java completion context provider
         const provider: ContextProvider<SupportedContextItem> = {
             id: getExtensionName(), // use extension id as provider id for now
             selector: [{ language: "java" }],
-            resolver: {
-                resolve: async (request, token) => {                    
-                    // Check if we have a cached result for the current active editor
-                    const activeEditor = vscode.window.activeTextEditor;
-                    if (activeEditor && activeEditor.document.languageId === 'java') {
-                        // Get current caret offset for position-sensitive caching
-                        const currentCaretOffset = activeEditor.document.offsetAt(activeEditor.selection.active);
-                        
-                        // Try to get cached imports with position validation
-                        const cachedImports = await contextCache.get(activeEditor.document.uri, currentCaretOffset);
-                        if (cachedImports) {
-                            logger.trace('Using cached imports, cache size:', cachedImports.length);
-                            // Return cached result as context items
-                            return cachedImports.map((cls: any) => ({
-                                uri: cls.uri,
-                                value: cls.className,
-                                importance: 70,
-                                origin: 'request' as const
-                            }));
-                        }
-                    }
-                    
-                    return await resolveJavaContext(request, token);
-                }
-            }
+            resolver: { resolve: createJavaContextResolver() }
         };
 
-        let installCount = 0;
-        if (copilotClientApi) {
-            const disposable = await installContextProvider(copilotClientApi, provider);
-            if (disposable) {
-                context.subscriptions.push(disposable);
-                installCount++;
-            }
-        }
-        if (copilotChatApi) {
-            const disposable = await installContextProvider(copilotChatApi, provider);
-            if (disposable) {
-                context.subscriptions.push(disposable);
-                installCount++;
-            }
-        }
+        const installCount = await JavaContextProviderUtils.installContextProviderOnApis(apis, provider, context, installContextProvider);
 
         if (installCount === 0) {
             logger.info('Incompatible GitHub Copilot extension installed. Skip registration of Java context providers.');
             return;
         }
+        
         logger.info('Registration of Java context provider for GitHub Copilot extension succeeded.');
         sendInfo("", {
             "action": "registerCopilotContextProvider",
@@ -92,10 +63,64 @@ export async function registerCopilotContextProviders(
     }
 }
 
-async function resolveJavaContext(_request: ResolveRequest, _token: vscode.CancellationToken): Promise<SupportedContextItem[]> {
+/**
+ * Create the Java context resolver function
+ */
+function createJavaContextResolver(): ContextResolverFunction {
+    return async (request: ResolveRequest, copilotCancel: vscode.CancellationToken): Promise<SupportedContextItem[]> => {
+        const resolveStartTime = performance.now();
+        let logMessage = `Java Context Provider: resolve(${request.documentContext.uri}:${request.documentContext.offset}):`;
+        
+        try {
+            // Check for immediate cancellation
+            JavaContextProviderUtils.checkCancellation(copilotCancel);
+            
+            // Check if we have a cached result for the current active editor
+            const activeEditor = vscode.window.activeTextEditor;
+            if (activeEditor && activeEditor.document.languageId === 'java') {
+                // Get current caret offset for position-sensitive caching
+                const currentCaretOffset = activeEditor.document.offsetAt(activeEditor.selection.active);
+                
+                // Try to get cached imports with position validation
+                const cachedImports = await contextCache.get(activeEditor.document.uri, currentCaretOffset);
+                if (cachedImports && !copilotCancel.isCancellationRequested) {
+                    logger.trace('Using cached imports, cache size:', cachedImports.length);
+                    logMessage += `(cached result with ${cachedImports.length} items)`;
+                    // Return cached result as context items
+                    return JavaContextProviderUtils.createContextItemsFromImports(cachedImports);
+                }
+            }
+            
+            return await resolveJavaContext(request, copilotCancel);
+        } catch (error: any) {
+            try {
+                JavaContextProviderUtils.handleError(error, 'Java context provider resolve', resolveStartTime, logMessage);
+            } catch (handledError) {
+                // Return empty array if error handling throws
+                return [];
+            }
+            // This should never be reached due to handleError throwing, but TypeScript requires it
+            return [];
+        } finally {
+            const duration = Math.round(performance.now() - resolveStartTime);
+            if (!logMessage.includes('cancellation')) {
+                logMessage += `(completed in ${duration}ms)`;
+                logger.info(logMessage);
+            }
+        }
+    };
+}
+
+async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode.CancellationToken): Promise<SupportedContextItem[]> {
     const items: SupportedContextItem[] = [];
     const start = performance.now();
+    const documentUri = request.documentContext.uri;
+    const caretOffset = request.documentContext.offset;
+    
     try {
+        // Check for cancellation before starting
+        JavaContextProviderUtils.checkCancellation(copilotCancel);
+        
         // Get current document and position information
         const activeEditor = vscode.window.activeTextEditor;
         if (!activeEditor || activeEditor.document.languageId !== 'java') {
@@ -104,31 +129,27 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
 
         const document = activeEditor.document;
 
-        // 1. Project basic information (High importance)
+        // Project basic information (High importance)
         const javaVersion = await getProjectJavaVersion(document);
+        
+        // Check for cancellation after potentially long operation
+        JavaContextProviderUtils.checkCancellation(copilotCancel);
 
-        items.push({
-            name: 'java.version',
-            value: javaVersion,
-            importance: 90,
-            id: 'java-version',
-            origin: 'request'
-        });
-
-        items.push({
-            name: 'java.file',
-            value: vscode.workspace.asRelativePath(document.uri),
-            importance: 80,
-            id: 'java-file-path',
-            origin: 'request'
-        });
+        items.push(JavaContextProviderUtils.createJavaVersionItem(javaVersion));
 
         // Try to get cached imports first
         let importClass = await contextCache.get(document.uri);
         if (!importClass) {
+            // Check for cancellation before expensive operation
+            JavaContextProviderUtils.checkCancellation(copilotCancel);
+            
             // If not cached, resolve and cache the result
-            const resolvedImports = await CopilotHelper.resolveLocalImports(document.uri);
+            const resolvedImports = await CopilotHelper.resolveLocalImports(document.uri, copilotCancel);
             logger.trace('Resolved imports count:', resolvedImports);
+            
+            // Check for cancellation after resolution
+            JavaContextProviderUtils.checkCancellation(copilotCancel);
+            
             if (resolvedImports) {
                 // Get current caret offset for position-sensitive caching
                 const currentCaretOffset = vscode.window.activeTextEditor?.document.offsetAt(
@@ -143,60 +164,34 @@ async function resolveJavaContext(_request: ResolveRequest, _token: vscode.Cance
             logger.info('Using cached imports in resolveJavaContext, cache size:', importClass.length);
         }
         
+        // Check for cancellation before processing results
+        JavaContextProviderUtils.checkCancellation(copilotCancel);
+        
         if (importClass) {
-            for (const cls of importClass) {
-                items.push({
-                    uri: cls.uri,
-                    value: cls.className,
-                    importance: 70,
-                    origin: 'request'
-                });
-            }
+            // Process imports in batches to reduce cancellation check overhead
+            const contextItems = JavaContextProviderUtils.createContextItemsFromImports(importClass);
+            
+            // Check cancellation once after creating all items
+            JavaContextProviderUtils.checkCancellation(copilotCancel);
+            
+            items.push(...contextItems);
         }
-    } catch (error) {
-        logger.error('Error resolving Java context:', error);
+    } catch (error: any) {
+        if (error instanceof CopilotCancellationError) {
+            throw error;
+        }
+        if (error instanceof vscode.CancellationError || error.message === CancellationError.Canceled) {
+            throw new InternalCancellationError();
+        }
+        logger.error(`Error resolving Java context for ${documentUri}:${caretOffset}:`, error);
+        // Don't rethrow general errors, return partial results
     }
-    logger.info('Total context resolution time:', performance.now() - start, 'ms', ' ,size:', items.length);
-    logger.info('Context items:', items);
+    
+    JavaContextProviderUtils.logCompletion('Java context resolution', documentUri, caretOffset, start, items.length);
     return items;
 }
 
-interface CopilotApi {
-    getContextProviderAPI(version: string): Promise<ContextProviderApiV1 | undefined>;
-}
-
-async function getCopilotClientApi(): Promise<CopilotApi | undefined> {
-    const extension = vscode.extensions.getExtension<CopilotApi>('github.copilot');
-    if (!extension) {
-        return undefined;
-    }
-    try {
-        return await extension.activate();
-    } catch {
-        return undefined;
-    }
-}
-
-async function getCopilotChatApi(): Promise<CopilotApi | undefined> {
-    type CopilotChatApi = { getAPI?(version: number): CopilotApi | undefined };
-    const extension = vscode.extensions.getExtension<CopilotChatApi>('github.copilot-chat');
-    if (!extension) {
-        return undefined;
-    }
-
-    let exports: CopilotChatApi | undefined;
-    try {
-        exports = await extension.activate();
-    } catch {
-        return undefined;
-    }
-    if (!exports || typeof exports.getAPI !== 'function') {
-        return undefined;
-    }
-    return exports.getAPI(1);
-}
-
-async function installContextProvider(
+export async function installContextProvider(
     copilotAPI: CopilotApi,
     contextProvider: ContextProvider<SupportedContextItem>
 ): Promise<vscode.Disposable | undefined> {
