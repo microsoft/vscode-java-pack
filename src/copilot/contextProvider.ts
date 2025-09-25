@@ -10,7 +10,6 @@ import {
 import * as vscode from 'vscode';
 import { CopilotHelper } from './context/copilotHelper';
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
-import { contextCache } from './context/contextCache';
 import { 
     getProjectJavaVersion, 
     logger, 
@@ -26,9 +25,6 @@ import { getExtensionName } from '../utils/extension';
 export async function registerCopilotContextProviders(
     context: vscode.ExtensionContext
 ) {
-    // Initialize the context cache with enhanced options
-    contextCache.initialize(context);
-    
     try {
         const apis = await JavaContextProviderUtils.getCopilotApis();
         if (!apis.clientApi || !apis.chatApi) {
@@ -74,22 +70,6 @@ function createJavaContextResolver(): ContextResolverFunction {
         try {
             // Check for immediate cancellation
             JavaContextProviderUtils.checkCancellation(copilotCancel);
-            
-            // Check if we have a cached result for the current active editor
-            const activeEditor = vscode.window.activeTextEditor;
-            if (activeEditor && activeEditor.document.languageId === 'java') {
-                // Get current caret offset for position-sensitive caching
-                const currentCaretOffset = activeEditor.document.offsetAt(activeEditor.selection.active);
-                
-                // Try to get cached imports with position validation
-                const cachedImports = await contextCache.get(activeEditor.document.uri, currentCaretOffset);
-                if (cachedImports && !copilotCancel.isCancellationRequested) {
-                    logger.trace('Using cached imports, cache size:', cachedImports.length);
-                    logMessage += `(cached result with ${cachedImports.length} items)`;
-                    // Return cached result as context items
-                    return JavaContextProviderUtils.createContextItemsFromImports(cachedImports);
-                }
-            }
             
             return await resolveJavaContext(request, copilotCancel);
         } catch (error: any) {
@@ -137,32 +117,15 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
 
         items.push(JavaContextProviderUtils.createJavaVersionItem(javaVersion));
 
-        // Try to get cached imports first
-        let importClass = await contextCache.get(document.uri);
-        if (!importClass) {
-            // Check for cancellation before expensive operation
-            JavaContextProviderUtils.checkCancellation(copilotCancel);
-            
-            // If not cached, resolve and cache the result
-            const resolvedImports = await CopilotHelper.resolveLocalImports(document.uri, copilotCancel);
-            logger.trace('Resolved imports count:', resolvedImports);
-            
-            // Check for cancellation after resolution
-            JavaContextProviderUtils.checkCancellation(copilotCancel);
-            
-            if (resolvedImports) {
-                // Get current caret offset for position-sensitive caching
-                const currentCaretOffset = vscode.window.activeTextEditor?.document.offsetAt(
-                    vscode.window.activeTextEditor.selection.active
-                );
-                
-                await contextCache.set(document.uri, resolvedImports, undefined, currentCaretOffset);
-                importClass = resolvedImports;
-                logger.trace('Cached new imports, cache size:', importClass.length);
-            }
-        } else {
-            logger.info('Using cached imports in resolveJavaContext, cache size:', importClass.length);
-        }
+        // Check for cancellation before expensive operation
+        JavaContextProviderUtils.checkCancellation(copilotCancel);
+        
+        // Resolve imports directly without caching
+        const importClass = await CopilotHelper.resolveLocalImports(document.uri, copilotCancel);
+        logger.trace('Resolved imports count:', importClass?.length || 0);
+        
+        // Check for cancellation after resolution
+        JavaContextProviderUtils.checkCancellation(copilotCancel);
         
         // Check for cancellation before processing results
         JavaContextProviderUtils.checkCancellation(copilotCancel);
