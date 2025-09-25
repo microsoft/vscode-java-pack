@@ -3,7 +3,7 @@
 
 import { commands, Uri, CancellationToken } from "vscode";
 import { logger } from "../utils";
-import { validateAndRecommendExtension } from "../../recommendation";
+import { validateExtensionInstalled } from "../../recommendation";
 
 export interface INodeImportClass {
     uri: string;
@@ -23,8 +23,8 @@ export namespace CopilotHelper {
         if (cancellationToken?.isCancellationRequested) {
             return [];
         }
-        
-        if (!await validateAndRecommendExtension("vscjava.vscode-java-dependency", "Project Manager for Java extension is recommended to provide additional Java project explorer features.", true)) {
+        // Ensure the Java Dependency extension is installed and meets the minimum version requirement.
+        if (!await validateExtensionInstalled("vscjava.vscode-java-dependency", "0.26.0")) {
             return [];
         }
         

@@ -3,7 +3,7 @@
 
 import * as vscode from "vscode";
 import { initialize as initHandler, extensionRecommendationHandler } from "./handler";
-import { isExtensionInstalled, getExtensionContext } from "../utils";
+import { isExtensionInstalled, getExtensionContext, getInstalledExtension } from "../utils";
 
 export function initialize(_context: vscode.ExtensionContext) {
   initHandler();
@@ -16,5 +16,15 @@ export async function validateAndRecommendExtension(extName: string, message: st
 
   await extensionRecommendationHandler(getExtensionContext(), extName, message, isForce);
 
+  return false;
+}
+
+export async function validateExtensionInstalled(extName: string, version: string) {
+  if(isExtensionInstalled(extName)) {
+    return true;
+  }
+  if(version && getInstalledExtension(extName)?.packageJSON.version >= version) {
+    return true;
+  }
   return false;
 }

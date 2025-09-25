@@ -20,8 +20,8 @@ interface CacheEntry {
     documentVersion?: number;
     /** Last access timestamp */
     lastAccess: number;
-    /** File content hash for change detection */
-    contentHash?: string;
+    /** File content fingerprint for change detection */
+    contentFingerprint?: string;
     /** Caret offset when cached (for position-sensitive invalidation) */
     caretOffset?: number;
 }
@@ -104,6 +104,8 @@ export class ContextCache {
     
     /**
      * Generate a hash for the document URI to use as cache key
+     * Note: We use MD5 for URI hashing because URIs can be long and contain special characters,
+     * while MD5 provides consistent, fixed-length keys that are safe for Map keys.
      * @param uri Document URI
      * @returns Hashed URI string
      */
@@ -191,17 +193,17 @@ export class ContextCache {
             this.evictLeastRecentlyUsed();
         }
         
-        // Generate lightweight content hash if enabled
-        let contentHash: string | undefined;
+        // Generate lightweight content fingerprint if enabled
+        let contentFingerprint: string | undefined;
         if (this.enableContentHashing) {
             try {
                 const document = await vscode.workspace.openTextDocument(uri);
                 // Use document version and file stats for efficient change detection
                 const stats = await vscode.workspace.fs.stat(uri);
-                const hashInput = `${document.version}-${stats.mtime}-${stats.size}`;
-                contentHash = crypto.createHash('md5').update(hashInput).digest('hex');
+                // Use the fingerprint directly - it's short and efficient
+                contentFingerprint = `${document.version}-${stats.mtime}-${stats.size}`;
             } catch (error) {
-                logger.error('Failed to generate content hash:', error);
+                logger.error('Failed to generate content fingerprint:', error);
             }
         }
         
@@ -211,7 +213,7 @@ export class ContextCache {
             timestamp: now,
             lastAccess: now,
             documentVersion,
-            contentHash,
+            contentFingerprint,
             caretOffset
         });
     }
@@ -288,13 +290,13 @@ export class ContextCache {
     }
     
     /**
-     * Check if content has changed by comparing lightweight hash
+     * Check if content has changed by comparing lightweight fingerprint
      * @param uri Document URI 
      * @param entry Cache entry to check
      * @returns True if content has changed
      */
     private async hasContentChanged(uri: vscode.Uri, entry: CacheEntry): Promise<boolean> {
-        if (!this.enableContentHashing || !entry.contentHash) {
+        if (!this.enableContentHashing || !entry.contentFingerprint) {
             return false;
         }
         
@@ -307,9 +309,8 @@ export class ContextCache {
             
             // If document version is the same or not available, check file stats
             const stats = await vscode.workspace.fs.stat(uri);
-            const hashInput = `${document.version}-${stats.mtime}-${stats.size}`;
-            const currentHash = crypto.createHash('md5').update(hashInput).digest('hex');
-            return currentHash !== entry.contentHash;
+            const currentFingerprint = `${document.version}-${stats.mtime}-${stats.size}`;
+            return currentFingerprint !== entry.contentFingerprint;
         } catch (error) {
             logger.error('Failed to check content change:', error);
             return false;
@@ -413,16 +414,3 @@ export class ContextCache {
  * Default context cache instance
  */
 export const contextCache = new ContextCache();
-
-/**
- * Enhanced context cache instance with position-sensitive features enabled
- * for more precise code completion context
- */
-export const enhancedContextCache = new ContextCache({
-    expiryTime: 10 * 60 * 1000, // 10 minutes
-    enablePositionSensitive: true,
-    maxCaretDistance: 8192, // Same as CopilotCompletionContextProvider
-    enableContentHashing: true,
-    maxCacheSize: 100,
-    cleanupInterval: 2 * 60 * 1000 // 2 minutes
-});

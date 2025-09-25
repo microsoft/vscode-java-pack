@@ -27,6 +27,10 @@ export function isExtensionInstalled(extName: string) {
   return !!vscode.extensions.getExtension(extName);
 }
 
+export function getInstalledExtension(extName: string) {
+  return vscode.extensions.getExtension(extName);
+}
+
 export async function recommendExtension(extName: string, message: string): Promise<void> {
   const action = "Install";
   const answer = await vscode.window.showInformationMessage(message, action);
