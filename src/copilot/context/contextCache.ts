@@ -46,6 +46,10 @@ interface ContextCacheOptions {
     maxCaretDistance?: number;
     /** Enable position-sensitive cache invalidation. Default: false */
     enablePositionSensitive?: boolean;
+    /** Only watch files that are currently cached (more efficient). Default: true */
+    watchOnlyCachedFiles?: boolean;
+    /** Custom directories to exclude from file watching. Default: common build/dependency folders */
+    watcherExcludeDirs?: string[];
 }
 
 /**
@@ -61,6 +65,8 @@ export class ContextCache {
     private readonly cleanupIntervalMs: number;
     private readonly maxCaretDistance: number;
     private readonly enablePositionSensitive: boolean;
+    private readonly watchOnlyCachedFiles: boolean;
+    private readonly watcherExcludeDirs: string[];
     
     private cleanupTimer?: NodeJS.Timeout;
     private fileWatcher?: vscode.FileSystemWatcher;
@@ -75,6 +81,11 @@ export class ContextCache {
         this.cleanupIntervalMs = options.cleanupInterval ?? 2 * 60 * 1000; // 2 minutes
         this.maxCaretDistance = options.maxCaretDistance ?? 8192; // Same as CopilotCompletionContextProvider
         this.enablePositionSensitive = options.enablePositionSensitive ?? false;
+        this.watchOnlyCachedFiles = options.watchOnlyCachedFiles ?? true;
+        this.watcherExcludeDirs = options.watcherExcludeDirs ?? [
+            'node_modules', 'target', 'build', 'out', '.git', 
+            'bin', '.vscode', '.idea', 'dist', '.next', 'coverage'
+        ];
     }
     
     /**
@@ -380,12 +391,38 @@ export class ContextCache {
     
     /**
      * Setup file system watcher for Java files to invalidate cache on changes
+     * Optimized to exclude common directories that don't need monitoring
      */
     private setupFileWatcher(): void {
         this.fileWatcher = vscode.workspace.createFileSystemWatcher('**/*.java');
         
+        const shouldIgnoreFile = (uri: vscode.Uri): boolean => {
+            const path = uri.fsPath.toLowerCase();
+            return this.watcherExcludeDirs.some(dir => 
+                path.includes(`/${dir}/`) || path.includes(`\\${dir}\\`) ||
+                path.includes(`/${dir}`) || path.includes(`\\${dir}`)
+            );
+        };
+        
         const invalidateHandler = (uri: vscode.Uri) => {
-            this.invalidate(uri);
+            // Skip files in excluded directories for performance
+            if (shouldIgnoreFile(uri)) {
+                return;
+            }
+            
+            // Apply smart filtering based on configuration
+            if (this.watchOnlyCachedFiles) {
+                // Only invalidate if we actually have this file cached (more efficient)
+                const key = this.generateCacheKey(uri);
+                if (this.cache.has(key)) {
+                    this.invalidate(uri);
+                    logger.trace('Cache invalidated due to file change:', uri.fsPath);
+                }
+            } else {
+                // Invalidate all files (less efficient but more comprehensive)
+                this.invalidate(uri);
+                logger.trace('Cache invalidated due to file change:', uri.fsPath);
+            }
         };
         
         this.fileWatcher.onDidChange(invalidateHandler);
@@ -411,6 +448,20 @@ export class ContextCache {
 }
 
 /**
- * Default context cache instance
+ * Default context cache instance with performance optimizations
+ * Configured for mixed projects (Java + TypeScript/Node.js)
  */
-export const contextCache = new ContextCache();
+export const contextCache = new ContextCache({
+    enableFileWatching: true,
+    watchOnlyCachedFiles: true, // Only watch files we actually cache (major performance improvement)
+    watcherExcludeDirs: [
+        // Standard exclusions for mixed projects
+        'node_modules', 'target', 'build', 'out', '.git',
+        'bin', '.vscode', '.idea', 'dist', '.next', 'coverage',
+        // Additional exclusions for complex projects
+        'logs', 'tmp', 'temp', '.cache', '.gradle'
+    ],
+    expiryTime: 10 * 60 * 1000, // 10 minutes
+    maxCacheSize: 100,
+    enableContentHashing: true
+});
