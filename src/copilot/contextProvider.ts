@@ -91,6 +91,26 @@ function createJavaContextResolver(): ContextResolverFunction {
     };
 }
 
+/**
+ * Send telemetry data for Java context resolution
+ */
+function sendContextTelemetry(request: ResolveRequest, start: number, itemCount: number, status: string, error?: string) {
+    const duration = Math.round(performance.now() - start);
+    const telemetryData: any = {
+        "action": "resolveJavaContext",
+        "completionId": request.completionId,
+        "duration": duration,
+        "itemCount": itemCount,
+        "status": status
+    };
+    
+    if (error) {
+        telemetryData.error = error;
+    }
+    
+    sendInfo("", telemetryData);
+}
+
 async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode.CancellationToken): Promise<SupportedContextItem[]> {
     const items: SupportedContextItem[] = [];
     const start = performance.now();
@@ -141,14 +161,26 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
         }
     } catch (error: any) {
         if (error instanceof CopilotCancellationError) {
+            sendContextTelemetry(request, start, items.length, "cancelled_by_copilot");
             throw error;
         }
         if (error instanceof vscode.CancellationError || error.message === CancellationError.Canceled) {
+            sendContextTelemetry(request, start, items.length, "cancelled_internally");
             throw new InternalCancellationError();
         }
+        
+        // Send telemetry for general errors (but continue with partial results)
+        sendContextTelemetry(request, start, items.length, "error_partial_results", error.message || "unknown_error");
+        
         logger.error(`Error resolving Java context for ${documentUri}:${caretOffset}:`, error);
-        // Don't rethrow general errors, return partial results
+        
+        // Return partial results and log completion for error case
+        JavaContextProviderUtils.logCompletion('Java context resolution', documentUri, caretOffset, start, items.length);
+        return items;
     }
+    
+    // Send telemetry data once at the end for success case
+    sendContextTelemetry(request, start, items.length, "succeeded");
     
     JavaContextProviderUtils.logCompletion('Java context resolution', documentUri, caretOffset, start, items.length);
     return items;
