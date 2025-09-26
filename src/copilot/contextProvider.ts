@@ -10,8 +10,7 @@ import {
 import * as vscode from 'vscode';
 import { CopilotHelper } from './context/copilotHelper';
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
-import { 
-    getProjectJavaVersion, 
+import {
     logger, 
     JavaContextProviderUtils,
     CancellationError,
@@ -129,17 +128,6 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
 
         const document = activeEditor.document;
 
-        // Project basic information (High importance)
-        const javaVersion = await getProjectJavaVersion(document);
-        
-        // Check for cancellation after potentially long operation
-        JavaContextProviderUtils.checkCancellation(copilotCancel);
-
-        items.push(JavaContextProviderUtils.createJavaVersionItem(javaVersion));
-
-        // Check for cancellation before expensive operation
-        JavaContextProviderUtils.checkCancellation(copilotCancel);
-        
         // Resolve imports directly without caching
         const importClass = await CopilotHelper.resolveLocalImports(document.uri, copilotCancel);
         logger.trace('Resolved imports count:', importClass?.length || 0);
