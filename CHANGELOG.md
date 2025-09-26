@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.30.2 
+
+- enhancement - Remove app moderization extension from pack by @FluoriteCafe-work in https://github.com/microsoft/vscode-java-pack/pull/1500
+
 ## 0.30.0
 
 - enhancement - Add app moderization extension into pack by @FluoriteCafe-work in https://github.com/microsoft/vscode-java-pack/pull/1483
