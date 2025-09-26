@@ -20,8 +20,8 @@ export async function validateAndRecommendExtension(extName: string, message: st
 }
 
 export async function validateExtensionInstalled(extName: string, version: string) {
-  if(isExtensionInstalled(extName)) {
-    return true;
+  if(!isExtensionInstalled(extName)) {
+    return false;
   }
   if(version && getInstalledExtension(extName)?.packageJSON.version >= version) {
     return true;
