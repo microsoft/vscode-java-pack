@@ -1,7 +1,14 @@
 import { LogOutputChannel, SymbolKind, TextDocument, commands, window, Range, Selection, workspace, DocumentSymbol, version } from "vscode";
+import * as vscode from 'vscode';
 import { SymbolNode } from "./inspect/SymbolNode";
 import { SemVer } from "semver";
 import { createUuid, sendOperationEnd, sendOperationError, sendOperationStart } from "vscode-extension-telemetry-wrapper";
+import {
+    ContextProviderApiV1,
+    ResolveRequest,
+    SupportedContextItem,
+    type ContextProvider,
+} from '@github/copilot-language-server';
 
 export const CLASS_KINDS: SymbolKind[] = [SymbolKind.Class, SymbolKind.Interface, SymbolKind.Enum];
 export const METHOD_KINDS: SymbolKind[] = [SymbolKind.Method, SymbolKind.Constructor];
@@ -151,4 +158,184 @@ export function fixedInstrumentOperation(
  */
 export function fixedInstrumentSimpleOperation(operationName: string, cb: (...args: any[]) => any, thisArg?: any): (...args: any[]) => any {
     return fixedInstrumentOperation(operationName, async (_operationId, ...args) => await cb.apply(thisArg, args), thisArg /** unnecessary */);
+}
+
+/**
+ * Error classes for Copilot context provider cancellation handling
+ */
+export class CancellationError extends Error {
+    static readonly Canceled = "Canceled";
+    constructor() {
+        super(CancellationError.Canceled);
+        this.name = this.message;
+    }
+}
+
+export class InternalCancellationError extends CancellationError {
+}
+
+export class CopilotCancellationError extends CancellationError {
+}
+
+/**
+ * Type definitions for common patterns
+ */
+export type ContextResolverFunction = (request: ResolveRequest, token: vscode.CancellationToken) => Promise<SupportedContextItem[]>;
+
+export interface CopilotApiWrapper {
+    clientApi?: CopilotApi;
+    chatApi?: CopilotApi;
+}
+
+export interface CopilotApi {
+    getContextProviderAPI(version: string): Promise<ContextProviderApiV1 | undefined>;
+}
+
+/**
+ * Utility class for handling common operations in Java Context Provider
+ */
+export class JavaContextProviderUtils {
+    /**
+     * Check if operation should be cancelled and throw appropriate error
+     */
+    static checkCancellation(token: vscode.CancellationToken): void {
+        if (token.isCancellationRequested) {
+            throw new CopilotCancellationError();
+        }
+    }
+
+    /**
+     * Handle errors with appropriate logging and re-throwing
+     */
+    static handleError(error: any, operation: string, startTime: number, logMessage: string): never {
+        const duration = Math.round(performance.now() - startTime);
+        
+        if (error instanceof CopilotCancellationError) {
+            const message = `${logMessage}(copilot cancellation after ${duration}ms)`;
+            logger.info(message);
+            throw error;
+        }
+        if (error instanceof InternalCancellationError) {
+            const message = `${logMessage}(internal cancellation after ${duration}ms)`;
+            logger.info(message);
+            throw error;
+        }
+        if (error instanceof vscode.CancellationError || error.message === CancellationError.Canceled) {
+            const message = `${logMessage}(cancellation after ${duration}ms)`;
+            logger.info(message);
+            throw new CancellationError();
+        }
+        
+        logger.error(`Error in ${operation}:`, error);
+        throw error;
+    }
+
+    /**
+     * Create context items from import classes
+     */
+    static createContextItemsFromImports(importClasses: any[]): SupportedContextItem[] {
+        return importClasses.map((cls: any) => ({
+            uri: cls.uri,
+            value: cls.className,
+            importance: 70,
+            origin: 'request' as const
+        }));
+    }
+
+    /**
+     * Create a basic Java version context item
+     */
+    static createJavaVersionItem(javaVersion: string): SupportedContextItem {
+        return {
+            name: 'java.version',
+            value: javaVersion,
+            importance: 90,
+            id: 'java-version',
+            origin: 'request'
+        };
+    }
+
+    /**
+     * Log completion with timing information
+     */
+    static logCompletion(operation: string, documentUri: string, caretOffset: number, startTime: number, itemCount: number): void {
+        const duration = Math.round(performance.now() - startTime);
+        logger.info(`${operation} for ${documentUri}:${caretOffset} completed in ${duration}ms with ${itemCount} items`);
+    }
+
+    /**
+     * Get and validate Copilot APIs
+     */
+    static async getCopilotApis(): Promise<CopilotApiWrapper> {
+        const copilotClientApi = await getCopilotClientApi();
+        const copilotChatApi = await getCopilotChatApi();
+        return { clientApi: copilotClientApi, chatApi: copilotChatApi };
+    }
+
+    /**
+     * Install context provider on available APIs
+     */
+    static async installContextProviderOnApis(
+        apis: CopilotApiWrapper, 
+        provider: ContextProvider<SupportedContextItem>, 
+        context: vscode.ExtensionContext,
+        installFn: (api: CopilotApi, provider: ContextProvider<SupportedContextItem>) => Promise<vscode.Disposable | undefined>
+    ): Promise<number> {
+        let installCount = 0;
+        
+        if (apis.clientApi) {
+            const disposable = await installFn(apis.clientApi, provider);
+            if (disposable) {
+                context.subscriptions.push(disposable);
+                installCount++;
+            }
+        }
+        
+        if (apis.chatApi) {
+            const disposable = await installFn(apis.chatApi, provider);
+            if (disposable) {
+                context.subscriptions.push(disposable);
+                installCount++;
+            }
+        }
+        
+        return installCount;
+    }
+}
+
+/**
+ * Get Copilot client API
+ */
+export async function getCopilotClientApi(): Promise<CopilotApi | undefined> {
+    const extension = vscode.extensions.getExtension<CopilotApi>('github.copilot');
+    if (!extension) {
+        return undefined;
+    }
+    try {
+        return await extension.activate();
+    } catch {
+        return undefined;
+    }
+}
+
+/**
+ * Get Copilot chat API
+ */
+export async function getCopilotChatApi(): Promise<CopilotApi | undefined> {
+    type CopilotChatApi = { getAPI?(version: number): CopilotApi | undefined };
+    const extension = vscode.extensions.getExtension<CopilotChatApi>('github.copilot-chat');
+    if (!extension) {
+        return undefined;
+    }
+
+    let exports: CopilotChatApi | undefined;
+    try {
+        exports = await extension.activate();
+    } catch {
+        return undefined;
+    }
+    if (!exports || typeof exports.getAPI !== 'function') {
+        return undefined;
+    }
+    return exports.getAPI(1);
 }
