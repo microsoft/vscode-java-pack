@@ -36,6 +36,11 @@ const JdkRuntime = (): JSX.Element => {
     }
   }
 
+  const handleDropdownChange = (event: any) => {
+    const selectedValue = event.target.value;
+    handleSelectJdk(selectedValue);
+  }
+
   const onDidChangeJdk = (event: OnDidChangeJdkEvent) => {
     const {data} = event;
     if (data.command === "classpath.onDidChangeJdk") {
@@ -66,10 +71,8 @@ const JdkRuntime = (): JSX.Element => {
         className="setting-section-option"
         key={vmInstall.path}
         value={vmInstall.path}
-        selected={vmInstall.path === activeVmInstallPath}
         onMouseEnter={() => setOptionDescription(vmInstall.path)}
         onMouseLeave={() => setOptionDescription(activeVmInstallPath)}
-        onClick={() => handleSelectJdk(vmInstall.path)}
       >
         <span>{vmInstall.name}</span>
       </VSCodeOption>
@@ -84,7 +87,6 @@ const JdkRuntime = (): JSX.Element => {
       id="add-new-jdk"
       onMouseEnter={() => setOptionDescription("Select a JDK from the local file system.")}
       onMouseLeave={() => setOptionDescription(activeVmInstallPath)}
-      onClick={() => handleSelectJdk("add-new-jdk")}
     >
       <div className="setting-section-option-action">
         <span className="codicon codicon-folder-opened"/>Find a local JDK...
@@ -100,7 +102,6 @@ const JdkRuntime = (): JSX.Element => {
         id="download-jdk"
         onMouseEnter={() => setOptionDescription("Download a new JDK.")}
         onMouseLeave={() => setOptionDescription(activeVmInstallPath)}
-        onClick={() => handleSelectJdk("download-jdk")}
       >
         <div className="setting-section-option-action">
           <span className="codicon codicon-desktop-download"/>Download a new JDK...
@@ -112,7 +113,13 @@ const JdkRuntime = (): JSX.Element => {
     <div className="setting-section">
       <div className="flex-center mt-2">
         <span className="setting-section-description mr-1">JDK:</span>
-        <VSCodeDropdown id="jdk-dropdown" value={activeVmInstallPath} className="setting-section-dropdown" position="below">
+        <VSCodeDropdown 
+          id="jdk-dropdown" 
+          value={activeVmInstallPath} 
+          className="setting-section-dropdown" 
+          position="below"
+          onChange={handleDropdownChange}
+        >
           <div className="dropdown-description dropdown-above-description">
             <p>{optionDescription ?? activeVmInstallPath}</p>
             <VSCodeDivider></VSCodeDivider>
