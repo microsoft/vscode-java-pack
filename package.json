@@ -393,7 +393,7 @@
     "expand-home-dir": "0.0.3",
     "expand-tilde": "^2.0.2",
     "fs-extra": "^11.3.0",
-    "hdr-histogram-js": "^3.0.0",
+    "hdr-histogram-js": "^3.0.1",
     "highlight.js": "10.5.0",
     "jdk-utils": "^0.4.4",
     "jquery": "^3.6.1",
