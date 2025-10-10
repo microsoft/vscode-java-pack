@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.30.3
+
+- Add new experiment that add context provider for Copilot in https://github.com/microsoft/vscode-java-pack/pull/1489
+- Fix JDK runtime setting not working with keyboard arrow in https://github.com/microsoft/vscode-java-pack/pull/1503
+
 ## 0.30.2 
 
 - enhancement - Remove app moderization extension from pack by @FluoriteCafe-work in https://github.com/microsoft/vscode-java-pack/pull/1500
