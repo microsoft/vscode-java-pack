@@ -11,7 +11,7 @@ import * as vscode from 'vscode';
 import { CopilotHelper } from './context/copilotHelper';
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import {
-    logger, 
+    logger,
     JavaContextProviderUtils,
     CancellationError,
     InternalCancellationError,
@@ -20,10 +20,12 @@ import {
     CopilotApi
 } from './utils';
 import { getExtensionName } from '../utils/extension';
+import { validateAndInstallExtensionVersion } from "../recommendation";
 
 export async function registerCopilotContextProviders(
     context: vscode.ExtensionContext
 ) {
+    validateAndInstallExtensionVersion("vscjava.vscode-java-dependency", "0.30.2025101702", "the Java Dependency extension is required for Copilot to work properly.")
     try {
         const apis = await JavaContextProviderUtils.getCopilotApis();
         if (!apis.clientApi || !apis.chatApi) {
@@ -128,16 +130,37 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
 
         const document = activeEditor.document;
 
+        // Resolve project dependencies first
+        const projectDependencies = await CopilotHelper.resolveProjectDependencies(document.uri, copilotCancel);
+        logger.info('Resolved project dependencies count:', Object.keys(projectDependencies).length);
+        
+        // Check for cancellation after dependency resolution
+        JavaContextProviderUtils.checkCancellation(copilotCancel);
+        
+        // Convert project dependencies to Trait items
+        if (projectDependencies && Object.keys(projectDependencies).length > 0) {
+            for (const [key, value] of Object.entries(projectDependencies)) {
+                items.push({
+                    name: key,
+                    value: value,
+                    importance: 50
+                });
+            }
+        }
+        
+        // Check for cancellation before resolving imports
+        JavaContextProviderUtils.checkCancellation(copilotCancel);
+
         // Resolve imports directly without caching
         const importClass = await CopilotHelper.resolveLocalImports(document.uri, copilotCancel);
-        logger.trace('Resolved imports count:', importClass?.length || 0);
+        logger.info('Resolved imports count:', importClass?.length || 0);
         
         // Check for cancellation after resolution
         JavaContextProviderUtils.checkCancellation(copilotCancel);
         
         // Check for cancellation before processing results
         JavaContextProviderUtils.checkCancellation(copilotCancel);
-        
+
         if (importClass) {
             // Process imports in batches to reduce cancellation check overhead
             const contextItems = JavaContextProviderUtils.createContextItemsFromImports(importClass);
@@ -166,7 +189,7 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
         JavaContextProviderUtils.logCompletion('Java context resolution', documentUri, caretOffset, start, items.length);
         return items;
     }
-    
+
     // Send telemetry data once at the end for success case
     sendContextTelemetry(request, start, items.length, "succeeded");
     
