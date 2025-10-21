@@ -3,7 +3,6 @@
 
 import { commands, Uri, CancellationToken } from "vscode";
 import { logger } from "../utils";
-import { validateExtensionInstalled } from "../../recommendation";
 
 export interface INodeImportClass {
     uri: string;
