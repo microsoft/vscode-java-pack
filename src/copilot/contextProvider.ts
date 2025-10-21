@@ -25,7 +25,7 @@ import { validateAndInstallExtensionVersion } from "../recommendation";
 export async function registerCopilotContextProviders(
     context: vscode.ExtensionContext
 ) {
-    validateAndInstallExtensionVersion("vscjava.vscode-java-dependency", "0.30.2025101702", "the Java Dependency extension is required for Copilot to work properly.")
+    validateAndInstallExtensionVersion("vscjava.vscode-java-dependency", "0.26.2025102107", "the Java Dependency extension is required for Copilot to work properly.")
     try {
         const apis = await JavaContextProviderUtils.getCopilotApis();
         if (!apis.clientApi || !apis.chatApi) {
