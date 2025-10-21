@@ -380,7 +380,7 @@
     "VisualStudioExptTeam.vscodeintellicode"
   ],
   "dependencies": {
-    "@github/copilot-language-server": "^1.316.0",
+    "@github/copilot-language-server": "^1.386.0",
     "@iconify-icons/codicon": "1.2.8",
     "@iconify/react": "^1.1.4",
     "@reduxjs/toolkit": "^1.8.6",
