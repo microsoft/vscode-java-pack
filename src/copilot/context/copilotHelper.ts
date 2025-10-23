@@ -52,7 +52,7 @@ export namespace CopilotHelper {
                     new Promise<INodeImportClass[]>((_, reject) => {
                         setTimeout(() => {
                             reject(new Error('Operation timed out'));
-                        }, 40); // 40ms timeout
+                        }, 80); // 80ms timeout
                     })
                 ]);
                 return result || [];
@@ -62,7 +62,7 @@ export namespace CopilotHelper {
                     new Promise<INodeImportClass[]>((_, reject) => {
                         setTimeout(() => {
                             reject(new Error('Operation timed out'));
-                        }, 40); // 40ms timeout
+                        }, 80); // 80ms timeout
                     })
                 ]);
                 return result || [];
@@ -112,7 +112,7 @@ export namespace CopilotHelper {
                     new Promise<IProjectDependency>((_, reject) => {
                         setTimeout(() => {
                             reject(new Error('Operation timed out'));
-                        }, 80); // 80ms timeout
+                        }, 40); // 40ms timeout
                     })
                 ]);
                 return result || {};
@@ -122,7 +122,7 @@ export namespace CopilotHelper {
                     new Promise<IProjectDependency>((_, reject) => {
                         setTimeout(() => {
                             reject(new Error('Operation timed out'));
-                        }, 80); // 80ms timeout
+                        }, 40); // 40ms timeout
                     })
                 ]);
                 return result || {};
