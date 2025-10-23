@@ -3,6 +3,7 @@
 
 import { commands, Uri, CancellationToken } from "vscode";
 import { logger } from "../utils";
+import { validateExtensionInstalled } from "../../recommendation";
 
 export interface INodeImportClass {
     uri: string;
@@ -26,6 +27,11 @@ export namespace CopilotHelper {
         if (cancellationToken?.isCancellationRequested) {
             return [];
         }
+
+        // Ensure the Java Dependency extension is installed and meets the minimum version requirement.
+        if (!await validateExtensionInstalled("vscjava.vscode-java-dependency", "0.26.2")) {
+            return [];
+        }
         
         if (cancellationToken?.isCancellationRequested) {
             return [];
@@ -42,11 +48,23 @@ export namespace CopilotHelper {
                         cancellationToken.onCancellationRequested(() => {
                             reject(new Error('Operation cancelled'));
                         });
+                    }),
+                    new Promise<INodeImportClass[]>((_, reject) => {
+                        setTimeout(() => {
+                            reject(new Error('Operation timed out'));
+                        }, 40); // 40ms timeout
                     })
                 ]);
                 return result || [];
             } else {
-                const result = await commandPromise;
+                const result = await Promise.race([
+                    commandPromise,
+                    new Promise<INodeImportClass[]>((_, reject) => {
+                        setTimeout(() => {
+                            reject(new Error('Operation timed out'));
+                        }, 40); // 40ms timeout
+                    })
+                ]);
                 return result || [];
             }
         } catch (error: any) {
@@ -69,6 +87,11 @@ export namespace CopilotHelper {
         if (cancellationToken?.isCancellationRequested) {
             return {};
         }
+
+        // Ensure the Java Dependency extension is installed and meets the minimum version requirement.
+        if (!await validateExtensionInstalled("vscjava.vscode-java-dependency", "0.26.2")) {
+            return {};
+        }
         
         if (cancellationToken?.isCancellationRequested) {
             return {};
@@ -77,7 +100,7 @@ export namespace CopilotHelper {
         try {
             // Create a promise that can be cancelled
             const commandPromise = commands.executeCommand("java.execute.workspaceCommand", "java.project.getDependencies", projectUri.toString()) as Promise<IProjectDependency>;
-            
+            //set timeout
             if (cancellationToken) {
                 const result = await Promise.race([
                     commandPromise,
@@ -85,11 +108,23 @@ export namespace CopilotHelper {
                         cancellationToken.onCancellationRequested(() => {
                             reject(new Error('Operation cancelled'));
                         });
+                    }),
+                    new Promise<IProjectDependency>((_, reject) => {
+                        setTimeout(() => {
+                            reject(new Error('Operation timed out'));
+                        }, 80); // 80ms timeout
                     })
                 ]);
                 return result || {};
             } else {
-                const result = await commandPromise;
+                const result = await Promise.race([
+                    commandPromise,
+                    new Promise<IProjectDependency>((_, reject) => {
+                        setTimeout(() => {
+                            reject(new Error('Operation timed out'));
+                        }, 80); // 80ms timeout
+                    })
+                ]);
                 return result || {};
             }
         } catch (error: any) {

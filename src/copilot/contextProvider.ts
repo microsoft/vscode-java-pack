@@ -20,12 +20,10 @@ import {
     CopilotApi
 } from './utils';
 import { getExtensionName } from '../utils/extension';
-import { validateAndInstallExtensionVersion } from "../recommendation";
 
 export async function registerCopilotContextProviders(
     context: vscode.ExtensionContext
 ) {
-    validateAndInstallExtensionVersion("vscjava.vscode-java-dependency", "0.26.2025102107", "the Java Dependency extension is required for Copilot to work properly.")
     try {
         const apis = await JavaContextProviderUtils.getCopilotApis();
         if (!apis.clientApi || !apis.chatApi) {
@@ -95,13 +93,15 @@ function createJavaContextResolver(): ContextResolverFunction {
 /**
  * Send telemetry data for Java context resolution
  */
-function sendContextTelemetry(request: ResolveRequest, start: number, itemCount: number, status: string, error?: string) {
+function sendContextTelemetry(request: ResolveRequest, start: number, items: SupportedContextItem[], status: string, error?: string) {
     const duration = Math.round(performance.now() - start);
+    const tokenCount = JavaContextProviderUtils.calculateTokenCount(items);
     const telemetryData: any = {
         "action": "resolveJavaContext",
         "completionId": request.completionId,
         "duration": duration,
-        "itemCount": itemCount,
+        "itemCount": items.length,
+        "tokenCount": tokenCount,
         "status": status
     };
     
@@ -172,16 +172,16 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
         }
     } catch (error: any) {
         if (error instanceof CopilotCancellationError) {
-            sendContextTelemetry(request, start, items.length, "cancelled_by_copilot");
+            sendContextTelemetry(request, start, items, "cancelled_by_copilot");
             throw error;
         }
         if (error instanceof vscode.CancellationError || error.message === CancellationError.Canceled) {
-            sendContextTelemetry(request, start, items.length, "cancelled_internally");
+            sendContextTelemetry(request, start, items, "cancelled_internally");
             throw new InternalCancellationError();
         }
         
         // Send telemetry for general errors (but continue with partial results)
-        sendContextTelemetry(request, start, items.length, "error_partial_results", error.message || "unknown_error");
+        sendContextTelemetry(request, start, items, "error_partial_results", error.message || "unknown_error");
         
         logger.error(`Error resolving Java context for ${documentUri}:${caretOffset}:`, error);
         
@@ -191,7 +191,7 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
     }
 
     // Send telemetry data once at the end for success case
-    sendContextTelemetry(request, start, items.length, "succeeded");
+    sendContextTelemetry(request, start, items, "succeeded");
     
     JavaContextProviderUtils.logCompletion('Java context resolution', documentUri, caretOffset, start, items.length);
     return items;

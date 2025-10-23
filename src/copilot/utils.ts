@@ -301,6 +301,39 @@ export class JavaContextProviderUtils {
         
         return installCount;
     }
+
+    /**
+     * Calculate approximate token count for context items
+     * Using a simple heuristic: ~4 characters per token
+     * Optimized for performance by using reduce and direct property access
+     */
+    static calculateTokenCount(items: SupportedContextItem[]): number {
+        // Fast path: if no items, return 0
+        if (items.length === 0) {
+            return 0;
+        }
+        
+        // Use reduce for better performance
+        const totalChars = items.reduce((sum, item) => {
+            let itemChars = 0;
+            // Direct property access is faster than 'in' operator
+            const value = (item as any).value;
+            const name = (item as any).name;
+            
+            if (value && typeof value === 'string') {
+                itemChars += value.length;
+            }
+            if (name && typeof name === 'string') {
+                itemChars += name.length;
+            }
+            
+            return sum + itemChars;
+        }, 0);
+        
+        // Approximate: 1 token ≈ 4 characters
+        // Use bitwise shift for faster division by 4
+        return (totalChars >> 2) + (totalChars & 3 ? 1 : 0);
+    }
 }
 
 /**
