@@ -132,7 +132,6 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
         
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders || workspaceFolders.length === 0) {
-            vscode.window.showErrorMessage("No workspace folder found");
             return items;
         }
 
