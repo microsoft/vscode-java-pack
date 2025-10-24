@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.30.4
+
+- Add new experiment that support project info as context for Copilot in https://github.com/microsoft/vscode-java-pack/pull/1518
+
 ## 0.30.3
 
 - Add new experiment that add context provider for Copilot in https://github.com/microsoft/vscode-java-pack/pull/1489
