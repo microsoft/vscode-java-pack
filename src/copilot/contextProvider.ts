@@ -129,9 +129,18 @@ async function resolveJavaContext(request: ResolveRequest, copilotCancel: vscode
         }
 
         const document = activeEditor.document;
+        
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            vscode.window.showErrorMessage("No workspace folder found");
+            return items;
+        }
+
+        const projectUri = workspaceFolders[0];
 
         // Resolve project dependencies first
-        const projectDependencies = await CopilotHelper.resolveProjectDependencies(document.uri, copilotCancel);
+        const projectDependencies = await CopilotHelper.resolveProjectDependencies(projectUri.uri, copilotCancel);
+
         logger.info('Resolved project dependencies count:', Object.keys(projectDependencies).length);
         
         // Check for cancellation after dependency resolution
