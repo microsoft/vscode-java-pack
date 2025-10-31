@@ -98,7 +98,7 @@ jobs:
               const response = await github.rest.actions.createWorkflowDispatch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                workflow_id: 'triage-agent-2.yml',
+                workflow_id: 'triage-agent.yml',
                 ref: 'main',
                 inputs: {
                   issue_number: issueNumber
