@@ -68,9 +68,9 @@ At the same time, [📦 CheckStyle](https://marketplace.visualstudio.com/items?i
 
 Each extension mentioned above is a separate open-source project and has its own repository. To make things easier, simply [🙋 open an issue in this repository](https://github.com/Microsoft/vscode-java-pack/issues). The new issue will be triaged and redirected.
 
-## Telemetry
+## Data/Telemetry
 
-This extension collects telemetry data to help us build a better experience for building Java applications with VS Code. We only collect data on which commands are executed. We do not collect any information about names, addresses, paths, etc. The extension respects the `telemetry.enableTelemetry` setting which you can learn more about in our [FAQ](https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting).
+This extension collects telemetry data to help improve the Java development experience in VS Code. We only collect information about which commands are executed—no personal data such as names, addresses, or file paths. For more details, see our [privacy statement](http://go.microsoft.com/fwlink/?LinkId=521839). You can disable telemetry collection using the `telemetry.enableTelemetry` setting as described in our [FAQ](https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting).
 
 ## License
 
