@@ -1,4 +1,4 @@
-name: AI Triage - Label and Comment on New Issues
+name: AI Triage
 on:
   issues:
     types: [opened]
@@ -7,6 +7,9 @@ on:
       issue_number:
         description: 'Issue number to triage (manual run). e.g. 123'
         required: true
+
+run-name: >-
+  AI Triage for Issue #${{ github.event.issue.number || github.event.inputs.issue_number }}
 
 permissions:
   issues: write
@@ -49,8 +52,8 @@ jobs:
             const labelNames = (issue.labels || []).map(label => label.name);
             core.setOutput('labels', JSON.stringify(labelNames));
 
-      - name: Start Triage Orchestration
-        id: start_orchestration
+      - name: Call Azure Function
+        id: call_azure_function
         env:
           PAYLOAD: >-
             {
@@ -67,14 +70,13 @@ jobs:
             }
 
         run: |
-          # Start the durable function orchestration
-          echo "Starting triage orchestration..."
-          echo "Payload size: $(echo "$PAYLOAD" | wc -c) bytes"
+          # Make the HTTP request with improved error handling and timeouts
+          echo "Making request to triage agent..."
 
-          # Make the initial request to start orchestration
+          # Add timeout handling and better error detection
           set +e  # Don't exit on curl failure
-          response=$(curl \
-              --max-time 60 \
+          response=$(timeout ${{ vars.TRIAGE_AGENT_TIMEOUT }} curl \
+              --max-time 0 \
               --connect-timeout 30 \
               --fail-with-body \
               --silent \
@@ -83,16 +85,19 @@ jobs:
               --header "Content-Type: application/json" \
               --request POST \
               --data "$PAYLOAD" \
-              ${{ secrets.TRIAGE_START_ENDPOINT }} 2>&1)
+              ${{ secrets.TRIAGE_FUNCTION_LINK }} 2>&1)
 
           curl_exit_code=$?
           set -e  # Re-enable exit on error
 
-          echo "Start orchestration curl exit code: $curl_exit_code"
+          echo "Curl exit code: $curl_exit_code"
 
-          # Check if curl command failed
-          if [ $curl_exit_code -ne 0 ]; then
-            echo "❌ Failed to start orchestration with exit code: $curl_exit_code"
+          # Check if curl command timed out or failed
+          if [ $curl_exit_code -eq 124 ]; then
+            echo "❌ Request timed out after 650 seconds"
+            exit 1
+          elif [ $curl_exit_code -ne 0 ]; then
+            echo "❌ Curl command failed with exit code: $curl_exit_code"
             echo "Response: $response"
             exit 1
           fi
@@ -110,115 +115,11 @@ jobs:
             exit 1
           fi
 
-          # Check if the orchestration started successfully
+          # Check if the request was successful
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            echo "✅ Triage orchestration started successfully"
-            echo "Response: $response_body"
-            
-            # Extract instance ID from response (assuming JSON response with instanceId field)
-            instance_id=$(echo "$response_body" | grep -o '"instanceId":"[^"]*"' | cut -d'"' -f4)
-            if [ -z "$instance_id" ]; then
-              echo "❌ Failed to extract instance ID from response"
-              echo "Response body: $response_body"
-              exit 1
-            fi
-            
-            echo "Instance ID: $instance_id"
-            echo "instance_id=$instance_id" >> $GITHUB_OUTPUT
+            echo "✅ Azure Function call succeeded"
           else
-            echo "❌ Failed to start orchestration with status code: $http_code"
+            echo "❌ Azure Function call failed with status code: $http_code"
             echo "Response: $response_body"
             exit 1
           fi
-
-      - name: Poll Orchestration Status
-        id: poll_status
-        run: |
-          # Poll the orchestration status until completion
-          instance_id="${{ steps.start_orchestration.outputs.instance_id }}"
-          echo "Polling status for instance: $instance_id"
-          
-          max_attempts=120  # Maximum number of polling attempts (10 minutes with 5-second intervals)
-          attempt=0
-          
-          while [ $attempt -lt $max_attempts ]; do
-            attempt=$((attempt + 1))
-            echo "Polling attempt $attempt/$max_attempts..."
-            
-            # Make status check request
-            set +e  # Don't exit on curl failure
-            # Safely replace the {instanceId} placeholder using bash parameter expansion
-            status_url="${{ secrets.TRIAGE_STATUS_ENDPOINT }}"
-            status_url="${status_url//\{instanceId\}/$instance_id}"
-            
-            response=$(curl \
-                --max-time 30 \
-                --connect-timeout 15 \
-                --fail-with-body \
-                --silent \
-                --show-error \
-                --write-out "HTTPSTATUS:%{http_code}" \
-                --request GET \
-                "$status_url" 2>&1)
-            
-            curl_exit_code=$?
-            set -e  # Re-enable exit on error
-            
-            if [ $curl_exit_code -ne 0 ]; then
-              echo "❌ Status check failed with exit code: $curl_exit_code"
-              echo "Response: $response"
-              sleep 5
-              continue
-            fi
-            
-            # Extract HTTP status code and response body
-            http_code=$(echo "$response" | grep -o "HTTPSTATUS:[0-9]*" | cut -d: -f2)
-            response_body=$(echo "$response" | sed 's/HTTPSTATUS:[0-9]*$//')
-            
-            echo "Status check HTTP code: $http_code"
-            
-            if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-              echo "Status response: $response_body"
-              
-              # Check if orchestration is complete (using runtimeStatus field from actual response schema)
-              runtime_status=$(echo "$response_body" | grep -o '"runtimeStatus":"[^"]*"' | cut -d'"' -f4)
-              
-              if [ "$runtime_status" = "Completed" ] || [ "$runtime_status" = "completed" ]; then
-                echo "✅ Triage orchestration completed successfully"
-                # Extract and display output if available
-                output=$(echo "$response_body" | grep -o '"output":[^,}]*' | cut -d':' -f2-)
-                if [ "$output" != "null" ] && [ -n "$output" ]; then
-                  echo "Orchestration output: $output"
-                fi
-                exit 0
-              elif [ "$runtime_status" = "Failed" ] || [ "$runtime_status" = "failed" ]; then
-                echo "❌ Triage orchestration failed"
-                echo "Final response: $response_body"
-                # Extract and display output for error details if available
-                output=$(echo "$response_body" | grep -o '"output":[^,}]*' | cut -d':' -f2-)
-                if [ "$output" != "null" ] && [ -n "$output" ]; then
-                  echo "Error details: $output"
-                fi
-                exit 1
-              elif [ "$runtime_status" = "Running" ] || [ "$runtime_status" = "running" ] || [ "$runtime_status" = "Pending" ] || [ "$runtime_status" = "pending" ]; then
-                echo "Orchestration status: $runtime_status, waiting..."
-                # Display last updated time for better monitoring
-                last_updated=$(echo "$response_body" | grep -o '"lastUpdatedAt":"[^"]*"' | cut -d'"' -f4)
-                if [ -n "$last_updated" ]; then
-                  echo "Last updated: $last_updated"
-                fi
-                sleep 5
-              else
-                echo "Unknown runtime status: $runtime_status, continuing to poll..."
-                echo "Full response: $response_body"
-                sleep 5
-              fi
-            else
-              echo "❌ Status check returned HTTP $http_code"
-              echo "Response: $response_body"
-              sleep 5
-            fi
-          done
-          
-          echo "❌ Orchestration polling timed out after $max_attempts attempts"
-          exit 1
