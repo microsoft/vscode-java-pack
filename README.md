@@ -70,7 +70,7 @@ Each extension mentioned above is a separate open-source project and has its own
 
 ## Data/Telemetry
 
-This extension collects telemetry data to help improve the Java development experience in VS Code. We do not collect any information about names, addresses, paths. For more details, see our [privacy statement](http://go.microsoft.com/fwlink/?LinkId=521839). You can disable telemetry collection using the `telemetry.enableTelemetry` setting as described in our [FAQ](https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting).
+This extension collects telemetry data to help us improve the Java development experience in VS Code. It does not collect any personal information such as names, addresses, or file paths. For more details, see our [privacy statement](http://go.microsoft.com/fwlink/?LinkId=521839). You can disable telemetry collection at any time by changing the `telemetry.enableTelemetry` setting as described in our [FAQ](https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting).
 
 ## License
 
