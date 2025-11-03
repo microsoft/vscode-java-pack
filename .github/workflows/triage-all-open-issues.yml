@@ -31,17 +31,15 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              per_page: 100,
+            // Use Search API to filter issues at API level
+            const { data } = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open -label:ai-triaged -label:invalid`,
               sort: 'created',
-              direction: 'asc'
+              order: 'asc',
+              per_page: 100
             });
             
-            // Filter out pull requests (GitHub API includes PRs in issues)
-            const actualIssues = issues.filter(issue => !issue.pull_request);
+            const actualIssues = data.items;
             
             let issuesToProcess = actualIssues;
             const maxIssues = parseInt('${{ inputs.max_issues }}' || '0');
