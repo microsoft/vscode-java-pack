@@ -5,7 +5,7 @@ import * as vscode from "vscode";
 import { extensionRecommendationHandler } from "./handler";
 
 const EXTENSION_NAME = "redhat.vscode-xml";
-const RECOMMENDATION_MESSAGE = "XML extension is recommended to check the syntax when editing pom.xml.";
+const RECOMMENDATION_MESSAGE = "XML extension is recommended for better POM editing with schema validation, auto-completion, and formatting.";
 
 function isPomDotXml(uri: vscode.Uri) {
   return !!uri.path && uri.path.toLowerCase().endsWith("pom.xml");
