@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.30.5
+
+- Remove IntelljCode from Java Pack in https://github.com/microsoft/vscode-java-pack/pull/1538
+- Revert Context Provider in Java Pack in https://github.com/microsoft/vscode-java-pack/pull/1533
+
 ## 0.30.4
 
 - Add new experiment that support project info as context for Copilot in https://github.com/microsoft/vscode-java-pack/pull/1518
