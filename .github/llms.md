@@ -19,9 +19,6 @@ Extension Pack for Java is a collection of popular extensions that can help writ
     - Import Gradle projects via [Gradle Build Server](https://github.com/microsoft/build-server-for-gradle)
 - [📦 Project Manager for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
     - Manage Java projects, referenced libraries, resource files, packages, classes, and class members
-- [📦 Visual Studio IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode)
-    - AI-assisted development
-    - Completion list ranked by AI
 
 ## Label
 When labeling an issue, follow the rules below per label category:
