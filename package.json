@@ -356,7 +356,7 @@
     "@types/xmldom": "^0.1.31",
     "autoprefixer": "^10.4.12",
     "bytes": "^3.1.2",
-    "css-loader": "^6.7.1",
+    "css-loader": "^7.1.2",
     "file-loader": "^6.2.0",
     "postcss": "^8.4.31",
     "postcss-loader": "^6.2.1",
