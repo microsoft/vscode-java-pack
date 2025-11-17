@@ -376,8 +376,7 @@
     "vscjava.vscode-java-test",
     "vscjava.vscode-maven",
     "vscjava.vscode-gradle",
-    "vscjava.vscode-java-dependency",
-    "VisualStudioExptTeam.vscodeintellicode"
+    "vscjava.vscode-java-dependency"
   ],
   "dependencies": {
     "@iconify-icons/codicon": "1.2.8",
