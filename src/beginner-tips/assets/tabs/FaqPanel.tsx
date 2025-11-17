@@ -76,10 +76,6 @@ export default function FaqPanel() {
       <p>
         It could take longer for the language server to load a project which references lots of dependencies. Those dependencies need to be resolved and downloaded from the internet. So the network connection plays a critical role in the process.
       </p>
-      <h2 className="font-weight-light">Why do I see a little ⭐ in some of the IntelliSense suggestions?</h2>
-      <p>
-        This is because <a href="https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode">Visual Studio IntelliCode</a> is working. IntelliCode ranks the suggestions using the model trained from the source code of popular open source projects. The items with the stars are the ones that fit the current context the most.
-      </p>
       <h2 className="font-weight-light">Can I use Lombok?</h2>
       <p>
         Yes. You'll need to install the <a href="https://marketplace.visualstudio.com/items?itemName=GabrielBB.vscode-lombok">Lombok</a> extension, which enables VS Code to process Lombok annotations. To learn more about alternatives and details, visit <a href="https://github.com/redhat-developer/vscode-java/wiki/Lombok-support">this page</a>.
