@@ -1,24 +1,38 @@
 name: No Response
 
 # **What it does**: Closes issues where the original author doesn't respond to a request for information.
-# **Why we have it**: To remove the need for maintainers to remember to check back on issues periodically to see if contributors have responded.
-# **Who does it impact**: Everyone that works on docs or docs-internal.
+# **Why we have it**: To remove the need for maintainers to check back on issues periodically to see if contributors have responded.
+# **Who does it impact**: Everyone that works on this repository.
 
 on:
-  issue_comment:
-    types: [created]
   schedule:
-    # Schedule for five minutes after the hour, every hour
+    # Run once daily at midnight UTC
     - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
 
 jobs:
   noResponse:
     runs-on: ubuntu-latest
     steps:
-      - uses: lee-dohm/no-response@v0.5.0
+      - uses: actions/stale@v9
         with:
-          token: ${{ github.token }}
-          daysUntilClose: 14 # Number of days of inactivity before an Issue is closed for lack of response
-          responseRequiredLabel: "needs more info" # Label indicating that a response from the original author is required
-          closeComment: >
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          # Only process issues with "needs more info" label
+          only-labels: 'needs more info'
+          # Don't mark as stale, just close directly after days-before-close
+          days-before-stale: -1
+          # Close after 14 days of inactivity
+          days-before-close: 14
+          # Message when closing
+          close-issue-message: >
             This issue has been closed automatically because it needs more information and has not had recent activity. Please reach out if you have or find the answers we need so that we can investigate further.
+          # Don't close if there are recent comments
+          remove-issue-stale-when-updated: true
+          # Exempt certain labels from being closed
+          exempt-issue-labels: 'pinned,security'
+          # Only process issues, not PRs
+          enable-statistics: true
