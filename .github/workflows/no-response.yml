@@ -23,15 +23,13 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           # Only process issues with "needs more info" label
           only-labels: 'needs more info'
-          # Don't mark as stale, just close directly after days-before-close
-          days-before-stale: -1
-          # Close after 14 days of inactivity
-          days-before-close: 14
+          # Mark as stale after 14 days of inactivity
+          days-before-stale: 14
+          # Close immediately after marking as stale
+          days-before-close: 0
           # Message when closing
           close-issue-message: >
             This issue has been closed automatically because it needs more information and has not had recent activity. Please reach out if you have or find the answers we need so that we can investigate further.
-          # Don't close if there are recent comments
-          remove-issue-stale-when-updated: true
           # Exempt certain labels from being closed
           exempt-issue-labels: 'pinned,security'
           # Only process issues, not PRs
