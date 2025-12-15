@@ -1,0 +1,61 @@
+name: Run IssueLens Agent
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-issuelens:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Install GitHub Copilot CLI
+        run: npm install -g @github/copilot
+      
+      - name: Run IssueLens with Copilot CLI
+        id: issuelens
+        run: |
+          # Create MCP config
+          echo '{"mcpServers": {"mcp-datetime": {"type": "local", "command": "uvx", "args": ["mcp-datetime"], "tools": ["*"]}}}' > mcp-config.json
+
+          # Run copilot CLI with issuelens custom agent
+          output=$(copilot --agent=issuelens --additional-mcp-config @mcp-config.json --prompt "triage issues for repo \"${{ github.repository }}\"" 2>&1 || true)
+          
+          echo "Raw output:"
+          echo "$output"
+          
+          # Extract JSON from output (looking for lines between curly braces)
+          json_output=$(echo "$output" | sed -n '/^{/,/^}/p' | jq -c '.')
+          
+          # If no JSON found with that pattern, try to extract any JSON
+          if [ -z "$json_output" ]; then
+            json_output=$(echo "$output" | grep -o '{[^}]*}' | jq -c '.' | head -1)
+          fi
+          
+          # If still no JSON, create a default payload with the raw output
+          if [ -z "$json_output" ]; then
+            json_output=$(jq -n --arg output "$output" '{"message": "IssueLens analysis complete", "output": $output}')
+          fi
+          
+          echo "Extracted JSON:"
+          echo "$json_output"
+          
+          # Save to output
+          echo "payload=$json_output" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Trigger Notification
+        uses: ./.github/actions/notification
+        with:
+          url: ${{ secrets.NOTIFICATION_URL }}
+          payload: ${{ steps.issuelens.outputs.payload }}
