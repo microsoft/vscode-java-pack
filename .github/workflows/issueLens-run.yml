@@ -1,6 +1,9 @@
 name: Run IssueLens Agent
 
 on:
+  schedule:
+    # Run once daily at 1am UTC
+    - cron: '0 1 * * *'
   workflow_dispatch:
 
 jobs:
