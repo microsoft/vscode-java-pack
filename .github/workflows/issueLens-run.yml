@@ -52,9 +52,9 @@ jobs:
           # Save to output
           echo "payload=$json_output" >> $GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.PAT }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
 
 
       - name: Trigger Notification
