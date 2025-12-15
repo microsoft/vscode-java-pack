@@ -1,0 +1,46 @@
+name: 'Notification'
+description: 'Triggers a notification with a JSON payload via HTTP POST request'
+author: 'Microsoft'
+
+inputs:
+  url:
+    description: 'Notification URL endpoint'
+    required: true
+  payload:
+    description: 'JSON payload to send to Notification URL'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Prepare payload
+      shell: bash
+      run: |
+        PAYLOAD='${{ inputs.payload }}'
+        echo "$PAYLOAD" > payload.json
+        echo "Payload prepared:"
+        cat payload.json
+    
+    - name: Trigger Logic App
+      shell: bash
+      env:
+        URL: ${{ inputs.url }}
+      run: |
+        response=$(curl -X POST "$URL" \
+          -H "Content-Type: application/json" \
+          -d @payload.json \
+          -w "\nHTTP_STATUS:%{http_code}" \
+          -s)
+        
+        http_status=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+        body=$(echo "$response" | sed '/HTTP_STATUS:/d')
+        
+        echo "Response Status: $http_status"
+        echo "Response Body: $body"
+        
+        if [ "$http_status" -ge 200 ] && [ "$http_status" -lt 300 ]; then
+          echo "✅ Notification triggered successfully"
+        else
+          echo "❌ Failed to trigger Notification with status code: $http_status"
+          exit 1
+        fi
