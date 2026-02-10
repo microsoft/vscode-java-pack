@@ -341,7 +341,7 @@
     "update-tpn": "node scripts/update-third-party-notice.js"
   },
   "devDependencies": {
-    "@types/bytes": "^3.1.1",
+    "@types/bytes": "^3.1.5",
     "@types/expand-tilde": "^2.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/lodash": "^4.14.186",
