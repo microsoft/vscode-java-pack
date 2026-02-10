@@ -2,17 +2,16 @@
 // Licensed under the MIT license.
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import "./style.scss";
 import { App } from "./App";
 import store from "./app/store";
 
-ReactDOM.render(
+createRoot(document.getElementById("formatterPanel")!).render(
   <React.StrictMode>
     <Provider store={store} >
       <App />
     </Provider>
-  </React.StrictMode>,
-  document.getElementById("formatterPanel")
+  </React.StrictMode>
 );

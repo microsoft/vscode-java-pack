@@ -2,12 +2,8 @@
 // Licensed under the MIT license.
 
 import "../../assets/vscode.scss";
-import "bootstrap/js/src/tab";
+import "bootstrap/js/dist/tab";
 const $ = require("jquery");
-
-$("#navigationPanel a").click((e: any) => {
-  ($($(e.target).attr("href")||"") as any).tab("show");
-});
 
 let os = "win";
 if (navigator.platform.toLowerCase().indexOf("mac") === 0) {
@@ -20,7 +16,7 @@ $(`[data-os=${osToHide}]`).hide();
 declare function acquireVsCodeApi(): any;
 const vscode = acquireVsCodeApi && acquireVsCodeApi();
 
-$("a[data-toggle='tab']").on("shown.bs.tab", (e: any) => {
+$("a[data-bs-toggle='tab']").on("shown.bs.tab", (e: any) => {
   vscode.postMessage({
     command: "tabActivated",
     tabId: e.target.id

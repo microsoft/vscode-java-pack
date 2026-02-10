@@ -2,12 +2,11 @@
 // Licensed under the MIT license.
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import App from "./mainpage/features/App";
 
-ReactDOM.render(
+createRoot(document.getElementById("content")!).render(
     <React.StrictMode>
         <App />
-    </React.StrictMode>,
-    document.getElementById("content")
+    </React.StrictMode>
 );

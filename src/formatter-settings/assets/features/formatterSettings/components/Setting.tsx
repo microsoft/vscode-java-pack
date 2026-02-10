@@ -75,7 +75,7 @@ const Setting = (): JSX.Element => {
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
             <span className="setting-section-description">{setting.name}.</span>
             <Dropdown className="mt-1">
-              <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left" disabled={readOnly}>
+              <Dropdown.Toggle className="dropdown-button flex-vertical-center text-start" disabled={readOnly}>
                 <span>{setting.value}</span>
                 <Icon className="codicon" icon={chevronDownIcon} />
               </Dropdown.Toggle>

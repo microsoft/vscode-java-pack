@@ -135,7 +135,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
         <div class="col">
           <div class="row mb-3">
             <div class="col">
-              <h3 class="font-weight-light">Start</h3>
+              <h3 class="fw-light">Start</h3>
               <div>
                 <a href="command:java.helper.createMavenProject" title="Create a Maven project using archetypes">Create a Maven project...</a>
               </div>
@@ -153,7 +153,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
           </div>
           <div class="row mb-3">
             <div class="col">
-              <h3 class="font-weight-light">Key Bindings</h3>
+              <h3 class="fw-light">Key Bindings</h3>
               <div ext="k--kato.intellij-idea-keybindings" displayName="IntelliJ IDEA Key Bindings">
                 <a href="#" title="Use IntelliJ IDEA hot keys in VS Code...">Use IntelliJ IDEA Key Bindings</a>
               </div>
@@ -164,7 +164,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
           </div>
           <div class="row mb-3">
             <div class="col">
-              <h3 class="font-weight-light">Extensions</h3>
+              <h3 class="fw-light">Extensions</h3>
               <div ext="redhat.java" displayName="Language Support for Java by Red Hat">
                 <a href="#" title="Install the Java language support extension...">Install Language Support for Java by Red Hat</a>
               </div>
@@ -198,7 +198,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
         <div class="col">
           <div class="row mb-3">
             <div class="col">
-              <h3 class="font-weight-light">Spring</h3>
+              <h3 class="fw-light">Spring</h3>
               <div>
                 <a href="command:java.helper.openUrl?%22https%3A%2F%2Fcode.visualstudio.com%2Fdocs%2Fjava%2Fjava-spring-boot%22" title="Learn how to work with Spring Boot projects in VS Code">Spring Boot with VS Code</a>
               </div>
@@ -212,7 +212,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
           </div>
           <div class="row mb-3">
             <div class="col">
-              <h3 class="font-weight-light">Microservices</h3>
+              <h3 class="fw-light">Microservices</h3>
               <div>
                 <a href="command:java.helper.openUrl?%22https%3A%2F%2Fcode.visualstudio.com%2Fdocs%2Fazure%2Fkubernetes%22" title="Learn how to work with Kubernetes in VS Code">Kubernetes in VS Code</a>
               </div>
@@ -241,7 +241,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
           </div>
           <div class="row mb-3">
             <div class="col">
-              <h3 class="font-weight-light">Help</h3>
+              <h3 class="fw-light">Help</h3>
               <div>
                 <a href="command:java.helper.openUrl?%22https%3A%2F%2Fgithub.com%2FMicrosoft%2Fvscode-java-pack%2Fissues%22" title="Report issues or request features">Questions & Issues</a>
               </div>
@@ -254,7 +254,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
         <div class="col">
           <div class="row mb-3">
             <div class="col">
-              <h3 class="font-weight-light">Learn</h3>
+              <h3 class="fw-light">Learn</h3>
               <div class="list-group">
                 <button command="java.gettingStarted" class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2 p-2" title="Open Java Beginner Tips View">
                     <p class="mb-1">Java Beginner Tips</p>
@@ -269,7 +269,7 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
           </div>
           <div class="row mb-3">
             <div class="col">
-              <h3 class="font-weight-light">Configuration</h3>
+              <h3 class="fw-light">Configuration</h3>
               <div class="list-group">
                 <a href="javascript:void(0)" command="java.runtime" class="list-group-item list-group-item-action flex-column align-items-start btn btn-link mb-2 p-2" title="Open Java Runtime Guide">
                   <p class="mb-1">Configure Java Runtime</p>

@@ -24,7 +24,7 @@
         // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
         "noUnusedParameters": true, /* Report errors on unused parameters. */
         "skipLibCheck": true,
-        "jsx": "react",
+        "jsx": "react-jsx",
         /* Enabled for React */
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,

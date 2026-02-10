@@ -87,8 +87,8 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
     <div class="container mt-5 mb-5">
       <div class="row mb-3">
         <div class="col">
-          <h1 class="font-weight-light">Java Extensions Guide</h1>
-          <h6 class="font-weight-light">Recommended extensions for Java development.</h5>
+          <h1 class="fw-light">Java Extensions Guide</h1>
+          <h6 class="fw-light">Recommended extensions for Java development.</h5>
         </div>
       </div>
       <div class="row">
@@ -99,16 +99,16 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
                 <div class="col-3 d-block">
                   <ul class="nav nav-pills flex-column mb-3" role="tablist">
                     <li class="nav-item">
-                      <a class="nav-link active" id="tab-basics" data-toggle="tab" href="#panel-basics" role="tab" aria-controls="panel-basics" aria-selected="true" title="">Basics</a>
+                      <a class="nav-link active" id="tab-basics" data-bs-toggle="tab" href="#panel-basics" role="tab" aria-controls="panel-basics" aria-selected="true" title="">Basics</a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link" id="tab-frameworks" data-toggle="tab" href="#panel-frameworks" role="tab" aria-controls="panel-frameworks" aria-selected="false" title="">Frameworks</a>
+                      <a class="nav-link" id="tab-frameworks" data-bs-toggle="tab" href="#panel-frameworks" role="tab" aria-controls="panel-frameworks" aria-selected="false" title="">Frameworks</a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link" id="tab-app-servers" data-toggle="tab" href="#panel-app-servers" role="tab" aria-controls="panel-app-servers" aria-selected="false" title="">Application Servers</a>
+                      <a class="nav-link" id="tab-app-servers" data-bs-toggle="tab" href="#panel-app-servers" role="tab" aria-controls="panel-app-servers" aria-selected="false" title="">Application Servers</a>
                     </li>
                     <li class="nav-item">
-                      <a class="nav-link" id="tab-keymaps" data-toggle="tab" href="#panel-keymaps" role="tab" aria-controls="panel-keymaps" aria-selected="false" title="">Keymaps</a>
+                      <a class="nav-link" id="tab-keymaps" data-bs-toggle="tab" href="#panel-keymaps" role="tab" aria-controls="panel-keymaps" aria-selected="false" title="">Keymaps</a>
                     </li>
                   </ul>
                 </div>
@@ -307,14 +307,14 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
                   <p class="d-none" ext="k--kato.intellij-idea-keybindings">
                     Port of IntelliJ IDEA Keybindings, including for WebStorm, PyCharm, PHP Storm, etc.
                   </p>
-                  <p class="text-right">
+                  <p class="text-end">
                     <a role="button" class="btn btn-primary btn-sm d-none" id="btn-learn-more" href="#">Learn More</a>
                   </p>
                 </div>
               </div>
               <div class="row">
                 <div class="col-3"></div>
-                <div class="col-5 text-right">
+                <div class="col-5 text-end">
                   <button type="button" class="btn btn-primary btn-sm d-none" id="btn-install-selected">Install Selected</button>
                   <button type="button" class="btn btn-primary btn-sm" id="btn-install-all">Install All</button>
                 </div>

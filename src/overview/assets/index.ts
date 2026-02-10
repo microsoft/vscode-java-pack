@@ -3,7 +3,7 @@
 
 const $ = require("jquery");
 import "../../assets/vscode.scss";
-import "bootstrap/js/src/tab";
+import "bootstrap/js/dist/tab";
 
 window.addEventListener("message", event => {
   if (event.data.command === "syncExtensionVisibility") {

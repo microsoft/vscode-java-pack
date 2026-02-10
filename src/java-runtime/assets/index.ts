@@ -2,11 +2,13 @@
 // Licensed under the MIT license.
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import "./style.scss";
 import { ProjectJDKPanel } from "./ProjectJDKPanel";
 import { onWillListRuntimes } from "./vscode.api";
 import { ToolingJDKPanel } from "./ToolingJDKPanel";
+
+const root = createRoot(document.getElementById("content")!);
 
 const onInitialize = (event: any) => {
   const { data } = event;
@@ -26,12 +28,12 @@ function showJavaRuntimeEntries(args: any) {
       javaHomeError: args.javaHomeError,
       javaDotHome: args.javaDotHome
     };
-    ReactDOM.render(React.createElement(ToolingJDKPanel, props), document.getElementById("content"));
+    root.render(React.createElement(ToolingJDKPanel, props));
   } else {
     const props = {
       jdkEntries: args.javaRuntimes,
       projectRuntimes: args.projectRuntimes,
     }
-    ReactDOM.render(React.createElement(ProjectJDKPanel, props), document.getElementById("content"));
+    root.render(React.createElement(ProjectJDKPanel, props));
   }
 }
