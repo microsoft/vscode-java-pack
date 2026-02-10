@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import { VSCodeLink, VSCodeButton, VSCodePanelView, VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-toolkit/react";
-import React from 'react';
 import { WEBVIEW_ID } from '../../constants';
 import { encodeExternalLinkWithTelemetry } from '../../../utils/webview';
 import { onWillReloadWindow } from '../vscode.api';

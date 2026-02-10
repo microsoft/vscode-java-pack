@@ -7,7 +7,7 @@ import { AdoptiumAsset, AdoptiumReleaseInfo } from '../../../../utils/adoptiumAp
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { listReleases, selectVersion, showAsset } from '../installJDKViewSlice';
 import { onWillDownloadTemurinJDK, onWillFetchAsset, onWillFetchAvailableReleases } from '../../vscode.api';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import bytes from "bytes";
 
 const AdoptiumJDKPanel = () => {

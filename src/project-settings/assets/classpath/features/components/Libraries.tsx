@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Dispatch } from "@reduxjs/toolkit";
-import React, { useEffect, useRef, useState } from "react";
+import { type JSX, useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeReferencedLibrary, addLibraries } from "../classpathConfigurationViewSlice";
 import { ClasspathRequest } from "../../../vscode/utils";

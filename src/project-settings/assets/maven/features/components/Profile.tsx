@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
-import React, { Dispatch } from "react";
+import { type JSX, Dispatch } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateActiveProfiles } from "../mavenConfigurationViewSlice";
 

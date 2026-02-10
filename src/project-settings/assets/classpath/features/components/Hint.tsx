@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { VSCodeLink} from "@vscode/webview-ui-toolkit/react";
-import React, { useEffect } from "react";
+import { type JSX, useEffect } from "react";
 import { ClasspathEntry, ProjectInfo } from "../../../../types";
 import { useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";

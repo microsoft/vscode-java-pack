@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { Dispatch, useEffect, useRef, useState } from "react";
+import { type JSX, Dispatch, useEffect, useRef, useState } from "react";
 import { ClasspathRequest, CommonRequest } from "../../../vscode/utils";
 import { VSCodeDivider, VSCodeDropdown, VSCodeOption, } from "@vscode/webview-ui-toolkit/react";
 import { useDispatch, useSelector } from "react-redux";

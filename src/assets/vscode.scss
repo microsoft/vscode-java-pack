@@ -1,16 +1,21 @@
-$body-bg: var(--vscode-editor-background);
-$body-color: var(--vscode-editor-foreground);
-$link-color: var(--vscode-textLink-foreground) !default;
+// Bootstrap 5's SCSS functions (color-contrast, tint-color, etc.) require
+// real Sass colors, not CSS custom properties, at compile time.
+// We set compile-time fallback colors here and override them at runtime
+// with VS Code CSS custom properties after the @import.
+
+$body-bg: #1e1e1e;
+$body-color: #d4d4d4;
+$link-color: #007acc !default;
 $link-hover-color: $link-color;
 $link-hover-decoration: none !default;
 
-$list-group-bg: var(--vscode-notifications-background) !default;
-$list-group-active-color: var(--vscode-notifications-foreground) !default;
-$list-group-active-bg: var(--vscode-notifications-border) !default;
-$list-group-hover-bg: var(--vscode-list-hoverBackground) !default;
+$list-group-bg: #252526;
+$list-group-active-color: #d4d4d4;
+$list-group-active-bg: #3c3c3c;
+$list-group-hover-bg: #2a2d2e;
 $list-group-action-active-bg: $list-group-bg;
-$list-group-border-color: var(--vscode-notifications-background) !default;
-$list-group-action-color: var(--vscode-notifications-foreground) !default;
+$list-group-border-color: $list-group-bg;
+$list-group-action-color: #d4d4d4;
 $list-group-item-padding-y: .75rem !default;
 $list-group-item-padding-x: 1rem !default;
 
@@ -18,29 +23,95 @@ $list-group-border-radius:          0 !default;
 
 $font-size-base: .8rem !default;
 
+$code-color: #d63384;
+$pre-color: #d63384;
+$kbd-bg: #0e639c;
+$kbd-color: #ffffff;
+
 $code-font-size: $font-size-base;
-$kbd-bg: var(--vscode-button-background) !default;
-$kbd-color: var(--vscode-button-foreground) !default;
-$pre-color: var(--vscode-textPreformat-foreground) !default;
 
-$text-muted: var(--vscode-editorCodeLens-foreground) !default;
+$text-muted: #999999;
 
-$nav-tabs-link-active-color: var(--vscode-sideBarTitle-foreground);
-$nav-tabs-link-active-bg: var(--vscode-sideBar-background);
-$nav-tabs-link-active-border-color: var(--vscode-sideBarTitle-foreground) var(--vscode-sideBarTitle-foreground) var(--vscode-sideBar-background) var(--vscode-sideBarTitle-foreground);
-$nav-tabs-link-hover-border-color: var(--vscode-sideBarTitle-foreground);
-$nav-tabs-border-color:  var(--vscode-sideBarTitle-foreground);
+$nav-tabs-link-active-color: #cccccc;
+$nav-tabs-link-active-bg: #252526;
+$nav-tabs-link-active-border-color: #cccccc #cccccc #252526 #cccccc;
+$nav-tabs-link-hover-border-color: #cccccc;
+$nav-tabs-border-color: #cccccc;
 
-$card-bg: var(--vscode-sideBar-background);
-$card-color: var(--vscode-sideBarTitle-foreground);
-$card-border-color: var(--vscode-sideBar-border);
+$card-bg: #252526;
+$card-color: #cccccc;
+$card-border-color: #454545;
 
-$input-group-addon-bg: var(--vscode-sideBar-background);
-$input-group-addon-color: var(--vscode-sideBarTitle-foreground);
+$input-group-addon-bg: #252526;
+$input-group-addon-color: #cccccc;
 
-$code-color: var(--vscode-textPreformat-foreground);
+$input-color: #cccccc;
+$input-bg: #252526;
 
-$input-color:var(--vscode-sideBarTitle-foreground);
-$input-bg:var(--vscode-sideBar-background);
 @import "~bootstrap/scss/bootstrap";
+
+// Runtime CSS custom property overrides for VS Code theme integration
+body {
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+
+a {
+  color: var(--vscode-textLink-foreground);
+
+  &:hover {
+    color: var(--vscode-textLink-foreground);
+  }
+}
+
+code {
+  color: var(--vscode-textPreformat-foreground);
+}
+
+pre {
+  color: var(--vscode-textPreformat-foreground);
+}
+
+kbd {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.text-muted {
+  color: var(--vscode-editorCodeLens-foreground) !important;
+}
+
+.list-group {
+  --bs-list-group-bg: var(--vscode-notifications-background);
+  --bs-list-group-color: var(--vscode-notifications-foreground);
+  --bs-list-group-border-color: var(--vscode-notifications-background);
+  --bs-list-group-active-bg: var(--vscode-notifications-border);
+  --bs-list-group-active-color: var(--vscode-notifications-foreground);
+  --bs-list-group-action-hover-bg: var(--vscode-list-hoverBackground);
+  --bs-list-group-action-active-bg: var(--vscode-notifications-background);
+  --bs-list-group-action-color: var(--vscode-notifications-foreground);
+}
+
+.nav-tabs {
+  --bs-nav-tabs-link-active-color: var(--vscode-sideBarTitle-foreground);
+  --bs-nav-tabs-link-active-bg: var(--vscode-sideBar-background);
+  --bs-nav-tabs-border-color: var(--vscode-sideBarTitle-foreground);
+  --bs-nav-tabs-link-hover-border-color: var(--vscode-sideBarTitle-foreground);
+}
+
+.card {
+  --bs-card-bg: var(--vscode-sideBar-background);
+  --bs-card-color: var(--vscode-sideBarTitle-foreground);
+  --bs-card-border-color: var(--vscode-sideBar-border);
+}
+
+.input-group-text {
+  background-color: var(--vscode-sideBar-background);
+  color: var(--vscode-sideBarTitle-foreground);
+}
+
+.form-control {
+  color: var(--vscode-sideBarTitle-foreground);
+  background-color: var(--vscode-sideBar-background);
+}
 

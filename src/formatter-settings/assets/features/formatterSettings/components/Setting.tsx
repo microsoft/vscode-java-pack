@@ -4,7 +4,7 @@
 import checkIcon from "@iconify-icons/codicon/check";
 import chevronDownIcon from "@iconify-icons/codicon/chevron-down";
 import { Icon } from "@iconify/react";
-import React from "react";
+import type { JSX } from "react";
 import { Dropdown, Form } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { VSCodeSettings } from "../../../../FormatterConstants";

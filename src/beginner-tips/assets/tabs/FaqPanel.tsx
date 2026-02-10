@@ -3,7 +3,6 @@
 
 import { GenerateHeaderOptions } from "@microsoft/fast-foundation";
 import { VSCodeDataGrid, VSCodeDataGridRow, VSCodeDataGridCell } from "@vscode/webview-ui-toolkit/react";
-import React from 'react';
 const REQUIRED_JDK_VERSION = 17;
 
 export default function FaqPanel() {

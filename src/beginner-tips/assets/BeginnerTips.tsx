@@ -3,7 +3,6 @@
 
 import "./style.scss";
 import { VSCodePanelTab, VSCodePanels, VSCodePanelView } from "@vscode/webview-ui-toolkit/react";
-import React from 'react';
 import CodeEditingPanel from "./tabs/CodeEditingPanel";
 import DebuggingPanel from "./tabs/DebuggingPanel";
 import FaqPanel from "./tabs/FaqPanel";

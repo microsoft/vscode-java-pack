@@ -3,7 +3,7 @@
 
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
 import { Dispatch } from "@reduxjs/toolkit";
-import React, { useEffect } from "react";
+import { type JSX, useEffect } from "react";
 import { ClasspathEntry, ProjectInfo } from "../../../../types";
 import { useDispatch, useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";

@@ -3,7 +3,6 @@
 
 import { GenerateHeaderOptions } from "@microsoft/fast-foundation";
 import { VSCodeDataGrid, VSCodeDataGridRow, VSCodeDataGridCell } from "@vscode/webview-ui-toolkit/react";
-import React from 'react';
 const isMac: boolean = navigator.platform.toLowerCase().indexOf("darwin") === 0;
 
 export default function CodeEditingPanel() {

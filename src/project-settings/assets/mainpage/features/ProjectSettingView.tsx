@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { Dispatch, useEffect, useRef } from "react";
+import { type JSX, Dispatch, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ClasspathConfigurationView from "../../classpath/features/ClasspathConfigurationView";
 import { initializeClasspathData, loadClasspath, updateActiveTab } from "../../classpath/features/classpathConfigurationViewSlice";
@@ -88,7 +88,7 @@ const ProjectSettingView = (): JSX.Element => {
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     window.addEventListener("message", onMessage);
     if (projects.length == 0) {
       // this makes sure the initialization only happens when the

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { Component } from "react";
+import { type JSX, Component } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../../../utils/webview";
 import { onWillFetchInitProps, reportSkipTour, WEBVIEW_ID } from "../utils";

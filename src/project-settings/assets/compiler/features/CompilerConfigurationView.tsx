@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { VSCodeCheckbox, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeDropdown, VSCodeLink, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
-import React, { Dispatch, useEffect } from "react";
+import { type JSX, Dispatch, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCompilerSettings, updateAvailableComplianceLevels } from "./compilerConfigurationViewSlice";
 import { CompilerRequest } from "../../vscode/utils";
