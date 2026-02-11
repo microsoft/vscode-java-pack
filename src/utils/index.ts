@@ -82,6 +82,6 @@ export function isInsiders() {
 export function getNonce() {
   let array = new Uint32Array(16);
   array = crypto.getRandomValues(array);
-  const buffer = Buffer.from(array);
+  const buffer = Buffer.from(array.buffer);
   return buffer.toString('base64');
 }
