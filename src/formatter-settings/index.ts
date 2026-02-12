@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import compareVersions from "compare-versions";
+import { compareVersions } from "compare-versions";
 import * as fse from "fs-extra";
 import * as path from "path";
 import * as vscode from "vscode";
