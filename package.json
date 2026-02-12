@@ -387,7 +387,7 @@
     "@xmldom/xmldom": "^0.8.3",
     "axios": "^1.13.5",
     "bootstrap": "^4.6.2",
-    "compare-versions": "^3.6.0",
+    "compare-versions": "^6.1.1",
     "expand-home-dir": "0.0.3",
     "expand-tilde": "^2.0.2",
     "fs-extra": "^11.3.0",
