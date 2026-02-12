@@ -11,7 +11,7 @@ import { CompilerRequestHandler } from "./handlers/CompilerRequestHandler";
 import { ProjectSettingsException, ProjectInfo } from "./types";
 import _ from "lodash";
 import { getProjectNameFromUri, isDefaultProject } from "../utils/jdt";
-import compareVersions from "compare-versions";
+import { compareVersions } from "compare-versions";
 
 let projectSettingsPanel: vscode.WebviewPanel | undefined;
 let lsApi: LanguageServerAPI | undefined;
