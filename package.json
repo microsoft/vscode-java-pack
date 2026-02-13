@@ -382,7 +382,7 @@
     "@iconify-icons/codicon": "1.2.8",
     "@iconify/react": "^1.1.4",
     "@reduxjs/toolkit": "^1.8.6",
-    "@vscode/codicons": "^0.0.35",
+    "@vscode/codicons": "^0.0.44",
     "@vscode/webview-ui-toolkit": "1.4.0",
     "@xmldom/xmldom": "^0.8.11",
     "axios": "^1.13.5",
