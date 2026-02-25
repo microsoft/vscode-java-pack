@@ -350,7 +350,7 @@
     "@types/react": "^17.0.50",
     "@types/react-dom": "^16.9.16",
     "@types/react-redux": "^7.1.24",
-    "@types/semver": "^7.3.12",
+    "@types/semver": "^7.7.1",
     "@types/vscode": "^1.74.0",
     "@types/winreg": "^1.2.31",
     "@types/xmldom": "^0.1.31",
@@ -400,7 +400,7 @@
     "react-bootstrap": "^1.6.6",
     "react-dom": "^16.14.0",
     "react-redux": "^7.2.9",
-    "semver": "^7.5.2",
+    "semver": "^7.7.4",
     "vscode-extension-telemetry-wrapper": "^0.14.0",
     "vscode-tas-client": "^0.1.75"
   }
