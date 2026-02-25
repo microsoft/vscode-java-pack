@@ -386,7 +386,7 @@
     "@vscode/webview-ui-toolkit": "1.4.0",
     "@xmldom/xmldom": "^0.8.11",
     "axios": "^1.13.5",
-    "bootstrap": "^4.6.2",
+    "bootstrap": "^5.3.8",
     "compare-versions": "^6.1.1",
     "expand-home-dir": "0.0.3",
     "expand-tilde": "^2.0.2",
