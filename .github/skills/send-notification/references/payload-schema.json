@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IssueLens Notification Payload",
+  "description": "JSON schema for the notification payload sent to the Logic App",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the notification/report"
+    },
+    "timeFrame": {
+      "type": "string",
+      "description": "The time period covered by the report"
+    },
+    "totalIssues": {
+      "type": "integer",
+      "description": "Total number of issues analyzed"
+    },
+    "criticalIssues": {
+      "type": "integer",
+      "description": "Number of critical issues identified"
+    },
+    "overallSummary": {
+      "type": "string",
+      "description": "Brief overview of the issues (no repo names)"
+    },
+    "criticalIssuesSummary": {
+      "type": "array",
+      "description": "Detailed summary of critical issues",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issueNumber": {
+            "type": "integer",
+            "description": "GitHub issue number"
+          },
+          "url": {
+            "type": "string",
+            "description": "Full URL to the issue"
+          },
+          "title": {
+            "type": "string",
+            "description": "Issue title"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Brief description including symptoms and reason for criticality"
+          },
+          "labels": {
+            "type": "string",
+            "description": "Priority level and labels, e.g., '🔴 **High Priority** | 🏷️ bug, critical'"
+          }
+        },
+        "required": ["issueNumber", "url", "title", "summary", "labels"]
+      }
+    },
+    "allIssues": {
+      "type": "array",
+      "description": "List of all issues analyzed",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issueNumber": {
+            "type": "integer",
+            "description": "GitHub issue number"
+          },
+          "url": {
+            "type": "string",
+            "description": "Full URL to the issue"
+          },
+          "title": {
+            "type": "string",
+            "description": "Issue title"
+          }
+        },
+        "required": ["issueNumber", "url", "title"]
+      }
+    },
+    "workflowRunUrl": {
+      "type": "string",
+      "description": "URL to the workflow run that generated this report"
+    }
+  },
+  "required": ["title", "timeFrame", "totalIssues", "criticalIssues", "overallSummary", "criticalIssuesSummary", "allIssues"]
+}

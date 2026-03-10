@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Personal Notification Payload",
+  "description": "JSON schema for personal notification payload sent to the Logic App",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the notification message"
+    },
+    "message": {
+      "type": "string",
+      "description": "Main content of the message (supports markdown)"
+    },
+    "workflowRunUrl": {
+      "type": "string",
+      "description": "URL to the workflow run that generated this notification"
+    },
+    "recipient": {
+      "type": "string",
+      "description": "Email address of the recipient"
+    }
+  },
+  "required": ["title", "message", "workflowRunUrl", "recipient"]
+}

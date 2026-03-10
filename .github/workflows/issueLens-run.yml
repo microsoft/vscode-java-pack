@@ -1,10 +1,14 @@
 name: Run IssueLens Agent
 
 on:
-  schedule:
-    # Run once daily at 1am UTC
-    - cron: '0 1 * * *'
+  issues:
+    types: [opened]
   workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage'
+        required: true
+        type: string
 
 jobs:
   run-issuelens:
@@ -21,44 +25,38 @@ jobs:
       - name: Install GitHub Copilot CLI
         run: npm install -g @github/copilot
       
+      - name: Determine issue number
+        id: issue
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "number=${{ inputs.issue_number }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run IssueLens with Copilot CLI
         id: issuelens
         run: |
           # Create MCP config
-          echo '{"mcpServers": {"mcp-datetime": {"type": "local", "command": "uvx", "args": ["mcp-datetime"], "tools": ["*"]}}}' > mcp-config.json
+          echo '{"mcpServers": {"javatooling-search": {"type": "http", "url": "${{ secrets.JAVATOOLING_INDEX_URL }}"}}}' > mcp-config.json
 
           # Run copilot CLI with issuelens custom agent
-          output=$(copilot --agent=issuelens --additional-mcp-config @mcp-config.json --prompt "triage issues for repo \"${{ github.repository }}\"" 2>&1 || true)
+          output=$(copilot --agent=issuelens --additional-mcp-config @mcp-config.json --prompt "triage issue #${{ steps.issue.outputs.number }} for repo \"${{ github.repository }}\"" 2>&1 || true)
           
           echo "Raw output:"
           echo "$output"
           
-          # Extract JSON from output (looking for lines between curly braces)
-          json_output=$(echo "$output" | sed -n '/^{/,/^}/p' | jq -c '.')
-          
-          # If no JSON found with that pattern, try to extract any JSON
-          if [ -z "$json_output" ]; then
-            json_output=$(echo "$output" | grep -o '{[^}]*}' | jq -c '.' | head -1)
-          fi
-          
-          # If still no JSON, create a default payload with the raw output
-          if [ -z "$json_output" ]; then
-            json_output=$(jq -n --arg output "$output" '{"message": "IssueLens analysis complete", "output": $output}')
-          fi
-          
-          echo "Extracted JSON:"
-          echo "$json_output"
-          
-          # Save to output
-          echo "payload=$json_output" >> $GITHUB_OUTPUT
+          # Save to file for artifact upload
+          echo "$output" > triage-output.txt
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COPILOT_GITHUB_TOKEN: ${{ secrets.PAT }}
-          GH_TOKEN: ${{ secrets.PAT }}
-
-
-      - name: Trigger Notification
-        uses: ./.github/actions/notification
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JAVATOOLING_INDEX_URL: ${{ secrets.JAVATOOLING_INDEX_URL }}
+      
+      - name: Upload triage output
+        uses: actions/upload-artifact@v4
         with:
-          url: ${{ secrets.NOTIFICATION_URL }}
-          payload: ${{ steps.issuelens.outputs.payload }}
+          name: triage-output
+          path: triage-output.txt
+          retention-days: 30
