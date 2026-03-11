@@ -33,7 +33,7 @@ Fetch `.github/llms.md` from the target repository using GitHub MCP tools. The f
 - **Labeling rules**: Criteria for when to apply each label
 - **Keywords mapping**: Keywords that trigger specific labels
 
-For template format, see [references/label_instructions_template.md](references/label_instructions_template.md).
+**Only apply labels explicitly defined in this document. Do not apply any other labels.**
 
 If `.github/llms.md` is not found:
 1. Fetch the list of labels defined in the target repository using `github/list_labels`
