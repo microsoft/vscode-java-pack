@@ -35,7 +35,7 @@ Fetch `.github/llms.md` from the target repository using GitHub MCP tools. The f
 
 For template format, see [references/label_instructions_template.md](references/label_instructions_template.md).
 
-If `.github/label-instructions.md` is not found:
+If `.github/llms.md` is not found:
 1. Fetch the list of labels defined in the target repository using `github/list_labels`
 2. Create a brief summary of available labels based on their names and descriptions
 3. Use the summary to determine which labels best match the issue content
@@ -103,8 +103,8 @@ Report the labeling decision with:
 
 The skill requires:
 
-1. **GITHUB_ACCESS_TOKEN** or **GITHUB_PAT** environment variable with `repo` scope
-2. **label-instructions.md** in target repository (optional but recommended)
+1. **GITHUB_ACCESS_TOKEN** or **GITHUB_TOKEN** environment variable with `repo` scope
+2. **.github/llms.md** in target repository (optional but recommended)
 
 ## Fallback Behavior
 

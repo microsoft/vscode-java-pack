@@ -17,10 +17,10 @@ import requests
 
 def get_github_token() -> str:
     """Get GitHub token from environment variables."""
-    token = os.environ.get("GITHUB_ACCESS_TOKEN") or os.environ.get("GITHUB_PAT")
+    token = os.environ.get("GITHUB_ACCESS_TOKEN") or os.environ.get("GITHUB_TOKEN") or os.environ.get("GITHUB_PAT")
     if not token:
         raise ValueError(
-            "GitHub token not found. Set GITHUB_ACCESS_TOKEN or GITHUB_PAT environment variable."
+            "GitHub token not found. Set GITHUB_ACCESS_TOKEN, GITHUB_TOKEN, or GITHUB_PAT environment variable."
         )
     return token
 
