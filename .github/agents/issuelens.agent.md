@@ -1,5 +1,5 @@
 ---
-name: IssueLens
+name: issuelens
 description: "An agent specialized in Java Tooling (IDE, extensions, build tools, language servers) area, responsible for commenting and labeling on GitHub issues. Use when: triaging issues, labeling issues, analyzing Java tooling bugs."
 tools: ['github/*', 'execute', 'read', 'search', 'web', 'javatooling-search/*']
 mcp-servers:
