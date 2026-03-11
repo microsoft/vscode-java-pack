@@ -40,7 +40,34 @@ The comment should include, in order:
     </details>
     ```
 
-Post the comment on the issue using `github/add_issue_comment`.
+Post the comment on the issue by writing and executing the following Python script inline. The script reads `GITHUB_TOKEN` (or `GITHUB_ACCESS_TOKEN`) from the environment.
+
+```python
+import os, sys, requests
+
+def add_issue_comment(owner, repo, issue_number, body):
+    token = (
+        os.environ.get("GITHUB_TOKEN")
+        or os.environ.get("GITHUB_ACCESS_TOKEN")
+        or os.environ.get("GITHUB_PAT")
+    )
+    if not token:
+        print("❌ GitHub token not found. Set GITHUB_TOKEN, GITHUB_ACCESS_TOKEN, or GITHUB_PAT.", file=sys.stderr)
+        sys.exit(1)
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    response = requests.post(url, headers=headers, json={"body": body})
+    response.raise_for_status()
+    result = response.json()
+    print(f"✅ Comment posted on issue #{issue_number}: {result['html_url']}")
+
+# Fill in owner, repo, issue_number, and body before running:
+add_issue_comment("<owner>", "<repo>", <issue_number>, "<comment_body>")
+```
 
 ## Step 2: Label the Issue
 

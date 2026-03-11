@@ -54,6 +54,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JAVATOOLING_INDEX_URL: ${{ secrets.JAVATOOLING_INDEX_URL }}
           MAILING_URL: ${{ secrets.MAILING_URL }}
+          REPORT_RECIPIENTS: ${{ secrets.REPORT_RECIPIENTS }}
       
       - name: Upload triage output
         uses: actions/upload-artifact@v4
