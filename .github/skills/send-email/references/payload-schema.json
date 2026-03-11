@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Email Notification Payload",
+  "description": "JSON schema for the email notification payload sent to the Logic App",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the email/report, used in the email subject"
+    },
+    "timeFrame": {
+      "type": "string",
+      "description": "The time period covered by the report, appended to the subject"
+    },
+    "body": {
+      "type": "string",
+      "description": "Well-formatted HTML content for the email body"
+    },
+    "workflowRunUrl": {
+      "type": "string",
+      "description": "URL to the workflow run that generated this report"
+    },
+    "recipients": {
+      "type": "array",
+      "description": "List of email addresses to send the notification to",
+      "items": {
+        "type": "string",
+        "format": "email"
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["title", "timeFrame", "body", "recipients"]
+}
