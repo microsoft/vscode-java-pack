@@ -41,7 +41,7 @@ jobs:
           echo '{"mcpServers": {"javatooling-search": {"type": "http", "url": "${{ secrets.JAVATOOLING_INDEX_URL }}"}}}' > mcp-config.json
 
           # Run copilot CLI with issuelens custom agent
-          output=$(copilot --agent=issuelens --additional-mcp-config @mcp-config.json --prompt "triage issue #${{ steps.issue.outputs.number }} for repo \"${{ github.repository }}\"" 2>&1 || true)
+          output=$(copilot --agent=issuelens --allow-all --enable-all-github-mcp-tools --no-custom-instructions --no-ask-user --additional-mcp-config @mcp-config.json --prompt "triage issue #${{ steps.issue.outputs.number }} for repo \"${{ github.repository }}\"" 2>&1 || true)
           
           echo "Raw output:"
           echo "$output"
