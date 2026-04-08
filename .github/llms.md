@@ -23,7 +23,7 @@ Extension Pack for Java is a collection of popular extensions that can help writ
 ## Label
 When labeling an issue, follow the rules below per label category:
 ### General Rules
-- Analyze if the issue is related with the scope of using extensions for Java development. If not, STOP labelling IMMEDIATELY.
+- Analyze if the issue is related with the scope of using extensions for Java development. If not, apply the `needs more info` label and stop labelling other categories.
 - Assign label per category.
 - If a category is not applicable or you're unsure, you may skip it.
 - Do not assign multiple labels within the same category, unless explicitly allowed as an exception.
