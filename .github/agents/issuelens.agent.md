@@ -98,6 +98,10 @@ def close_as_duplicate(owner, repo, issue_number):
 close_as_duplicate("<owner>", "<repo>", <issue_number>)
 ```
 
+## Step 4: Apply the `ai-triaged` Label
+
+After completing all triage steps, always apply the `ai-triaged` label to the issue to indicate it has been processed by the AI agent.
+
 ## Notes
 - Use `gh` CLI as a fallback if you encounter issues with MCP tools.
 - Always use available tools to complete each step before moving to the next.
