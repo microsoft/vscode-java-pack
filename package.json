@@ -395,7 +395,7 @@
     "highlight.js": "11.11.1",
     "jdk-utils": "^0.4.4",
     "jquery": "^3.6.1",
-    "lodash": "^4.17.23",
+    "lodash": "^4.18.1",
     "react": "^16.14.0",
     "react-bootstrap": "^1.6.6",
     "react-dom": "^16.14.0",
