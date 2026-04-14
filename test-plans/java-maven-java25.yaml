@@ -1,19 +1,19 @@
 # Test Plan: Maven Java 25 (from vscode-java-pack.wiki)
 #
-# Source: wiki Test-Plan.md "Maven - Java 11" scenario (upgraded to Java 25)
-# Verify: Open Maven project with JDK 25 → LS ready → editing experience works
+# 来源: wiki Test-Plan.md "Maven - Java 11" 场景（升级为 Java 25）
+# 验证: 使用 JDK 25 打开 Maven 项目 → LS 就绪 → 编辑体验正常
 #
-# Prerequisites:
-#   - vscode-java repository cloned locally
-#   - JDK 25 installed (C:\Program Files\Java\jdk-25)
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 25 已安装（C:\Program Files\Java\jdk-25）
 #
-# Usage: autotest run test-plans/java-maven-java25.yaml
+# 用法: autotest run test-plans/java-maven-java25.yaml
 
-name: "Maven Java 25 — JDK 25 Compatibility"
+name: "Maven Java 25 — JDK 25 兼容性"
 description: |
-  Corresponds to the Maven Java 11 scenario in the wiki Test Plan (upgraded to Java 25):
-  Open the salut-java11 Maven project with JDK 25,
-  verify the language server starts normally and the editing experience works.
+  对应 wiki Test Plan 的 Maven Java 11 场景（升级为 Java 25）:
+  使用 JDK 25 打开 salut-java11 Maven 项目，
+  验证语言服务器正常启动，编辑体验正常。
 
 setup:
   extension: "redhat.java"
@@ -26,28 +26,28 @@ setup:
     java.jdt.ls.java.home: "C:\\Program Files\\Java\\jdk-25"
 
 steps:
-  # ── Step 1: Wait for LS ready ────────────────────────────────
+  # ── Step 1: 等待 LS 就绪 ────────────────────────────────
   # wiki: "check the status bar icon is 👍, and there should be no errors"
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
+    verify: "状态栏显示 Java 语言服务器已就绪"
     timeout: 180
 
-  # ── Step 2: Open Java file ──────────────────────────────
+  # ── Step 2: 打开 Java 文件 ──────────────────────────────
   # wiki: "Open Bar.java, make sure the editing experience is correctly working"
   - id: "open-bar"
-    action: "open file Bar.java"
-    verify: "Bar.java file is opened in the editor"
+    action: "打开文件 Bar.java"
+    verify: "Bar.java 文件已在编辑器中打开"
     timeout: 15
 
-  # ── Step 3: Verify completion ────────────────────────────────
+  # ── Step 3: 验证补全 ────────────────────────────────────
   - id: "verify-completion"
     action: "triggerCompletion"
-    verify: "Code completion works correctly"
+    verify: "代码补全正常工作"
     verifyCompletion:
       notEmpty: true
 
-  # ── Step 4: Verify editing ────────────────────────────────
+  # ── Step 4: 验证编辑 ────────────────────────────────────
   - id: "goto-line"
     action: "goToLine 5"
 

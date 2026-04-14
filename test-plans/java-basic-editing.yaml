@@ -1,54 +1,54 @@
 # Test Plan: Java Basic Editing (from vscode-java-pack.wiki)
 #
-# Source: wiki Test-Plan.md "Basic" scenario (Steps 1-5)
-# Verify: Open Eclipse project → Language Server ready → Code snippet → Code Action fixes error
+# 来源: wiki Test-Plan.md "Basic" 场景 (Steps 1-5)
+# 验证: 打开 Eclipse 项目 → 语言服务器就绪 → 代码片段 → Code Action 修复错误
 #
-# Prerequisites:
-#   - vscode-java repository cloned locally
-#   - JDK installed and available
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
 #
-# Usage: autotest run test-plans/java-basic-editing.yaml
+# 用法: autotest run test-plans/java-basic-editing.yaml
 
-name: "Java Basic Editing — Diagnostics, Code Snippets, Code Action"
+name: "Java Basic Editing — 诊断、代码片段、Code Action"
 description: |
-  Corresponds to the first 5 steps of the Basic scenario in the wiki Test Plan:
-  Open the simple-app Eclipse project, verify Language Server starts up,
-  use class code snippet to fix Foo.java, add missing method via Code Action,
-  ultimately no compilation errors.
+  对应 wiki Test Plan 的 Basic 场景前 5 步:
+  打开 simple-app Eclipse 项目，验证语言服务器启动，
+  使用 class 代码片段修复 Foo.java，通过 Code Action 补全缺失方法，
+  最终编译无错误。
 
 setup:
   extension: "redhat.java"
   extensions:
     - "vscjava.vscode-java-pack"
-  # To test extension dev version, uncomment:
+  # 如果需要测试扩展开发版本，取消注释:
   # extensionPath: "../../vscode-java"
   vscodeVersion: "stable"
   workspace: "../../vscode-java/test/resources/projects/eclipse/simple-app"
-  timeout: 60  # Java LS starts slowly, needs sufficient wait time
+  timeout: 60  # Java LS 启动较慢，需要足够等待时间
 
 steps:
-  # ── Step 1: Open project ──────────────────────────────────
+  # ── Step 1: 打开项目 ──────────────────────────────────────
   - id: "project-loaded"
-    action: "wait 5 seconds"
-    verify: "Project file tree is visible"
+    action: "等待 5 秒"
+    verify: "项目文件树可见"
 
-  # ── Step 2: Language Server ready + diagnostics ──────────
+  # ── Step 2: 语言服务器就绪 + 诊断 ────────────────────────
   # wiki: "After the language server is initialized, check the status bar
   #        icon is 👍, and the problems view has two errors."
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready (👍 icon)"
+    verify: "状态栏显示 Java 语言服务器已就绪（👍 图标）"
     verifyProblems:
       errors: 2
     timeout: 120
 
-  # ── Step 3: Fix Foo.java (write class skeleton) ─────────────
+  # ── Step 3: 修复 Foo.java（写入 class 代码骨架）────────────
   # wiki: "Select Foo.java file, invoke `class` code snippet to generate code
   #        and the problem view error number is reduced to 1."
-  # Note: Foo.java is an empty file, using disk modification to write class skeleton (snippet is unstable in empty files)
+  # 注意: Foo.java 是空文件，使用磁盘修改写入 class 骨架（snippet 在空文件中不稳定）
   - id: "open-foo"
-    action: "open file Foo.java"
-    verify: "Foo.java file is opened in the editor"
+    action: "打开文件 Foo.java"
+    verify: "Foo.java 文件已在编辑器中打开"
     timeout: 15
 
   - id: "write-class-body"
@@ -59,20 +59,20 @@ steps:
       errors: 1
     timeout: 30
 
-  # ── Step 4: Create missing method call() ─────────────────
+  # ── Step 4: 创建缺失方法 call() ──────────────────────────
   # wiki: "Select 'Create method call() in type Foo' to fix the error."
-  # Directly add call() method via disk modification (Code Action is unstable in automation)
+  # 直接通过磁盘修改添加 call() 方法（Code Action 在自动化中不稳定）
   - id: "add-call-method"
     action: "insertLineInFile src/app/Foo.java 4     public void call() {}\n"
     verifyProblems:
       errors: 0
     timeout: 30
 
-  # ── Step 5: Save and verify no errors ────────────────────
+  # ── Step 5: 保存并验证无错误 ─────────────────────────────
   # wiki: "Save all the files... There should be no errors."
   - id: "save-all"
-    action: "run command File: Save All"
-    verify: "All files saved, no compilation errors"
+    action: "执行命令 File: Save All"
+    verify: "所有文件已保存，编译无错误"
     verifyProblems:
       errors: 0
     timeout: 30

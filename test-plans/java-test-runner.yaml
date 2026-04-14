@@ -1,20 +1,20 @@
 # Test Plan: Java Test Runner (from vscode-java-pack.wiki)
 #
-# Source: wiki Test-Plan.md "Java Test Runner" scenario
-# Verify: Test panel display → run all tests → CodeLens visible
+# 来源: wiki Test-Plan.md "Java Test Runner" 场景
+# 验证: 测试面板展示 → 运行全部测试 → CodeLens 可见
 #
-# Uses maven/salut project (contains compilable Java source files)
+# 使用 maven/salut 项目（包含可编译的 Java 源文件）
 #
-# Prerequisites:
-#   - vscode-java repository cloned locally
-#   - JDK installed and available
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
 #
-# Usage: autotest run test-plans/java-test-runner.yaml
+# 用法: autotest run test-plans/java-test-runner.yaml
 
-name: "Java Test Runner — Test Panel and CodeLens"
+name: "Java Test Runner — 测试面板与 CodeLens"
 description: |
-  Corresponds to the Java Test Runner scenario in the wiki Test Plan:
-  Verify the test panel can display test cases, and tests can be run via the panel or CodeLens.
+  对应 wiki Test Plan 的 Java Test Runner 场景:
+  验证测试面板能展示测试用例，可通过面板或 CodeLens 运行测试。
 
 setup:
   extension: "redhat.java"
@@ -25,35 +25,35 @@ setup:
   timeout: 90
 
 steps:
-  # ── Wait for LS ready ─────────────────────────────────────────
+  # ── 等待 LS 就绪 ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
+    verify: "状态栏显示 Java 语言服务器已就绪"
     timeout: 120
 
-  # ── Step 1: Open test panel ─────────────────────────────────
+  # ── Step 1: 打开测试面板 ─────────────────────────────────
   # wiki: "The test explorer can show test case."
   - id: "open-test-explorer"
     action: "openTestExplorer"
-    verify: "Test panel is opened, test case list is visible"
+    verify: "测试面板已打开，可以看到测试用例列表"
 
-  # ── Step 2: Run all tests ─────────────────────────────────
+  # ── Step 2: 运行全部测试 ─────────────────────────────────
   # wiki: "Can run the test cases by clicking Run All in test explorer"
   - id: "run-all-tests"
     action: "runAllTests"
-    verify: "Tests start running"
+    verify: "测试开始运行"
 
   - id: "wait-test-complete"
-    action: "wait 30 seconds"
-    verify: "Test run completed"
+    action: "等待 30 秒"
+    verify: "测试运行完成"
 
-  # ── Step 3: Open test file to verify CodeLens ────────────────────
+  # ── Step 3: 打开测试文件验证 CodeLens ────────────────────
   # wiki: "Open a Java test file, the Code Lens could show above each test cases"
   - id: "open-test-file"
-    action: "open file Foo.java"
-    verify: "Test file is opened"
+    action: "打开文件 Foo.java"
+    verify: "测试文件已打开"
     timeout: 10
 
   - id: "verify-codelens"
-    action: "wait 5 seconds"
-    verify: "CodeLens appears above test cases (Run Test / Debug Test)"
+    action: "等待 5 秒"
+    verify: "CodeLens 显示在测试用例上方（Run Test / Debug Test）"

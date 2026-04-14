@@ -1,20 +1,20 @@
 # Test Plan: Maven for Java — Resolve Unknown Type (from vscode-java-pack.wiki)
 #
-# Source: wiki Test-Plan.md "Maven for Java" scenario
-# Verify: Type unknown type → hover shows "Resolve unknown type" → add dependency and import
+# 来源: wiki Test-Plan.md "Maven for Java" 场景
+# 验证: 输入未知类型 → hover 显示 "Resolve unknown type" → 添加依赖和 import
 #
-# Prerequisites:
-#   - vscode-java repository cloned locally
-#   - JDK installed and available
-#   - Maven installed
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
+#   - Maven 已安装
 #
-# Usage: autotest run test-plans/java-maven-resolve-type.yaml
+# 用法: autotest run test-plans/java-maven-resolve-type.yaml
 
 name: "Maven for Java — Resolve Unknown Type"
 description: |
-  Corresponds to the Maven for Java scenario in the wiki Test Plan:
-  Type an unknown type (e.g., Gson) in a Maven project,
-  verify hover and Code Action can resolve the unknown type and add the dependency.
+  对应 wiki Test Plan 的 Maven for Java 场景:
+  在 Maven 项目中输入未知类型（如 Gson），
+  验证 hover 和 Code Action 可以解析未知类型并添加依赖。
 
 setup:
   extension: "redhat.java"
@@ -25,19 +25,19 @@ setup:
   timeout: 90
 
 steps:
-  # ── Wait for LS ready ─────────────────────────────────────────
+  # ── 等待 LS 就绪 ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
+    verify: "状态栏显示 Java 语言服务器已就绪"
     timeout: 120
 
-  # ── Open Java file ──────────────────────────────────────
+  # ── 打开 Java 文件 ──────────────────────────────────────
   - id: "open-foo"
-    action: "open file Foo.java"
-    verify: "Foo.java file is opened in the editor"
+    action: "打开文件 Foo.java"
+    verify: "Foo.java 文件已在编辑器中打开"
     timeout: 15
 
-  # ── Type unknown type ─────────────────────────────────────────
+  # ── 输入未知类型 ─────────────────────────────────────────
   # wiki: "type 'Gson gson;'"
   - id: "goto-insert"
     action: "goToLine 10"
@@ -50,15 +50,15 @@ steps:
 
   - id: "save-file"
     action: "saveFile"
-    verify: "File saved, LS starts analyzing"
+    verify: "文件已保存，LS 开始分析"
 
-  # ── Verify hover shows Resolve unknown type ─────────────────
+  # ── 验证 hover 显示 Resolve unknown type ─────────────────
   # wiki: "When hovering on the classname, 'Resolve unknown type' action is shown."
   - id: "hover-on-gson"
     action: "hoverOnText Gson"
-    verify: "Hover popup shows Resolve unknown type action"
+    verify: "hover 弹窗显示 Resolve unknown type 操作"
 
-  # ── Verify Code Action ────────────────────────────────────
+  # ── 验证 Code Action ────────────────────────────────────
   # wiki: "When open Code Actions, 'Resolve unknown type' is in the list."
   - id: "dismiss-hover"
     action: "dismissHover"
@@ -68,4 +68,4 @@ steps:
 
   - id: "check-code-action"
     action: "applyCodeAction Resolve unknown type"
-    verify: "Code Action is available to resolve the unknown type"
+    verify: "Code Action 可用于解析未知类型"

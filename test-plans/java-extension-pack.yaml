@@ -1,21 +1,21 @@
 # Test Plan: Java Extension Pack — Classpath Configuration (from vscode-java-pack.wiki)
 #
-# Source: wiki Test-Plan.md "Java Extension Pack" scenario
-# Verify: Trigger Java: Configure Classpath command → Configuration page appears
+# 来源: wiki Test-Plan.md "Java Extension Pack" 场景
+# 验证: 触发 Java: Configure Classpath 命令 → 配置页面出现
 #
-# Note: Classpath configuration uses webview, current framework has limited support
-#       for webview internal interactions, only verifies command can be triggered and page appears.
+# 注意: Classpath 配置使用 webview，当前框架对 webview 内部交互支持有限，
+#       仅验证命令可触发和页面出现。
 #
-# Prerequisites:
-#   - vscode-java repository cloned locally
-#   - JDK installed and available
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
 #
-# Usage: autotest run test-plans/java-extension-pack.yaml
+# 用法: autotest run test-plans/java-extension-pack.yaml
 
-name: "Java Extension Pack — Classpath Configuration"
+name: "Java Extension Pack — Classpath 配置"
 description: |
-  Corresponds to the Java Extension Pack scenario in the wiki Test Plan:
-  Trigger Java: Configure Classpath command, verify the configuration page appears.
+  对应 wiki Test Plan 的 Java Extension Pack 场景:
+  触发 Java: Configure Classpath 命令，验证配置页面出现。
 
 setup:
   extension: "redhat.java"
@@ -26,18 +26,18 @@ setup:
   timeout: 90
 
 steps:
-  # ── Wait for LS ready ───────────────────────────────────────
+  # ── 等待 LS 就绪 ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
+    verify: "状态栏显示 Java 语言服务器已就绪"
     timeout: 120
 
-  # ── Trigger Classpath configuration command ──────────────────
+  # ── 触发 Classpath 配置命令 ──────────────────────────────
   # wiki: "Trigger the command 'Java: Configure Classpath'"
   - id: "configure-classpath"
-    action: "run command Java: Configure Classpath"
-    verify: "Classpath configuration page appears (webview or settings page)"
+    action: "执行命令 Java: Configure Classpath"
+    verify: "Classpath 配置页面出现（webview 或 settings 页面）"
 
   - id: "verify-page"
-    action: "wait 3 seconds"
-    verify: "Configuration page finished loading"
+    action: "等待 3 秒"
+    verify: "配置页面加载完成"

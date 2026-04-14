@@ -1,19 +1,19 @@
 # Test Plan: Java Dependency Viewer (from vscode-java-pack.wiki)
 #
-# Source: wiki Test-Plan.md "Java Dependency Viewer" scenario
-# Verify: Dependency view shows Sources / JDK Libraries / Maven Dependencies
+# 来源: wiki Test-Plan.md "Java Dependency Viewer" 场景
+# 验证: 依赖视图展示 Sources / JDK Libraries / Maven Dependencies
 #
-# Prerequisites:
-#   - vscode-java repository cloned locally
-#   - JDK installed and available
-#   - Maven installed
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
+#   - Maven 已安装
 #
-# Usage: autotest run test-plans/java-dependency-viewer.yaml
+# 用法: autotest run test-plans/java-dependency-viewer.yaml
 
-name: "Java Dependency Viewer — Dependency View"
+name: "Java Dependency Viewer — 依赖视图"
 description: |
-  Corresponds to the Java Dependency Viewer scenario in the wiki Test Plan:
-  Open a Maven project, verify the dependency view can show Sources, JDK Libraries, and Maven Dependencies.
+  对应 wiki Test Plan 的 Java Dependency Viewer 场景:
+  打开 Maven 项目，验证依赖视图可以展示 Sources、JDK Libraries、Maven Dependencies。
 
 setup:
   extension: "redhat.java"
@@ -24,24 +24,24 @@ setup:
   timeout: 90
 
 steps:
-  # ── Wait for LS ready ───────────────────────────────────────
+  # ── 等待 LS 就绪 ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
+    verify: "状态栏显示 Java 语言服务器已就绪"
     timeout: 120
 
-  # ── Open dependency view ───────────────────────────────────
+  # ── 打开依赖视图 ─────────────────────────────────────────
   # wiki: "The dependency explorer can show: Sources, JDK libraries, Maven Dependencies"
   - id: "open-dep-explorer"
     action: "openDependencyExplorer"
-    verify: "Java dependency view is opened"
+    verify: "Java 依赖视图已打开"
 
-  # ── Verify Sources node is visible ─────────────────────────
+  # ── 验证 Sources 节点可见 ────────────────────────────────
   - id: "verify-sources"
-    action: "wait 3 seconds"
-    verify: "Sources node is visible"
+    action: "等待 3 秒"
+    verify: "Sources 节点可见"
 
-  # ── Expand Sources to view contents ────────────────────────
+  # ── 展开 Sources 查看内容 ────────────────────────────────
   - id: "expand-sources"
-    action: "expand salut tree item"
-    verify: "salut project node is expanded, child nodes are visible"
+    action: "展开 salut 节点"
+    verify: "salut 项目节点已展开，可以看到子节点"
