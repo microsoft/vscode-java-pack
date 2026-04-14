@@ -37,7 +37,18 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Java
+      - name: Setup Java 25 (for java25 test plans)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Create JDK 25 path for test plans
+        shell: pwsh
+        run: |
+          New-Item -ItemType Junction -Path "C:\Program Files\Java\jdk-25" -Target $env:JAVA_HOME
+
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
