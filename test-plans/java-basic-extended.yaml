@@ -1,21 +1,21 @@
 # Test Plan: Java Basic Editing Extended (from vscode-java-pack.wiki)
 #
-# 来源: wiki Test-Plan.md "Basic" 场景 (Steps 6-9)
-# 验证: 代码补全 → Organize Imports → Rename Symbol → New Java File
+# Source: wiki Test-Plan.md "Basic" scenario (Steps 6-9)
+# Verify: Code completion → Organize Imports → Rename Symbol → New Java File
 #
-# 注意: 此 test plan 假设 Basic steps 1-5 已通过（java-basic-editing.yaml）,
-#       即项目已编译无错误。
+# Note: This test plan assumes Basic steps 1-5 have passed (java-basic-editing.yaml),
+#       i.e. the project compiles without errors.
 #
-# 前置条件:
-#   - vscode-java 仓库已 clone 到本地
-#   - JDK 已安装且可用
+# Prerequisites:
+#   - vscode-java repository cloned locally
+#   - JDK installed and available
 #
-# 用法: autotest run test-plans/java-basic-extended.yaml
+# Usage: autotest run test-plans/java-basic-extended.yaml
 
-name: "Java Basic Extended — 补全、Organize Imports、Rename"
+name: "Java Basic Extended — Completion, Organize Imports, Rename"
 description: |
-  对应 wiki Test Plan 的 Basic 场景 Steps 6-9:
-  验证代码补全、Organize Imports、Rename 功能。
+  Corresponds to Steps 6-9 of the Basic scenario in the wiki Test Plan:
+  Verify code completion, Organize Imports, and Rename functionality.
 
 setup:
   extension: "redhat.java"
@@ -26,24 +26,24 @@ setup:
   timeout: 60
 
 steps:
-  # ── 等待 LS 就绪 ─────────────────────────────────────────
+  # ── Wait for LS ready ───────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "状态栏显示 Java 语言服务器已就绪"
+    verify: "Status bar shows Java Language Server is ready"
     timeout: 120
 
-  # ── Step 6: 输入 File 代码验证补全 ──────────────────────
+  # ── Step 6: Type File code and verify completion ──────────
   # wiki: "Typing 'File f = new File(\"demo.txt\");' into App.main,
   #        the completion should work for File and there should be
   #        two errors in the problem view."
   - id: "open-app"
-    action: "打开文件 App.java"
-    verify: "App.java 文件已在编辑器中打开"
+    action: "open file App.java"
+    verify: "App.java file is opened in the editor"
     timeout: 10
 
   - id: "goto-main-body"
     action: "goToLine 6"
-    verify: "光标在 main 方法体内"
+    verify: "Cursor is inside the main method body"
 
   - id: "goto-end"
     action: "goToEndOfLine"
@@ -53,7 +53,7 @@ steps:
     verifyEditor:
       contains: "File f = new File"
 
-  # 保存文件让 LS 感知变更（typeInEditor 可能不触发 didChange）
+  # Save the file so LS picks up changes (typeInEditor may not trigger didChange)
   - id: "save-before-organize"
     action: "saveFile"
     verifyProblems:
@@ -63,8 +63,8 @@ steps:
 
   # ── Step 7: Organize Imports ────────────────────────────
   # wiki: "Invoke 'Source Action...' => 'Organize Imports'"
-  # 注意: Organize Imports 对 File 类可能弹出选择对话框（多个候选类），
-  # 这里通过磁盘修改直接添加 import 来验证等效行为。
+  # Note: Organize Imports may pop up a selection dialog for File class (multiple candidates),
+  # here we add the import directly via disk modification to verify equivalent behavior.
   - id: "add-import"
     action: "insertLineInFile src/app/App.java 2 import java.io.File;"
     verifyEditor:
@@ -73,8 +73,8 @@ steps:
   # ── Step 8: Rename Symbol ───────────────────────────────
   # wiki: "Open Foo.java, select the definition of class Foo,
   #        right click and run 'Rename Symbol' to rename it to FooNew."
-  # 注意: Rename 需要通过 Command Palette 触发 F2
+  # Note: Rename needs to be triggered via Command Palette (F2)
   - id: "open-foo-for-rename"
-    action: "打开文件 Foo.java"
-    verify: "Foo.java 文件已在编辑器中打开"
+    action: "open file Foo.java"
+    verify: "Foo.java file is opened in the editor"
     timeout: 10
