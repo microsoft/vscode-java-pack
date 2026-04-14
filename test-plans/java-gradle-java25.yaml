@@ -1,0 +1,62 @@
+# Test Plan: Gradle Java 25 (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Gradle - Java 11" 场景（升级为 Java 25）
+# 验证: 使用 JDK 25 打开 Gradle 项目 → LS 就绪 → 编辑体验正常
+#
+# 使用 eclipse.jdt.ls 的 subprojects 项目（Gradle 8.5）
+#
+# 前置条件:
+#   - eclipse.jdt.ls 仓库已 clone 到本地
+#   - JDK 25 已安装（C:\Program Files\Java\jdk-25）
+#
+# 用法: autotest run test-plans/java-gradle-java25.yaml
+
+name: "Gradle Java 25 — JDK 25 兼容性"
+description: |
+  对应 wiki Test Plan 的 Gradle Java 11 场景（升级为 Java 25）:
+  使用 JDK 25 打开 Gradle 8.5 项目，
+  验证语言服务器正常启动，编辑体验正常。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../eclipse.jdt.ls/org.eclipse.jdt.ls.tests/projects/gradle/subprojects"
+  timeout: 180
+  settings:
+    java.jdt.ls.java.home: "C:\\Program Files\\Java\\jdk-25"
+
+steps:
+  # ── Step 1: 等待 LS 就绪 ────────────────────────────────
+  # wiki: "check the status bar icon is 👍, and there should be no errors"
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    timeout: 300
+
+  # ── Step 2: 打开 Java 文件 ──────────────────────────────
+  # wiki: "Open Foo.java, make sure the editing experience is correctly working"
+  - id: "open-test1"
+    action: "打开文件 Test1.java"
+    verify: "Test1.java 文件已在编辑器中打开"
+    timeout: 15
+
+  # ── Step 3: 验证补全 ────────────────────────────────────
+  - id: "verify-completion"
+    action: "triggerCompletion"
+    verify: "代码补全正常工作"
+    verifyCompletion:
+      notEmpty: true
+
+  # ── Step 4: 验证编辑 ────────────────────────────────────
+  - id: "goto-line"
+    action: "goToLine 3"
+
+  - id: "goto-end"
+    action: "goToEndOfLine"
+
+  - id: "type-code"
+    action: "typeInEditor // JDK 25 gradle test marker"
+    verifyEditor:
+      contains: "// JDK 25 gradle test marker"

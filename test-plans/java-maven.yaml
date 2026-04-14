@@ -1,0 +1,75 @@
+# Test Plan: Java Maven Project (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Maven" 场景
+# 验证: 打开 Maven 项目 → LS 就绪 → 基本编辑体验（诊断、补全、Code Action）
+#
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
+#   - Maven 已安装
+#
+# 用法: autotest run test-plans/java-maven.yaml
+
+name: "Java Maven Project — 项目导入与基本编辑"
+description: |
+  对应 wiki Test Plan 的 Maven 场景:
+  打开 Maven 项目 salut，验证语言服务器正常启动，
+  验证基本编辑体验包括诊断、代码补全和 Code Action 功能。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  timeout: 90  # Maven 项目导入可能较慢
+
+steps:
+  # ── Step 1: 等待语言服务器就绪 ──────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    timeout: 120
+
+  # ── Step 2: 打开 Java 文件验证编辑体验 ─────────────────
+
+  # 2a. 打开文件
+  - id: "open-java-file"
+    action: "打开文件 Foo.java"
+    verify: "Foo.java 文件已在编辑器中打开"
+    timeout: 10
+
+  # 2b. 验证代码补全
+  - id: "verify-completion"
+    action: "triggerCompletionAt endOfMethod"
+    verify: "代码补全列表出现，包含合理的补全项"
+    verifyCompletion:
+      notEmpty: true
+
+  # 2c. 验证光标导航 (goToLine)
+  - id: "goto-line"
+    action: "goToLine 10"
+    verify: "光标移到第 10 行"
+
+  - id: "goto-end-of-line"
+    action: "goToEndOfLine"
+
+  # 2d. 验证编辑器输入 (typeInEditor)
+  - id: "type-in-editor"
+    action: "typeInEditor // autotest marker"
+    verifyEditor:
+      contains: "// autotest marker"
+
+  # 2e. 保存文件
+  - id: "save-file"
+    action: "saveFile"
+    verify: "文件已保存"
+
+  # 2f. 验证诊断 — 通过磁盘修改文件并重新加载
+  #     添加 unused import 后 LS 会报告新的 warning (unused import)
+  - id: "verify-diagnostics"
+    action: "insertLineInFile src/main/java/java/Foo.java 2 import java.util.ArrayList;"
+    verifyProblems:
+      warnings: 2
+      atLeast: true
+    timeout: 60

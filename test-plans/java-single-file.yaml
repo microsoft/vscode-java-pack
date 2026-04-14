@@ -1,0 +1,62 @@
+# Test Plan: Java Single File (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Single file" 场景
+# 验证: 在空文件夹中创建单个 Java 文件 → LS 就绪 → 编辑体验正常
+#
+# 前置条件:
+#   - JDK 已安装且可用
+#
+# 用法: autotest run test-plans/java-single-file.yaml
+
+name: "Java Single File — 单文件编辑体验"
+description: |
+  对应 wiki Test Plan 的 Single file 场景:
+  在空文件夹中打开一个 Java 文件，验证语言服务器正常启动，
+  编辑体验包括代码片段、诊断和补全正常工作。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  # 使用 simple-app 的 App.java 作为单文件场景
+  # 框架会自动复制到临时目录
+  workspace: "../../vscode-java/test/resources/projects/eclipse/simple-app"
+  timeout: 60
+
+steps:
+  # ── Step 1: 等待 LS 就绪 ────────────────────────────────
+  # wiki: "Check the language server is initialized, and the
+  #        status bar icon is 👍 after that."
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    timeout: 120
+
+  # ── Step 2: 打开 Java 文件 ──────────────────────────────
+  - id: "open-app"
+    action: "打开文件 App.java"
+    verify: "App.java 文件已在编辑器中打开"
+    timeout: 10
+
+  # ── Step 3: 验证代码补全 ────────────────────────────────
+  # wiki: "make sure the editing experience is correctly working
+  #        including diagnostics, code completion and code action."
+  - id: "verify-completion"
+    action: "triggerCompletion"
+    verify: "代码补全列表出现"
+    verifyCompletion:
+      notEmpty: true
+
+  # ── Step 4: 验证基本编辑 ────────────────────────────────
+  - id: "goto-main"
+    action: "goToLine 6"
+    verify: "光标移到 main 方法"
+
+  - id: "goto-end"
+    action: "goToEndOfLine"
+
+  - id: "type-code"
+    action: "typeInEditor \n        System.out.println(\"Hello\");"
+    verifyEditor:
+      contains: "System.out.println"

@@ -1,0 +1,70 @@
+# Test Plan: Gradle Project (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Gradle" 场景
+# 验证: 打开 Gradle 项目 → LS 就绪 → 无错误 → Java 文件编辑体验正常
+#
+# 注意: 使用 eclipse.jdt.ls 的 subprojects 测试项目 (Gradle 8.5)，
+#       因为 vscode-java 的 simple-gradle 使用 Gradle 4.10.2 与现代 JDK 不兼容。
+#
+# 前置条件:
+#   - eclipse.jdt.ls 仓库已 clone 到本地
+#   - JDK 已安装且可用
+#
+# 用法: autotest run test-plans/java-gradle.yaml
+
+name: "Java Gradle Project — Gradle 项目基本编辑"
+description: |
+  对应 wiki Test Plan 的 Gradle 场景:
+  打开 Gradle 8.5 项目，验证语言服务器启动无错误，
+  Java 文件编辑体验正常（诊断、补全）。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../eclipse.jdt.ls/org.eclipse.jdt.ls.tests/projects/gradle/subprojects"
+  timeout: 180  # Gradle 项目导入可能较慢（需要下载 Gradle distribution）
+
+steps:
+  # ── Step 1: 等待语言服务器就绪 ──────────────────────────
+  # wiki: "check the status bar icon is 👍, and there should be
+  #        no errors/problems in the problems view."
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    verifyProblems:
+      errors: 0
+    timeout: 300
+
+  # ── Step 2: 打开 Foo.java 验证编辑体验 ─────────────────
+  # wiki: "Open Foo.java file, make sure the editing experience
+  #        is correctly working including diagnostics, code completion
+  #        and code action"
+  - id: "open-foo"
+    action: "打开文件 Test1.java"
+    verify: "Test1.java 文件已在编辑器中打开"
+    timeout: 15
+
+  - id: "verify-completion"
+    action: "triggerCompletion"
+    verify: "代码补全列表出现，包含合理的补全项"
+    verifyCompletion:
+      notEmpty: true
+
+  # 验证编辑器可以正常输入和保存
+  - id: "goto-line"
+    action: "goToLine 5"
+    verify: "光标移到第 5 行"
+
+  - id: "goto-end"
+    action: "goToEndOfLine"
+
+  - id: "type-comment"
+    action: "typeInEditor // gradle test marker"
+    verifyEditor:
+      contains: "// gradle test marker"
+
+  - id: "save-file"
+    action: "saveFile"
+    verify: "文件已保存"

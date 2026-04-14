@@ -1,0 +1,43 @@
+# Test Plan: Java Extension Pack — Classpath Configuration (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Java Extension Pack" 场景
+# 验证: 触发 Java: Configure Classpath 命令 → 配置页面出现
+#
+# 注意: Classpath 配置使用 webview，当前框架对 webview 内部交互支持有限，
+#       仅验证命令可触发和页面出现。
+#
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
+#
+# 用法: autotest run test-plans/java-extension-pack.yaml
+
+name: "Java Extension Pack — Classpath 配置"
+description: |
+  对应 wiki Test Plan 的 Java Extension Pack 场景:
+  触发 Java: Configure Classpath 命令，验证配置页面出现。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  timeout: 90
+
+steps:
+  # ── 等待 LS 就绪 ─────────────────────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    timeout: 120
+
+  # ── 触发 Classpath 配置命令 ──────────────────────────────
+  # wiki: "Trigger the command 'Java: Configure Classpath'"
+  - id: "configure-classpath"
+    action: "执行命令 Java: Configure Classpath"
+    verify: "Classpath 配置页面出现（webview 或 settings 页面）"
+
+  - id: "verify-page"
+    action: "等待 3 秒"
+    verify: "配置页面加载完成"

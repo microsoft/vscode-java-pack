@@ -1,0 +1,49 @@
+# Test Plan: Fresh Import — Spring Petclinic (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Fresh import" 场景
+# 验证: 克隆并打开 Spring Petclinic → LS 就绪 → 补全正常
+#
+# 前置条件:
+#   - JDK 已安装且可用
+#   - Maven 已安装
+#   - Git 已安装（用于自动 clone）
+#
+# 用法: autotest run test-plans/java-fresh-import.yaml
+
+name: "Java Fresh Import — Spring Petclinic"
+description: |
+  对应 wiki Test Plan 的 Fresh Import 场景:
+  自动 clone Spring Petclinic 项目，
+  验证语言服务器正常启动，基本补全功能正常。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  repos:
+    - url: "https://github.com/spring-projects/spring-petclinic"
+      path: "../../spring-petclinic"
+  workspace: "../../spring-petclinic"
+  timeout: 300  # 大型 Maven 项目导入可能很慢
+
+steps:
+  # ── 等待 LS 就绪 ─────────────────────────────────────────
+  # wiki: "Check LS status bar is 👍"
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    timeout: 300
+
+  # ── 验证补全 ─────────────────────────────────────────────
+  # wiki: "basic language features such as completion works"
+  - id: "open-main-class"
+    action: "打开文件 PetClinicApplication.java"
+    verify: "PetClinicApplication.java 已打开"
+    timeout: 15
+
+  - id: "verify-completion"
+    action: "triggerCompletion"
+    verify: "代码补全正常工作"
+    verifyCompletion:
+      notEmpty: true

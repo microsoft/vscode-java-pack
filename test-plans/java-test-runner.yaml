@@ -1,0 +1,59 @@
+# Test Plan: Java Test Runner (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Java Test Runner" 场景
+# 验证: 测试面板展示 → 运行全部测试 → CodeLens 可见
+#
+# 使用 maven/salut 项目（包含可编译的 Java 源文件）
+#
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
+#
+# 用法: autotest run test-plans/java-test-runner.yaml
+
+name: "Java Test Runner — 测试面板与 CodeLens"
+description: |
+  对应 wiki Test Plan 的 Java Test Runner 场景:
+  验证测试面板能展示测试用例，可通过面板或 CodeLens 运行测试。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  timeout: 90
+
+steps:
+  # ── 等待 LS 就绪 ─────────────────────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    timeout: 120
+
+  # ── Step 1: 打开测试面板 ─────────────────────────────────
+  # wiki: "The test explorer can show test case."
+  - id: "open-test-explorer"
+    action: "openTestExplorer"
+    verify: "测试面板已打开，可以看到测试用例列表"
+
+  # ── Step 2: 运行全部测试 ─────────────────────────────────
+  # wiki: "Can run the test cases by clicking Run All in test explorer"
+  - id: "run-all-tests"
+    action: "runAllTests"
+    verify: "测试开始运行"
+
+  - id: "wait-test-complete"
+    action: "等待 30 秒"
+    verify: "测试运行完成"
+
+  # ── Step 3: 打开测试文件验证 CodeLens ────────────────────
+  # wiki: "Open a Java test file, the Code Lens could show above each test cases"
+  - id: "open-test-file"
+    action: "打开文件 Foo.java"
+    verify: "测试文件已打开"
+    timeout: 10
+
+  - id: "verify-codelens"
+    action: "等待 5 秒"
+    verify: "CodeLens 显示在测试用例上方（Run Test / Debug Test）"

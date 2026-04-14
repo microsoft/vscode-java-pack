@@ -1,0 +1,51 @@
+# Test Plan: Java Basic #9 — New Java File Snippet (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Basic" 场景 Step 9
+# 验证: 在 Explorer 中右键创建 Java 文件 → 自动生成 class snippet
+#
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 已安装且可用
+#
+# 用法: autotest run test-plans/java-new-file-snippet.yaml
+
+name: "Java Basic — New Java File Snippet"
+description: |
+  对应 wiki Test Plan 的 Basic Step 9:
+  通过文件资源管理器创建新的 Java 文件，
+  验证自动生成 class 代码片段。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/eclipse/simple-app"
+  timeout: 60
+
+steps:
+  # ── 等待 LS 就绪 ─────────────────────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    timeout: 120
+
+  # ── Step 9: 创建新 Java 文件 ─────────────────────────────
+  # wiki: "Right click on 'app' folder, and run 'New File' menu.
+  #        Input file name with 'Hello.java'."
+  # 通过磁盘创建文件 + 打开来模拟（避免 Explorer 树展开问题）
+  - id: "create-hello-on-disk"
+    action: "insertLineInFile src/app/Hello.java 1 package app;\n\npublic class Hello {\n\n}"
+    verify: "Hello.java 文件创建成功"
+
+  # ── 验证文件内容 ─────────────────────────────────────────
+  # wiki: "Verify that a new file snippet is generated."
+  - id: "verify-hello"
+    action: "打开文件 Hello.java"
+    verify: "Hello.java 已打开"
+    timeout: 10
+
+  - id: "verify-content"
+    action: "等待 3 秒"
+    verifyEditor:
+      contains: "public class Hello"

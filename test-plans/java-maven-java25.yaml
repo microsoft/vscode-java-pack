@@ -1,0 +1,60 @@
+# Test Plan: Maven Java 25 (from vscode-java-pack.wiki)
+#
+# 来源: wiki Test-Plan.md "Maven - Java 11" 场景（升级为 Java 25）
+# 验证: 使用 JDK 25 打开 Maven 项目 → LS 就绪 → 编辑体验正常
+#
+# 前置条件:
+#   - vscode-java 仓库已 clone 到本地
+#   - JDK 25 已安装（C:\Program Files\Java\jdk-25）
+#
+# 用法: autotest run test-plans/java-maven-java25.yaml
+
+name: "Maven Java 25 — JDK 25 兼容性"
+description: |
+  对应 wiki Test Plan 的 Maven Java 11 场景（升级为 Java 25）:
+  使用 JDK 25 打开 salut-java11 Maven 项目，
+  验证语言服务器正常启动，编辑体验正常。
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut-java11"
+  timeout: 120
+  settings:
+    java.jdt.ls.java.home: "C:\\Program Files\\Java\\jdk-25"
+
+steps:
+  # ── Step 1: 等待 LS 就绪 ────────────────────────────────
+  # wiki: "check the status bar icon is 👍, and there should be no errors"
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "状态栏显示 Java 语言服务器已就绪"
+    timeout: 180
+
+  # ── Step 2: 打开 Java 文件 ──────────────────────────────
+  # wiki: "Open Bar.java, make sure the editing experience is correctly working"
+  - id: "open-bar"
+    action: "打开文件 Bar.java"
+    verify: "Bar.java 文件已在编辑器中打开"
+    timeout: 15
+
+  # ── Step 3: 验证补全 ────────────────────────────────────
+  - id: "verify-completion"
+    action: "triggerCompletion"
+    verify: "代码补全正常工作"
+    verifyCompletion:
+      notEmpty: true
+
+  # ── Step 4: 验证编辑 ────────────────────────────────────
+  - id: "goto-line"
+    action: "goToLine 5"
+
+  - id: "goto-end"
+    action: "goToEndOfLine"
+
+  - id: "type-code"
+    action: "typeInEditor // JDK 25 test marker"
+    verifyEditor:
+      contains: "// JDK 25 test marker"
