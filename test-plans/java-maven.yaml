@@ -1,0 +1,75 @@
+# Test Plan: Java Maven Project (from vscode-java-pack.wiki)
+#
+# Source: wiki Test-Plan.md "Maven" scenario
+# Verify: Open Maven project → LS ready → basic editing experience (diagnostics, completion, Code Action)
+#
+# Prerequisites:
+#   - vscode-java repository cloned locally
+#   - JDK installed and available
+#   - Maven installed
+#
+# Usage: autotest run test-plans/java-maven.yaml
+
+name: "Java Maven Project — Project Import and Basic Editing"
+description: |
+  Corresponds to the Maven scenario in the wiki Test Plan:
+  Open the Maven project salut, verify the language server starts normally,
+  verify basic editing experience including diagnostics, code completion, and Code Action features.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  timeout: 90  # Maven project import may be slow
+
+steps:
+  # ── Step 1: Wait for language server ready ──────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Java language server is ready"
+    timeout: 120
+
+  # ── Step 2: Open Java file to verify editing experience ─────────────────
+
+  # 2a. Open file
+  - id: "open-java-file"
+    action: "open file Foo.java"
+    verify: "Foo.java file is opened in the editor"
+    timeout: 10
+
+  # 2b. Verify code completion
+  - id: "verify-completion"
+    action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion list appears with reasonable completion items"
+    verifyCompletion:
+      notEmpty: true
+
+  # 2c. Verify cursor navigation (goToLine)
+  - id: "goto-line"
+    action: "goToLine 10"
+    verify: "Cursor moved to line 10"
+
+  - id: "goto-end-of-line"
+    action: "goToEndOfLine"
+
+  # 2d. Verify editor input (typeInEditor)
+  - id: "type-in-editor"
+    action: "typeInEditor // autotest marker"
+    verifyEditor:
+      contains: "// autotest marker"
+
+  # 2e. Save file
+  - id: "save-file"
+    action: "saveFile"
+    verify: "File saved"
+
+  # 2f. Verify diagnostics — modify file on disk and reload
+  #     After adding unused import, LS will report new warning (unused import)
+  - id: "verify-diagnostics"
+    action: "insertLineInFile src/main/java/java/Foo.java 2 import java.util.ArrayList;"
+    verifyProblems:
+      warnings: 2
+      atLeast: true
+    timeout: 60

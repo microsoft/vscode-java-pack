@@ -1,0 +1,82 @@
+name: E2E AutoTest
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_plan:
+        description: "Test plan to run (leave empty for all)"
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  e2e-test:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout vscode-java-pack
+        uses: actions/checkout@v4
+        with:
+          path: vscode-java-pack
+
+      - name: Checkout vscode-java (test projects)
+        uses: actions/checkout@v4
+        with:
+          repository: redhat-developer/vscode-java
+          path: vscode-java
+
+      - name: Checkout eclipse.jdt.ls (Gradle test projects)
+        uses: actions/checkout@v4
+        with:
+          repository: eclipse-jdtls/eclipse.jdt.ls
+          path: eclipse.jdt.ls
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install autotest CLI
+        run: npm install -g @vscjava/vscode-autotest
+
+      - name: Run test plan(s)
+        shell: pwsh
+        working-directory: vscode-java-pack
+        run: |
+          $plan = "${{ inputs.test_plan }}"
+          if ($plan -and $plan -ne "") {
+            Write-Host "Running: $plan"
+            autotest run "test-plans/$plan"
+          } else {
+            Write-Host "Running all test plans..."
+            $plans = Get-ChildItem test-plans -Filter "*.yaml" |
+              Where-Object { $_.Name -ne "java-fresh-import.yaml" } |
+              Sort-Object Name
+            $failed = @()
+            foreach ($p in $plans) {
+              Write-Host "`n========== $($p.Name) =========="
+              autotest run "test-plans/$($p.Name)"
+              if ($LASTEXITCODE -ne 0) { $failed += $p.Name }
+            }
+            Write-Host "`n========== Summary =========="
+            Write-Host "Total: $($plans.Count)  Failed: $($failed.Count)"
+            if ($failed.Count -gt 0) {
+              Write-Host "Failed: $($failed -join ', ')"
+              exit 1
+            }
+          }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: vscode-java-pack/test-results/
+          retention-days: 30

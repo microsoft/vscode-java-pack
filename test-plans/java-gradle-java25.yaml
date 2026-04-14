@@ -1,0 +1,62 @@
+# Test Plan: Gradle Java 25 (from vscode-java-pack.wiki)
+#
+# Source: wiki Test-Plan.md "Gradle - Java 11" scenario (upgraded to Java 25)
+# Verify: Open Gradle project with JDK 25 → LS ready → Editing experience works
+#
+# Uses eclipse.jdt.ls subprojects project (Gradle 8.5)
+#
+# Prerequisites:
+#   - eclipse.jdt.ls repository cloned locally
+#   - JDK 25 installed (C:\Program Files\Java\jdk-25)
+#
+# Usage: autotest run test-plans/java-gradle-java25.yaml
+
+name: "Gradle Java 25 — JDK 25 Compatibility"
+description: |
+  Corresponds to the Gradle Java 11 scenario in the wiki Test Plan (upgraded to Java 25):
+  Open a Gradle 8.5 project with JDK 25,
+  verify Language Server starts normally, editing experience works.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../eclipse.jdt.ls/org.eclipse.jdt.ls.tests/projects/gradle/subprojects"
+  timeout: 180
+  settings:
+    java.jdt.ls.java.home: "C:\\Program Files\\Java\\jdk-25"
+
+steps:
+  # ── Step 1: Wait for LS ready ──────────────────────────────
+  # wiki: "check the status bar icon is 👍, and there should be no errors"
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Java Language Server is ready"
+    timeout: 300
+
+  # ── Step 2: Open Java file ────────────────────────────────
+  # wiki: "Open Foo.java, make sure the editing experience is correctly working"
+  - id: "open-test1"
+    action: "open file Test1.java"
+    verify: "Test1.java file is opened in the editor"
+    timeout: 15
+
+  # ── Step 3: Verify completion ──────────────────────────────
+  - id: "verify-completion"
+    action: "triggerCompletion"
+    verify: "Code completion works correctly"
+    verifyCompletion:
+      notEmpty: true
+
+  # ── Step 4: Verify editing ──────────────────────────────────
+  - id: "goto-line"
+    action: "goToLine 3"
+
+  - id: "goto-end"
+    action: "goToEndOfLine"
+
+  - id: "type-code"
+    action: "typeInEditor // JDK 25 gradle test marker"
+    verifyEditor:
+      contains: "// JDK 25 gradle test marker"
