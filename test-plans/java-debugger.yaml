@@ -1,21 +1,21 @@
 # Test Plan: Debugger for Java (from vscode-java-pack.wiki)
 #
-# 来源: wiki Test-Plan.md "Debugger for Java" 场景
-# 验证: 启动调试 → 断点命中 → 单步调试 → 变量查看 → 程序输出
+# Source: wiki Test-Plan.md "Debugger for Java" scenario
+# Verify: Start debugging → Breakpoint hit → Step through → Variable inspection → Program output
 #
-# 使用 simple-app 项目（有 main 方法的 App.java）
+# Uses simple-app project (App.java with main method)
 #
-# 前置条件:
-#   - vscode-java 仓库已 clone 到本地
-#   - JDK 已安装且可用
+# Prerequisites:
+#   - vscode-java repository cloned locally
+#   - JDK installed and available
 #
-# 用法: autotest run test-plans/java-debugger.yaml
+# Usage: autotest run test-plans/java-debugger.yaml
 
-name: "Java Debugger — 断点调试"
+name: "Java Debugger — Breakpoint Debugging"
 description: |
-  对应 wiki Test Plan 的 Debugger for Java 场景:
-  打开 simple-app 项目，设置断点，启动调试，
-  验证断点命中和程序输出。
+  Corresponds to the Debugger for Java scenario in the wiki Test Plan:
+  Open the simple-app project, set breakpoints, start debugging,
+  verify breakpoint hit and program output.
 
 setup:
   extension: "redhat.java"
@@ -26,38 +26,38 @@ setup:
   timeout: 60
 
 steps:
-  # ── 等待 LS 就绪 ─────────────────────────────────────────
+  # ── Wait for LS ready ───────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "状态栏显示 Java 语言服务器已就绪"
+    verify: "Status bar shows Java Language Server is ready"
     timeout: 120
 
-  # ── 打开 App.java ────────────────────────────────────────
+  # ── Open App.java ──────────────────────────────────────────
   - id: "open-app"
-    action: "打开文件 App.java"
-    verify: "App.java 文件已在编辑器中打开"
+    action: "open file App.java"
+    verify: "App.java file is opened in the editor"
     timeout: 15
 
-  # ── 设置断点 ─────────────────────────────────────────────
+  # ── Set breakpoint ──────────────────────────────────────────
   # wiki: "verify if the breakpoint is hit"
-  # App.java 第 5 行是 System.out.println("Hello Java");
+  # App.java line 5 is System.out.println("Hello Java");
   - id: "set-breakpoint"
     action: "setBreakpoint 5"
-    verify: "在第 5 行设置了断点"
+    verify: "Breakpoint set on line 5"
 
-  # ── 启动调试 ─────────────────────────────────────────────
+  # ── Start debugging ────────────────────────────────────────
   - id: "start-debug"
     action: "startDebugSession"
-    verify: "调试会话已启动，调试工具栏可见"
+    verify: "Debug session started, debug toolbar is visible"
     timeout: 30
 
-  # ── 验证调试控制台输出 ────────────────────────────────────
+  # ── Verify debug console output ──────────────────────────────
   # wiki: "program output is as expected"
   - id: "wait-for-output"
-    action: "等待 5 秒"
-    verify: "程序运行并输出结果"
+    action: "wait 5 seconds"
+    verify: "Program runs and produces output"
 
-  # ── 停止调试 ─────────────────────────────────────────────
+  # ── Stop debugging ─────────────────────────────────────────
   - id: "stop-debug"
     action: "stopDebugSession"
-    verify: "调试会话已停止"
+    verify: "Debug session stopped"

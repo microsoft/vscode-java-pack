@@ -1,53 +1,53 @@
 # Test Plan: Single File Without Workspace (from vscode-java-pack.wiki)
 #
-# 来源: wiki Test-Plan.md "Single file without workspace" 场景
-# 验证: 无 workspace 模式下打开单个 Java 文件 → LS 就绪 → 编辑体验正常
+# Source: wiki Test-Plan.md "Single file without workspace" scenario
+# Verify: Open a single Java file without workspace → LS ready → editing experience works
 #
-# 前置条件:
-#   - vscode-java 仓库已 clone 到本地
-#   - JDK 已安装且可用
+# Prerequisites:
+#   - vscode-java repository cloned locally
+#   - JDK installed and available
 #
-# 用法: autotest run test-plans/java-single-no-workspace.yaml
+# Usage: autotest run test-plans/java-single-no-workspace.yaml
 
-name: "Java Single File Without Workspace — 无工作区单文件"
+name: "Java Single File Without Workspace — No Workspace Single File"
 description: |
-  对应 wiki Test Plan 的 Single file without workspace 场景:
-  在无 workspace 模式下直接打开一个 Java 文件，
-  验证 LS 正常工作，基本编辑功能可用。
+  Corresponds to the Single file without workspace scenario in the wiki Test Plan:
+  Directly open a Java file without workspace mode,
+  verify LS works normally and basic editing features are available.
 
 setup:
   extension: "redhat.java"
   extensions:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
-  # 单文件模式 — 不设 workspace，只打开一个文件
+  # Single file mode — no workspace set, only open a file
   file: "../../vscode-java/test/resources/projects/eclipse/simple-app/src/app/App.java"
   timeout: 60
 
 steps:
-  # ── Step 1: 等待 LS 就绪 ────────────────────────────────
+  # ── Step 1: Wait for LS ready ────────────────────────────────
   # wiki: "Wait for Java extension to be ready (the status bar icon is 👍)."
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "状态栏显示 Java 语言服务器已就绪"
+    verify: "Status bar shows Java language server is ready"
     timeout: 120
 
-  # ── Step 2: 验证文件已打开 ──────────────────────────────
+  # ── Step 2: Verify file is opened ──────────────────────────
   - id: "verify-file-open"
-    action: "等待 3 秒"
-    verify: "App.java 已打开"
+    action: "wait 3 seconds"
+    verify: "App.java is opened"
     verifyEditor:
       contains: "Hello Java"
 
-  # ── Step 3: 验证基本编辑功能 ────────────────────────────
+  # ── Step 3: Verify basic editing features ────────────────────────────
   # wiki: "Try the basic editing features in App.java, they should work."
   - id: "verify-completion"
     action: "triggerCompletion"
-    verify: "代码补全正常工作"
+    verify: "Code completion works correctly"
     verifyCompletion:
       notEmpty: true
 
-  # ── Step 4: 验证编辑 ────────────────────────────────────
+  # ── Step 4: Verify editing ────────────────────────────────
   - id: "goto-line"
     action: "goToLine 5"
 

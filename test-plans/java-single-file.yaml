@@ -1,57 +1,57 @@
 # Test Plan: Java Single File (from vscode-java-pack.wiki)
 #
-# 来源: wiki Test-Plan.md "Single file" 场景
-# 验证: 在空文件夹中创建单个 Java 文件 → LS 就绪 → 编辑体验正常
+# Source: wiki Test-Plan.md "Single file" scenario
+# Verify: Create a single Java file in an empty folder → LS ready → editing experience works
 #
-# 前置条件:
-#   - JDK 已安装且可用
+# Prerequisites:
+#   - JDK installed and available
 #
-# 用法: autotest run test-plans/java-single-file.yaml
+# Usage: autotest run test-plans/java-single-file.yaml
 
-name: "Java Single File — 单文件编辑体验"
+name: "Java Single File — Single File Editing Experience"
 description: |
-  对应 wiki Test Plan 的 Single file 场景:
-  在空文件夹中打开一个 Java 文件，验证语言服务器正常启动，
-  编辑体验包括代码片段、诊断和补全正常工作。
+  Corresponds to the Single file scenario in the wiki Test Plan:
+  Open a Java file in an empty folder, verify the language server starts normally,
+  editing experience including code snippets, diagnostics, and completion works correctly.
 
 setup:
   extension: "redhat.java"
   extensions:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
-  # 使用 simple-app 的 App.java 作为单文件场景
-  # 框架会自动复制到临时目录
+  # Use simple-app's App.java as the single file scenario
+  # The framework will automatically copy to a temporary directory
   workspace: "../../vscode-java/test/resources/projects/eclipse/simple-app"
   timeout: 60
 
 steps:
-  # ── Step 1: 等待 LS 就绪 ────────────────────────────────
+  # ── Step 1: Wait for LS ready ────────────────────────────────
   # wiki: "Check the language server is initialized, and the
   #        status bar icon is 👍 after that."
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "状态栏显示 Java 语言服务器已就绪"
+    verify: "Status bar shows Java language server is ready"
     timeout: 120
 
-  # ── Step 2: 打开 Java 文件 ──────────────────────────────
+  # ── Step 2: Open Java file ──────────────────────────────
   - id: "open-app"
-    action: "打开文件 App.java"
-    verify: "App.java 文件已在编辑器中打开"
+    action: "open file App.java"
+    verify: "App.java file is opened in the editor"
     timeout: 10
 
-  # ── Step 3: 验证代码补全 ────────────────────────────────
+  # ── Step 3: Verify code completion ────────────────────────────
   # wiki: "make sure the editing experience is correctly working
   #        including diagnostics, code completion and code action."
   - id: "verify-completion"
     action: "triggerCompletion"
-    verify: "代码补全列表出现"
+    verify: "Code completion list appears"
     verifyCompletion:
       notEmpty: true
 
-  # ── Step 4: 验证基本编辑 ────────────────────────────────
+  # ── Step 4: Verify basic editing ────────────────────────────
   - id: "goto-main"
     action: "goToLine 6"
-    verify: "光标移到 main 方法"
+    verify: "Cursor moved to main method"
 
   - id: "goto-end"
     action: "goToEndOfLine"
