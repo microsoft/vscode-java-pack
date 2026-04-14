@@ -8,14 +8,6 @@ on:
         required: false
         default: ""
         type: string
-      vscode_version:
-        description: "VSCode version"
-        required: false
-        default: "stable"
-        type: choice
-        options:
-          - stable
-          - insiders
 
 jobs:
   e2e-test:
@@ -25,18 +17,20 @@ jobs:
     steps:
       - name: Checkout vscode-java-pack
         uses: actions/checkout@v4
+        with:
+          path: vscode-java-pack
 
-      - name: Checkout vscode-java
+      - name: Checkout vscode-java (test projects)
         uses: actions/checkout@v4
         with:
           repository: redhat-developer/vscode-java
-          path: ../vscode-java
+          path: vscode-java
 
-      - name: Checkout eclipse.jdt.ls
+      - name: Checkout eclipse.jdt.ls (Gradle test projects)
         uses: actions/checkout@v4
         with:
           repository: eclipse-jdtls/eclipse.jdt.ls
-          path: ../eclipse.jdt.ls
+          path: eclipse.jdt.ls
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -54,6 +48,7 @@ jobs:
 
       - name: Run test plan(s)
         shell: pwsh
+        working-directory: vscode-java-pack
         run: |
           $plan = "${{ inputs.test_plan }}"
           if ($plan -and $plan -ne "") {
@@ -70,8 +65,10 @@ jobs:
               autotest run "test-plans/$($p.Name)"
               if ($LASTEXITCODE -ne 0) { $failed += $p.Name }
             }
+            Write-Host "`n========== Summary =========="
+            Write-Host "Total: $($plans.Count)  Failed: $($failed.Count)"
             if ($failed.Count -gt 0) {
-              Write-Host "`n❌ Failed plans: $($failed -join ', ')"
+              Write-Host "Failed: $($failed -join ', ')"
               exit 1
             }
           }
@@ -80,6 +77,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: test-results/
+          name: e2e-test-results
+          path: vscode-java-pack/test-results/
           retention-days: 30
