@@ -15,10 +15,11 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - name: Checkout vscode-java-pack
+      - name: Checkout javaext-autotest
         uses: actions/checkout@v4
         with:
-          path: vscode-java-pack
+          repository: wenytang-ms/javaext-autotest
+          path: javaext-autotest
 
       - name: Checkout vscode-java (test projects)
         uses: actions/checkout@v4
@@ -41,7 +42,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: 25-ea
 
       - name: Create JDK 25 path for test plans
         shell: pwsh
@@ -54,17 +55,18 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install autotest CLI
-        run: npm install -g @vscjava/vscode-autotest
+      - name: Install autotest dependencies
+        working-directory: javaext-autotest
+        run: npm ci && npm run build
 
       - name: Run test plan(s)
         shell: pwsh
-        working-directory: vscode-java-pack
+        working-directory: javaext-autotest
         run: |
           $plan = "${{ inputs.test_plan }}"
           if ($plan -and $plan -ne "") {
             Write-Host "Running: $plan"
-            autotest run "test-plans/$plan"
+            npx autotest run "test-plans/$plan"
           } else {
             Write-Host "Running all test plans..."
             $plans = Get-ChildItem test-plans -Filter "*.yaml" |
@@ -73,7 +75,7 @@ jobs:
             $failed = @()
             foreach ($p in $plans) {
               Write-Host "`n========== $($p.Name) =========="
-              autotest run "test-plans/$($p.Name)"
+              npx autotest run "test-plans/$($p.Name)"
               if ($LASTEXITCODE -ne 0) { $failed += $p.Name }
             }
             Write-Host "`n========== Summary =========="
@@ -89,5 +91,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
-          path: vscode-java-pack/test-results/
+          path: javaext-autotest/test-results/
           retention-days: 30
