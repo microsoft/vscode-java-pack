@@ -75,6 +75,15 @@ jobs:
             npx autotest run-all test-plans --exclude java-fresh-import
           }
 
+      - name: Write Job Summary
+        if: always()
+        shell: pwsh
+        run: |
+          $summaryFile = "javaext-autotest/test-results/summary.md"
+          if (Test-Path $summaryFile) {
+            Get-Content $summaryFile -Raw >> $env:GITHUB_STEP_SUMMARY
+          }
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
