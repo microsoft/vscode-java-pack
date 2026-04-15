@@ -62,28 +62,17 @@ jobs:
       - name: Run test plan(s)
         shell: pwsh
         working-directory: javaext-autotest
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
         run: |
           $plan = "${{ inputs.test_plan }}"
           if ($plan -and $plan -ne "") {
             Write-Host "Running: $plan"
             npx autotest run "test-plans/$plan"
           } else {
-            Write-Host "Running all test plans..."
-            $plans = Get-ChildItem test-plans -Filter "*.yaml" |
-              Where-Object { $_.Name -ne "java-fresh-import.yaml" } |
-              Sort-Object Name
-            $failed = @()
-            foreach ($p in $plans) {
-              Write-Host "`n========== $($p.Name) =========="
-              npx autotest run "test-plans/$($p.Name)"
-              if ($LASTEXITCODE -ne 0) { $failed += $p.Name }
-            }
-            Write-Host "`n========== Summary =========="
-            Write-Host "Total: $($plans.Count)  Failed: $($failed.Count)"
-            if ($failed.Count -gt 0) {
-              Write-Host "Failed: $($failed -join ', ')"
-              exit 1
-            }
+            npx autotest run-all test-plans --exclude java-fresh-import
           }
 
       - name: Upload test results
