@@ -10,9 +10,35 @@ on:
         type: string
 
 jobs:
+  # ── Job 1: Discover test plans ──────────────────────────
+  discover:
+    if: ${{ inputs.test_plan == '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.scan.outputs.matrix }}
+    steps:
+      - name: Checkout javaext-autotest
+        uses: actions/checkout@v4
+        with:
+          repository: wenytang-ms/javaext-autotest
+
+      - name: Scan test plans
+        id: scan
+        run: |
+          plans=$(ls test-plans/*.yaml | xargs -I{} basename {} .yaml | grep -v java-fresh-import | jq -R . | jq -sc .)
+          echo "matrix=$plans" >> "$GITHUB_OUTPUT"
+          echo "Found plans: $plans"
+
+  # ── Job 2: Run each test plan in parallel ───────────────
   e2e-test:
+    if: ${{ inputs.test_plan == '' }}
+    needs: discover
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        plan: ${{ fromJson(needs.discover.outputs.matrix) }}
 
     steps:
       - name: Checkout javaext-autotest
@@ -39,12 +65,14 @@ jobs:
           node-version: 20
 
       - name: Setup Java 25 (for java25 test plans)
+        if: contains(matrix.plan, 'java25')
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 25-ea
 
-      - name: Create JDK 25 path for test plans
+      - name: Create JDK 25 path
+        if: contains(matrix.plan, 'java25')
         shell: pwsh
         run: |
           New-Item -ItemType Junction -Path "C:\Program Files\Java\jdk-25" -Target $env:JAVA_HOME
@@ -55,39 +83,160 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install autotest dependencies
+      - name: Install and build autotest
         working-directory: javaext-autotest
         run: npm ci && npm run build
 
-      - name: Run test plan(s)
+      - name: Run ${{ matrix.plan }}
         shell: pwsh
         working-directory: javaext-autotest
         env:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: |
-          $plan = "${{ inputs.test_plan }}"
-          if ($plan -and $plan -ne "") {
-            Write-Host "Running: $plan"
-            npx autotest run "test-plans/$plan"
-          } else {
-            npx autotest run-all test-plans --exclude java-fresh-import
-          }
+        run: npx autotest run "test-plans/${{ matrix.plan }}.yaml"
 
-      - name: Write Job Summary
+      - name: Upload results
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ matrix.plan }}
+          path: javaext-autotest/test-results/
+          retention-days: 30
+
+  # ── Job 2b: Run a single test plan (when specified) ─────
+  e2e-single:
+    if: ${{ inputs.test_plan != '' }}
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout javaext-autotest
+        uses: actions/checkout@v4
+        with:
+          repository: wenytang-ms/javaext-autotest
+          path: javaext-autotest
+
+      - name: Checkout vscode-java
+        uses: actions/checkout@v4
+        with:
+          repository: redhat-developer/vscode-java
+          path: vscode-java
+
+      - name: Checkout eclipse.jdt.ls
+        uses: actions/checkout@v4
+        with:
+          repository: eclipse-jdtls/eclipse.jdt.ls
+          path: eclipse.jdt.ls
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java 25
+        if: contains(inputs.test_plan, 'java25')
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25-ea
+
+      - name: Create JDK 25 path
+        if: contains(inputs.test_plan, 'java25')
         shell: pwsh
         run: |
-          $summaryFile = "javaext-autotest/test-results/summary.md"
-          if (Test-Path $summaryFile) {
-            Get-Content $summaryFile -Raw >> $env:GITHUB_STEP_SUMMARY
-          }
+          New-Item -ItemType Junction -Path "C:\Program Files\Java\jdk-25" -Target $env:JAVA_HOME
 
-      - name: Upload test results
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install and build autotest
+        working-directory: javaext-autotest
+        run: npm ci && npm run build
+
+      - name: Run ${{ inputs.test_plan }}
+        shell: pwsh
+        working-directory: javaext-autotest
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+        run: npx autotest run "test-plans/${{ inputs.test_plan }}"
+
+      - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
           path: javaext-autotest/test-results/
+          retention-days: 30
+
+  # ── Job 3: Aggregate analysis ───────────────────────────
+  analyze:
+    if: ${{ always() && inputs.test_plan == '' }}
+    needs: e2e-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout javaext-autotest
+        uses: actions/checkout@v4
+        with:
+          repository: wenytang-ms/javaext-autotest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and build autotest
+        run: npm ci && npm run build
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          path: all-results
+          merge-multiple: false
+
+      - name: Organize results
+        run: |
+          mkdir -p test-results
+          for dir in all-results/results-*/; do
+            plan=$(basename "$dir" | sed 's/^results-//')
+            if [ -d "$dir/$plan" ]; then
+              cp -r "$dir/$plan" "test-results/$plan"
+            elif [ -d "$dir" ]; then
+              # Results may be nested differently
+              find "$dir" -name "results.json" -exec dirname {} \; | while read d; do
+                name=$(basename "$d")
+                cp -r "$d" "test-results/$name"
+              done
+            fi
+          done
+          echo "Organized results:"
+          ls test-results/
+
+      - name: Analyze results
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+        run: npx autotest analyze test-results --output test-results
+
+      - name: Write Job Summary
+        if: always()
+        run: |
+          if [ -f test-results/summary.md ]; then
+            cat test-results/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload aggregate results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-aggregate-summary
+          path: test-results/summary.md
           retention-days: 30
