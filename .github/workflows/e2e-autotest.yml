@@ -17,15 +17,19 @@ jobs:
     outputs:
       matrix: ${{ steps.scan.outputs.matrix }}
     steps:
-      - name: Checkout javaext-autotest
-        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          repository: wenytang-ms/javaext-autotest
+          node-version: 20
+
+      - name: Install autotest CLI
+        run: npm install -g @vscjava/vscode-autotest
 
       - name: Scan test plans
         id: scan
         run: |
-          plans=$(ls test-plans/*.yaml | xargs -I{} basename {} .yaml | grep -v java-fresh-import | jq -R . | jq -sc .)
+          pkg_dir=$(npm root -g)/@vscjava/vscode-autotest
+          plans=$(ls "$pkg_dir"/test-plans/*.yaml | xargs -I{} basename {} .yaml | grep -v java-fresh-import | jq -R . | jq -sc .)
           echo "matrix=$plans" >> "$GITHUB_OUTPUT"
           echo "Found plans: $plans"
 
@@ -41,11 +45,8 @@ jobs:
         plan: ${{ fromJson(needs.discover.outputs.matrix) }}
 
     steps:
-      - name: Checkout javaext-autotest
+      - name: Checkout vscode-java-pack (for local test-plans overlay)
         uses: actions/checkout@v4
-        with:
-          repository: wenytang-ms/javaext-autotest
-          path: javaext-autotest
 
       - name: Checkout vscode-java (test projects)
         uses: actions/checkout@v4
@@ -83,25 +84,38 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install and build autotest
-        working-directory: javaext-autotest
-        run: npm ci && npm run build
+      - name: Install autotest CLI
+        run: npm install -g @vscjava/vscode-autotest
+
+      - name: Sync test plans from npm package
+        shell: pwsh
+        run: |
+          $pkgDir = (npm root -g) + "/@vscjava/vscode-autotest"
+          # Copy npm package test plans, then overlay with local test-plans (if any)
+          $targetDir = "test-plans"
+          if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir | Out-Null }
+          Copy-Item "$pkgDir/test-plans/*.yaml" $targetDir -Force
+          # Local test-plans in repo can override npm package versions
+          if (Test-Path "test-plans-local") {
+            Copy-Item "test-plans-local/*.yaml" $targetDir -Force
+          }
+          Write-Host "Test plans:"
+          Get-ChildItem $targetDir -Filter "*.yaml" | ForEach-Object { Write-Host "  $($_.Name)" }
 
       - name: Run ${{ matrix.plan }}
         shell: pwsh
-        working-directory: javaext-autotest
         env:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: npx autotest run "test-plans/${{ matrix.plan }}.yaml"
+        run: autotest run "test-plans/${{ matrix.plan }}.yaml"
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: results-${{ matrix.plan }}
-          path: javaext-autotest/test-results/
+          path: test-results/
           retention-days: 30
 
   # ── Job 2b: Run a single test plan (when specified) ─────
@@ -111,11 +125,8 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout javaext-autotest
+      - name: Checkout vscode-java-pack
         uses: actions/checkout@v4
-        with:
-          repository: wenytang-ms/javaext-autotest
-          path: javaext-autotest
 
       - name: Checkout vscode-java
         uses: actions/checkout@v4
@@ -153,25 +164,34 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install and build autotest
-        working-directory: javaext-autotest
-        run: npm ci && npm run build
+      - name: Install autotest CLI
+        run: npm install -g @vscjava/vscode-autotest
+
+      - name: Sync test plans from npm package
+        shell: pwsh
+        run: |
+          $pkgDir = (npm root -g) + "/@vscjava/vscode-autotest"
+          $targetDir = "test-plans"
+          if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir | Out-Null }
+          Copy-Item "$pkgDir/test-plans/*.yaml" $targetDir -Force
+          if (Test-Path "test-plans-local") {
+            Copy-Item "test-plans-local/*.yaml" $targetDir -Force
+          }
 
       - name: Run ${{ inputs.test_plan }}
         shell: pwsh
-        working-directory: javaext-autotest
         env:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: npx autotest run "test-plans/${{ inputs.test_plan }}"
+        run: autotest run "test-plans/${{ inputs.test_plan }}"
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
-          path: javaext-autotest/test-results/
+          path: test-results/
           retention-days: 30
 
   # ── Job 3: Aggregate analysis ───────────────────────────
@@ -181,18 +201,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout javaext-autotest
-        uses: actions/checkout@v4
-        with:
-          repository: wenytang-ms/javaext-autotest
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install and build autotest
-        run: npm ci && npm run build
+      - name: Install autotest CLI
+        run: npm install -g @vscjava/vscode-autotest
 
       - name: Download all results
         uses: actions/download-artifact@v4
@@ -209,7 +224,6 @@ jobs:
             if [ -d "$dir/$plan" ]; then
               cp -r "$dir/$plan" "test-results/$plan"
             elif [ -d "$dir" ]; then
-              # Results may be nested differently
               find "$dir" -name "results.json" -exec dirname {} \; | while read d; do
                 name=$(basename "$d")
                 cp -r "$d" "test-results/$name"
@@ -224,7 +238,7 @@ jobs:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: npx autotest analyze test-results --output test-results
+        run: autotest analyze test-results --output test-results
 
       - name: Write Job Summary
         if: always()
