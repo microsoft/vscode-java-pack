@@ -70,7 +70,7 @@ steps:
   # ── Continue execution ──────────────────────────────────
   - id: "continue-debug"
     action: "debugStepOver"
-    verify: "Program continued past breakpoint"
+    verify: "Program stepped over the breakpoint line and remained paused"
 
   # ── Stop debug ──────────────────────────────────────────
   - id: "stop-debug"

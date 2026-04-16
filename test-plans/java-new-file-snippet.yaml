@@ -1,7 +1,7 @@
 # Test Plan: Java Basic #9 — New Java File Snippet (from vscode-java-pack.wiki)
 #
 # Source: wiki Test-Plan.md "Basic" scenario Step 9
-# Verify: Right-click in Explorer to create Java file → auto-generate class snippet
+# Verify: Right-click in Explorer to create Java file → auto-generated class snippet
 #
 # Prerequisites:
 #   - vscode-java repo cloned locally

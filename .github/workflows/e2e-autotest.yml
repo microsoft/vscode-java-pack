@@ -107,14 +107,13 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
         run: |
-          $vsixArg = ""
+          $autotestArgs = @("run", "test-plans/${{ matrix.plan }}.yaml")
           if (Test-Path vsix) {
             $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
-            if ($vsixFiles) { $vsixArg = "--vsix `"$vsixFiles`"" }
+            if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
-          $cmd = "autotest run `"test-plans/${{ matrix.plan }}.yaml`" $vsixArg"
-          Write-Host "Running: $cmd"
-          Invoke-Expression $cmd
+          Write-Host "Running: autotest $($autotestArgs -join ' ')"
+          & autotest @autotestArgs
 
       - name: Upload results
         if: always()
@@ -192,14 +191,13 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
         run: |
-          $vsixArg = ""
+          $autotestArgs = @("run", "test-plans/${{ inputs.test_plan }}")
           if (Test-Path vsix) {
             $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
-            if ($vsixFiles) { $vsixArg = "--vsix `"$vsixFiles`"" }
+            if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
-          $cmd = "autotest run `"test-plans/${{ inputs.test_plan }}`" $vsixArg"
-          Write-Host "Running: $cmd"
-          Invoke-Expression $cmd
+          Write-Host "Running: autotest $($autotestArgs -join ' ')"
+          & autotest @autotestArgs
 
       - name: Upload results
         if: always()
