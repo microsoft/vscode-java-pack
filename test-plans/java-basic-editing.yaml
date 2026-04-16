@@ -1,0 +1,158 @@
+# Test Plan: Java Basic (from vscode-java-pack.wiki)
+#
+# Source: wiki Test-Plan.md "Basic" scenario (Steps 1-8)
+# Verifies: LS ready → class snippet → Code Action → completion → Organize Imports → Rename
+#
+# Prerequisites:
+#   - vscode-java repo cloned locally
+#   - JDK installed
+#
+# Usage: autotest run test-plans/java-basic-editing.yaml
+
+name: "Java Basic — Full Scenario (Steps 1-8)"
+description: |
+  Wiki Basic scenario steps 1-8 in a single run:
+  1-2: Open simple-app, verify LS ready with 2 errors
+  3: Class snippet to fix Foo.java
+  4: Code Action to create missing call() method
+  5: Save all, verify 0 errors
+  6: Type File code, verify completion
+  7: Organize Imports (Shift+Alt+O)
+  8: Rename Symbol (F2)
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/eclipse/simple-app"
+  timeout: 60
+
+steps:
+  # ══════════════════════════════════════════════════════════
+  #  Steps 1-5: Diagnostics, Snippet, Code Action
+  # ══════════════════════════════════════════════════════════
+
+  # ── Step 1: Project loaded ──────────────────────────────────
+  - id: "project-loaded"
+    action: "wait 5 seconds"
+    verify: "Project file tree is visible"
+
+  # ── Step 2: LS ready + 2 errors ─────────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Language Server is ready with 2 errors"
+    verifyProblems:
+      errors: 2
+    timeout: 120
+
+  # ── Step 3: Class snippet in Foo.java ───────────────────────
+  - id: "open-foo"
+    action: "open file Foo.java"
+    verify: "Foo.java is open in editor"
+    timeout: 15
+
+  - id: "type-class-snippet"
+    action: "typeAndTriggerSnippet class"
+    verify: "Class skeleton generated via snippet"
+    verifyEditor:
+      contains: "public class Foo"
+    timeout: 30
+
+  - id: "save-foo"
+    action: "saveFile"
+    verifyProblems:
+      errors: 1
+    timeout: 30
+
+  # ── Step 4: Code Action to create call() ────────────────────
+  - id: "close-all-before-codeaction"
+    action: "run command Workbench: Close All Editors"
+
+  - id: "navigate-to-error"
+    action: "navigateToError 1"
+    verify: "Cursor jumped to f.call() error in Bar.java"
+
+  - id: "apply-code-action"
+    action: "applyCodeAction Create method 'call()'"
+    verify: "Code Action created call() method in Foo.java"
+    timeout: 15
+
+  # ── Step 5: Save all + verify 0 errors ──────────────────────
+  - id: "save-all-step5"
+    action: "run command File: Save All"
+    verify: "All files saved, no compilation errors"
+    verifyProblems:
+      errors: 0
+    timeout: 60
+
+  # ══════════════════════════════════════════════════════════
+  #  Steps 6-8: Completion, Organize Imports, Rename
+  # ══════════════════════════════════════════════════════════
+
+  # Close all editors to prevent duplicate tab issues
+  - id: "close-all-before-step6"
+    action: "run command Workbench: Close All Editors"
+
+  # ── Step 6: Type File code ────────────────────────────────
+  # Use insertLineInFile so LS properly detects the unresolved File type
+  - id: "open-app"
+    action: "open file App.java"
+    verify: "App.java is open in editor"
+    timeout: 10
+
+  - id: "insert-file-code"
+    action: "insertLineInFile src/app/App.java 6         File f = new File(\"demo.txt\");"
+    verifyEditor:
+      contains: "File f = new File"
+    verifyProblems:
+      errors: 1
+      atLeast: true
+    timeout: 30
+
+  # ── Step 7: Organize Imports (Shift+Alt+O) ──────────────────
+  - id: "organize-imports"
+    action: "organizeImports"
+    verify: "Organize Imports resolved File type"
+    timeout: 15
+
+  # Save all — LS may write the import to a second tab (dual-tab issue on CI)
+  # Verify via file on disk to bypass dual-tab problem
+  - id: "save-after-organize"
+    action: "run command File: Save All"
+    verify: "App.java on disk contains import java.io.File"
+    verifyFile:
+      path: "~/src/app/App.java"
+      contains: "import java.io.File"
+    timeout: 10
+
+  # ── Step 8: Rename Symbol (F2) ──────────────────────────────
+  - id: "close-all-before-rename"
+    action: "run command Workbench: Close All Editors"
+
+  - id: "open-foo-for-rename"
+    action: "open file Foo.java"
+    verify: "Foo.java is open in editor"
+    timeout: 10
+
+  # Place cursor on "Foo" — use Find to locate the text, then close Find (cursor stays on it)
+  - id: "find-foo-class"
+    action: "findText Foo"
+
+  - id: "rename-foo-to-foonew"
+    action: "renameSymbol FooNew"
+    timeout: 15
+
+  # LS renames file to FooNew.java — close stale tab and click renamed file in Explorer
+  - id: "save-after-rename"
+    action: "run command File: Save All"
+
+  - id: "close-all-after-rename"
+    action: "run command Workbench: Close All Editors"
+
+  - id: "click-foonew-in-explorer"
+    action: "doubleClick FooNew.java"
+    verify: "FooNew.java shows renamed class"
+    verifyEditor:
+      contains: "public class FooNew"
+    timeout: 15

@@ -1,0 +1,63 @@
+# Test Plan: Maven Multimodule (from vscode-java-pack.wiki)
+#
+# Source: wiki Test-Plan.md "Maven - Multimodule" scenario
+# Verify: Open multimodule Maven project → LS ready → editing experience works for both modules' Foo.java
+#
+# Prerequisites:
+#   - vscode-java repo cloned locally
+#   - JDK installed and available
+#   - Maven installed
+#
+# Usage: autotest run test-plans/java-maven-multimodule.yaml
+
+name: "Java Maven Multimodule — Multimodule Project Editing"
+description: |
+  Corresponds to the Maven Multimodule scenario in the wiki Test Plan:
+  Open the multimodule Maven project, verify the language server starts without errors,
+  and verify editing experience works for both modules' Foo.java (diagnostics, completion, Code Action).
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/multimodule"
+  timeout: 120  # Multimodule import may be slow
+
+steps:
+  # ── Step 1: Wait for language server ready ──────────────────────────
+  # wiki: "check the status bar icon is 👍, and there should be
+  #        no errors/warning in the problems view."
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Java language server is ready"
+    verifyProblems:
+      errors: 0
+    timeout: 180
+
+  # ── Step 2: Verify module1 Foo.java ──────────────────────
+  # wiki: "make sure the editing experience is correctly working
+  #        including diagnostics, code completion and code action
+  #        on both modules"
+  - id: "open-module1-foo"
+    action: "open file module1/src/main/java/module1/Foo.java"
+    verify: "module1 Foo.java is open in the editor"
+    timeout: 15
+
+  - id: "module1-completion"
+    action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion works for module1 Foo.java"
+    verifyCompletion:
+      notEmpty: true
+
+  # ── Step 3: Verify module2 Foo.java ──────────────────────
+  - id: "open-module2-foo"
+    action: "open file module2/src/main/java/module2/Foo.java"
+    verify: "module2 Foo.java is open in the editor"
+    timeout: 15
+
+  - id: "module2-completion"
+    action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion works for module2 Foo.java"
+    verifyCompletion:
+      notEmpty: true

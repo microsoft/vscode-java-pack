@@ -1,0 +1,56 @@
+# Test Plan: Java Test Runner (from vscode-java-pack.wiki)
+#
+# Source: wiki Test-Plan.md "Java Test Runner" scenario
+# Verify: Test panel display → run all tests → CodeLens visible
+#
+# Uses maven/salut project (contains compilable Java source files)
+#
+# Prerequisites:
+#   - vscode-java repo cloned locally
+#   - JDK installed and available
+#
+# Usage: autotest run test-plans/java-test-runner.yaml
+
+name: "Java Test Runner — Test Panel and CodeLens"
+description: |
+  Corresponds to the Java Test Runner scenario in the wiki Test Plan:
+  Verify that the test panel displays test cases and tests can be run via the panel or CodeLens.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  timeout: 90
+
+steps:
+  # ── Wait for LS ready ─────────────────────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Java language server is ready"
+    timeout: 120
+
+  # ── Step 1: Open test explorer ─────────────────────────────
+  - id: "open-test-explorer"
+    action: "openTestExplorer"
+    verify: "Test explorer panel opened"
+
+  # ── Step 2: Run all tests ──────────────────────────────────
+  - id: "run-all-tests"
+    action: "runAllTests"
+    verify: "Tests started running"
+
+  - id: "wait-test-complete"
+    action: "wait 60 seconds"
+    verify: "Test execution completed"
+
+  # ── Step 3: Open test file and verify CodeLens ──────────────
+  - id: "open-test-file"
+    action: "open file Foo.java"
+    verify: "Test file opened"
+    timeout: 10
+
+  - id: "verify-codelens"
+    action: "wait 5 seconds"
+    verify: "CodeLens visible above test cases (Run Test / Debug Test)"

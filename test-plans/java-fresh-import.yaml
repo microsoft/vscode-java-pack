@@ -1,0 +1,49 @@
+# Test Plan: Fresh Import — Spring Petclinic (from vscode-java-pack.wiki)
+#
+# Source: wiki Test-Plan.md "Fresh import" scenario
+# Verify: Clone and open Spring Petclinic → LS ready → completion works
+#
+# Prerequisites:
+#   - JDK is installed and available
+#   - Maven is installed
+#   - Git is installed (for automatic clone)
+#
+# Usage: autotest run test-plans/java-fresh-import.yaml
+
+name: "Java Fresh Import — Spring Petclinic"
+description: |
+  Corresponds to the Fresh Import scenario in the wiki Test Plan:
+  Automatically clone the Spring Petclinic project,
+  verify the language server starts normally and basic completion works.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  repos:
+    - url: "https://github.com/spring-projects/spring-petclinic"
+      path: "../../spring-petclinic"
+  workspace: "../../spring-petclinic"
+  timeout: 300  # Large Maven project import can be slow
+
+steps:
+  # ── Wait for LS ready ────────────────────────────────────
+  # wiki: "Check LS status bar is 👍"
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Java Language Server is ready"
+    timeout: 300
+
+  # ── Verify completion ────────────────────────────────────
+  # wiki: "basic language features such as completion works"
+  - id: "open-main-class"
+    action: "open file PetClinicApplication.java"
+    verify: "PetClinicApplication.java is opened"
+    timeout: 15
+
+  - id: "verify-completion"
+    action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion works correctly"
+    verifyCompletion:
+      notEmpty: true

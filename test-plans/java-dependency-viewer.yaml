@@ -1,0 +1,61 @@
+# Test Plan: Java Dependency Viewer (from vscode-java-pack.wiki)
+#
+# Source: wiki Test-Plan.md "Java Dependency Viewer" scenario
+# Verify: Dependency view displays Sources / JDK Libraries / Maven Dependencies
+#
+# Prerequisites:
+#   - vscode-java repo is cloned locally
+#   - JDK is installed and available
+#   - Maven is installed
+#
+# Usage: autotest run test-plans/java-dependency-viewer.yaml
+
+name: "Java Dependency Viewer — Dependency View"
+description: |
+  Corresponds to the Java Dependency Viewer scenario in the wiki Test Plan:
+  Open a Maven project and verify the dependency view displays Sources, JDK Libraries, and Maven Dependencies.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  timeout: 90
+
+steps:
+  # ── Wait for LS ready ────────────────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Java Language Server is ready"
+    timeout: 120
+
+  # ── Open dependency view ─────────────────────────────────
+  # wiki: "The dependency explorer can show: Sources, JDK libraries, Maven Dependencies"
+  - id: "open-dep-explorer"
+    action: "openDependencyExplorer"
+    verify: "Java Dependencies view opened"
+
+  - id: "wait-for-tree"
+    action: "wait 3 seconds"
+    verify: "Dependency tree loaded"
+
+  # ── Verify project node ─────────────────────────────────
+  - id: "expand-project"
+    action: "expand salut tree item"
+    verify: "salut project node expanded"
+
+  # ── Verify JDK Libraries node ───────────────────────────
+  - id: "verify-jdk"
+    action: "expand JRE System Library tree item"
+    verify: "JDK Libraries node visible and expandable"
+
+  # Collapse JRE to free vertical space, then Maven Dependencies becomes visible
+  - id: "collapse-jdk"
+    action: "expand JRE System Library tree item"
+
+  # ── Verify Maven Dependencies node ──────────────────────
+  - id: "verify-maven-deps"
+    action: "expand Maven Dependencies tree item"
+    verify: "Maven Dependencies node visible and expandable"
+    timeout: 10

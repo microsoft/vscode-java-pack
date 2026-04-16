@@ -1,0 +1,60 @@
+# Test Plan: Maven for Java — Resolve Unknown Type (from vscode-java-pack.wiki)
+#
+# Source: wiki Test-Plan.md "Maven for Java" scenario
+# Verify: Type unknown type → hover shows "Resolve unknown type" → add dependency and import
+#
+# Prerequisites:
+#   - vscode-java repo cloned locally
+#   - JDK installed and available
+#   - Maven installed
+#
+# Usage: autotest run test-plans/java-maven-resolve-type.yaml
+
+name: "Maven for Java — Resolve Unknown Type"
+description: |
+  Corresponds to the Maven for Java scenario in the wiki Test Plan:
+  Type an unknown type (e.g. Gson) in a Maven project,
+  verify that hover and Code Action can resolve the unknown type and add the dependency.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  timeout: 90
+
+steps:
+  # ── Wait for LS ready ─────────────────────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Java language server is ready"
+    timeout: 120
+
+  # ── Open Java file ──────────────────────────────────────
+  - id: "open-foo"
+    action: "open file Foo.java"
+    verify: "Foo.java file is open in the editor"
+    timeout: 15
+
+  # ── Type unknown type ─────────────────────────────────────────
+  # wiki: "type 'Gson gson;'" — use insertLineInFile so LS detects the change
+  - id: "insert-unknown-type"
+    action: "insertLineInFile src/main/java/java/Foo.java 10         Gson gson;"
+    waitBefore: 3
+
+  # ── Verify Code Action: Resolve unknown type ────────────
+  # wiki: hover shows "Resolve unknown type" → apply Code Action
+  # Wait for LS to detect the Gson error before navigating
+  - id: "navigate-to-error"
+    action: "navigateToError 1"
+    waitBefore: 5
+
+  - id: "check-code-action"
+    action: "applyCodeAction Resolve unknown type"
+    verify: "Code Action applied to resolve unknown type"
+
+  # ── Verify save and check result ────────────────────────
+  - id: "save-after-resolve"
+    action: "saveFile"
+    verify: "File saved after resolving unknown type"

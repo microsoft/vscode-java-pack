@@ -17,19 +17,13 @@ jobs:
     outputs:
       matrix: ${{ steps.scan.outputs.matrix }}
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install autotest CLI
-        run: npm install -g @vscjava/vscode-autotest
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Scan test plans
         id: scan
         run: |
-          pkg_dir=$(npm root -g)/@vscjava/vscode-autotest
-          plans=$(ls "$pkg_dir"/test-plans/*.yaml | xargs -I{} basename {} .yaml | grep -v java-fresh-import | jq -R . | jq -sc .)
+          plans=$(ls test-plans/*.yaml | xargs -I{} basename {} .yaml | grep -v java-fresh-import | jq -R . | jq -sc .)
           echo "matrix=$plans" >> "$GITHUB_OUTPUT"
           echo "Found plans: $plans"
 
@@ -45,7 +39,7 @@ jobs:
         plan: ${{ fromJson(needs.discover.outputs.matrix) }}
 
     steps:
-      - name: Checkout vscode-java-pack (for local test-plans overlay)
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Checkout vscode-java (test projects)
@@ -87,21 +81,6 @@ jobs:
       - name: Install autotest CLI
         run: npm install -g @vscjava/vscode-autotest
 
-      - name: Sync test plans from npm package
-        shell: pwsh
-        run: |
-          $pkgDir = (npm root -g) + "/@vscjava/vscode-autotest"
-          # Copy npm package test plans, then overlay with local test-plans (if any)
-          $targetDir = "test-plans"
-          if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir | Out-Null }
-          Copy-Item "$pkgDir/test-plans/*.yaml" $targetDir -Force
-          # Local test-plans in repo can override npm package versions
-          if (Test-Path "test-plans-local") {
-            Copy-Item "test-plans-local/*.yaml" $targetDir -Force
-          }
-          Write-Host "Test plans:"
-          Get-ChildItem $targetDir -Filter "*.yaml" | ForEach-Object { Write-Host "  $($_.Name)" }
-
       - name: Run ${{ matrix.plan }}
         shell: pwsh
         env:
@@ -125,7 +104,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout vscode-java-pack
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Checkout vscode-java
@@ -166,17 +145,6 @@ jobs:
 
       - name: Install autotest CLI
         run: npm install -g @vscjava/vscode-autotest
-
-      - name: Sync test plans from npm package
-        shell: pwsh
-        run: |
-          $pkgDir = (npm root -g) + "/@vscjava/vscode-autotest"
-          $targetDir = "test-plans"
-          if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir | Out-Null }
-          Copy-Item "$pkgDir/test-plans/*.yaml" $targetDir -Force
-          if (Test-Path "test-plans-local") {
-            Copy-Item "test-plans-local/*.yaml" $targetDir -Force
-          }
 
       - name: Run ${{ inputs.test_plan }}
         shell: pwsh
@@ -220,15 +188,10 @@ jobs:
         run: |
           mkdir -p test-results
           for dir in all-results/results-*/; do
-            plan=$(basename "$dir" | sed 's/^results-//')
-            if [ -d "$dir/$plan" ]; then
-              cp -r "$dir/$plan" "test-results/$plan"
-            elif [ -d "$dir" ]; then
-              find "$dir" -name "results.json" -exec dirname {} \; | while read d; do
-                name=$(basename "$d")
-                cp -r "$d" "test-results/$name"
-              done
-            fi
+            find "$dir" -name "results.json" -exec dirname {} \; | while read d; do
+              name=$(basename "$d")
+              cp -r "$d" "test-results/$name"
+            done
           done
           echo "Organized results:"
           ls test-results/
