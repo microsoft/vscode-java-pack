@@ -8,6 +8,11 @@ on:
         required: false
         default: ""
         type: string
+      vsix_urls:
+        description: "VSIX URLs to install, comma-separated (e.g. https://host/redhat.java-1.42.0.vsix,https://host/vscode-java-debug-0.58.0.vsix)"
+        required: false
+        default: ""
+        type: string
 
 jobs:
   # ── Job 1: Discover test plans ──────────────────────────
@@ -81,13 +86,35 @@ jobs:
       - name: Install autotest CLI
         run: npm install -g @vscjava/vscode-autotest
 
+      - name: Download VSIX files
+        if: ${{ inputs.vsix_urls != '' }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path vsix -Force | Out-Null
+          $urls = "${{ inputs.vsix_urls }}" -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+          foreach ($url in $urls) {
+            $fileName = [System.IO.Path]::GetFileName(($url -split '\?')[0])
+            Write-Host "Downloading: $url → vsix/$fileName"
+            Invoke-WebRequest -Uri $url -OutFile "vsix/$fileName" -UseBasicParsing
+          }
+          Write-Host "Downloaded VSIX files:"
+          Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { Write-Host "  $($_.Name) ($([math]::Round($_.Length/1MB, 1)) MB)" }
+
       - name: Run ${{ matrix.plan }}
         shell: pwsh
         env:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: autotest run "test-plans/${{ matrix.plan }}.yaml"
+        run: |
+          $vsixArg = ""
+          if (Test-Path vsix) {
+            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
+            if ($vsixFiles) { $vsixArg = "--vsix `"$vsixFiles`"" }
+          }
+          $cmd = "autotest run `"test-plans/${{ matrix.plan }}.yaml`" $vsixArg"
+          Write-Host "Running: $cmd"
+          Invoke-Expression $cmd
 
       - name: Upload results
         if: always()
@@ -146,13 +173,33 @@ jobs:
       - name: Install autotest CLI
         run: npm install -g @vscjava/vscode-autotest
 
+      - name: Download VSIX files
+        if: ${{ inputs.vsix_urls != '' }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path vsix -Force | Out-Null
+          $urls = "${{ inputs.vsix_urls }}" -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+          foreach ($url in $urls) {
+            $fileName = [System.IO.Path]::GetFileName(($url -split '\?')[0])
+            Write-Host "Downloading: $url → vsix/$fileName"
+            Invoke-WebRequest -Uri $url -OutFile "vsix/$fileName" -UseBasicParsing
+          }
+
       - name: Run ${{ inputs.test_plan }}
         shell: pwsh
         env:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: autotest run "test-plans/${{ inputs.test_plan }}"
+        run: |
+          $vsixArg = ""
+          if (Test-Path vsix) {
+            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
+            if ($vsixFiles) { $vsixArg = "--vsix `"$vsixFiles`"" }
+          }
+          $cmd = "autotest run `"test-plans/${{ inputs.test_plan }}`" $vsixArg"
+          Write-Host "Running: $cmd"
+          Invoke-Expression $cmd
 
       - name: Upload results
         if: always()
