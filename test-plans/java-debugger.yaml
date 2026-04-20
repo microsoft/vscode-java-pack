@@ -1,21 +1,21 @@
 # Test Plan: Debugger for Java (from vscode-java-pack.wiki)
 #
 # Source: wiki Test-Plan.md "Debugger for Java" scenario
-# Verify: Start debugging → Breakpoint hit → Step through → Variable inspection → Program output
+# Verify: Start debug → breakpoint hit → step through → inspect variables → program output
 #
-# Uses simple-app project (App.java with main method)
+# Uses the simple-app project (App.java with a main method)
 #
 # Prerequisites:
-#   - vscode-java repository cloned locally
-#   - JDK installed and available
+#   - vscode-java repo is cloned locally
+#   - JDK is installed and available
 #
 # Usage: autotest run test-plans/java-debugger.yaml
 
 name: "Java Debugger — Breakpoint Debugging"
 description: |
   Corresponds to the Debugger for Java scenario in the wiki Test Plan:
-  Open the simple-app project, set breakpoints, start debugging,
-  verify breakpoint hit and program output.
+  Open the simple-app project, set a breakpoint, start debugging,
+  and verify breakpoint hit and program output.
 
 setup:
   extension: "redhat.java"
@@ -26,38 +26,53 @@ setup:
   timeout: 60
 
 steps:
-  # ── Wait for LS ready ───────────────────────────────────────
+  # ── Remove files that cause compilation errors ──────────
+  # simple-app has Bar.java and Foo.java with unresolved references
+  # Delete them so App.java compiles cleanly for debugging
+  - id: "delete-bar"
+    action: "deleteFile src/app/Bar.java"
+
+  - id: "delete-foo"
+    action: "deleteFile src/app/Foo.java"
+
+  # ── Wait for LS ready ────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
+    verify: "Status bar shows Java Language Server is ready with no errors"
+    verifyProblems:
+      errors: 0
     timeout: 120
 
-  # ── Open App.java ──────────────────────────────────────────
+  # ── Open App.java ────────────────────────────────────────
   - id: "open-app"
     action: "open file App.java"
     verify: "App.java file is opened in the editor"
     timeout: 15
 
-  # ── Set breakpoint ──────────────────────────────────────────
-  # wiki: "verify if the breakpoint is hit"
-  # App.java line 5 is System.out.println("Hello Java");
+  # ── Set breakpoint ───────────────────────────────────────
+  # App.java line 5: System.out.println("Hello Java");
   - id: "set-breakpoint"
     action: "setBreakpoint 5"
     verify: "Breakpoint set on line 5"
 
-  # ── Start debugging ────────────────────────────────────────
+  # ── Start debug session ─────────────────────────────────
   - id: "start-debug"
     action: "startDebugSession"
-    verify: "Debug session started, debug toolbar is visible"
+    verify: "Debug session started, debug toolbar visible"
     timeout: 30
 
-  # ── Verify debug console output ──────────────────────────────
-  # wiki: "program output is as expected"
-  - id: "wait-for-output"
-    action: "wait 5 seconds"
-    verify: "Program runs and produces output"
+  # ── Verify breakpoint hit ───────────────────────────────
+  # wiki: "verify if the breakpoint is hit"
+  - id: "verify-breakpoint"
+    action: "wait 10 seconds"
+    verify: "Breakpoint hit, program paused"
 
-  # ── Stop debugging ─────────────────────────────────────────
+  # ── Continue execution ──────────────────────────────────
+  - id: "continue-debug"
+    action: "debugStepOver"
+    verify: "Program stepped over the breakpoint line and remained paused"
+
+  # ── Stop debug ──────────────────────────────────────────
   - id: "stop-debug"
     action: "stopDebugSession"
     verify: "Debug session stopped"

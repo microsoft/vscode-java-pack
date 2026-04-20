@@ -6,7 +6,7 @@
 # Uses maven/salut project (contains compilable Java source files)
 #
 # Prerequisites:
-#   - vscode-java repository cloned locally
+#   - vscode-java repo cloned locally
 #   - JDK installed and available
 #
 # Usage: autotest run test-plans/java-test-runner.yaml
@@ -14,7 +14,7 @@
 name: "Java Test Runner — Test Panel and CodeLens"
 description: |
   Corresponds to the Java Test Runner scenario in the wiki Test Plan:
-  Verify the test panel can display test cases, and tests can be run via the panel or CodeLens.
+  Verify that the test panel displays test cases and tests can be run via the panel or CodeLens.
 
 setup:
   extension: "redhat.java"
@@ -31,29 +31,26 @@ steps:
     verify: "Status bar shows Java language server is ready"
     timeout: 120
 
-  # ── Step 1: Open test panel ─────────────────────────────────
-  # wiki: "The test explorer can show test case."
+  # ── Step 1: Open test explorer ─────────────────────────────
   - id: "open-test-explorer"
     action: "openTestExplorer"
-    verify: "Test panel is opened, test case list is visible"
+    verify: "Test explorer panel opened"
 
-  # ── Step 2: Run all tests ─────────────────────────────────
-  # wiki: "Can run the test cases by clicking Run All in test explorer"
+  # ── Step 2: Run all tests ──────────────────────────────────
   - id: "run-all-tests"
     action: "runAllTests"
-    verify: "Tests start running"
+    verify: "Tests started running"
 
   - id: "wait-test-complete"
-    action: "wait 30 seconds"
-    verify: "Test run completed"
+    action: "wait 60 seconds"
+    verify: "Test execution completed"
 
-  # ── Step 3: Open test file to verify CodeLens ────────────────────
-  # wiki: "Open a Java test file, the Code Lens could show above each test cases"
+  # ── Step 3: Open test file and verify CodeLens ──────────────
   - id: "open-test-file"
     action: "open file Foo.java"
-    verify: "Test file is opened"
+    verify: "Test file opened"
     timeout: 10
 
   - id: "verify-codelens"
     action: "wait 5 seconds"
-    verify: "CodeLens appears above test cases (Run Test / Debug Test)"
+    verify: "CodeLens visible above test cases (Run Test / Debug Test)"

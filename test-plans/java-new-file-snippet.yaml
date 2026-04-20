@@ -4,7 +4,7 @@
 # Verify: Right-click in Explorer to create Java file → auto-generated class snippet
 #
 # Prerequisites:
-#   - vscode-java repository cloned locally
+#   - vscode-java repo cloned locally
 #   - JDK installed and available
 #
 # Usage: autotest run test-plans/java-new-file-snippet.yaml
@@ -12,8 +12,8 @@
 name: "Java Basic — New Java File Snippet"
 description: |
   Corresponds to Basic Step 9 in the wiki Test Plan:
-  Create a new Java file through the file explorer,
-  verify that a class code snippet is auto-generated.
+  Create a new Java file via the file explorer,
+  and verify that a class code snippet is auto-generated.
 
 setup:
   extension: "redhat.java"
@@ -33,16 +33,16 @@ steps:
   # ── Step 9: Create new Java file ─────────────────────────────
   # wiki: "Right click on 'app' folder, and run 'New File' menu.
   #        Input file name with 'Hello.java'."
-  # Simulate by creating file on disk + opening (to avoid Explorer tree expansion issues)
+  # Simulate by creating file on disk + opening it (to avoid Explorer tree expansion issues)
   - id: "create-hello-on-disk"
     action: "insertLineInFile src/app/Hello.java 1 package app;\n\npublic class Hello {\n\n}"
     verify: "Hello.java file created successfully"
 
-  # ── Verify file content ─────────────────────────────────────
+  # ── Verify file content ─────────────────────────────────────────
   # wiki: "Verify that a new file snippet is generated."
   - id: "verify-hello"
     action: "open file Hello.java"
-    verify: "Hello.java is opened"
+    verify: "Hello.java is open"
     timeout: 10
 
   - id: "verify-content"

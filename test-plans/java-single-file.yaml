@@ -12,7 +12,7 @@ name: "Java Single File — Single File Editing Experience"
 description: |
   Corresponds to the Single file scenario in the wiki Test Plan:
   Open a Java file in an empty folder, verify the language server starts normally,
-  editing experience including code snippets, diagnostics, and completion works correctly.
+  and verify editing experience including snippets, diagnostics, and completion works correctly.
 
 setup:
   extension: "redhat.java"
@@ -20,7 +20,7 @@ setup:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
   # Use simple-app's App.java as the single file scenario
-  # The framework will automatically copy to a temporary directory
+  # The framework will automatically copy to a temp directory
   workspace: "../../vscode-java/test/resources/projects/eclipse/simple-app"
   timeout: 60
 
@@ -36,19 +36,19 @@ steps:
   # ── Step 2: Open Java file ──────────────────────────────
   - id: "open-app"
     action: "open file App.java"
-    verify: "App.java file is opened in the editor"
+    verify: "App.java file is open in the editor"
     timeout: 10
 
-  # ── Step 3: Verify code completion ────────────────────────────
+  # ── Step 3: Verify code completion ────────────────────────────────
   # wiki: "make sure the editing experience is correctly working
   #        including diagnostics, code completion and code action."
   - id: "verify-completion"
-    action: "triggerCompletion"
+    action: "triggerCompletionAt endOfMethod"
     verify: "Code completion list appears"
     verifyCompletion:
       notEmpty: true
 
-  # ── Step 4: Verify basic editing ────────────────────────────
+  # ── Step 4: Verify basic editing ────────────────────────────────
   - id: "goto-main"
     action: "goToLine 6"
     verify: "Cursor moved to main method"

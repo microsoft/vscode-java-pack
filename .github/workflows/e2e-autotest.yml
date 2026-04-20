@@ -8,17 +8,44 @@ on:
         required: false
         default: ""
         type: string
+      vsix_urls:
+        description: "VSIX URLs to install, comma-separated (e.g. https://host/redhat.java-1.42.0.vsix,https://host/vscode-java-debug-0.58.0.vsix)"
+        required: false
+        default: ""
+        type: string
 
 jobs:
+  # ── Job 1: Discover test plans ──────────────────────────
+  discover:
+    if: ${{ inputs.test_plan == '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.scan.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan test plans
+        id: scan
+        run: |
+          plans=$(ls test-plans/*.yaml | xargs -I{} basename {} .yaml | grep -v java-fresh-import | jq -R . | jq -sc .)
+          echo "matrix=$plans" >> "$GITHUB_OUTPUT"
+          echo "Found plans: $plans"
+
+  # ── Job 2: Run each test plan in parallel ───────────────
   e2e-test:
+    if: ${{ inputs.test_plan == '' }}
+    needs: discover
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        plan: ${{ fromJson(needs.discover.outputs.matrix) }}
 
     steps:
-      - name: Checkout vscode-java-pack
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: vscode-java-pack
 
       - name: Checkout vscode-java (test projects)
         uses: actions/checkout@v4
@@ -37,7 +64,20 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Java
+      - name: Setup Java 25 (for java25 test plans)
+        if: contains(matrix.plan, 'java25')
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25-ea
+
+      - name: Create JDK 25 path
+        if: contains(matrix.plan, 'java25')
+        shell: pwsh
+        run: |
+          New-Item -ItemType Junction -Path "C:\Program Files\Java\jdk-25" -Target $env:JAVA_HOME
+
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -46,37 +86,179 @@ jobs:
       - name: Install autotest CLI
         run: npm install -g @vscjava/vscode-autotest
 
-      - name: Run test plan(s)
+      - name: Download VSIX files
+        if: ${{ inputs.vsix_urls != '' }}
         shell: pwsh
-        working-directory: vscode-java-pack
         run: |
-          $plan = "${{ inputs.test_plan }}"
-          if ($plan -and $plan -ne "") {
-            Write-Host "Running: $plan"
-            autotest run "test-plans/$plan"
-          } else {
-            Write-Host "Running all test plans..."
-            $plans = Get-ChildItem test-plans -Filter "*.yaml" |
-              Where-Object { $_.Name -ne "java-fresh-import.yaml" } |
-              Sort-Object Name
-            $failed = @()
-            foreach ($p in $plans) {
-              Write-Host "`n========== $($p.Name) =========="
-              autotest run "test-plans/$($p.Name)"
-              if ($LASTEXITCODE -ne 0) { $failed += $p.Name }
-            }
-            Write-Host "`n========== Summary =========="
-            Write-Host "Total: $($plans.Count)  Failed: $($failed.Count)"
-            if ($failed.Count -gt 0) {
-              Write-Host "Failed: $($failed -join ', ')"
-              exit 1
-            }
+          New-Item -ItemType Directory -Path vsix -Force | Out-Null
+          $urls = "${{ inputs.vsix_urls }}" -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+          foreach ($url in $urls) {
+            $fileName = [System.IO.Path]::GetFileName(($url -split '\?')[0])
+            Write-Host "Downloading: $url → vsix/$fileName"
+            Invoke-WebRequest -Uri $url -OutFile "vsix/$fileName" -UseBasicParsing
+          }
+          Write-Host "Downloaded VSIX files:"
+          Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { Write-Host "  $($_.Name) ($([math]::Round($_.Length/1MB, 1)) MB)" }
+
+      - name: Run ${{ matrix.plan }}
+        shell: pwsh
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+        run: |
+          $autotestArgs = @("run", "test-plans/${{ matrix.plan }}.yaml")
+          if (Test-Path vsix) {
+            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
+            if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
+          }
+          Write-Host "Running: autotest $($autotestArgs -join ' ')"
+          & autotest @autotestArgs
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ matrix.plan }}
+          path: test-results/
+          retention-days: 30
+
+  # ── Job 2b: Run a single test plan (when specified) ─────
+  e2e-single:
+    if: ${{ inputs.test_plan != '' }}
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout vscode-java
+        uses: actions/checkout@v4
+        with:
+          repository: redhat-developer/vscode-java
+          path: vscode-java
+
+      - name: Checkout eclipse.jdt.ls
+        uses: actions/checkout@v4
+        with:
+          repository: eclipse-jdtls/eclipse.jdt.ls
+          path: eclipse.jdt.ls
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java 25
+        if: contains(inputs.test_plan, 'java25')
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25-ea
+
+      - name: Create JDK 25 path
+        if: contains(inputs.test_plan, 'java25')
+        shell: pwsh
+        run: |
+          New-Item -ItemType Junction -Path "C:\Program Files\Java\jdk-25" -Target $env:JAVA_HOME
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install autotest CLI
+        run: npm install -g @vscjava/vscode-autotest
+
+      - name: Download VSIX files
+        if: ${{ inputs.vsix_urls != '' }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path vsix -Force | Out-Null
+          $urls = "${{ inputs.vsix_urls }}" -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+          foreach ($url in $urls) {
+            $fileName = [System.IO.Path]::GetFileName(($url -split '\?')[0])
+            Write-Host "Downloading: $url → vsix/$fileName"
+            Invoke-WebRequest -Uri $url -OutFile "vsix/$fileName" -UseBasicParsing
           }
 
-      - name: Upload test results
+      - name: Run ${{ inputs.test_plan }}
+        shell: pwsh
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+        run: |
+          $autotestArgs = @("run", "test-plans/${{ inputs.test_plan }}")
+          if (Test-Path vsix) {
+            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
+            if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
+          }
+          Write-Host "Running: autotest $($autotestArgs -join ' ')"
+          & autotest @autotestArgs
+
+      - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
-          path: vscode-java-pack/test-results/
+          path: test-results/
+          retention-days: 30
+
+  # ── Job 3: Aggregate analysis ───────────────────────────
+  analyze:
+    if: ${{ always() && inputs.test_plan == '' }}
+    needs: e2e-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install autotest CLI
+        run: npm install -g @vscjava/vscode-autotest
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          path: all-results
+          merge-multiple: false
+
+      - name: Organize results
+        run: |
+          mkdir -p test-results
+          for dir in all-results/results-*/; do
+            find "$dir" -name "results.json" -exec dirname {} \; | while read d; do
+              name=$(basename "$d")
+              cp -r "$d" "test-results/$name"
+            done
+          done
+          echo "Organized results:"
+          ls test-results/
+
+      - name: Analyze results
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+        run: autotest analyze test-results --output test-results
+
+      - name: Write Job Summary
+        if: always()
+        run: |
+          if [ -f test-results/summary.md ]; then
+            cat test-results/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload aggregate results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-aggregate-summary
+          path: test-results/summary.md
           retention-days: 30

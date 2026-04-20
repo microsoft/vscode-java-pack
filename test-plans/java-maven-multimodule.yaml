@@ -4,7 +4,7 @@
 # Verify: Open multimodule Maven project → LS ready → editing experience works for both modules' Foo.java
 #
 # Prerequisites:
-#   - vscode-java repository cloned locally
+#   - vscode-java repo cloned locally
 #   - JDK installed and available
 #   - Maven installed
 #
@@ -14,7 +14,7 @@ name: "Java Maven Multimodule — Multimodule Project Editing"
 description: |
   Corresponds to the Maven Multimodule scenario in the wiki Test Plan:
   Open the multimodule Maven project, verify the language server starts without errors,
-  verify editing experience works for both modules' Foo.java (diagnostics, completion, Code Action).
+  and verify editing experience works for both modules' Foo.java (diagnostics, completion, Code Action).
 
 setup:
   extension: "redhat.java"
@@ -41,23 +41,23 @@ steps:
   #        on both modules"
   - id: "open-module1-foo"
     action: "open file module1/src/main/java/module1/Foo.java"
-    verify: "module1 Foo.java is opened in the editor"
+    verify: "module1 Foo.java is open in the editor"
     timeout: 15
 
   - id: "module1-completion"
-    action: "triggerCompletion"
-    verify: "Code completion works correctly for module1 Foo.java"
+    action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion works for module1 Foo.java"
     verifyCompletion:
       notEmpty: true
 
   # ── Step 3: Verify module2 Foo.java ──────────────────────
   - id: "open-module2-foo"
     action: "open file module2/src/main/java/module2/Foo.java"
-    verify: "module2 Foo.java is opened in the editor"
+    verify: "module2 Foo.java is open in the editor"
     timeout: 15
 
   - id: "module2-completion"
-    action: "triggerCompletion"
-    verify: "Code completion works correctly for module2 Foo.java"
+    action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion works for module2 Foo.java"
     verifyCompletion:
       notEmpty: true

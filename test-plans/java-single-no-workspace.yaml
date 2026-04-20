@@ -4,15 +4,15 @@
 # Verify: Open a single Java file without workspace → LS ready → editing experience works
 #
 # Prerequisites:
-#   - vscode-java repository cloned locally
+#   - vscode-java repo cloned locally
 #   - JDK installed and available
 #
 # Usage: autotest run test-plans/java-single-no-workspace.yaml
 
-name: "Java Single File Without Workspace — No Workspace Single File"
+name: "Java Single File Without Workspace — Single File Without Workspace"
 description: |
   Corresponds to the Single file without workspace scenario in the wiki Test Plan:
-  Directly open a Java file without workspace mode,
+  Directly open a Java file without a workspace,
   verify LS works normally and basic editing features are available.
 
 setup:
@@ -20,7 +20,7 @@ setup:
   extensions:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
-  # Single file mode — no workspace set, only open a file
+  # Single file mode — no workspace, just open one file
   file: "../../vscode-java/test/resources/projects/eclipse/simple-app/src/app/App.java"
   timeout: 60
 
@@ -32,22 +32,25 @@ steps:
     verify: "Status bar shows Java language server is ready"
     timeout: 120
 
-  # ── Step 2: Verify file is opened ──────────────────────────
+  # ── Step 2: Verify file is open ──────────────────────────────
   - id: "verify-file-open"
     action: "wait 3 seconds"
-    verify: "App.java is opened"
+    verify: "App.java is open"
     verifyEditor:
       contains: "Hello Java"
 
   # ── Step 3: Verify basic editing features ────────────────────────────
   # wiki: "Try the basic editing features in App.java, they should work."
+  # LS may briefly re-enter Searching after Ready; wait before triggering completion
   - id: "verify-completion"
-    action: "triggerCompletion"
+    action: "triggerCompletionAt endOfMethod"
     verify: "Code completion works correctly"
     verifyCompletion:
       notEmpty: true
+    waitBefore: 5
+    timeout: 30
 
-  # ── Step 4: Verify editing ────────────────────────────────
+  # ── Step 4: Verify editing ────────────────────────────────────
   - id: "goto-line"
     action: "goToLine 5"
 

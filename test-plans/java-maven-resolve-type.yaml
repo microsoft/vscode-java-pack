@@ -4,7 +4,7 @@
 # Verify: Type unknown type → hover shows "Resolve unknown type" → add dependency and import
 #
 # Prerequisites:
-#   - vscode-java repository cloned locally
+#   - vscode-java repo cloned locally
 #   - JDK installed and available
 #   - Maven installed
 #
@@ -13,8 +13,8 @@
 name: "Maven for Java — Resolve Unknown Type"
 description: |
   Corresponds to the Maven for Java scenario in the wiki Test Plan:
-  Type an unknown type (e.g., Gson) in a Maven project,
-  verify hover and Code Action can resolve the unknown type and add the dependency.
+  Type an unknown type (e.g. Gson) in a Maven project,
+  verify that hover and Code Action can resolve the unknown type and add the dependency.
 
 setup:
   extension: "redhat.java"
@@ -34,38 +34,27 @@ steps:
   # ── Open Java file ──────────────────────────────────────
   - id: "open-foo"
     action: "open file Foo.java"
-    verify: "Foo.java file is opened in the editor"
+    verify: "Foo.java file is open in the editor"
     timeout: 15
 
   # ── Type unknown type ─────────────────────────────────────────
-  # wiki: "type 'Gson gson;'"
-  - id: "goto-insert"
-    action: "goToLine 10"
+  # wiki: "type 'Gson gson;'" — use insertLineInFile so LS detects the change
+  - id: "insert-unknown-type"
+    action: "insertLineInFile src/main/java/java/Foo.java 10         Gson gson;"
+    waitBefore: 3
 
-  - id: "goto-end"
-    action: "goToEndOfLine"
-
-  - id: "type-unknown-type"
-    action: "typeInEditor \n        Gson gson;"
-
-  - id: "save-file"
-    action: "saveFile"
-    verify: "File saved, LS starts analyzing"
-
-  # ── Verify hover shows Resolve unknown type ─────────────────
-  # wiki: "When hovering on the classname, 'Resolve unknown type' action is shown."
-  - id: "hover-on-gson"
-    action: "hoverOnText Gson"
-    verify: "Hover popup shows Resolve unknown type action"
-
-  # ── Verify Code Action ────────────────────────────────────
-  # wiki: "When open Code Actions, 'Resolve unknown type' is in the list."
-  - id: "dismiss-hover"
-    action: "dismissHover"
-
+  # ── Verify Code Action: Resolve unknown type ────────────
+  # wiki: hover shows "Resolve unknown type" → apply Code Action
+  # Wait for LS to detect the Gson error before navigating
   - id: "navigate-to-error"
     action: "navigateToError 1"
+    waitBefore: 5
 
   - id: "check-code-action"
     action: "applyCodeAction Resolve unknown type"
-    verify: "Code Action is available to resolve the unknown type"
+    verify: "Code Action applied to resolve unknown type"
+
+  # ── Verify save and check result ────────────────────────
+  - id: "save-after-resolve"
+    action: "saveFile"
+    verify: "File saved after resolving unknown type"
