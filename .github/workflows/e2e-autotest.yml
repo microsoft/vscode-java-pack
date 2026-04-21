@@ -51,13 +51,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: redhat-developer/vscode-java
-          path: vscode-java
+          path: ../vscode-java
 
       - name: Checkout eclipse.jdt.ls (Gradle test projects)
         uses: actions/checkout@v4
         with:
           repository: eclipse-jdtls/eclipse.jdt.ls
-          path: eclipse.jdt.ls
+          path: ../eclipse.jdt.ls
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -137,13 +137,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: redhat-developer/vscode-java
-          path: vscode-java
+          path: ../vscode-java
 
       - name: Checkout eclipse.jdt.ls
         uses: actions/checkout@v4
         with:
           repository: eclipse-jdtls/eclipse.jdt.ls
-          path: eclipse.jdt.ls
+          path: ../eclipse.jdt.ls
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
