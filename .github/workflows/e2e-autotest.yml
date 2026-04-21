@@ -47,17 +47,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout vscode-java (test projects)
-        uses: actions/checkout@v4
-        with:
-          repository: redhat-developer/vscode-java
-          path: ../vscode-java
+      - name: Clone vscode-java (test projects)
+        run: git clone --depth 1 https://github.com/redhat-developer/vscode-java.git ../vscode-java
 
-      - name: Checkout eclipse.jdt.ls (Gradle test projects)
-        uses: actions/checkout@v4
-        with:
-          repository: eclipse-jdtls/eclipse.jdt.ls
-          path: ../eclipse.jdt.ls
+      - name: Clone eclipse.jdt.ls (Gradle test projects)
+        run: git clone --depth 1 https://github.com/eclipse-jdtls/eclipse.jdt.ls.git ../eclipse.jdt.ls
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -133,17 +127,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout vscode-java
-        uses: actions/checkout@v4
-        with:
-          repository: redhat-developer/vscode-java
-          path: ../vscode-java
+      - name: Clone vscode-java
+        run: git clone --depth 1 https://github.com/redhat-developer/vscode-java.git ../vscode-java
 
-      - name: Checkout eclipse.jdt.ls
-        uses: actions/checkout@v4
-        with:
-          repository: eclipse-jdtls/eclipse.jdt.ls
-          path: ../eclipse.jdt.ls
+      - name: Clone eclipse.jdt.ls
+        run: git clone --depth 1 https://github.com/eclipse-jdtls/eclipse.jdt.ls.git ../eclipse.jdt.ls
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
