@@ -1,13 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { Orientation } from '@microsoft/fast-web-utilities';
-import { VSCodeRadioGroup, VSCodeRadio, VSCodeButton, VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+import "@vscode-elements/elements/dist/vscode-progress-ring/index.js";
+import "@vscode-elements/elements/dist/vscode-radio-group/index.js";
+import "@vscode-elements/elements/dist/vscode-radio/index.js";
+
+
 import { AdoptiumAsset, AdoptiumReleaseInfo } from '../../../../utils/adoptiumApi';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { listReleases, selectVersion, showAsset } from '../installJDKViewSlice';
 import { onWillDownloadTemurinJDK, onWillFetchAsset, onWillFetchAvailableReleases } from '../../vscode.api';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import bytes from "bytes";
 
 const AdoptiumJDKPanel = () => {
@@ -49,7 +53,7 @@ const AdoptiumJDKPanel = () => {
 
   // rendering
   if (releases === undefined) {
-    return <VSCodeProgressRing />;
+    return <vscode-progress-ring />;
   }
 
   const versionElements = releases?.available_lts_releases.map((v: number) => {
@@ -57,16 +61,16 @@ const AdoptiumJDKPanel = () => {
       version: v,
       isLts: true,
     };
-  }).map((obj: any) => <VSCodeRadio
+  }).map((obj: any) => <vscode-radio
     key={obj.version}
     defaultChecked={obj.version === releases.most_recent_lts}
     checked={obj.version === currentVersion}
     onClick={() => handleVersionChange(obj.version)}
-  >{obj.version}{obj.isLts && " (LTS)"}</VSCodeRadio>);
+  >{obj.version}{obj.isLts && " (LTS)"}</vscode-radio>);
 
   const downloadPanel = asset ?
     <div>
-      <VSCodeButton onClick={() => downloadJDK(asset)}>
+      <vscode-button onClick={() => downloadJDK(asset)}>
         <div className='btn-download'>
           <div> 
             Download
@@ -88,21 +92,21 @@ const AdoptiumJDKPanel = () => {
             </div>
           </div>
         </div>
-      </VSCodeButton>
+      </vscode-button>
     </div>
     : 
-    <VSCodeProgressRing />;
+    <vscode-progress-ring />;
 
   return (
     <div>
-      <VSCodeRadioGroup orientation={Orientation.vertical} readOnly={asset===undefined}>
+      <vscode-radio-group orientation="vertical" readOnly={asset===undefined}>
         <label slot="label">Version</label>
         {versionElements}
-      </VSCodeRadioGroup>
-      <VSCodeRadioGroup orientation={Orientation.vertical} readOnly={asset===undefined}>
+      </vscode-radio-group>
+      <vscode-radio-group orientation="vertical" readOnly={asset===undefined}>
         <label slot="label">JVM</label>
-        <VSCodeRadio defaultChecked checked>hotspot</VSCodeRadio>
-      </VSCodeRadioGroup>
+        <vscode-radio defaultChecked checked>hotspot</vscode-radio>
+      </vscode-radio-group>
       {downloadPanel}
     </div>
   );
