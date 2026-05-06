@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import BeginnerTips from "./BeginnerTips";
 
-ReactDOM.render(
-  <BeginnerTips />,
-  document.getElementById('root') as HTMLElement
-);
+const root = createRoot(document.getElementById('root')!);
+root.render(<BeginnerTips />);

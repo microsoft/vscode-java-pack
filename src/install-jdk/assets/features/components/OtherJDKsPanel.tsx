@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeLink } from "@vscode/webview-ui-toolkit/react";
-import * as React from 'react';
 import { encodeExternalLinkWithTelemetry } from '../../../../utils/webview';
 import { WEBVIEW_ID } from '../../../constants';
 
-class OtherJDKsPanel extends React.Component {
-  public render() {
+export default function OtherJDKsPanel() {
     const jdkList = [
       { name: "Amazon Corretto", url: "https://aws.amazon.com/corretto" },
       { name: "Azul Zulu", url: "https://www.azul.com/downloads/?package=jdk" },
@@ -23,13 +20,9 @@ class OtherJDKsPanel extends React.Component {
       <div>
         <ul className='jdk-distros'>
           {
-            jdkList.map((jdk, idx) => <li key={idx}><VSCodeLink href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, jdk.name, jdk.url)} title={jdk.name}>{jdk.name}</VSCodeLink></li>)
+            jdkList.map((jdk, idx) => <li key={idx}><a href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, jdk.name, jdk.url)} title={jdk.name}>{jdk.name}</a></li>)
           }
         </ul>
-
       </div>
     );
-  }
 }
-
-export default OtherJDKsPanel;

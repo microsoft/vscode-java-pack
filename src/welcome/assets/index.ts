@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
 import { GetStartedPage } from "./components/GetStartedPage";
 import "./style.scss";
 import { onWillFetchInitProps } from "./utils";
 
+const container = document.getElementById("content")!;
+const root = createRoot(container);
 
 const onInitialize =  (event: any) => {
     const { data } = event;
     if (data.command === "onDidFetchInitProps") {
-        ReactDOM.render(React.createElement(GetStartedPage, data.props), document.getElementById("content"));
+        root.render(createElement(GetStartedPage, data.props));
     }
 };
 

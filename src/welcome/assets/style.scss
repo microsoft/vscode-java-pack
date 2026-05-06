@@ -1,31 +1,41 @@
 @import "../../assets/vscode.scss";
 
 // Custom styles dedicated to this webview:
-$nav-tabs-link-active-color: var(--vscode-panelTitle-activeForeground);
-$nav-tabs-link-active-bg: transparent;
-$nav-tabs-link-active-border-color: transparent;
-$nav-tabs-link-hover-border-color: transparent;
-$nav-tabs-border-color: transparent;
 
-$list-group-bg: var(--vscode-peekViewTitle-background);
-$list-group-border-color: var(--vscode-peekViewTitle-background);
-$list-group-action-active-bg: $list-group-bg;
-
-@import "~bootstrap/scss/bootstrap";
-
-.nav-link,
-.nav-link:hover {
-  color: var(--vscode-panelTitle-inactiveForeground);
-  text-transform: uppercase;
+// Tab styles (replacing react-bootstrap Tabs)
+.nav-tabs {
+  display: flex;
+  border-bottom: 1px solid transparent;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
 }
 
-.nav-tabs a:hover div,
-.nav-tabs a.active div {
+.nav-link {
+  display: block;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--vscode-panelTitle-inactiveForeground);
+  text-transform: uppercase;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--vscode-panelTitle-inactiveForeground);
+  }
+  &.active {
+    color: var(--vscode-panelTitle-activeForeground);
+  }
+}
+
+.nav-tabs .nav-link:hover .navigation-title,
+.nav-tabs .nav-link.active .navigation-title {
   border-color: transparent transparent var(--vscode-panelTitle-activeBorder)
     transparent;
 }
 
-.nav-tabs a div {
+.nav-tabs .nav-link .navigation-title {
   border: solid 1px;
   padding-bottom: 8px;
   border-color: transparent;
@@ -40,14 +50,17 @@ $list-group-action-active-bg: $list-group-bg;
   padding: 24px 0px 0px 0px;
 }
 
-.tab-content a {
+// Style for links inside tab/navigation content and list-groups
+.tab-content a,
+.navigation-tabcontent a {
   &:hover {
     color: var(--vscode-panelTitle-activeForeground);
   }
   color: var(--vscode-foreground);
   width: fit-content;
 
-  svg.codicon {
+  svg.codicon,
+  i.codicon {
     margin-right: 0.5em;
   }
 }
@@ -107,18 +120,47 @@ div.header {
   }
 }
 
-.list-group a {
-  margin-bottom: 12px;
-}
-
+// Override list-group colors for quick-actions section only
 div.quick-actions {
+  .list-group {
+    gap: 6px;
+  }
+
+  .list-group-item {
+    background-color: var(--vscode-sideBar-background);
+    border: none;
+    border-radius: 4px;
+    padding: 0.65rem 1rem;
+    // Override list-group-item-action color with higher specificity
+    &.list-group-item-action {
+      color: var(--vscode-descriptionForeground);
+      &:hover {
+        background-color: var(--vscode-list-hoverBackground);
+      }
+    }
+  }
+
   a {
     color: var(--vscode-descriptionForeground);
 
     span.highlight {
       color: var(--vscode-foreground);
+      font-weight: 600;
     }
   }
+}
+
+// Navigation and footer list-groups: transparent background
+.navigation-tabcontent .list-group,
+.footer .list-group {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+// Spacing for plain links inside list-groups (navigation & footer only)
+.navigation-tabcontent .list-group a,
+.footer .list-group a {
+  margin-bottom: 12px;
 }
 
 div.page-content {

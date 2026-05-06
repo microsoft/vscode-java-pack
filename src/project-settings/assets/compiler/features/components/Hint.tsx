@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeLink} from "@vscode/webview-ui-toolkit/react";
-import React from "react";
 import { useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
 import { ClasspathRequest } from "../../../vscode/utils";
@@ -45,7 +43,7 @@ const Hint = (): JSX.Element | null => {
           <div className="mt-1">
             <span className="setting-section-warning">
               '{projects[activeProjectIndex].name}' is imported by {projectType[activeProjectIndex]}, some changes made to the compiler settings might be lost after reloading.
-              To make permanent changes, please edit the <VSCodeLink href="" onClick={() => handleOpenBuildFile()}>{buildFile}</VSCodeLink> file.
+              To make permanent changes, please edit the <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a> file.
             </span>
           </div>
         }

@@ -1,23 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React from "react";
-import { Form } from "react-bootstrap";
 import { setWelcomeVisibility } from "../utils";
 
-export default class ControllerPanel extends React.Component<{
+interface ControllerPanelProps {
     showWhenUsingJava?: boolean;
-}> {
-  render() {
-    let {showWhenUsingJava} = this.props;
+}
 
-    return <Form>
-        <Form.Check defaultChecked={showWhenUsingJava} label="Show Help Center when using Java" onChange={toggleVisibility}/>
-    </Form>;
-  }
-
+export default function ControllerPanel({ showWhenUsingJava }: ControllerPanelProps) {
+    return (
+        <div>
+            <label>
+                <input
+                    type="checkbox"
+                    defaultChecked={showWhenUsingJava}
+                    onChange={toggleVisibility}
+                />
+                {" "}Show Help Center when using Java
+            </label>
+        </div>
+    );
 }
 
 function toggleVisibility(event: React.ChangeEvent<HTMLInputElement>) {
-  setWelcomeVisibility(event.target.checked);
+    setWelcomeVisibility(event.target.checked);
 }
