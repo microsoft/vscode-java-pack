@@ -4,11 +4,14 @@
 # Verify: Type unknown type → hover shows "Resolve unknown type" → add dependency and import
 #
 # Prerequisites:
-#   - vscode-java repo cloned locally
-#   - JDK installed and available
-#   - Maven installed
+#   - JDK 11+ installed and available on PATH (the workflow installs JDK 21)
+#   - Maven installed (or the redhat.java embedded one)
 #
 # Usage: autotest run test-plans/java-maven-resolve-type.yaml
+#
+# Fixture: test-fixtures/maven-resolve-type — self-contained, owned by this
+# repo. Uses JDK 11 compliance to ensure JDT runs full semantic analysis
+# and publishes the unresolved-type diagnostic (see fixture README).
 
 name: "Maven for Java — Resolve Unknown Type"
 description: |
@@ -21,7 +24,7 @@ setup:
   extensions:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
-  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  workspace: "../test-fixtures/maven-resolve-type"
   timeout: 90
 
 steps:
@@ -32,20 +35,22 @@ steps:
     timeout: 120
 
   # ── Open Java file ──────────────────────────────────────
-  - id: "open-foo"
-    action: "open file Foo.java"
-    verify: "Foo.java file is open in the editor"
+  - id: "open-app"
+    action: "open file App.java"
+    verify: "App.java file is open in the editor"
     timeout: 15
 
   # ── Type unknown type ─────────────────────────────────────────
-  # wiki: "type 'Gson gson;'" — use insertLineInFile so LS detects the change
+  # wiki: "type 'Gson gson;'" — use insertLineInFile so LS detects the change.
+  # Line 4 places the field directly inside the class body of App.java.
   - id: "insert-unknown-type"
-    action: "insertLineInFile src/main/java/java/Foo.java 10         Gson gson;"
+    action: "insertLineInFile src/main/java/com/example/App.java 4         Gson gson;"
     waitBefore: 3
 
   # ── Verify Code Action: Resolve unknown type ────────────
-  # wiki: hover shows "Resolve unknown type" → apply Code Action
-  # Wait for LS to detect the Gson error before navigating
+  # wiki: hover shows "Resolve unknown type" → apply Code Action.
+  # navigateToError polls for diagnostics up to 30s and fails clearly if
+  # the LS hasn't published the unresolved-type error yet.
   - id: "navigate-to-error"
     action: "navigateToError 1"
     waitBefore: 5
