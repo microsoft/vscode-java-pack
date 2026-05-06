@@ -16,10 +16,10 @@ on:
         required: false
         default: ""
         type: string
-      stable_extensions:
-        description: "Install stable versions of marketplace extensions (default: pre-release)"
+      pre_release:
+        description: "Install pre-release versions of marketplace extensions"
         required: false
-        default: false
+        default: true
         type: boolean
 
 jobs:
@@ -148,7 +148,7 @@ jobs:
             $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
             if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
-          if ("${{ inputs.stable_extensions }}" -eq "true") { $autotestArgs += "--stable" }
+          if ("${{ inputs.pre_release }}" -ne "false") { $autotestArgs += "--pre-release" }
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
           & autotest @autotestArgs
 
@@ -263,7 +263,7 @@ jobs:
             $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
             if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
-          if ("${{ inputs.stable_extensions }}" -eq "true") { $autotestArgs += "--stable" }
+          if ("${{ inputs.pre_release }}" -ne "false") { $autotestArgs += "--pre-release" }
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
           & autotest @autotestArgs
 
