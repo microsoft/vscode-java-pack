@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as _ from "lodash";
 import { useState, useRef } from "react";
 import { reportTabSwitch, WEBVIEW_ID } from "../utils";
 import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
@@ -48,15 +47,20 @@ export default function NavigationPanel({ isAwtDisabled }: NavigationPanelProps)
   const [activeTab, setActiveTab] = useState(groups[0].name);
   const prevTabRef = useRef(groups[0].name);
 
-  const studentSection = _.find(groups, { name: "Student" });
-  if (studentSection) {
-    for (const action of studentSection.actions) {
-      if (action.command === "java.toggleAwtDevelopment") {
-        action.name = `${isAwtDisabled ? "Enable" : "Disable"} AWT Development`;
-        action.args = [isAwtDisabled];
-      }
-    }
-  }
+  const resolvedGroups = groups.map(group => {
+    if (group.name !== "Student") return group;
+    return {
+      ...group,
+      actions: group.actions.map(action => {
+        if (action.command !== "java.toggleAwtDevelopment") return action;
+        return {
+          ...action,
+          name: `${isAwtDisabled ? "Enable" : "Disable"} AWT Development`,
+          args: [isAwtDisabled],
+        };
+      }),
+    };
+  });
 
   const onSwitchTab = (newTab: string) => {
     reportTabSwitch(prevTabRef.current, newTab);
@@ -67,7 +71,7 @@ export default function NavigationPanel({ isAwtDisabled }: NavigationPanelProps)
   return (
     <div id="navigationPanel">
       <ul className="nav-tabs" role="tablist">
-        {groups.map(group => (
+        {resolvedGroups.map(group => (
           <li key={group.name} className="navigation-tab">
             <button
               role="tab"
@@ -82,7 +86,7 @@ export default function NavigationPanel({ isAwtDisabled }: NavigationPanelProps)
           </li>
         ))}
       </ul>
-      {groups.map(group => (
+      {resolvedGroups.map(group => (
         activeTab === group.name && (
           <div key={group.name} className="navigation-tabcontent" role="tabpanel">
             <div className="list-group">
