@@ -1,6 +1,9 @@
 name: E2E AutoTest
 
 on:
+  schedule:
+    # Every weekday (Mon–Fri) at 13:00 Shanghai time (05:00 UTC)
+    - cron: '0 5 * * 1-5'
   workflow_dispatch:
     inputs:
       test_plan:
@@ -9,10 +12,15 @@ on:
         default: ""
         type: string
       vsix_urls:
-        description: "VSIX URLs to install, comma-separated (e.g. https://host/redhat.java-1.42.0.vsix,https://host/vscode-java-debug-0.58.0.vsix)"
+        description: "VSIX URLs or GitHub release tag URLs, comma-separated (e.g. https://github.com/redhat-developer/vscode-java/releases/tag/v1.54.0,https://host/vscode-java-debug-0.58.0.vsix). Release tag URLs auto-resolve to the platform-specific VSIX for the runner OS."
         required: false
         default: ""
         type: string
+      stable_extensions:
+        description: "Install stable versions of marketplace extensions (default: pre-release)"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   # ── Job 1: Discover test plans ──────────────────────────
@@ -86,7 +94,41 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path vsix -Force | Out-Null
           $urls = "${{ inputs.vsix_urls }}" -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+
+          # Map runner OS/arch to vscode-java platform identifiers
+          $platformMap = @{ "Windows" = "win32"; "Linux" = "linux"; "macOS" = "darwin" }
+          $archMap = @{ "X64" = "x64"; "ARM64" = "arm64" }
+          $platform = $platformMap["${{ runner.os }}"]
+          $arch = $archMap["${{ runner.arch }}"]
+          $platformId = "$platform-$arch"
+          Write-Host "Runner platform: $platformId (${{ runner.os }}/${{ runner.arch }})"
+
+          $resolvedUrls = @()
           foreach ($url in $urls) {
+            if ($url -match '^https://github\.com/([^/]+)/([^/]+)/releases/tag/(.+)$') {
+              $owner = $Matches[1]; $repo = $Matches[2]; $tag = $Matches[3]
+              Write-Host "Resolving GitHub release: $owner/$repo@$tag for platform $platformId"
+              $apiUrl = "https://api.github.com/repos/$owner/$repo/releases/tags/$tag"
+              $release = Invoke-RestMethod -Uri $apiUrl -Headers @{ Accept = "application/vnd.github.v3+json" } -UseBasicParsing
+              $platformAsset = $release.assets | Where-Object { $_.name -like "*-$platformId-*" -and $_.name -like "*.vsix" } | Select-Object -First 1
+              if ($platformAsset) {
+                Write-Host "  Found platform-specific VSIX: $($platformAsset.name)"
+                $resolvedUrls += $platformAsset.browser_download_url
+              } else {
+                $universalAsset = $release.assets | Where-Object { $_.name -notmatch '-(darwin|linux|win32)-' -and $_.name -like "*.vsix" } | Select-Object -First 1
+                if ($universalAsset) {
+                  Write-Host "  No platform-specific VSIX found, using universal: $($universalAsset.name)"
+                  $resolvedUrls += $universalAsset.browser_download_url
+                } else {
+                  Write-Host "::warning::No matching VSIX found in release $owner/$repo@$tag for platform $platformId"
+                }
+              }
+            } else {
+              $resolvedUrls += $url
+            }
+          }
+
+          foreach ($url in $resolvedUrls) {
             $fileName = [System.IO.Path]::GetFileName(($url -split '\?')[0])
             Write-Host "Downloading: $url → vsix/$fileName"
             Invoke-WebRequest -Uri $url -OutFile "vsix/$fileName" -UseBasicParsing
@@ -106,6 +148,7 @@ jobs:
             $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
             if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
+          if ("${{ inputs.stable_extensions }}" -eq "true") { $autotestArgs += "--stable" }
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
           & autotest @autotestArgs
 
@@ -166,11 +209,47 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path vsix -Force | Out-Null
           $urls = "${{ inputs.vsix_urls }}" -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+
+          # Map runner OS/arch to vscode-java platform identifiers
+          $platformMap = @{ "Windows" = "win32"; "Linux" = "linux"; "macOS" = "darwin" }
+          $archMap = @{ "X64" = "x64"; "ARM64" = "arm64" }
+          $platform = $platformMap["${{ runner.os }}"]
+          $arch = $archMap["${{ runner.arch }}"]
+          $platformId = "$platform-$arch"
+          Write-Host "Runner platform: $platformId (${{ runner.os }}/${{ runner.arch }})"
+
+          $resolvedUrls = @()
           foreach ($url in $urls) {
+            if ($url -match '^https://github\.com/([^/]+)/([^/]+)/releases/tag/(.+)$') {
+              $owner = $Matches[1]; $repo = $Matches[2]; $tag = $Matches[3]
+              Write-Host "Resolving GitHub release: $owner/$repo@$tag for platform $platformId"
+              $apiUrl = "https://api.github.com/repos/$owner/$repo/releases/tags/$tag"
+              $release = Invoke-RestMethod -Uri $apiUrl -Headers @{ Accept = "application/vnd.github.v3+json" } -UseBasicParsing
+              $platformAsset = $release.assets | Where-Object { $_.name -like "*-$platformId-*" -and $_.name -like "*.vsix" } | Select-Object -First 1
+              if ($platformAsset) {
+                Write-Host "  Found platform-specific VSIX: $($platformAsset.name)"
+                $resolvedUrls += $platformAsset.browser_download_url
+              } else {
+                $universalAsset = $release.assets | Where-Object { $_.name -notmatch '-(darwin|linux|win32)-' -and $_.name -like "*.vsix" } | Select-Object -First 1
+                if ($universalAsset) {
+                  Write-Host "  No platform-specific VSIX found, using universal: $($universalAsset.name)"
+                  $resolvedUrls += $universalAsset.browser_download_url
+                } else {
+                  Write-Host "::warning::No matching VSIX found in release $owner/$repo@$tag for platform $platformId"
+                }
+              }
+            } else {
+              $resolvedUrls += $url
+            }
+          }
+
+          foreach ($url in $resolvedUrls) {
             $fileName = [System.IO.Path]::GetFileName(($url -split '\?')[0])
             Write-Host "Downloading: $url → vsix/$fileName"
             Invoke-WebRequest -Uri $url -OutFile "vsix/$fileName" -UseBasicParsing
           }
+          Write-Host "Downloaded VSIX files:"
+          Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { Write-Host "  $($_.Name) ($([math]::Round($_.Length/1MB, 1)) MB)" }
 
       - name: Run ${{ inputs.test_plan }}
         shell: pwsh
@@ -184,6 +263,7 @@ jobs:
             $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
             if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
+          if ("${{ inputs.stable_extensions }}" -eq "true") { $autotestArgs += "--stable" }
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
           & autotest @autotestArgs
 
