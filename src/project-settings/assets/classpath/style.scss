@@ -51,7 +51,7 @@
   }
 
   &[open][position='above'] #add-new-jdk {
-    margin: calc(var(--design-unit) * 1px) 0;
+    margin: calc(var(--design-unit, 4) * 1px) 0;
   }
  
   p {
@@ -66,7 +66,7 @@
       display: flex;
       align-items: flex-end;
       .codicon {
-        margin-right: calc(var(--design-unit) * 1px);
+        margin-right: calc(var(--design-unit, 4) * 1px);
       }
     }
   }
@@ -87,7 +87,7 @@
     align-items: center;
   }
   .setting-section-grid-cell-left {
-    padding-right: calc(var(--design-unit) * 4px);
+    padding-right: calc(var(--design-unit, 4) * 4px);
   }
   .setting-section-grid-cell-readonly {
     justify-content: space-between;
@@ -119,7 +119,7 @@
 }
 
 .setting-list-actions {
-  height: calc(var(--design-unit) * 8px);
+  height: calc(var(--design-unit, 4) * 8px);
 }
 
 // Ghost/icon button style (transparent background, like old appearance="icon")

@@ -1,36 +1,36 @@
 @for $i from 0 through 12 {
     .pl-#{$i} {
-        padding-left: calc(var(--design-unit) * #{$i}px);
+        padding-left: calc(var(--design-unit, 4) * #{$i}px);
     }
 
     .pr-#{$i} {
-        padding-right: calc(var(--design-unit) * #{$i}px);
+        padding-right: calc(var(--design-unit, 4) * #{$i}px);
     }
 
     .pt-#{$i} {
-        padding-top: calc(var(--design-unit) * #{$i}px);
+        padding-top: calc(var(--design-unit, 4) * #{$i}px);
     }
 
     .pb-#{$i} {
-        padding-bottom: calc(var(--design-unit) * #{$i}px);
+        padding-bottom: calc(var(--design-unit, 4) * #{$i}px);
     }
 }
 
 @for $i from 0 through 12 {
     .ml-#{$i} {
-        margin-left: calc(var(--design-unit) * #{$i}px);
+        margin-left: calc(var(--design-unit, 4) * #{$i}px);
     }
 
     .mr-#{$i} {
-        margin-right: calc(var(--design-unit) * #{$i}px);
+        margin-right: calc(var(--design-unit, 4) * #{$i}px);
     }
 
     .mt-#{$i} {
-        margin-top: calc(var(--design-unit) * #{$i}px);
+        margin-top: calc(var(--design-unit, 4) * #{$i}px);
     }
 
     .mb-#{$i} {
-        margin-bottom: calc(var(--design-unit) * #{$i}px);
+        margin-bottom: calc(var(--design-unit, 4) * #{$i}px);
     }
 }
 
