@@ -158,6 +158,21 @@ steps:
         - "JDK Runtime"
     timeout: 30
 
+  # Regression check: clicking the JDK dropdown opens a list. We do not
+  # enumerate which JDKs appear (that depends on the host runner), only
+  # that the vscode-elements <vscode-single-select> still wires up after
+  # the React 19 migration. clickInWebview throws if #jdk-dropdown is
+  # not present in any webview frame, so a silent migration regression
+  # surfaces as a hard error rather than a no-op pass.
+  - id: "open-jdk-dropdown"
+    action: "clickInWebview #jdk-dropdown"
+    verify: "JDK dropdown opens listing detected runtimes"
+    waitBefore: 1
+
+  - id: "verify-jdk-dropdown"
+    action: "wait 2 seconds"
+    verify: "screenshot shows the JDK dropdown expanded with at least one runtime entry"
+
   - id: "close-java-runtime"
     action: "run command View: Close All Editors"
 
