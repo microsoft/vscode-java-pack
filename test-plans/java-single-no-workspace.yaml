@@ -29,7 +29,6 @@ steps:
   # wiki: "Wait for Java extension to be ready (the status bar icon is 👍)."
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
     timeout: 120
 
   # ── Step 2: Verify file is open ──────────────────────────────

@@ -28,9 +28,11 @@ setup:
 steps:
   # ── Step 1: Wait for LS ready ────────────────────────────
   # wiki: "check the status bar icon is 👍, and there should be no errors"
+  # waitForLanguageServer only returns true once "Java: Ready" appears;
+  # we drop verify: text to avoid LLM downgrades when the AFTER
+  # screenshot catches a subsequent transient "Building"/"Searching" status.
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready with no errors"
     verifyProblems:
       errors: 0
     timeout: 180

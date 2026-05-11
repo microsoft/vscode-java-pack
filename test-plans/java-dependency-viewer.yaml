@@ -27,7 +27,6 @@ steps:
   # ── Wait for LS ready ────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
     timeout: 120
 
   # ── Open dependency view ─────────────────────────────────

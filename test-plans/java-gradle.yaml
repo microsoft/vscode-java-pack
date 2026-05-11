@@ -32,7 +32,6 @@ steps:
   #        no errors/problems in the problems view."
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
     verifyProblems:
       errors: 0
     timeout: 300

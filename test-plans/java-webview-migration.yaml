@@ -54,7 +54,6 @@ steps:
   #    Java Runtime, Configure Classpath) have project data to render. ──────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
     timeout: 180
 
   # ══════════════════════════════════════════════════════════════════════

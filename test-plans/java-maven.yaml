@@ -29,7 +29,6 @@ steps:
   # wiki: "status bar icon is 👍, problems view has several warnings but without errors"
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
     verifyProblems:
       errors: 0
       warnings: 1

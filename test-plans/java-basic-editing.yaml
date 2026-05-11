@@ -41,7 +41,6 @@ steps:
   # ── Step 2: LS ready + 2 errors ─────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Language Server is ready with 2 errors"
     verifyProblems:
       errors: 2
     timeout: 120

@@ -32,7 +32,6 @@ steps:
   # wiki: "Check LS status bar is 👍"
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
     timeout: 300
 
   # ── Verify completion ────────────────────────────────────

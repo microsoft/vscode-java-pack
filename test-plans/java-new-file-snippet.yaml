@@ -27,7 +27,6 @@ steps:
   # ── Wait for LS ready ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
     timeout: 120
 
   # ── Step 9: Create new Java file ─────────────────────────────

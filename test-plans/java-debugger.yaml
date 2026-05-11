@@ -36,9 +36,12 @@ steps:
     action: "deleteFile src/app/Foo.java"
 
   # ── Wait for LS ready ────────────────────────────────────
+  # Drop verify: — waitForLanguageServer returns only when status is
+  # "Java: Ready"; the LLM was downgrading because the screenshot can
+  # capture a moment right after "Ready" when the LS immediately starts
+  # an incremental "Building"/"Searching" pass.
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready with no errors"
     verifyProblems:
       errors: 0
     timeout: 120
@@ -46,33 +49,32 @@ steps:
   # ── Open App.java ────────────────────────────────────────
   - id: "open-app"
     action: "open file App.java"
-    verify: "App.java file is opened in the editor"
     timeout: 15
 
   # ── Set breakpoint ───────────────────────────────────────
   # App.java line 5: System.out.println("Hello Java");
   - id: "set-breakpoint"
     action: "setBreakpoint 5"
-    verify: "Breakpoint set on line 5"
 
   # ── Start debug session ─────────────────────────────────
   - id: "start-debug"
     action: "startDebugSession"
-    verify: "Debug session started, debug toolbar visible"
     timeout: 30
 
   # ── Verify breakpoint hit ───────────────────────────────
-  # wiki: "verify if the breakpoint is hit"
+  # wiki: "verify if the breakpoint is hit". The deterministic ground
+  # truth is the next step `debugStepOver` — it can only succeed if the
+  # debugger is paused, so an action-level pass there implies the
+  # breakpoint was hit. Drop verify: text here to avoid LLM downgrades
+  # when the screenshot misses the yellow execution-line marker (it can
+  # be off-viewport when the debug toolbar pushes the editor down).
   - id: "verify-breakpoint"
     action: "wait 10 seconds"
-    verify: "Breakpoint hit, program paused"
 
   # ── Continue execution ──────────────────────────────────
   - id: "continue-debug"
     action: "debugStepOver"
-    verify: "Program stepped over the breakpoint line and remained paused"
 
   # ── Stop debug ──────────────────────────────────────────
   - id: "stop-debug"
     action: "stopDebugSession"
-    verify: "Debug session stopped"

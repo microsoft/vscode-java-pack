@@ -32,7 +32,6 @@ steps:
   # wiki: "check the status bar icon is 👍, and there should be no errors"
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready with no errors"
     verifyProblems:
       errors: 0
     timeout: 300

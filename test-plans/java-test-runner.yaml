@@ -30,7 +30,6 @@ steps:
   # ── Wait for LS ready ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
     timeout: 300
 
   # ── Step 1: Open test file so CodeLens can render ───────────

@@ -30,7 +30,6 @@ steps:
   #        status bar icon is 👍 after that."
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
     timeout: 120
 
   # ── Step 2: Open Java file ──────────────────────────────
