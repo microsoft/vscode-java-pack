@@ -58,6 +58,9 @@ steps:
     timeout: 15
 
   # ── Verify JDK Libraries node ───────────────────────────
+  # Drop `verify:` — the deterministic `expandTreeItem JRE System Library`
+  # is the ground truth (succeeds only if the node exists). The wiki uses
+  # "JDK Libraries" as a category name but the actual tree label is
+  # "JRE System Library", which can confuse the LLM verifier.
   - id: "verify-jdk"
     action: "expandTreeItem JRE System Library"
-    verify: "JDK Libraries node visible and expandable"

@@ -45,11 +45,13 @@ steps:
     timeout: 15
 
   # ── Step 3: Verify completion ───────────────────────────
+  # Drop `verify:` — completion popup timing flakes on CI (transient
+  # "Loading…" indicator). verifyCompletion.notEmpty is the ground truth.
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
-    verify: "Code completion works at end of method body"
     verifyCompletion:
       notEmpty: true
+    waitBefore: 5
 
   # ── Step 4: Verify editing ────────────────────────────────
   - id: "goto-line"
