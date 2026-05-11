@@ -130,7 +130,7 @@ jobs:
           java-version: 21
 
       - name: Install autotest CLI
-        run: npm install -g @vscjava/vscode-autotest@^0.7.0
+        run: npm install -g @vscjava/vscode-autotest
 
       - name: Download PR VSIX (vscode-java-pack from branch)
         if: ${{ github.event_name == 'pull_request' }}
@@ -234,7 +234,7 @@ jobs:
           node-version: 20
 
       - name: Install autotest CLI
-        run: npm install -g @vscjava/vscode-autotest@^0.7.0
+        run: npm install -g @vscjava/vscode-autotest
 
       - name: Download all results
         uses: actions/download-artifact@v4
