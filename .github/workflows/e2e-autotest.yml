@@ -200,12 +200,13 @@ jobs:
             if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
 
-          # PRs always test the branch-built VSIX against stable marketplace deps (no LLM, no pre-release).
+          # PRs test the branch-built VSIX against stable marketplace deps.
+          # LLM verification activates automatically when AZURE_OPENAI_* secrets
+          # are available (e.g. internal PRs); fork PRs without secret access
+          # simply skip the LLM step (LLMClient.isConfigured() returns false).
           # Scheduled & manual runs default to --pre-release unless explicitly disabled.
           $isPR = "${{ github.event_name }}" -eq "pull_request"
-          if ($isPR) {
-            $autotestArgs += "--no-llm"
-          } elseif ("${{ inputs.pre_release }}" -ne "false") {
+          if (-not $isPR -and "${{ inputs.pre_release }}" -ne "false") {
             $autotestArgs += "--pre-release"
           }
 
