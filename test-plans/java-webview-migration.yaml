@@ -1,0 +1,286 @@
+# Test Plan: Java Pack Webview Migration (React 19 + @vscode-elements/elements)
+#
+# Source: PR https://github.com/microsoft/vscode-java-pack/pull/1616
+#         Screenshots in the PR comments verify the post-migration rendering of
+#         each webview page authored by the Extension Pack for Java.
+#
+# Goal:   Open every webview that the PR migrated and assert the key headings,
+#         tab labels, and action buttons visible in the PR's screenshots are
+#         present in the rendered webview text. This guards against any regression
+#         where the React 19 / @vscode-elements/elements migration silently drops
+#         a panel or label.
+#
+# Coverage (from the PR description and screenshots):
+#   1. Java Help Center           — command "Java: Help Center"               (java.welcome)
+#   2. Tips for Beginners         — command "Java: Tips for Beginners"        (java.gettingStarted)
+#   3. Install New JDK            — command "Java: Install New JDK"           (java.installJdk)
+#   4. Configure Java Runtime     — command "Java: Configure Java Runtime"    (java.runtime)
+#   5. Project Settings           — command "Java: Open Project Settings"     (java.projectSettings)
+#   6. Configure Classpath        — command "Java: Configure Classpath"       (java.classpathConfiguration)
+#   7. Formatter Settings         — command "Java: Open Java Formatter Settings with Preview"
+#                                                                              (java.formatterSettings)
+#   8. Overview                   — command "Java: Overview"                  (java.overview)
+#
+# Prerequisites:
+#   - vscode-java repo cloned as ../../vscode-java (provides the Maven sample project)
+#   - JDK installed (Project Settings / Configure Runtime need a working LS)
+#
+# Usage: npx autotest run test-plans/java-webview-migration.yaml
+
+name: "Java Pack Webview Migration — UI Smoke (PR #1616)"
+description: |
+  Open each webview migrated to React 19 + @vscode-elements/elements in PR #1616
+  and verify the headings, tab labels, and action buttons rendered in the PR's
+  screenshots are present in the actual webview text. A Maven sample project is
+  used so the Maven tab in Project Settings and the project list in Configure
+  Java Runtime become visible.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  timeout: 120
+  # Pre-configure the formatter profile path so the Formatter Settings webview
+  # bypasses the "No active Formatter Profile found" notification (which the
+  # smoke-test driver suppresses, leaving the webview stuck). The profile XML
+  # itself is written by the "create-formatter-profile" step below.
+  workspaceSettings:
+    java.format.settings.url: ".vscode/java-formatter.xml"
+
+steps:
+  # ── Wait for LS so commands that depend on it (Project Settings, Configure
+  #    Java Runtime, Configure Classpath) have project data to render. ──────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "Status bar shows Java Language Server is ready"
+    timeout: 180
+
+  # ══════════════════════════════════════════════════════════════════════
+  # 1. Java Help Center (java.welcome)
+  #    Screenshot shows: title "Java Help Center", side tabs General / Spring /
+  #    Student, action links such as "Configure Java Runtime" and "Install
+  #    Extensions...".
+  # ══════════════════════════════════════════════════════════════════════
+  - id: "open-help-center"
+    action: "run command Java: Help Center"
+    verify: "Java Help Center webview opens"
+    waitBefore: 1
+
+  - id: "verify-help-center"
+    action: "wait 3 seconds"
+    verify: "Help Center renders heading and navigation panels"
+    # Tab labels are rendered uppercase via CSS text-transform, so the DOM
+    # innerText returned by getWebviewText() is "GENERAL" / "SPRING" / "STUDENT".
+    verifyWebview:
+      contains:
+        - "Java Help Center"
+        - "GENERAL"
+        - "SPRING"
+        - "STUDENT"
+        - "Configure Java Runtime"
+        - "Install Extensions"
+    timeout: 30
+
+  - id: "close-help-center"
+    action: "run command Workbench: Close All Editors"
+
+  # ══════════════════════════════════════════════════════════════════════
+  # 2. Tips for Beginners (java.gettingStarted)
+  #    Screenshot shows: title "Tips for Beginners", panel tabs Quick Start /
+  #    Code Editing / Debugging / FAQ.
+  # ══════════════════════════════════════════════════════════════════════
+  - id: "open-beginner-tips"
+    action: "run command Java: Tips for Beginners"
+    verify: "Tips for Beginners webview opens"
+    waitBefore: 1
+
+  - id: "verify-beginner-tips"
+    action: "wait 3 seconds"
+    verify: "Tips for Beginners shows all four panel tabs"
+    verifyWebview:
+      contains:
+        - "Tips for Beginners"
+        - "Quick Start"
+        - "Code Editing"
+        - "Debugging"
+        - "FAQ"
+    timeout: 30
+
+  - id: "close-beginner-tips"
+    action: "run command Workbench: Close All Editors"
+
+  # ══════════════════════════════════════════════════════════════════════
+  # 3. Install New JDK (java.installJdk)
+  #    Screenshot shows: title "Install New JDK", tabs "Adoptium's Temurin" /
+  #    "Others", "Reload Window" button.
+  # ══════════════════════════════════════════════════════════════════════
+  - id: "open-install-jdk"
+    action: "run command Java: Install New JDK"
+    verify: "Install JDK webview opens"
+    waitBefore: 1
+
+  - id: "verify-install-jdk"
+    action: "wait 3 seconds"
+    verify: "Install JDK shows Adoptium / Others tabs and Reload Window button"
+    verifyWebview:
+      contains:
+        - "Install New JDK"
+        - "Adoptium"
+        - "Others"
+        - "Reload Window"
+    timeout: 30
+
+  - id: "close-install-jdk"
+    action: "run command Workbench: Close All Editors"
+
+  # ══════════════════════════════════════════════════════════════════════
+  # 4. Configure Java Runtime (java.runtime)
+  #    The "Java: Configure Java Runtime" command is wired in src/commands/
+  #    index.ts to projectSettingView.showProjectSettingsPage("classpath/jdk"),
+  #    i.e. it opens the Project Settings webview focused on the JDK Runtime
+  #    tab — not a standalone Java Runtime panel. So the migration regression
+  #    we want to catch is that the Project Settings page renders its
+  #    Classpath / JDK Runtime nav after the React 19 upgrade.
+  # ══════════════════════════════════════════════════════════════════════
+  - id: "open-java-runtime"
+    action: "run command Java: Configure Java Runtime"
+    verify: "Project Settings webview opens focused on JDK Runtime"
+    waitBefore: 1
+
+  - id: "verify-java-runtime"
+    action: "wait 3 seconds"
+    verify: "Project Settings shows Classpath sidebar and JDK Runtime tab"
+    verifyWebview:
+      contains:
+        - "Classpath"
+        - "JDK Runtime"
+    timeout: 30
+
+  - id: "close-java-runtime"
+    action: "run command Workbench: Close All Editors"
+
+  # ══════════════════════════════════════════════════════════════════════
+  # 5. Project Settings (java.projectSettings)
+  #    Screenshot shows: sidebar Classpath / Compiler / Maven / Formatter and
+  #    the Classpath section's three tabs Sources / JDK Runtime / Libraries.
+  # ══════════════════════════════════════════════════════════════════════
+  - id: "open-project-settings"
+    action: "run command Java: Open Project Settings"
+    verify: "Project Settings webview opens"
+    waitBefore: 1
+
+  - id: "verify-project-settings"
+    action: "wait 3 seconds"
+    verify: "Project Settings sidebar and Classpath tabs are visible"
+    verifyWebview:
+      contains:
+        - "Classpath"
+        - "Compiler"
+        - "Maven"
+        - "Formatter"
+        - "Sources"
+        - "JDK Runtime"
+        - "Libraries"
+    timeout: 30
+
+  - id: "close-project-settings"
+    action: "run command Workbench: Close All Editors"
+
+  # ══════════════════════════════════════════════════════════════════════
+  # 6. Configure Classpath (java.classpathConfiguration)
+  #    Same React tree as Project Settings but launched via the standalone
+  #    "Configure Classpath" command shown as the entry point in the PR's
+  #    Help Center screenshot.
+  # ══════════════════════════════════════════════════════════════════════
+  - id: "open-classpath-config"
+    action: "run command Java: Configure Classpath"
+    verify: "Classpath configuration webview opens"
+    waitBefore: 1
+
+  - id: "verify-classpath-config"
+    action: "wait 3 seconds"
+    verify: "Classpath configuration shows Sources / JDK Runtime / Libraries tabs"
+    verifyWebview:
+      contains:
+        - "Sources"
+        - "JDK Runtime"
+        - "Libraries"
+    timeout: 30
+
+  - id: "close-classpath-config"
+    action: "run command Workbench: Close All Editors"
+
+  # ══════════════════════════════════════════════════════════════════════
+  # 7. Formatter Settings (java.formatterSettings)
+  #    Screenshot shows: title "Java Formatter Settings" and the side nav
+  #    Indentation / Blank Lines / Comment / Insert Line / Whitespace /
+  #    Wrapping.
+  #
+  #    Precondition: showFormatterSettingsEditor() refuses to open the webview
+  #    when `java.format.settings.url` points at a missing file or is unset
+  #    (it falls back to a notification toast asking the user to create a
+  #    profile, and the smoke-test driver suppresses those toasts). We set the
+  #    setting via `setup.workspaceSettings` and create the XML profile below.
+  # ══════════════════════════════════════════════════════════════════════
+  - id: "create-formatter-profile"
+    action: |
+      insertLineInFile .vscode/java-formatter.xml 1 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+      <profiles version="20">
+          <profile kind="CodeFormatterProfile" name="autotest" version="20">
+              <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="4"/>
+          </profile>
+      </profiles>
+    verify: "Eclipse formatter profile XML created in workspace"
+    verifyFile:
+      path: "~/.vscode/java-formatter.xml"
+      contains: "CodeFormatterProfile"
+
+  - id: "close-profile-file-before-formatter"
+    action: "run command Workbench: Close All Editors"
+
+  - id: "open-formatter-settings"
+    action: "run command Java: Open Java Formatter Settings with Preview"
+    verify: "Formatter Settings webview opens"
+    waitBefore: 1
+
+  - id: "verify-formatter-settings"
+    action: "wait 5 seconds"
+    verify: "Formatter Settings shows all six categories"
+    verifyWebview:
+      contains:
+        - "Java Formatter Settings"
+        - "Indentation"
+        - "Blank Lines"
+        - "Comment"
+        - "Insert Line"
+        - "Whitespace"
+        - "Wrapping"
+    timeout: 45
+
+  - id: "close-formatter-settings"
+    action: "run command Workbench: Close All Editors"
+
+  # ══════════════════════════════════════════════════════════════════════
+  # 8. Overview (java.overview)
+  #    Not migrated in this PR (still on jQuery/Bootstrap), but the PR's
+  #    "Testing" section verified Overview continues to render. Smoke-check
+  #    that the page still loads to catch any side-effect regression from
+  #    the React 19 upgrade.
+  # ══════════════════════════════════════════════════════════════════════
+  - id: "open-overview"
+    action: "run command Java: Overview"
+    verify: "Overview webview opens"
+    waitBefore: 1
+
+  - id: "verify-overview"
+    action: "wait 3 seconds"
+    verify: "Overview page still renders after the migration"
+    verifyWebview:
+      contains:
+        - "Overview"
+    timeout: 30
+
+  - id: "close-overview"
+    action: "run command Workbench: Close All Editors"
