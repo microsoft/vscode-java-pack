@@ -67,7 +67,7 @@ steps:
 
   # ── Step 4: Code Action to create call() ────────────────────
   - id: "close-all-before-codeaction"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   - id: "navigate-to-error"
     action: "navigateToError 1"
@@ -92,7 +92,7 @@ steps:
 
   # Close all editors to prevent duplicate tab issues
   - id: "close-all-before-step6"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   # ── Step 6: Type File code ────────────────────────────────
   # Use insertLineInFile so LS properly detects the unresolved File type
@@ -128,7 +128,7 @@ steps:
 
   # ── Step 8: Rename Symbol (F2) ──────────────────────────────
   - id: "close-all-before-rename"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   - id: "open-foo-for-rename"
     action: "open file Foo.java"
@@ -148,7 +148,7 @@ steps:
     action: "run command File: Save All"
 
   - id: "close-all-after-rename"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   - id: "click-foonew-in-explorer"
     action: "doubleClick FooNew.java"

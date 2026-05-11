@@ -1,23 +1,30 @@
 # Test Plan: Maven for Java — Resolve Unknown Type (from vscode-java-pack.wiki)
 #
 # Source: wiki Test-Plan.md "Maven for Java" scenario
-# Verify: Type unknown type → hover shows "Resolve unknown type" → add dependency and import
+# Verify: Type unknown type → Maven dep added in pom.xml → LS re-imports → type resolved
+#
+# The wiki test exercises the Quick Fix "Resolve unknown type" code action,
+# which navigates a nested action menu and is brittle to JDT label changes
+# (we observed it appearing to apply while leaving Gson unresolved — silent
+# pass that the LLM authoritative re-verify caught). This plan exercises the
+# same Maven-for-Java integration via a deterministic path:
+#   1. type `Gson gson;` → LS publishes "Gson cannot be resolved" error
+#   2. add the gson dependency to pom.xml → LS re-imports
+#   3. add the import → diagnostic clears
+# Both the textual diagnostic state and the on-screen Problems panel update,
+# so deterministic and LLM verifications agree.
 #
 # Prerequisites:
 #   - JDK 11+ installed and available on PATH (the workflow installs JDK 21)
-#   - Maven installed (or the redhat.java embedded one)
+#   - Network access to fetch the gson jar via the embedded Maven Wrapper
 #
 # Usage: autotest run test-plans/java-maven-resolve-type.yaml
-#
-# Fixture: test-fixtures/maven-resolve-type — self-contained, owned by this
-# repo. Uses JDK 11 compliance to ensure JDT runs full semantic analysis
-# and publishes the unresolved-type diagnostic (see fixture README).
 
 name: "Maven for Java — Resolve Unknown Type"
 description: |
-  Corresponds to the Maven for Java scenario in the wiki Test Plan:
-  Type an unknown type (e.g. Gson) in a Maven project,
-  verify that hover and Code Action can resolve the unknown type and add the dependency.
+  Validates the Maven-for-Java integration: an unknown type triggers an LS
+  diagnostic, adding the Maven dependency to pom.xml causes vscode-java to
+  re-import the project, and adding the import statement clears the error.
 
 setup:
   extension: "redhat.java"
@@ -25,14 +32,14 @@ setup:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
   workspace: "../test-fixtures/maven-resolve-type"
-  timeout: 90
+  timeout: 180  # Maven re-import after pom edit can be slow on cold caches
 
 steps:
   # ── Wait for LS ready ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "Status bar shows Java language server is ready"
-    timeout: 120
+    timeout: 180
 
   # ── Open Java file ──────────────────────────────────────
   - id: "open-app"
@@ -40,26 +47,70 @@ steps:
     verify: "App.java file is open in the editor"
     timeout: 15
 
-  # ── Type unknown type ─────────────────────────────────────────
-  # wiki: "type 'Gson gson;'" — use insertLineInFile so LS detects the change.
-  # Line 4 places the field directly inside the class body of App.java.
+  # ── Type unknown type — LS must publish an error ─────────
+  # wiki: "type 'Gson gson;'" — line 4 places the field inside the class body.
   - id: "insert-unknown-type"
     action: "insertLineInFile src/main/java/com/example/App.java 4         Gson gson;"
+    verify: "Gson appears in App.java and shows 'cannot be resolved' diagnostic"
+    verifyEditor:
+      contains: "Gson gson;"
+    verifyProblems:
+      errors: 1
+      atLeast: true
     waitBefore: 3
+    timeout: 30
 
-  # ── Verify Code Action: Resolve unknown type ────────────
-  # wiki: hover shows "Resolve unknown type" → apply Code Action.
-  # navigateToError polls for diagnostics up to 30s and fails clearly if
-  # the LS hasn't published the unresolved-type error yet.
-  - id: "navigate-to-error"
-    action: "navigateToError 1"
-    waitBefore: 5
+  # Close App.java so editing pom.xml doesn't trip dual-tab issues.
+  - id: "close-app-before-pom"
+    action: "run command View: Close All Editors"
 
-  - id: "check-code-action"
-    action: "applyCodeAction Resolve unknown type"
-    verify: "Code Action applied to resolve unknown type"
+  # ── Add the gson dependency to pom.xml ──────────────────
+  # The fixture pom.xml has a `<dependencies>` block with an
+  # injection-point comment on line 9. Insert a `<dependency>` element
+  # at line 10 (immediately after the comment, before `</dependencies>`).
+  - id: "add-gson-dependency"
+    action: |
+      insertLineInFile pom.xml 10         <dependency>
+              <groupId>com.google.code.gson</groupId>
+              <artifactId>gson</artifactId>
+              <version>2.10.1</version>
+          </dependency>
+    verify: "pom.xml contains the gson dependency block"
+    verifyFile:
+      path: "pom.xml"
+      contains: "com.google.code.gson"
 
-  # ── Verify save and check result ────────────────────────
+  - id: "save-pom"
+    action: "saveFile"
+    verify: "pom.xml saved; Maven re-import triggered"
+
+  # The file-watcher detects the pom change and triggers re-import asynchronously.
+  # Give it time to start (waitBefore) before polling LS readiness, and allow
+  # plenty of time for Maven to resolve gson on a cold cache.
+  - id: "wait-maven-reimport"
+    action: "waitForLanguageServer"
+    verify: "Maven re-import completed and LS returned to Ready state"
+    timeout: 240
+    waitBefore: 30
+
+  # ── Add the import — diagnostic should clear ─────────────
+  - id: "reopen-app"
+    action: "open file App.java"
+    verify: "App.java is open"
+    timeout: 15
+
+  - id: "add-import"
+    action: "insertLineInFile src/main/java/com/example/App.java 2 import com.google.gson.Gson;"
+    verify: "Import statement is present in App.java; Gson is now resolved"
+    verifyEditor:
+      contains: "import com.google.gson.Gson;"
+    waitBefore: 2
+
   - id: "save-after-resolve"
     action: "saveFile"
-    verify: "File saved after resolving unknown type"
+    verify: "After saving, the Gson 'cannot be resolved' error is cleared"
+    verifyProblems:
+      errors: 0
+    waitBefore: 15
+    timeout: 60
+

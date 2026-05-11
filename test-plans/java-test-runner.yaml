@@ -3,11 +3,13 @@
 # Source: wiki Test-Plan.md "Java Test Runner" scenario
 # Verify: Test panel display → run all tests → CodeLens visible
 #
-# Uses maven/salut project (contains compilable Java source files)
+# Uses test-fixtures/maven-junit — a self-contained Maven + JUnit 5 fixture
+# owned by this repo. Upstream `vscode-java/maven/salut` has no @Test files,
+# so `Test: Run All Tests` reports "No tests have been found" — masking real
+# Test Runner regressions.
 #
 # Prerequisites:
-#   - vscode-java repo cloned locally
-#   - JDK installed and available
+#   - JDK 11+ installed and available
 #
 # Usage: autotest run test-plans/java-test-runner.yaml
 
@@ -21,36 +23,49 @@ setup:
   extensions:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
-  workspace: "../../vscode-java/test/resources/projects/maven/salut"
-  timeout: 90
+  workspace: "../test-fixtures/maven-junit"
+  timeout: 360  # First import needs to download JUnit jars on cold caches
 
 steps:
   # ── Wait for LS ready ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "Status bar shows Java language server is ready"
-    timeout: 120
+    timeout: 300
 
-  # ── Step 1: Open test explorer ─────────────────────────────
-  - id: "open-test-explorer"
-    action: "openTestExplorer"
-    verify: "Test explorer panel opened"
+  # ── Step 1: Open test file so CodeLens can render ───────────
+  - id: "open-test-file"
+    action: "open file CalculatorTest.java"
+    verify: "CalculatorTest.java is open"
+    verifyEditor:
+      contains: "@Test"
+    timeout: 15
+    waitBefore: 5
 
-  # ── Step 2: Run all tests ──────────────────────────────────
+  # Give the Java Test Runner extension time to scan the project after LS
+  # ready — discovery is asynchronous and Test Explorer is initially empty.
+  - id: "wait-test-discovery"
+    action: "wait 20 seconds"
+
+  # ── Step 2: Run tests via Java Test Runner palette command ───────
+  # autotest 0.7.1 ships `openTestExplorer`/`runAllTests` actions wired to
+  # legacy palette titles ("Testing: Focus on Test Explorer View", "Test: Run
+  # All Tests") that no longer exist in current VS Code / vscode-java-test.
+  # `Java: Run Tests` is the live palette command exposed by vscode-java-test
+  # and runs every test in the project from any context (matches the wiki
+  # scenario "Run all tests").
   - id: "run-all-tests"
-    action: "runAllTests"
-    verify: "Tests started running"
+    action: "run command Java: Run Tests"
+    verify: "Java test runner starts (Test Results panel shows test execution)"
+    waitBefore: 2
 
   - id: "wait-test-complete"
-    action: "wait 60 seconds"
-    verify: "Test execution completed"
+    action: "wait 45 seconds"
+    verify: "JUnit test execution completed; CalculatorTest pass/fail state visible"
 
-  # ── Step 3: Open test file and verify CodeLens ──────────────
-  - id: "open-test-file"
-    action: "open file Foo.java"
-    verify: "Test file opened"
+  # ── Step 3: Re-open test file and verify CodeLens ──────────
+  - id: "reopen-test-file"
+    action: "open file CalculatorTest.java"
+    verify: "CodeLens (Run | Debug) is visible above the @Test method"
     timeout: 10
 
-  - id: "verify-codelens"
-    action: "wait 5 seconds"
-    verify: "CodeLens visible above test cases (Run Test / Debug Test)"

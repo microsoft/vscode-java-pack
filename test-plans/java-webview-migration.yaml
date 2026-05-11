@@ -146,7 +146,10 @@ steps:
   # ══════════════════════════════════════════════════════════════════════
   - id: "open-java-runtime"
     action: "run command Java: Configure Java Runtime"
-    verify: "Project Settings webview opens focused on JDK Runtime"
+    # No `verify:` — transitional step. The next `verify-java-runtime`
+    # step waits 3s and asserts the rendered Classpath / JDK Runtime nav.
+    # On slower CI the screenshot taken at command-return can capture a
+    # blank webview before React renders, which trips the LLM re-verify.
     waitBefore: 1
 
   - id: "verify-java-runtime"
@@ -211,7 +214,9 @@ steps:
   # ══════════════════════════════════════════════════════════════════════
   - id: "open-classpath-config"
     action: "run command Java: Configure Classpath"
-    verify: "Classpath configuration webview opens"
+    # No `verify:` — transitional step. The next `verify-classpath-config`
+    # step waits 3s and asserts Sources / JDK Runtime / Libraries.
+    # Screenshot at command-return can be pre-render on slower CI.
     waitBefore: 1
 
   - id: "verify-classpath-config"
@@ -257,12 +262,18 @@ steps:
 
   - id: "open-formatter-settings"
     action: "run command Java: Open Java Formatter Settings with Preview"
-    verify: "Formatter Settings webview opens"
+    # No `verify:` — transitional step. The next `verify-formatter-settings`
+    # step waits 5s and asserts all six category labels via verifyWebview.
+    # On slower CI the screenshot can capture the formatter XML file still
+    # focused (before the webview takes focus).
     waitBefore: 1
 
   - id: "verify-formatter-settings"
     action: "wait 5 seconds"
-    verify: "Formatter Settings shows all six categories"
+    verify: "Formatter Settings webview is rendered"
+    # Deterministic check below is authoritative for the six categories.
+    # `verify:` text is intentionally generic — the LLM has been observed to
+    # hallucinate a specific category count off vertical label stacking.
     verifyWebview:
       contains:
         - "Java Formatter Settings"
