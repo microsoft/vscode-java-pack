@@ -54,6 +54,7 @@ steps:
   #    Java Runtime, Configure Classpath) have project data to render. ──────
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Maven salut workspace has loaded; the Java extension and the pack webview commands are ready"
     timeout: 180
 
   # ══════════════════════════════════════════════════════════════════════

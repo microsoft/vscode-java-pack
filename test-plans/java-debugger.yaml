@@ -36,12 +36,12 @@ steps:
     action: "deleteFile src/app/Foo.java"
 
   # ── Wait for LS ready ────────────────────────────────────
-  # Drop verify: — waitForLanguageServer returns only when status is
-  # "Java: Ready"; the LLM was downgrading because the screenshot can
-  # capture a moment right after "Ready" when the LS immediately starts
-  # an incremental "Building"/"Searching" pass.
+  # verify text describes the persistent Problems panel state, not the
+  # transient status-bar text which can flicker into Building/Searching
+  # right after Ready (Maven post-import incremental compile).
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Java workspace has loaded; Problems panel shows no errors"
     verifyProblems:
       errors: 0
     timeout: 120
@@ -49,32 +49,39 @@ steps:
   # ── Open App.java ────────────────────────────────────────
   - id: "open-app"
     action: "open file App.java"
+    verify: "App.java file is opened in the editor"
+    waitBefore: 5
     timeout: 15
 
   # ── Set breakpoint ───────────────────────────────────────
   # App.java line 5: System.out.println("Hello Java");
   - id: "set-breakpoint"
     action: "setBreakpoint 5"
+    verify: "Red breakpoint dot is shown in the gutter of App.java line 5"
 
   # ── Start debug session ─────────────────────────────────
   - id: "start-debug"
     action: "startDebugSession"
+    verify: "Debug session has started; the debug toolbar (continue / step / stop) is visible"
     timeout: 30
 
   # ── Verify breakpoint hit ───────────────────────────────
   # wiki: "verify if the breakpoint is hit". The deterministic ground
   # truth is the next step `debugStepOver` — it can only succeed if the
-  # debugger is paused, so an action-level pass there implies the
-  # breakpoint was hit. Drop verify: text here to avoid LLM downgrades
-  # when the screenshot misses the yellow execution-line marker (it can
-  # be off-viewport when the debug toolbar pushes the editor down).
+  # debugger is paused. The verify text is intentionally lenient: the
+  # yellow execution-line marker can be off-viewport when the debug
+  # toolbar pushes the editor down, so we accept either the marker or
+  # the debug toolbar in paused state as evidence.
   - id: "verify-breakpoint"
     action: "wait 10 seconds"
+    verify: "Program is paused at the breakpoint — debug toolbar visible in paused state or the yellow execution-line marker appears on/near App.java line 5"
 
   # ── Continue execution ──────────────────────────────────
   - id: "continue-debug"
     action: "debugStepOver"
+    verify: "Program has stepped one statement and remains paused (debug toolbar still in paused state)"
 
   # ── Stop debug ──────────────────────────────────────────
   - id: "stop-debug"
     action: "stopDebugSession"
+    verify: "Debug session has ended; the debug toolbar is no longer visible"

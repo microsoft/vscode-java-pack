@@ -30,6 +30,7 @@ steps:
   #        no errors/warning in the problems view."
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Multimodule Maven workspace has loaded; Problems panel shows no errors"
     verifyProblems:
       errors: 0
     timeout: 180
@@ -45,6 +46,7 @@ steps:
 
   - id: "module1-completion"
     action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion popup is shown for module1/Foo.java with IntelliSense suggestions"
     verifyCompletion:
       notEmpty: true
     waitBefore: 5
@@ -57,6 +59,7 @@ steps:
 
   - id: "module2-completion"
     action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion popup is shown for module2/Foo.java with IntelliSense suggestions"
     verifyCompletion:
       notEmpty: true
     waitBefore: 5

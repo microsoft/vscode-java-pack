@@ -28,11 +28,9 @@ setup:
 steps:
   # ── Step 1: Wait for LS ready ────────────────────────────
   # wiki: "check the status bar icon is 👍, and there should be no errors"
-  # waitForLanguageServer only returns true once "Java: Ready" appears;
-  # we drop verify: text to avoid LLM downgrades when the AFTER
-  # screenshot catches a subsequent transient "Building"/"Searching" status.
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Maven workspace has loaded under JDK 25; Problems panel shows no errors"
     verifyProblems:
       errors: 0
     timeout: 180
@@ -45,11 +43,12 @@ steps:
     timeout: 15
 
   # ── Step 3: Verify completion ────────────────────────────
-  # The completion popup timing is flaky on CI (sometimes "Loading…" is
-  # visible at screenshot time and LLM downgrades on it). The deterministic
-  # `verifyCompletion.notEmpty` is the source of truth here.
+  # verifyCompletion.notEmpty is the deterministic ground truth; the
+  # `verify:` text is lenient so a transient "Loading…" indicator at
+  # screenshot time doesn't downgrade the step.
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion popup is shown with at least one IntelliSense suggestion (popup may still be populating)"
     verifyCompletion:
       notEmpty: true
     waitBefore: 5

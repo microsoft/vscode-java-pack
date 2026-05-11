@@ -29,6 +29,7 @@ steps:
   # wiki: "Wait for Java extension to be ready (the status bar icon is 👍)."
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Java extension has activated for the single-file (no-workspace) mode; no error notifications visible"
     timeout: 120
 
   # ── Step 2: Verify file is open ──────────────────────────────
@@ -40,16 +41,17 @@ steps:
 
   # ── Step 3: Verify basic editing features ────────────────────────────
   # wiki: "Try the basic editing features in App.java, they should work."
-  # LS may briefly re-enter Searching after Ready; wait before triggering completion
+  # LS may briefly re-enter Searching after Ready; wait before triggering completion.
+  # verifyCompletion.notEmpty is the deterministic ground truth; verify
+  # text is lenient because the popup may still render "Loading..." while
+  # items are already available via the completion API.
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion popup is shown in App.java with at least one IntelliSense suggestion"
     verifyCompletion:
       notEmpty: true
     waitBefore: 8
     timeout: 30
-    # No `verify:` — on slower CI the completion menu screenshot can show
-    # the "Loading..." indicator even when the underlying completion API
-    # already has items. Deterministic verifyCompletion above is authoritative.
 
   # ── Step 4: Verify editing ────────────────────────────────────
   - id: "goto-line"

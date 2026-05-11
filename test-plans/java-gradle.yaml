@@ -32,6 +32,7 @@ steps:
   #        no errors/problems in the problems view."
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Gradle workspace has loaded; Problems panel shows no errors"
     verifyProblems:
       errors: 0
     timeout: 300

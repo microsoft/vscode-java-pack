@@ -39,8 +39,15 @@ steps:
     verify: "Project file tree is visible"
 
   # ── Step 2: LS ready + 2 errors ─────────────────────────────
+  # wiki: "status bar icon is 👍, problems view shows 2 errors"
+  # The Problems panel is not auto-opened; verify text describes the
+  # workspace-loaded state that's persistently visible in the editor
+  # window (project tree, no progress indicator). The deterministic
+  # verifyProblems.errors:2 polls the diagnostics API directly so the
+  # error count is checked regardless of whether the panel is open.
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Java extension has activated and the simple-app project tree is visible in the Explorer sidebar"
     verifyProblems:
       errors: 2
     timeout: 120
@@ -49,6 +56,7 @@ steps:
   - id: "open-foo"
     action: "open file Foo.java"
     verify: "Foo.java is open in editor"
+    waitBefore: 5
     timeout: 15
 
   - id: "type-class-snippet"
@@ -78,12 +86,15 @@ steps:
     timeout: 15
 
   # ── Step 5: Save all + verify 0 errors ──────────────────────
-  # Drop verify: text — apply-code-action above creates a stub with a
-  # TODO marker which the LLM consistently misreads as a "compilation
-  # error", causing downgrades on otherwise-passing steps. The
-  # deterministic verifyProblems.errors:0 is the ground truth.
+  # The verify text only describes what's reliably observable when the
+  # command runs — the command palette has closed and no error toast
+  # was raised. The unsaved-indicator dot on tabs depends on which
+  # files were modified (apply-code-action edits Foo.java which may
+  # not be the currently active tab), so we avoid asserting on it.
+  # Ground truth: verifyProblems.errors:0.
   - id: "save-all-step5"
     action: "run command File: Save All"
+    verify: "File: Save All command has been invoked; no error notification toast appeared"
     verifyProblems:
       errors: 0
     timeout: 60
@@ -118,14 +129,13 @@ steps:
     verify: "Organize Imports resolved File type"
     timeout: 15
 
-  # Save all — LS may write the import to a second tab (dual-tab issue on CI)
-  # Verify via file on disk to bypass dual-tab problem. We intentionally
-  # drop `verify:` so the LLM authoritative re-verify doesn't try to assert
-  # an editor-visual change (the import is added on disk but the visible
-  # editor pane may show a different tab — verifyFile on disk is the
-  # source of truth here).
+  # Save all — LS may write the import to a second tab (dual-tab issue on CI).
+  # The visible editor tab may show a different file than App.java, so the
+  # verify text describes only the command invocation. The disk-side check
+  # (verifyFile.contains "import java.io.File") is the ground truth.
   - id: "save-after-organize"
     action: "run command File: Save All"
+    verify: "File: Save All command has been invoked to persist the Organize Imports change to disk"
     verifyFile:
       path: "~/src/app/App.java"
       contains: "import java.io.File"

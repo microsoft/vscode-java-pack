@@ -32,6 +32,7 @@ steps:
   # wiki: "check the status bar icon is 👍, and there should be no errors"
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Gradle subprojects workspace has loaded under JDK 25; Problems panel shows no errors"
     verifyProblems:
       errors: 0
     timeout: 300
@@ -44,10 +45,12 @@ steps:
     timeout: 15
 
   # ── Step 3: Verify completion ───────────────────────────
-  # Drop `verify:` — completion popup timing flakes on CI (transient
-  # "Loading…" indicator). verifyCompletion.notEmpty is the ground truth.
+  # verify text describes the rendered popup; verifyCompletion.notEmpty
+  # is the deterministic ground truth — kept lenient so a transient
+  # "Loading…" indicator at screenshot time doesn't downgrade.
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion popup is shown with at least one IntelliSense suggestion (popup may still be populating)"
     verifyCompletion:
       notEmpty: true
     waitBefore: 5

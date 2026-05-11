@@ -29,6 +29,7 @@ steps:
   # wiki: "status bar icon is 👍, problems view has several warnings but without errors"
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Maven workspace has loaded; Problems panel shows no errors (warnings may be present)"
     verifyProblems:
       errors: 0
       warnings: 1
@@ -41,11 +42,13 @@ steps:
   - id: "open-java-file"
     action: "open file Foo.java"
     verify: "Foo.java file is open in the editor"
+    waitBefore: 5
     timeout: 10
 
   # 2b. Verify code completion
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion popup is shown in Foo.java with reasonable IntelliSense suggestions"
     verifyCompletion:
       notEmpty: true
     waitBefore: 5

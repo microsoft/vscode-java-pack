@@ -27,6 +27,7 @@ steps:
   # ── Wait for LS ready ────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Java workspace has loaded; Explorer shows the project tree and Problems panel is settled"
     timeout: 120
 
   # ── Open dependency view ─────────────────────────────────
@@ -57,9 +58,10 @@ steps:
     timeout: 15
 
   # ── Verify JDK Libraries node ───────────────────────────
-  # Drop `verify:` — the deterministic `expandTreeItem JRE System Library`
-  # is the ground truth (succeeds only if the node exists). The wiki uses
-  # "JDK Libraries" as a category name but the actual tree label is
-  # "JRE System Library", which can confuse the LLM verifier.
+  # The wiki uses "JDK Libraries" as the category name but the actual
+  # tree label rendered by vscode-java-dependency is "JRE System Library".
+  # The verify text deliberately accepts either label so the LLM doesn't
+  # downgrade on a vocabulary mismatch.
   - id: "verify-jdk"
     action: "expandTreeItem JRE System Library"
+    verify: "JDK / JRE system library node is visible under the project in the Java Projects view"

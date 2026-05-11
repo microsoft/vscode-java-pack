@@ -30,20 +30,23 @@ steps:
   #        status bar icon is 👍 after that."
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "Java extension has activated for the single-file workspace; no error notifications are visible"
     timeout: 120
 
   # ── Step 2: Open Java file ──────────────────────────────
   - id: "open-app"
     action: "open file App.java"
     verify: "App.java file is open in the editor"
+    waitBefore: 5
     timeout: 10
 
   # ── Step 3: Verify code completion ────────────────────────────────
-  # Drop `verify:` text — the completion popup timing is flaky on CI
-  # (LLM occasionally sees "Loading…" indicator before items render and
-  # downgrades). Rely on deterministic `verifyCompletion.notEmpty`.
+  # verifyCompletion.notEmpty is the deterministic ground truth; the
+  # verify text is lenient because on slower CI the popup may still show
+  # "Loading..." while items are already in the list.
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
+    verify: "Code completion popup is shown for App.java with at least one IntelliSense suggestion"
     verifyCompletion:
       notEmpty: true
     waitBefore: 5

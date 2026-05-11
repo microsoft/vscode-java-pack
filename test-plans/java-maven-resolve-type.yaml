@@ -36,23 +36,31 @@ setup:
 
 steps:
   # ── Wait for LS ready ─────────────────────────────────────────
+  # Workspace tree state can vary at screenshot time (src may be
+  # collapsed, target/ may or may not be present), so verify text only
+  # asserts on the workspace-loaded state visible regardless of tree
+  # expansion.
   - id: "ls-ready"
     action: "waitForLanguageServer"
+    verify: "maven-resolve-type project has been imported; the Java extension is activated and pom.xml is visible in the Explorer"
     timeout: 180
 
   # ── Open Java file ──────────────────────────────────────
   - id: "open-app"
     action: "open file App.java"
     verify: "App.java file is open in the editor"
+    waitBefore: 5
     timeout: 15
 
   # ── Type unknown type — LS must publish an error ─────────
   # wiki: "type 'Gson gson;'" — line 4 places the field inside the class body.
-  # Drop `verify:` so LLM doesn't downgrade based on screenshot timing —
-  # the red squiggle may take a moment to render after the diagnostic
-  # publish; `verifyProblems.errors >= 1` is the deterministic ground truth.
+  # The Problems panel is not auto-opened by autotest and the red squiggle
+  # may take a moment to render, so verify text describes only the
+  # inserted code line. The deterministic verifyProblems.errors >= 1
+  # polls the diagnostics API and is the ground truth for the LS error.
   - id: "insert-unknown-type"
     action: "insertLineInFile src/main/java/com/example/App.java 4         Gson gson;"
+    verify: "App.java editor now shows the inserted 'Gson gson;' declaration inside the class body"
     verifyEditor:
       contains: "Gson gson;"
     verifyProblems:
@@ -64,6 +72,15 @@ steps:
   # Close App.java so editing pom.xml doesn't trip dual-tab issues.
   - id: "close-app-before-pom"
     action: "run command View: Close All Editors"
+
+  # ── Open pom.xml in the editor before insertion ──────────
+  # `insertLineInFile` writes to disk without opening the file. Open
+  # pom.xml explicitly so the next insertion is visible to the LLM
+  # verifier in the AFTER screenshot.
+  - id: "open-pom"
+    action: "open file pom.xml"
+    verify: "pom.xml is open in the editor showing the Maven project configuration"
+    timeout: 10
 
   # ── Add the gson dependency to pom.xml ──────────────────
   # The fixture pom.xml has a `<dependencies>` block with an
@@ -78,34 +95,41 @@ steps:
               <artifactId>gson</artifactId>
               <version>2.10.1</version>
           </dependency>
+    verify: "pom.xml editor now contains a <dependency> block referencing com.google.code.gson"
     verifyFile:
       path: "~/pom.xml"
       contains: "com.google.code.gson"
+    waitBefore: 2
 
   - id: "save-pom"
     action: "saveFile"
+    verify: "pom.xml has been saved to disk (editor no longer shows the unsaved-change dot)"
 
   # The file-watcher detects the pom change and triggers re-import asynchronously.
   # Give it time to start (waitBefore) before polling LS readiness, and allow
   # plenty of time for Maven to resolve gson on a cold cache.
   - id: "wait-maven-reimport"
     action: "waitForLanguageServer"
+    verify: "Maven re-import has completed; the Java language server is settled and no progress indicator is shown"
     timeout: 300
     waitBefore: 45
 
   # ── Add the import — diagnostic should clear ─────────────
   - id: "reopen-app"
     action: "open file App.java"
+    verify: "App.java is re-opened in the editor"
     timeout: 15
 
   - id: "add-import"
     action: "insertLineInFile src/main/java/com/example/App.java 2 import com.google.gson.Gson;"
+    verify: "App.java editor now shows 'import com.google.gson.Gson;' at the top of the file"
     verifyEditor:
       contains: "import com.google.gson.Gson;"
     waitBefore: 3
 
   - id: "save-after-resolve"
     action: "saveFile"
+    verify: "App.java has been saved; the 'Gson cannot be resolved' diagnostic has cleared (no error squiggle on the Gson reference)"
     verifyProblems:
       errors: 0
     waitBefore: 20
