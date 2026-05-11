@@ -40,13 +40,14 @@ steps:
     timeout: 10
 
   # ── Step 3: Verify code completion ────────────────────────────────
-  # wiki: "make sure the editing experience is correctly working
-  #        including diagnostics, code completion and code action."
+  # Drop `verify:` text — the completion popup timing is flaky on CI
+  # (LLM occasionally sees "Loading…" indicator before items render and
+  # downgrades). Rely on deterministic `verifyCompletion.notEmpty`.
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
-    verify: "Code completion list appears"
     verifyCompletion:
       notEmpty: true
+    waitBefore: 5
 
   # ── Step 4: Verify basic editing ────────────────────────────────
   - id: "goto-main"

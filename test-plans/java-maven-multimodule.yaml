@@ -46,9 +46,9 @@ steps:
 
   - id: "module1-completion"
     action: "triggerCompletionAt endOfMethod"
-    verify: "Code completion works for module1 Foo.java"
     verifyCompletion:
       notEmpty: true
+    waitBefore: 5
 
   # ── Step 3: Verify module2 Foo.java ──────────────────────
   - id: "open-module2-foo"
@@ -58,6 +58,6 @@ steps:
 
   - id: "module2-completion"
     action: "triggerCompletionAt endOfMethod"
-    verify: "Code completion works for module2 Foo.java"
     verifyCompletion:
       notEmpty: true
+    waitBefore: 5

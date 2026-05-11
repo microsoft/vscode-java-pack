@@ -117,10 +117,13 @@ steps:
     timeout: 15
 
   # Save all — LS may write the import to a second tab (dual-tab issue on CI)
-  # Verify via file on disk to bypass dual-tab problem
+  # Verify via file on disk to bypass dual-tab problem. We intentionally
+  # drop `verify:` so the LLM authoritative re-verify doesn't try to assert
+  # an editor-visual change (the import is added on disk but the visible
+  # editor pane may show a different tab — verifyFile on disk is the
+  # source of truth here).
   - id: "save-after-organize"
     action: "run command File: Save All"
-    verify: "App.java on disk contains import java.io.File"
     verifyFile:
       path: "~/src/app/App.java"
       contains: "import java.io.File"

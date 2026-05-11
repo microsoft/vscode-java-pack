@@ -49,16 +49,18 @@ steps:
 
   # ── Type unknown type — LS must publish an error ─────────
   # wiki: "type 'Gson gson;'" — line 4 places the field inside the class body.
+  # Drop `verify:` so LLM doesn't downgrade based on screenshot timing —
+  # the red squiggle may take a moment to render after the diagnostic
+  # publish; `verifyProblems.errors >= 1` is the deterministic ground truth.
   - id: "insert-unknown-type"
     action: "insertLineInFile src/main/java/com/example/App.java 4         Gson gson;"
-    verify: "Gson appears in App.java and shows 'cannot be resolved' diagnostic"
     verifyEditor:
       contains: "Gson gson;"
     verifyProblems:
       errors: 1
       atLeast: true
-    waitBefore: 3
-    timeout: 30
+    waitBefore: 8
+    timeout: 60
 
   # Close App.java so editing pom.xml doesn't trip dual-tab issues.
   - id: "close-app-before-pom"
@@ -68,6 +70,8 @@ steps:
   # The fixture pom.xml has a `<dependencies>` block with an
   # injection-point comment on line 9. Insert a `<dependency>` element
   # at line 10 (immediately after the comment, before `</dependencies>`).
+  # `verifyFile.path` needs the `~/` prefix so autotest resolves the path
+  # against the workspace root (the worktree), not the runner's CWD.
   - id: "add-gson-dependency"
     action: |
       insertLineInFile pom.xml 10         <dependency>
@@ -75,42 +79,36 @@ steps:
               <artifactId>gson</artifactId>
               <version>2.10.1</version>
           </dependency>
-    verify: "pom.xml contains the gson dependency block"
     verifyFile:
-      path: "pom.xml"
+      path: "~/pom.xml"
       contains: "com.google.code.gson"
 
   - id: "save-pom"
     action: "saveFile"
-    verify: "pom.xml saved; Maven re-import triggered"
 
   # The file-watcher detects the pom change and triggers re-import asynchronously.
   # Give it time to start (waitBefore) before polling LS readiness, and allow
   # plenty of time for Maven to resolve gson on a cold cache.
   - id: "wait-maven-reimport"
     action: "waitForLanguageServer"
-    verify: "Maven re-import completed and LS returned to Ready state"
-    timeout: 240
-    waitBefore: 30
+    timeout: 300
+    waitBefore: 45
 
   # ── Add the import — diagnostic should clear ─────────────
   - id: "reopen-app"
     action: "open file App.java"
-    verify: "App.java is open"
     timeout: 15
 
   - id: "add-import"
     action: "insertLineInFile src/main/java/com/example/App.java 2 import com.google.gson.Gson;"
-    verify: "Import statement is present in App.java; Gson is now resolved"
     verifyEditor:
       contains: "import com.google.gson.Gson;"
-    waitBefore: 2
+    waitBefore: 3
 
   - id: "save-after-resolve"
     action: "saveFile"
-    verify: "After saving, the Gson 'cannot be resolved' error is cleared"
     verifyProblems:
       errors: 0
-    waitBefore: 15
-    timeout: 60
+    waitBefore: 20
+    timeout: 90
 

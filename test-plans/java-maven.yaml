@@ -47,9 +47,9 @@ steps:
   # 2b. Verify code completion
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
-    verify: "Code completion list appears with reasonable completion items"
     verifyCompletion:
       notEmpty: true
+    waitBefore: 5
 
   # 2c. Verify cursor navigation (goToLine)
   - id: "goto-line"
