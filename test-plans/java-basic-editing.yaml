@@ -78,9 +78,12 @@ steps:
     timeout: 15
 
   # ── Step 5: Save all + verify 0 errors ──────────────────────
+  # Drop verify: text — apply-code-action above creates a stub with a
+  # TODO marker which the LLM consistently misreads as a "compilation
+  # error", causing downgrades on otherwise-passing steps. The
+  # deterministic verifyProblems.errors:0 is the ground truth.
   - id: "save-all-step5"
     action: "run command File: Save All"
-    verify: "All files saved, no compilation errors"
     verifyProblems:
       errors: 0
     timeout: 60
