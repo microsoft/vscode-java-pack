@@ -84,7 +84,7 @@ steps:
     timeout: 30
 
   - id: "close-help-center"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 2. Tips for Beginners (java.gettingStarted)
@@ -109,7 +109,7 @@ steps:
     timeout: 30
 
   - id: "close-beginner-tips"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 3. Install New JDK (java.installJdk)
@@ -133,7 +133,7 @@ steps:
     timeout: 30
 
   - id: "close-install-jdk"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 4. Configure Java Runtime (java.runtime)
@@ -159,7 +159,7 @@ steps:
     timeout: 30
 
   - id: "close-java-runtime"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 5. Project Settings (java.projectSettings)
@@ -186,7 +186,7 @@ steps:
     timeout: 30
 
   - id: "close-project-settings"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 6. Configure Classpath (java.classpathConfiguration)
@@ -210,7 +210,7 @@ steps:
     timeout: 30
 
   - id: "close-classpath-config"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 7. Formatter Settings (java.formatterSettings)
@@ -238,7 +238,7 @@ steps:
       contains: "CodeFormatterProfile"
 
   - id: "close-profile-file-before-formatter"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   - id: "open-formatter-settings"
     action: "run command Java: Open Java Formatter Settings with Preview"
@@ -260,7 +260,7 @@ steps:
     timeout: 45
 
   - id: "close-formatter-settings"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 8. Overview (java.overview)
@@ -283,4 +283,4 @@ steps:
     timeout: 30
 
   - id: "close-overview"
-    action: "run command Workbench: Close All Editors"
+    action: "run command View: Close All Editors"
