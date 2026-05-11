@@ -1,6 +1,9 @@
 name: E2E AutoTest
 
 on:
+  pull_request:
+    branches:
+      - main
   schedule:
     # Every weekday (Mon–Fri) at 13:00 Shanghai time (05:00 UTC)
     - cron: '0 5 * * 1-5'
@@ -22,10 +25,42 @@ on:
         default: true
         type: boolean
 
+permissions:
+  contents: read
+
 jobs:
-  # ── Job 1: Discover test plans ──────────────────────────
+  # ── Job 1a: Build vscode-java-pack VSIX from the PR branch ───────
+  build-pack:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Package PR VSIX
+        run: npx @vscode/vsce@latest package -o vscode-java-pack-pr.vsix
+
+      - name: Upload PR VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-vsix
+          path: vscode-java-pack-pr.vsix
+          retention-days: 1
+
+  # ── Job 1b: Discover test plans ──────────────────────────
   discover:
-    if: ${{ inputs.test_plan == '' }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.scan.outputs.matrix }}
@@ -33,17 +68,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Scan test plans
+      - name: Resolve test plan matrix
         id: scan
+        shell: bash
         run: |
-          plans=$(ls test-plans/*.yaml | xargs -I{} basename {} .yaml | grep -v java-fresh-import | jq -R . | jq -sc .)
-          echo "matrix=$plans" >> "$GITHUB_OUTPUT"
-          echo "Found plans: $plans"
+          requested="${{ inputs.test_plan }}"
+          if [ -n "$requested" ]; then
+            # Strip optional .yaml suffix and emit a single-entry matrix
+            plan="${requested%.yaml}"
+            matrix=$(printf '%s' "$plan" | jq -R . | jq -sc .)
+          else
+            matrix=$(ls test-plans/*.yaml | xargs -I{} basename {} .yaml | grep -v java-fresh-import | jq -R . | jq -sc .)
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "Found plans: $matrix"
 
   # ── Job 2: Run each test plan in parallel ───────────────
   e2e-test:
-    if: ${{ inputs.test_plan == '' }}
-    needs: discover
+    needs: [discover, build-pack]
+    # build-pack is skipped on schedule/workflow_dispatch — only require it on PRs
+    if: ${{ always() && needs.discover.result == 'success' && (github.event_name != 'pull_request' || needs.build-pack.result == 'success') }}
     runs-on: windows-latest
     timeout-minutes: 30
     strategy:
@@ -88,8 +132,15 @@ jobs:
       - name: Install autotest CLI
         run: npm install -g @vscjava/vscode-autotest
 
-      - name: Download VSIX files
-        if: ${{ inputs.vsix_urls != '' }}
+      - name: Download PR VSIX (vscode-java-pack from branch)
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-vsix
+          path: vsix
+
+      - name: Download VSIX files (manual trigger)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.vsix_urls != '' }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path vsix -Force | Out-Null
@@ -148,7 +199,16 @@ jobs:
             $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
             if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
-          if ("${{ inputs.pre_release }}" -ne "false") { $autotestArgs += "--pre-release" }
+
+          # PRs always test the branch-built VSIX against stable marketplace deps (no LLM, no pre-release).
+          # Scheduled & manual runs default to --pre-release unless explicitly disabled.
+          $isPR = "${{ github.event_name }}" -eq "pull_request"
+          if ($isPR) {
+            $autotestArgs += "--no-llm"
+          } elseif ("${{ inputs.pre_release }}" -ne "false") {
+            $autotestArgs += "--pre-release"
+          }
+
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
           & autotest @autotestArgs
 
@@ -160,124 +220,9 @@ jobs:
           path: test-results/
           retention-days: 30
 
-  # ── Job 2b: Run a single test plan (when specified) ─────
-  e2e-single:
-    if: ${{ inputs.test_plan != '' }}
-    runs-on: windows-latest
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Clone vscode-java
-        run: git clone --depth 1 https://github.com/redhat-developer/vscode-java.git ../vscode-java
-
-      - name: Clone eclipse.jdt.ls
-        run: git clone --depth 1 https://github.com/eclipse-jdtls/eclipse.jdt.ls.git ../eclipse.jdt.ls
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup Java 25
-        if: contains(inputs.test_plan, 'java25')
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 25-ea
-
-      - name: Create JDK 25 path
-        if: contains(inputs.test_plan, 'java25')
-        shell: pwsh
-        run: |
-          New-Item -ItemType Junction -Path "C:\Program Files\Java\jdk-25" -Target $env:JAVA_HOME
-
-      - name: Setup Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Install autotest CLI
-        run: npm install -g @vscjava/vscode-autotest
-
-      - name: Download VSIX files
-        if: ${{ inputs.vsix_urls != '' }}
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Path vsix -Force | Out-Null
-          $urls = "${{ inputs.vsix_urls }}" -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
-
-          # Map runner OS/arch to vscode-java platform identifiers
-          $platformMap = @{ "Windows" = "win32"; "Linux" = "linux"; "macOS" = "darwin" }
-          $archMap = @{ "X64" = "x64"; "ARM64" = "arm64" }
-          $platform = $platformMap["${{ runner.os }}"]
-          $arch = $archMap["${{ runner.arch }}"]
-          $platformId = "$platform-$arch"
-          Write-Host "Runner platform: $platformId (${{ runner.os }}/${{ runner.arch }})"
-
-          $resolvedUrls = @()
-          foreach ($url in $urls) {
-            if ($url -match '^https://github\.com/([^/]+)/([^/]+)/releases/tag/(.+)$') {
-              $owner = $Matches[1]; $repo = $Matches[2]; $tag = $Matches[3]
-              Write-Host "Resolving GitHub release: $owner/$repo@$tag for platform $platformId"
-              $apiUrl = "https://api.github.com/repos/$owner/$repo/releases/tags/$tag"
-              $release = Invoke-RestMethod -Uri $apiUrl -Headers @{ Accept = "application/vnd.github.v3+json" } -UseBasicParsing
-              $platformAsset = $release.assets | Where-Object { $_.name -like "*-$platformId-*" -and $_.name -like "*.vsix" } | Select-Object -First 1
-              if ($platformAsset) {
-                Write-Host "  Found platform-specific VSIX: $($platformAsset.name)"
-                $resolvedUrls += $platformAsset.browser_download_url
-              } else {
-                $universalAsset = $release.assets | Where-Object { $_.name -notmatch '-(darwin|linux|win32)-' -and $_.name -like "*.vsix" } | Select-Object -First 1
-                if ($universalAsset) {
-                  Write-Host "  No platform-specific VSIX found, using universal: $($universalAsset.name)"
-                  $resolvedUrls += $universalAsset.browser_download_url
-                } else {
-                  Write-Host "::warning::No matching VSIX found in release $owner/$repo@$tag for platform $platformId"
-                }
-              }
-            } else {
-              $resolvedUrls += $url
-            }
-          }
-
-          foreach ($url in $resolvedUrls) {
-            $fileName = [System.IO.Path]::GetFileName(($url -split '\?')[0])
-            Write-Host "Downloading: $url → vsix/$fileName"
-            Invoke-WebRequest -Uri $url -OutFile "vsix/$fileName" -UseBasicParsing
-          }
-          Write-Host "Downloaded VSIX files:"
-          Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { Write-Host "  $($_.Name) ($([math]::Round($_.Length/1MB, 1)) MB)" }
-
-      - name: Run ${{ inputs.test_plan }}
-        shell: pwsh
-        env:
-          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: |
-          $autotestArgs = @("run", "test-plans/${{ inputs.test_plan }}")
-          if (Test-Path vsix) {
-            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
-            if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
-          }
-          if ("${{ inputs.pre_release }}" -ne "false") { $autotestArgs += "--pre-release" }
-          Write-Host "Running: autotest $($autotestArgs -join ' ')"
-          & autotest @autotestArgs
-
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-test-results
-          path: test-results/
-          retention-days: 30
-
   # ── Job 3: Aggregate analysis ───────────────────────────
   analyze:
-    if: ${{ always() && inputs.test_plan == '' }}
+    if: ${{ always() && needs.e2e-test.result != 'skipped' && github.event_name != 'pull_request' && inputs.test_plan == '' }}
     needs: e2e-test
     runs-on: ubuntu-latest
 
