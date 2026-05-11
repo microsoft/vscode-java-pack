@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { VSCodeDataGrid, VSCodeDataGridRow, VSCodeDataGridCell } from "@vscode/webview-ui-toolkit/react";
-import React from 'react';
+import "@vscode-elements/elements/dist/vscode-table/index.js";
+import "@vscode-elements/elements/dist/vscode-table-row/index.js";
+import "@vscode-elements/elements/dist/vscode-table-cell/index.js";
+import "@vscode-elements/elements/dist/vscode-table-body/index.js";
 const isMac: boolean = navigator.platform.toLowerCase().indexOf("darwin") === 0;
 
 export default function CodeEditingPanel() {
@@ -33,48 +34,54 @@ export default function CodeEditingPanel() {
         <p>
           Code Navigation makes it easy to understand existing codebase. Here to mention a few features that can help you navigate your code repositories.
         </p>
-        <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-          <VSCodeDataGridRow key={1}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Go to Definition</VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2"><kbd>F12</kbd><br />You can also hover on the symbol to preview its declaration and javadoc. To jump to the definition, hold the {controlKey} key, and click on the symbol.</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow key={2}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Go to Implementation</VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2">{f12Key}<br />For an interface, this shows all the implementors of that interface and for abstract methods, this shows all concrete implementations of that method.</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow key={3}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Go to Type Definition</VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2">This one allows you to go to the definition of the type of the symbol. For example, you have a class member <code>someString</code>, "Go to Definition" will take you to the definition of <code>someString</code> while "Go to <strong>Type</strong> Definition" will take you to the definition of <code>String</code>.</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow key={4}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Find All References</VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2">{shiftAltF12}<br />This allows you to quickly analyze the impact of your edit or the popularity of your specific method or property throughout your repository.</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-        </VSCodeDataGrid>
+        <vscode-table>
+          <vscode-table-body slot="body">
+          <vscode-table-row key={1}>
+            <vscode-table-cell className="font-weight-bold" >Go to Definition</vscode-table-cell>
+            <vscode-table-cell ><kbd>F12</kbd><br />You can also hover on the symbol to preview its declaration and javadoc. To jump to the definition, hold the {controlKey} key, and click on the symbol.</vscode-table-cell>
+          </vscode-table-row>
+          <vscode-table-row key={2}>
+            <vscode-table-cell className="font-weight-bold" >Go to Implementation</vscode-table-cell>
+            <vscode-table-cell >{f12Key}<br />For an interface, this shows all the implementors of that interface and for abstract methods, this shows all concrete implementations of that method.</vscode-table-cell>
+          </vscode-table-row>
+          <vscode-table-row key={3}>
+            <vscode-table-cell className="font-weight-bold" >Go to Type Definition</vscode-table-cell>
+            <vscode-table-cell >This one allows you to go to the definition of the type of the symbol. For example, you have a class member <code>someString</code>, "Go to Definition" will take you to the definition of <code>someString</code> while "Go to <strong>Type</strong> Definition" will take you to the definition of <code>String</code>.</vscode-table-cell>
+          </vscode-table-row>
+          <vscode-table-row key={4}>
+            <vscode-table-cell className="font-weight-bold" >Find All References</vscode-table-cell>
+            <vscode-table-cell >{shiftAltF12}<br />This allows you to quickly analyze the impact of your edit or the popularity of your specific method or property throughout your repository.</vscode-table-cell>
+          </vscode-table-row>
+          </vscode-table-body>
+        </vscode-table>
       </div>
       <div>
         <p>
           The commands above will possibly take you to another file. But you can choose to stay using the peeking features below:
         </p>
-        <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-          <VSCodeDataGridRow key={1}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Peek Definition</VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2">{altF12Key}</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow key={2}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Peek References</VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2">{shiftF12}</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-        </VSCodeDataGrid>
+        <vscode-table>
+          <vscode-table-body slot="body">
+          <vscode-table-row key={1}>
+            <vscode-table-cell className="font-weight-bold" >Peek Definition</vscode-table-cell>
+            <vscode-table-cell >{altF12Key}</vscode-table-cell>
+          </vscode-table-row>
+          <vscode-table-row key={2}>
+            <vscode-table-cell className="font-weight-bold" >Peek References</vscode-table-cell>
+            <vscode-table-cell >{shiftF12}</vscode-table-cell>
+          </vscode-table-row>
+          </vscode-table-body>
+        </vscode-table>
       </div>
       <div>
         <p> Last but not least, you can jump between the matching brackets back and forth: </p>
-        <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-          <VSCodeDataGridRow key={1}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1">Go to Bracket</VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2">{ctrlShiftSlash}</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-        </VSCodeDataGrid>
+        <vscode-table>
+          <vscode-table-body slot="body">
+          <vscode-table-row key={1}>
+            <vscode-table-cell className="font-weight-bold" >Go to Bracket</vscode-table-cell>
+            <vscode-table-cell >{ctrlShiftSlash}</vscode-table-cell>
+          </vscode-table-row>
+          </vscode-table-body>
+        </vscode-table>
       </div>
       <h2 className="font-weight-light">IntelliSense</h2>
       <p>

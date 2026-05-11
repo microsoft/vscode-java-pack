@@ -9,6 +9,7 @@ module.exports = function (env, argv) {
     mode: 'none',
     entry: {
       overview: './src/overview/assets/index.ts',
+      'java-runtime': './src/java-runtime/assets/index.ts',
       'beginner-tips': './src/beginner-tips/assets/index.tsx',
       'ext-guide': './src/ext-guide/assets/index.ts',
       welcome: './src/welcome/assets/index.ts',

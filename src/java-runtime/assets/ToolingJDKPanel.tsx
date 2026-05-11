@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
-import * as React from "react";
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+
+import { useState } from "react";
 import { JavaRuntimeEntry } from "../types";
 import { onWillBrowseForJDK, onWillRunCommandFromWebview } from './vscode.api';
 
@@ -14,38 +15,32 @@ interface Props {
   javaHomeError?: any;
 }
 
-interface State {
-  isDirty?: boolean;
-}
+export function ToolingJDKPanel({ javaHomeError }: Props) {
+  const [isDirty, setIsDirty] = useState(false);
 
-export class ToolingJDKPanel extends React.Component<Props, State> {
-  render = () => {
-    const { javaHomeError } = this.props;
-    
-    return (
-      <div className="container">
-        <h1>Configure Runtime for Language Server</h1>
-        <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK {REQUIRED_JDK_VERSION}+ to launch itself.</div>
-
-        {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
-
-        <div className="jdk-action">
-          <VSCodeButton appearance="secondary" onClick={this.onClickBrowseJDKButton}><a href="#">Locate an <b>Existing JDK</b></a></VSCodeButton>
-          {this?.state?.isDirty && <VSCodeButton><a href="command:workbench.action.reloadWindow">Reload</a></VSCodeButton> }
-        </div>
-        <div className="jdk-action">
-          <VSCodeButton appearance="secondary" onClick={this.onClickInstallButton}><a href="#">Install a <b>New JDK</b></a></VSCodeButton>
-        </div>
-      </div>
-    );
-  }
-
-  onClickBrowseJDKButton = () => {
+  const onClickBrowseJDKButton = () => {
     onWillBrowseForJDK();
-    this.setState({ isDirty: true });
-  }
+    setIsDirty(true);
+  };
 
-  onClickInstallButton = () => {
+  const onClickInstallButton = () => {
     onWillRunCommandFromWebview("java.runtime", "download", "java.installJdk");
-  }
+  };
+
+  return (
+    <div className="container">
+      <h1>Configure Runtime for Language Server</h1>
+      <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK {REQUIRED_JDK_VERSION}+ to launch itself.</div>
+
+      {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
+
+      <div className="jdk-action">
+        <vscode-button secondary onClick={onClickBrowseJDKButton}><a href="#">Locate an <b>Existing JDK</b></a></vscode-button>
+        {isDirty && <vscode-button><a href="command:workbench.action.reloadWindow">Reload</a></vscode-button>}
+      </div>
+      <div className="jdk-action">
+        <vscode-button secondary onClick={onClickInstallButton}><a href="#">Install a <b>New JDK</b></a></vscode-button>
+      </div>
+    </div>
+  );
 }

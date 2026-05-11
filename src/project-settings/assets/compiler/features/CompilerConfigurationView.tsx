@@ -1,8 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeCheckbox, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeDropdown, VSCodeLink, VSCodeOption } from "@vscode/webview-ui-toolkit/react";
-import React, { Dispatch, useEffect } from "react";
+import "@vscode-elements/elements/dist/vscode-divider/index.js";
+import "@vscode-elements/elements/dist/vscode-single-select/index.js";
+import "@vscode-elements/elements/dist/vscode-option/index.js";
+import "@vscode-elements/elements/dist/vscode-checkbox/index.js";
+import "@vscode-elements/elements/dist/vscode-table/index.js";
+import "@vscode-elements/elements/dist/vscode-table-body/index.js";
+import "@vscode-elements/elements/dist/vscode-table-row/index.js";
+import "@vscode-elements/elements/dist/vscode-table-cell/index.js";
+
+
+import { Dispatch, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCompilerSettings, updateAvailableComplianceLevels } from "./compilerConfigurationViewSlice";
 import { CompilerRequest } from "../../vscode/utils";
@@ -68,7 +77,7 @@ const CompilerConfigurationView = (): JSX.Element | null => {
     return availableComplianceLevels.map((level) => {
 
       return (
-        <VSCodeOption
+        <vscode-option
           className="setting-section-option"
           key={`${label}-${level}`}
           value={level}
@@ -76,7 +85,7 @@ const CompilerConfigurationView = (): JSX.Element | null => {
           onClick={() => onClick(level)}
         >
           <span>{level}</span>
-        </VSCodeOption>
+        </vscode-option>
       );
     });
   };
@@ -139,41 +148,43 @@ const CompilerConfigurationView = (): JSX.Element | null => {
     <div className="root">
       <div className="setting-section">
         <div>
-          <VSCodeCheckbox checked={useRelease} onClick={onClickUseRelease}>Use '--release' option for cross-compilation (Java 9 and later)</VSCodeCheckbox>
+          <vscode-checkbox checked={useRelease} onClick={onClickUseRelease}>Use '--release' option for cross-compilation (Java 9 and later)</vscode-checkbox>
         </div>
         <div>
-          <VSCodeDataGrid gridTemplateColumns="40% 60%">
-            <VSCodeDataGridRow className={useRelease ? "" : "invisible"}>
-              <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
+          <vscode-table >
+            <vscode-table-body slot="body">
+            <vscode-table-row className={useRelease ? "" : "invisible"}>
+              <vscode-table-cell className="flex-center pl-0 pr-0" >
                 <span>Bytecode version:</span>
-              </VSCodeDataGridCell>
-              <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="2">
-                <VSCodeDropdown value={complianceLevel}>
+              </vscode-table-cell>
+              <vscode-table-cell className="flex-center pl-0 pr-0" >
+                <vscode-single-select value={complianceLevel}>
                   {jdkLevels(complianceLevel, "compliance", onClickComplianceLevel)}
-                </VSCodeDropdown>
-              </VSCodeDataGridCell>
-            </VSCodeDataGridRow>
-            <VSCodeDataGridRow className={useRelease ? "invisible" : ""}>
-              <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
+                </vscode-single-select>
+              </vscode-table-cell>
+            </vscode-table-row>
+            <vscode-table-row className={useRelease ? "invisible" : ""}>
+              <vscode-table-cell className="flex-center pl-0 pr-0" >
                 <span>Source compatibility:</span>
-              </VSCodeDataGridCell>
-              <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="2">
-                <VSCodeDropdown value={sourceLevel}>
+              </vscode-table-cell>
+              <vscode-table-cell className="flex-center pl-0 pr-0" >
+                <vscode-single-select value={sourceLevel}>
                   {jdkLevels(sourceLevel, "source", onClickSourceLevel)}
-                </VSCodeDropdown>
-              </VSCodeDataGridCell>
-            </VSCodeDataGridRow>
-            <VSCodeDataGridRow className={useRelease ? "invisible" : ""}>
-              <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="1">
+                </vscode-single-select>
+              </vscode-table-cell>
+            </vscode-table-row>
+            <vscode-table-row className={useRelease ? "invisible" : ""}>
+              <vscode-table-cell className="flex-center pl-0 pr-0" >
                 <span>Target compatibility:</span>
-              </VSCodeDataGridCell>
-              <VSCodeDataGridCell className="flex-center pl-0 pr-0" gridColumn="2">
-                <VSCodeDropdown value={targetLevel}>
+              </vscode-table-cell>
+              <vscode-table-cell className="flex-center pl-0 pr-0" >
+                <vscode-single-select value={targetLevel}>
                   {jdkLevels(targetLevel, "target", onClickTargetLevel)}
-                </VSCodeDropdown>
-              </VSCodeDataGridCell>
-            </VSCodeDataGridRow>
-          </VSCodeDataGrid>
+                </vscode-single-select>
+              </vscode-table-cell>
+            </vscode-table-row>
+            </vscode-table-body>
+          </vscode-table>
         </div>
         <div className={`mt-2 mb-2 ${showSourceTargetWarning ? "" : "invisible"}`}>
           <span className="setting-section-warning">
@@ -182,19 +193,19 @@ const CompilerConfigurationView = (): JSX.Element | null => {
         </div>
         <div className={`mt-2 mb-2 ${showJdkLevelWarning ? "" : "invisible"}`}>
           <span className="setting-section-warning">
-            Please make sure to have a compatible JDK configured (currently {currentJdkComplianceLevel}). You can change the JDK under the <VSCodeLink href="" onClick={() => onClickChangeJdk()}>JDK Runtime</VSCodeLink> tab.
+            Please make sure to have a compatible JDK configured (currently {currentJdkComplianceLevel}). You can change the JDK under the <a href="" onClick={() => onClickChangeJdk()}>JDK Runtime</a> tab.
           </span>
         </div>
         <div className={showPreviewFlag ? "" : "invisible"}>
-          <VSCodeCheckbox checked={enablePreview} onClick={onClickEnablePreview}>Enable preview features</VSCodeCheckbox>
+          <vscode-checkbox checked={enablePreview} onClick={onClickEnablePreview}>Enable preview features</vscode-checkbox>
         </div>
-        <VSCodeDivider className="mt-3" />
+        <vscode-divider className="mt-3" />
         <h4 className="mt-3 mb-3">Class File Generation</h4>
         <div>
-          <VSCodeCheckbox checked={generateDebugInfo} onClick={onClickGenerateDebugInfo}>Generate debugging information</VSCodeCheckbox>
+          <vscode-checkbox checked={generateDebugInfo} onClick={onClickGenerateDebugInfo}>Generate debugging information</vscode-checkbox>
         </div>
         <div>
-          <VSCodeCheckbox checked={storeMethodParamNames} onClick={onClickStoreMethodParamNames}>Store information about method parameters</VSCodeCheckbox>
+          <vscode-checkbox checked={storeMethodParamNames} onClick={onClickStoreMethodParamNames}>Store information about method parameters</vscode-checkbox>
         </div>
       </div>
       <Hint />

@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
-import React, { Dispatch } from "react";
+import "@vscode-elements/elements/dist/vscode-textfield/index.js";
+
+
+import { Dispatch } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateActiveProfiles } from "../mavenConfigurationViewSlice";
 
@@ -26,10 +28,10 @@ const Profile = (): JSX.Element => {
         <span>(comma separated)</span>
       </div>
 
-      <VSCodeTextField className="setting-section-text"
+      <vscode-textfield className="setting-section-text"
         value={activeProfiles ?? ""}
         onInput={handleInput}>
-      </VSCodeTextField>
+      </vscode-textfield>
     </div>
   );
 };

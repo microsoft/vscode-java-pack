@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+import "@vscode-elements/elements/dist/vscode-divider/index.js";
+
 import { Dispatch } from "@reduxjs/toolkit";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeReferencedLibrary, addLibraries } from "../classpathConfigurationViewSlice";
 import { ClasspathRequest } from "../../../vscode/utils";
-import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider } from "@vscode/webview-ui-toolkit/react";
+
 import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
 
 const Libraries = (): JSX.Element => {
@@ -83,25 +86,23 @@ const Libraries = (): JSX.Element => {
   let librariesSections: JSX.Element | JSX.Element[];
   if (libraries.length === 0) {
     librariesSections = (
-      <VSCodeDataGridRow className="setting-section-grid-row">
+      <div className="source-row">
         <span><em>No libraries are configured.</em></span>
-      </VSCodeDataGridRow>
+      </div>
     );
   } else {
     librariesSections = libraries.map((library, index) => (
-      <VSCodeDataGridRow className="setting-section-grid-row" id={`library-${index}`} onMouseEnter={() => setHoveredRow(`library-${index}`)} onMouseLeave={() => setHoveredRow(null)}  key={library.path}>
-        <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-readonly" gridColumn="1">
-          <div title={library.path} className="setting-section-grid-cell">
-            <span className={`codicon ${library.kind === 2 ? "codicon-project" : "codicon-library"} mr-1`}></span>
-            <span>{resolveLibPath(library)}</span>
-          </div>
-          {hoveredRow === `library-${index}` && (
-            <VSCodeButton appearance='icon' onClick={() => handleRemove(index)}>
-              <span className="codicon codicon-close"></span>
-            </VSCodeButton>
-          )}
-        </VSCodeDataGridCell>
-      </VSCodeDataGridRow>
+      <div className="source-row" id={`library-${index}`} onMouseEnter={() => setHoveredRow(`library-${index}`)} onMouseLeave={() => setHoveredRow(null)}  key={library.path}>
+        <div title={library.path} className="setting-section-grid-cell" style={{flex: 1}}>
+          <span className={`codicon ${library.kind === 2 ? "codicon-project" : "codicon-library"} mr-1`}></span>
+          <span>{resolveLibPath(library)}</span>
+        </div>
+        <div className={`source-row-actions ${hoveredRow === `library-${index}` ? "" : "hidden"}`}>
+          <vscode-button class="ghost-button" icon-only onClick={() => handleRemove(index)} title="Remove">
+            <span className="codicon codicon-close"></span>
+          </vscode-button>
+        </div>
+      </div>
     ));
   }
 
@@ -109,16 +110,14 @@ const Libraries = (): JSX.Element => {
     <div className="setting-section">
       <div>
         <div id="list-actions" className="flex-center setting-list-actions">
-          <VSCodeButton className="pl-1 pr-1 pt-1 pb-1" slot="end" appearance="icon" onClick={() => handleAdd()}>
+          <vscode-button class="ghost-button" onClick={() => handleAdd()}>
             <span className="codicon codicon-add mr-1"></span>
             Add Library...
-          </VSCodeButton>
+          </vscode-button>
         </div>
-        <VSCodeDivider className="mb-0"/>
+        <vscode-divider className="mb-0"/>
         <div className="setting-overflow-area">
-          <VSCodeDataGrid>
-            {librariesSections}
-          </VSCodeDataGrid>
+          {librariesSections}
         </div>
       </div>
     </div>

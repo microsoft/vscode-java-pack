@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import checkIcon from "@iconify-icons/codicon/check";
-import chevronDownIcon from "@iconify-icons/codicon/chevron-down";
-import { Icon } from "@iconify/react";
-import React from "react";
-import { Dropdown, Form } from "react-bootstrap";
+import "@vscode-elements/elements/dist/vscode-single-select/index.js";
+import "@vscode-elements/elements/dist/vscode-option/index.js";
+
 import { useSelector } from "react-redux";
 import { VSCodeSettings } from "../../../../FormatterConstants";
 import { Category, ExampleKind, JavaFormatterSetting, ValueKind } from "../../../../types";
@@ -29,8 +27,8 @@ const Setting = (): JSX.Element => {
     onWillChangeSetting(e.target.id, e.target.value);
   };
 
-  const handleSelect = (setting: JavaFormatterSetting, entry: string) => {
-    onWillChangeSetting(setting.id, entry);
+  const handleSelect = (setting: JavaFormatterSetting, value: string) => {
+    onWillChangeSetting(setting.id, value);
   };
 
   const handleClick = (exampleKind: ExampleKind) => {
@@ -41,55 +39,50 @@ const Setting = (): JSX.Element => {
     if (!setting.name || !setting.id) {
       return null;
     }
-    const candidates = [];
     switch (setting.valueKind as ValueKind) {
       case ValueKind.Boolean:
         const willBeOverriden = detectIndentation && setting.id === VSCodeSettings.DETECT_INDENTATION;
         return (
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
-            <Form.Check type="checkbox" className="pl-0" id={`${setting.id}`} >
-              <Form.Check.Input type="checkbox" checked={setting.value === "true"} onChange={handleChangeCheckbox} disabled={readOnly} />
-              <Form.Check.Label className="setting-section-description">
-                <Icon className="codicon" icon={checkIcon} />
-                <div className="setting-section-description-checkbox">{setting.name}.</div>
-              </Form.Check.Label>
-              <br></br>
+            <div className="pl-0">
+              <label className="setting-section-description">
+                <input type="checkbox" id={`${setting.id}`} checked={setting.value === "true"} onChange={handleChangeCheckbox} disabled={readOnly} />
+                <i className="codicon codicon-check"></i>
+                <span className="setting-section-description-checkbox">{setting.name}.</span>
+              </label>
+              <br />
               <span className="warning">
                 {willBeOverriden ? "When enabled, the indentation settings will be overriden based on the file contents." : ""}
               </span>
-            </Form.Check>
+            </div>
           </div>
         );
       case ValueKind.Enum:
         if (!setting.candidates) {
           return null;
         }
-        for (const candidate of setting.candidates) {
-          candidates.push(
-            <Dropdown.Item key={`${setting.id}.${candidate}`} className="dropdown-item py-0 pl-1" onSelect={() => handleSelect(setting, candidate)}>
-              {candidate}
-            </Dropdown.Item>
-          );
-        }
         return (
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
             <span className="setting-section-description">{setting.name}.</span>
-            <Dropdown className="mt-1">
-              <Dropdown.Toggle className="dropdown-button flex-vertical-center text-left" disabled={readOnly}>
-                <span>{setting.value}</span>
-                <Icon className="codicon" icon={chevronDownIcon} />
-              </Dropdown.Toggle>
-              <Dropdown.Menu className="dropdown-menu mt-0 p-0">
-                {candidates}
-              </Dropdown.Menu>
-            </Dropdown>
-          </div >
+            <vscode-single-select
+              className="mt-1"
+              value={setting.value}
+              disabled={readOnly}
+              onChange={(e: any) => handleSelect(setting, e.target.value)}
+            >
+              {setting.candidates.map(candidate => (
+                <vscode-option key={`${setting.id}.${candidate}`} value={candidate} selected={candidate === setting.value}>
+                  {candidate}
+                </vscode-option>
+              ))}
+            </vscode-single-select>
+          </div>
         );
       case ValueKind.Number:
         return (
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
-            <Form.Label className="setting-section-description my-0">{setting.name}.</Form.Label>
-            <Form.Control className="pl-1 mt-1" type="number" id={setting.id} value={setting.value} onChange={handleChangeInput} disabled={readOnly}></Form.Control>
+            <label className="setting-section-description my-0">{setting.name}.</label>
+            <input className="form-control pl-1 mt-1" type="number" id={setting.id} value={setting.value} onChange={handleChangeInput} disabled={readOnly} />
           </div>
         );
       default:

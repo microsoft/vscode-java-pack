@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { VSCodeDataGrid, VSCodeDataGridRow, VSCodeDataGridCell } from "@vscode/webview-ui-toolkit/react";
-import React from 'react';
+import "@vscode-elements/elements/dist/vscode-table/index.js";
+import "@vscode-elements/elements/dist/vscode-table-row/index.js";
+import "@vscode-elements/elements/dist/vscode-table-cell/index.js";
+import "@vscode-elements/elements/dist/vscode-table-body/index.js";
 const REQUIRED_JDK_VERSION = 17;
 
 export default function FaqPanel() {
@@ -29,20 +30,22 @@ export default function FaqPanel() {
         <p>
           VS Code Java is new, and we are here to help.
         </p>
-        <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 3fr">
-          <VSCodeDataGridRow key={1}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1"><a href="https://gitter.im/redhat-developer/vscode-java">Ask Questions</a></VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2"><a href="https://gitter.im/redhat-developer/vscode-java">vscode-java</a> Gitter channel is recommended to ask for help</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow key={2}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1"><a href="https://github.com/microsoft/vscode-java-pack/issues">Open Issues</a></VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2"><a href="https://github.com/microsoft/vscode-java-pack/issues">vscode-java-pack</a> GitHub repo is recommended for opening bugs</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          <VSCodeDataGridRow key={3}>
-            <VSCodeDataGridCell className="font-weight-bold" gridColumn="1"><a href="https://twitter.com/search?q=vscodejava">Other Feedback</a></VSCodeDataGridCell>
-            <VSCodeDataGridCell gridColumn="2"><a href="https://twitter.com/VSCodeJava">@VSCodeJava</a> is the handle to mention on twitter</VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-        </VSCodeDataGrid>
+        <vscode-table>
+          <vscode-table-body slot="body">
+          <vscode-table-row key={1}>
+            <vscode-table-cell className="font-weight-bold" ><a href="https://gitter.im/redhat-developer/vscode-java">Ask Questions</a></vscode-table-cell>
+            <vscode-table-cell ><a href="https://gitter.im/redhat-developer/vscode-java">vscode-java</a> Gitter channel is recommended to ask for help</vscode-table-cell>
+          </vscode-table-row>
+          <vscode-table-row key={2}>
+            <vscode-table-cell className="font-weight-bold" ><a href="https://github.com/microsoft/vscode-java-pack/issues">Open Issues</a></vscode-table-cell>
+            <vscode-table-cell ><a href="https://github.com/microsoft/vscode-java-pack/issues">vscode-java-pack</a> GitHub repo is recommended for opening bugs</vscode-table-cell>
+          </vscode-table-row>
+          <vscode-table-row key={3}>
+            <vscode-table-cell className="font-weight-bold" ><a href="https://twitter.com/search?q=vscodejava">Other Feedback</a></vscode-table-cell>
+            <vscode-table-cell ><a href="https://twitter.com/VSCodeJava">@VSCodeJava</a> is the handle to mention on twitter</vscode-table-cell>
+          </vscode-table-row>
+          </vscode-table-body>
+        </vscode-table>
       </blockquote>
 
       <h2 className="font-weight-light">Why do I see the JDK errors?</h2>

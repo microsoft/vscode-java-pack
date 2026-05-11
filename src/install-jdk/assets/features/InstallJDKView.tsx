@@ -1,8 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeLink, VSCodeButton, VSCodePanelView, VSCodePanels, VSCodePanelTab } from "@vscode/webview-ui-toolkit/react";
-import React from 'react';
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+import "@vscode-elements/elements/dist/vscode-tabs/index.js";
+import "@vscode-elements/elements/dist/vscode-tab-header/index.js";
+import "@vscode-elements/elements/dist/vscode-tab-panel/index.js";
+
+
 import { WEBVIEW_ID } from '../../constants';
 import { encodeExternalLinkWithTelemetry } from '../../../utils/webview';
 import { onWillReloadWindow } from '../vscode.api';
@@ -17,21 +21,21 @@ export default function InstallJDKView() {
                 <h1 className="title">Install New JDK</h1>
             </header>
             <p className="intro">{/*reserved for introduction*/}</p>
-            <VSCodePanels activeid="tab-1">
-                <VSCodePanelTab id="tab-1">Adoptium's Temurin</VSCodePanelTab>
-                <VSCodePanelTab id="tab-2">Others</VSCodePanelTab>
-                <VSCodePanelView id="view-1">
+            <vscode-tabs selected-index={0} >
+                <vscode-tab-header slot="header" id="tab-1">Adoptium's Temurin</vscode-tab-header>
+                <vscode-tab-header slot="header" id="tab-2">Others</vscode-tab-header>
+                <vscode-tab-panel id="view-1">
                     <AdoptiumJDKPanel />
-                </VSCodePanelView>
-                <VSCodePanelView id="view-2">
+                </vscode-tab-panel>
+                <vscode-tab-panel id="view-2">
                     <OtherJDKsPanel />
-                </VSCodePanelView>
-            </VSCodePanels>
+                </vscode-tab-panel>
+            </vscode-tabs>
             <div className="footer">
                 <p>After you finish JDK installation, please reload Visual Studio Code to make it effective.</p>
                 <div>
-                    <VSCodeButton appearance='secondary' onClick={onWillReloadWindow}>Reload Window</VSCodeButton>
-                    <VSCodeLink className='troubleshoot-link' href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, "Having trouble?", helpLink)}>Having trouble?</VSCodeLink>
+                    <vscode-button secondary onClick={onWillReloadWindow}>Reload Window</vscode-button>
+                    <a className='troubleshoot-link' href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, "Having trouble?", helpLink)}>Having trouble?</a>
                 </div>
 
             </div>

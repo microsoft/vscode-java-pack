@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { useEffect } from "react";
+import "@vscode-elements/elements/dist/vscode-tabs/index.js";
+import "@vscode-elements/elements/dist/vscode-tab-header/index.js";
+import "@vscode-elements/elements/dist/vscode-tab-panel/index.js";
+
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import Output from "./components/Output";
@@ -9,7 +13,7 @@ import Sources from "./components/Sources";
 import Libraries from "./components/Libraries";
 import { listVmInstalls, updateActiveTab } from "./classpathConfigurationViewSlice";
 import JdkRuntime from "./components/JdkRuntime";
-import { VSCodePanelTab, VSCodePanelView, VSCodePanels } from "@vscode/webview-ui-toolkit/react";
+
 import { ProjectType } from "../../../../utils/webview";
 import UnmanagedFolderSources from "./components/UnmanagedFolderSources";
 import Hint from "./components/Hint";
@@ -20,6 +24,9 @@ const ClasspathConfigurationView = (): JSX.Element => {
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
   const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
   const dispatch: Dispatch<any> = useDispatch();
+
+  const tabIds = ["source", "jdk", "libraries"];
+  const selectedIndex = Math.max(0, tabIds.indexOf(activeTab));
 
   const onClickTab = (tabId: string) => {
     dispatch(updateActiveTab(tabId));
@@ -41,22 +48,22 @@ const ClasspathConfigurationView = (): JSX.Element => {
 
   return (
     <div className="root">
-      <VSCodePanels activeid={activeTab} className="setting-panels">
-        <VSCodePanelTab id="source" onClick={() => onClickTab("source")}>Sources</VSCodePanelTab>
-        <VSCodePanelTab id="jdk" onClick={() => onClickTab("jdk")}>JDK Runtime</VSCodePanelTab>
-        <VSCodePanelTab id="libraries" onClick={() => onClickTab("libraries")}>Libraries</VSCodePanelTab>
-        <VSCodePanelView className="setting-panels-view">
+      <vscode-tabs selected-index={selectedIndex} className="setting-panels">
+        <vscode-tab-header slot="header" onClick={() => onClickTab("source")}>Sources</vscode-tab-header>
+        <vscode-tab-header slot="header" onClick={() => onClickTab("jdk")}>JDK Runtime</vscode-tab-header>
+        <vscode-tab-header slot="header" onClick={() => onClickTab("libraries")}>Libraries</vscode-tab-header>
+        <vscode-tab-panel className="setting-panels-view">
           {[ProjectType.Gradle, ProjectType.Maven].includes(projectType) && (<Sources />)}
           {projectType !== ProjectType.Gradle && projectType !== ProjectType.Maven && (<UnmanagedFolderSources />)}
           {projectType === ProjectType.UnmanagedFolder && (<Output />)}
-        </VSCodePanelView>
-        <VSCodePanelView className="setting-panels-view">
+        </vscode-tab-panel>
+        <vscode-tab-panel className="setting-panels-view">
           <JdkRuntime />
-        </VSCodePanelView>
-        <VSCodePanelView className="setting-panels-view">
+        </vscode-tab-panel>
+        <vscode-tab-panel className="setting-panels-view">
           <Libraries />
-        </VSCodePanelView>
-      </VSCodePanels>
+        </vscode-tab-panel>
+      </vscode-tabs>
       <Hint />
     </div>
   );

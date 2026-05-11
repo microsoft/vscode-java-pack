@@ -1,24 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as React from "react";
-
 interface Props {
   projectType: "Maven" | "Gradle" | "Others" | undefined;
 }
 
-export class ProjectTypeHint extends React.Component<Props, {}> {
-
-  render = () => {
-    return (
-      <div className="hintPanel">
-        {this.hintContent()}
-      </div>
-    );
-  }
-
-  hintContent = () => {
-    const { projectType } = this.props;
+export function ProjectTypeHint({ projectType }: Props) {
+  const hintContent = () => {
     switch (projectType) {
       case "Maven":
         return (
@@ -46,7 +34,6 @@ export class ProjectTypeHint extends React.Component<Props, {}> {
             </div>
           </div>
         );
-
       case "Others":
         return (
           <div>
@@ -56,5 +43,11 @@ export class ProjectTypeHint extends React.Component<Props, {}> {
       default:
         return undefined;
     }
-  }
+  };
+
+  return (
+    <div className="hintPanel">
+      {hintContent()}
+    </div>
+  );
 }

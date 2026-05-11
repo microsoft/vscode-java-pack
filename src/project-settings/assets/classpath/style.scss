@@ -51,7 +51,7 @@
   }
 
   &[open][position='above'] #add-new-jdk {
-    margin: calc(var(--design-unit) * 1px) 0;
+    margin: calc(var(--design-unit, 4) * 1px) 0;
   }
  
   p {
@@ -66,7 +66,7 @@
       display: flex;
       align-items: flex-end;
       .codicon {
-        margin-right: calc(var(--design-unit) * 1px);
+        margin-right: calc(var(--design-unit, 4) * 1px);
       }
     }
   }
@@ -87,10 +87,11 @@
     align-items: center;
   }
   .setting-section-grid-cell-left {
-    padding-right: calc(var(--design-unit) * 4px);
+    padding-right: calc(var(--design-unit, 4) * 4px);
   }
   .setting-section-grid-cell-readonly {
     justify-content: space-between;
+    width: 100%;
   }
   .setting-section-grid-cell-editable {
     justify-content: end;
@@ -118,7 +119,15 @@
 }
 
 .setting-list-actions {
-  height: calc(var(--design-unit) * 8px);
+  height: calc(var(--design-unit, 4) * 8px);
+}
+
+// Ghost/icon button style (transparent background, like old appearance="icon")
+.ghost-button {
+  --vscode-button-background: transparent;
+  --vscode-button-foreground: var(--vscode-foreground);
+  --vscode-button-hoverBackground: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31));
+  --vscode-button-border: transparent;
 }
 
 .setting-overflow-area {
@@ -128,4 +137,94 @@
 
 .inactive {
   opacity: 0.67;
+}
+
+// Sources tab layout
+.source-list-header {
+  display: flex;
+  padding: 4px 8px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--vscode-settings-headerBorder, rgba(128,128,128,0.35));
+  .source-list-header-cell {
+    flex: 1;
+    font-size: 12.8px;
+  }
+}
+
+.source-row {
+  display: flex;
+  padding: 4px 8px;
+  align-items: center;
+  &:hover {
+    background: var(--vscode-list-hoverBackground);
+  }
+  .source-row-path {
+    flex: 1;
+    font-size: 12.8px;
+    word-break: break-all;
+  }
+  .source-row-output {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.8px;
+    .source-row-output-text {
+      word-break: break-all;
+    }
+    .source-row-actions {
+      display: flex;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.source-edit-row {
+  padding: 8px;
+  border: 1px solid var(--vscode-settings-headerBorder, rgba(128,128,128,0.35));
+  margin: 4px 0;
+  .source-edit-field {
+    margin-bottom: 8px;
+    label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--vscode-descriptionForeground);
+      font-size: 12px;
+    }
+    .source-edit-input-group {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      .source-edit-input {
+        flex: 1;
+      }
+    }
+  }
+  .source-edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+}
+
+// JDK Runtime tab layout
+.jdk-runtime-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.jdk-runtime-path {
+  margin-top: 8px;
+  color: var(--vscode-descriptionForeground);
+  word-break: break-all;
+  font-size: 12.8px;
+}
+
+.jdk-runtime-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
 }

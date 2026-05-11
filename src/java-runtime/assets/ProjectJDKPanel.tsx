@@ -1,9 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { DataGridRowTypes, GenerateHeaderOptions } from "@microsoft/fast-foundation";
-import { VSCodeDataGrid, VSCodeDataGridRow, VSCodeDataGridCell, VSCodeButton } from "@vscode/webview-ui-toolkit/react";
-import * as React from "react";
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+import "@vscode-elements/elements/dist/vscode-table/index.js";
+import "@vscode-elements/elements/dist/vscode-table-body/index.js";
+import "@vscode-elements/elements/dist/vscode-table-row/index.js";
+import "@vscode-elements/elements/dist/vscode-table-cell/index.js";
+import "@vscode-elements/elements/dist/vscode-table-header/index.js";
+import "@vscode-elements/elements/dist/vscode-table-header-cell/index.js";
+
+import { useState } from "react";
 import { encodeCommandUriWithTelemetry, ProjectType } from "../../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
 import { DefaultJDKSelector } from "./components/DefaultJDKSelector";
@@ -13,101 +19,81 @@ import { onWillListRuntimes, openBuildScript } from "./vscode.api";
 interface Props {
   jdkEntries: JavaRuntimeEntry[];
   projectRuntimes: ProjectRuntimeEntry[];
-};
-interface State {
-  showHintFor?: "Maven" | "Gradle" | "Others";
 }
 
-export class ProjectJDKPanel extends React.Component<Props, State> {
-  constructor(props: any) {
-    super(props);
-    this.state = {
-    };
-  }
-  render = () => {
-    const { jdkEntries, projectRuntimes } = this.props;
-    const { showHintFor } = this.state;
-    
+export function ProjectJDKPanel({ jdkEntries, projectRuntimes }: Props) {
+  const [showHintFor, setShowHintFor] = useState<"Maven" | "Gradle" | "Others" | undefined>();
 
-    const projectTypeHint = (projectType: ProjectType) => {
-      switch (projectType) {
-        case "Maven":
-          return <VSCodeButton onClick={() => this.showHint("Maven")} appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. pom.xml)."><span className="codicon codicon-info"></span></VSCodeButton>
-        case "Gradle":
-          return <VSCodeButton onClick={() => this.showHint("Gradle")} appearance="icon" title="For projects managed by build tools, Java version is specified in build scripts(e.g. build.gradle)."><span className="codicon codicon-info"></span></VSCodeButton>
-        default:
-          return <VSCodeButton onClick={() => this.showHint("Others")} appearance="icon" title="For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used."><span className="codicon codicon-info"></span></VSCodeButton>
-      }
+  const projectTypeHint = (projectType: ProjectType) => {
+    switch (projectType) {
+      case "Maven":
+        return <vscode-button onClick={() => setShowHintFor("Maven")} icon-only title="For projects managed by build tools, Java version is specified in build scripts(e.g. pom.xml)."><span className="codicon codicon-info"></span></vscode-button>;
+      case "Gradle":
+        return <vscode-button onClick={() => setShowHintFor("Gradle")} icon-only title="For projects managed by build tools, Java version is specified in build scripts(e.g. build.gradle)."><span className="codicon codicon-info"></span></vscode-button>;
+      default:
+        return <vscode-button onClick={() => setShowHintFor("Others")} icon-only title="For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used."><span className="codicon codicon-info"></span></vscode-button>;
     }
+  };
 
-    const projectEntries = projectRuntimes
-      .filter(p => p.projectType !== ProjectType.Default)
-      .map((p, index) => (
-        <VSCodeDataGridRow key={index}>
-          <VSCodeDataGridCell gridColumn="1">{p.name}</VSCodeDataGridCell>
-          <VSCodeDataGridCell gridColumn="2"><div className="inline-flex">{p.projectType}{projectTypeHint(p.projectType)}</div></VSCodeDataGridCell>
-          <VSCodeDataGridCell gridColumn="3">
-            {
-              hasBuildTool(p) ?
-                <div className="inline-flex">
-                  <span>{p.sourceLevel}</span>
-                  <VSCodeButton appearance="icon" onClick={() => this.onClickEdit(p)} title="Edit"><span className="codicon codicon-edit"></span></VSCodeButton>
-                </div>
-                :
-                <DefaultJDKSelector projectRuntime={p} jdkEntries={jdkEntries} />
-            }
-          </VSCodeDataGridCell>
-        </VSCodeDataGridRow>
-      ));
-    const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download", "java.installJdk");
-    return (
-      <div className="container">
-        <h1>Configure Runtime for Projects</h1>
-        {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
-        {
-          projectEntries.length > 0 ?
-            <VSCodeDataGrid generateHeader={GenerateHeaderOptions.none} gridTemplateColumns="1fr 1fr 1fr">
-              <VSCodeDataGridRow rowType={DataGridRowTypes.stickyHeader}>
-                <VSCodeDataGridCell gridColumn="1">Project Name</VSCodeDataGridCell>
-                <VSCodeDataGridCell gridColumn="2">Type</VSCodeDataGridCell>
-                <VSCodeDataGridCell gridColumn="3">Java Version</VSCodeDataGridCell>
-              </VSCodeDataGridRow>
-              {projectEntries}
-            </VSCodeDataGrid>
-            :
-            <div>
-              <p>No project detected yet. Please refresh later if Java extension is importing your projects.</p>
-              <VSCodeButton onClick={this.refresh}>Refresh<span slot="start" className="codicon codicon-refresh"></span></VSCodeButton>
-            </div>
-        }
-        <ProjectTypeHint projectType={showHintFor} />
-      </div>
-    );
-  }
-
-  onClickEdit = (p: ProjectRuntimeEntry) => {
+  const onClickEdit = (p: ProjectRuntimeEntry) => {
     let scriptFile;
     if (p.projectType === ProjectType.Maven) {
       scriptFile = "pom.xml";
     } else if (p.projectType === ProjectType.Gradle) {
       scriptFile = "build.gradle";
     }
-
     if (scriptFile) {
       openBuildScript(p.rootPath, scriptFile);
     }
-  }
+  };
 
-  showHint = (projectType: any) => {
-    this.setState({
-      showHintFor: projectType
-    });
-  }
+  const projectEntries = projectRuntimes
+    .filter(p => p.projectType !== ProjectType.Default)
+    .map((p, index) => (
+      <vscode-table-row key={index}>
+        <vscode-table-cell>{p.name}</vscode-table-cell>
+        <vscode-table-cell><div className="inline-flex">{p.projectType}{projectTypeHint(p.projectType)}</div></vscode-table-cell>
+        <vscode-table-cell>
+          {
+            hasBuildTool(p) ?
+              <div className="inline-flex">
+                <span>{p.sourceLevel}</span>
+                <vscode-button icon-only onClick={() => onClickEdit(p)} title="Edit"><span className="codicon codicon-edit"></span></vscode-button>
+              </div>
+              :
+              <DefaultJDKSelector projectRuntime={p} jdkEntries={jdkEntries} />
+          }
+        </vscode-table-cell>
+      </vscode-table-row>
+    ));
 
-  refresh = () => {
-    onWillListRuntimes();
-  }
-  
+  const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download", "java.installJdk");
+
+  return (
+    <div className="container">
+      <h1>Configure Runtime for Projects</h1>
+      {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
+      {
+        projectEntries.length > 0 ?
+          <vscode-table>
+            <vscode-table-header slot="header">
+              <vscode-table-header-cell>Project Name</vscode-table-header-cell>
+              <vscode-table-header-cell>Type</vscode-table-header-cell>
+              <vscode-table-header-cell>Java Version</vscode-table-header-cell>
+            </vscode-table-header>
+            <vscode-table-body slot="body">
+              {projectEntries}
+            </vscode-table-body>
+          </vscode-table>
+          :
+          <div>
+            <p>No project detected yet. Please refresh later if Java extension is importing your projects.</p>
+            <vscode-button onClick={onWillListRuntimes}>Refresh<span slot="start" className="codicon codicon-refresh"></span></vscode-button>
+          </div>
+      }
+      <ProjectTypeHint projectType={showHintFor} />
+    </div>
+  );
 }
 
 function hasBuildTool(p: ProjectRuntimeEntry) {

@@ -44,4 +44,17 @@ code {
     font-family: var(--vscode-editor-font-family);
 }
 
+.text-danger {
+    color: var(--vscode-editorError-foreground, #f44747);
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.mt-5 { margin-top: 3rem; }
+.mb-0 { margin-bottom: 0; }
+.mb-5 { margin-bottom: 3rem; }
+
 @import "../../../node_modules/@vscode/codicons/dist/codicon.css";

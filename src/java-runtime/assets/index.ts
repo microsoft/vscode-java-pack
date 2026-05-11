@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createElement } from "react";
+import { createRoot } from "react-dom/client";
 import "./style.scss";
 import { ProjectJDKPanel } from "./ProjectJDKPanel";
 import { onWillListRuntimes } from "./vscode.api";
 import { ToolingJDKPanel } from "./ToolingJDKPanel";
+
+const container = document.getElementById("content")!;
+const root = createRoot(container);
 
 const onInitialize = (event: any) => {
   const { data } = event;
@@ -26,12 +29,12 @@ function showJavaRuntimeEntries(args: any) {
       javaHomeError: args.javaHomeError,
       javaDotHome: args.javaDotHome
     };
-    ReactDOM.render(React.createElement(ToolingJDKPanel, props), document.getElementById("content"));
+    root.render(createElement(ToolingJDKPanel, props));
   } else {
     const props = {
       jdkEntries: args.javaRuntimes,
       projectRuntimes: args.projectRuntimes,
     }
-    ReactDOM.render(React.createElement(ProjectJDKPanel, props), document.getElementById("content"));
+    root.render(createElement(ProjectJDKPanel, props));
   }
 }

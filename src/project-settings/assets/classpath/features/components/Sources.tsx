@@ -1,12 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { useEffect, useRef, useState } from "react";
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+import "@vscode-elements/elements/dist/vscode-textfield/index.js";
+import "@vscode-elements/elements/dist/vscode-divider/index.js";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateSource } from "../classpathConfigurationViewSlice";
 import { ClasspathRequest } from "../../../vscode/utils";
-import { VSCodeButton, VSCodeDataGrid, VSCodeDataGridCell, VSCodeDataGridRow, VSCodeDivider, VSCodeTextField } from "@vscode/webview-ui-toolkit/react";
+
 import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
 
 const Sources = (): JSX.Element => {
@@ -25,7 +29,36 @@ const Sources = (): JSX.Element => {
   const [editingSourcePath, setEditingSourcePath] = useState<string | null>(null);
   const [editingOutputPath, setEditingOutputPath] = useState<string | null>(defaultOutput);
 
+  const sourceInputRef = useRef<HTMLElement>(null);
+  const outputInputRef = useRef<HTMLElement>(null);
+
   const dispatch: Dispatch<any> = useDispatch();
+
+  // Use refs to hold latest editing values so native event listeners can access them
+  const editingSourcePathRef = useRef(editingSourcePath);
+  const editingOutputPathRef = useRef(editingOutputPath);
+  const editRowRef = useRef(editRow);
+  useEffect(() => { editingSourcePathRef.current = editingSourcePath; }, [editingSourcePath]);
+  useEffect(() => { editingOutputPathRef.current = editingOutputPath; }, [editingOutputPath]);
+  useEffect(() => { editRowRef.current = editRow; }, [editRow]);
+
+  // Attach native input events to textfield refs
+  useEffect(() => {
+    const srcEl = sourceInputRef.current;
+    const outEl = outputInputRef.current;
+    const onSrcInput = (e: Event) => {
+      setEditingSourcePath((e.target as any).value);
+    };
+    const onOutInput = (e: Event) => {
+      setEditingOutputPath((e.target as any).value);
+    };
+    if (srcEl) srcEl.addEventListener("input", onSrcInput);
+    if (outEl) outEl.addEventListener("input", onOutInput);
+    return () => {
+      if (srcEl) srcEl.removeEventListener("input", onSrcInput);
+      if (outEl) outEl.removeEventListener("input", onOutInput);
+    };
+  }, [editRow]);
 
   const handleRemove = (path: string) => {
     const updatedSources: ClasspathEntry[] = [];
@@ -54,23 +87,27 @@ const Sources = (): JSX.Element => {
   }
 
   const handleOK = () => {
+    const currentSourcePath = editingSourcePathRef.current;
+    const currentOutputPath = editingOutputPathRef.current;
+    const currentEditRow = editRowRef.current;
+
     const updatedSources: ClasspathEntry[] = sources.map((source, index) => {
-      if (index === editRow && editingSourcePath) {
+      if (index === currentEditRow && currentSourcePath) {
         return {
           kind: ClasspathEntryKind.Source,
-          path: editingSourcePath,
-          output: editingOutputPath ?? undefined,
+          path: currentSourcePath,
+          output: currentOutputPath ?? undefined,
           attributes: source.attributes,
         };
       }
       return source;
     });
 
-    if (editRow === sources.length) {
+    if (currentEditRow === sources.length) {
       updatedSources.push({
         kind: ClasspathEntryKind.Source,
-        path: editingSourcePath!,
-        output: editingOutputPath ?? undefined,
+        path: currentSourcePath!,
+        output: currentOutputPath ?? undefined,
       });
     }
     dispatch(updateSource({
@@ -92,146 +129,115 @@ const Sources = (): JSX.Element => {
     ClasspathRequest.onWillSelectFolder(type);
   }
 
-  const messageHandler = (event: any) => {
+  const messageHandler = useCallback((event: any) => {
     const {data} = event;
     if (data.command === "classpath.onDidSelectFolder") {
-      /**
-       * data: {
-       *  command: string;
-       *  path: string;
-       *  type: string;
-       * }
-       */
       if (data.type === "source") {
         setEditingSourcePath(data.path);
       } else if (data.type === "output") {
         setEditingOutputPath(data.path);
       }
     } else if (data.command === "classpath.onDidUpdateSourceFolder") {
-      /**
-       * data: {
-       *  command: string;
-       *  sourcePaths: string[];
-       * }
-       */
       dispatch(updateSource({
         activeProjectIndex: activeProjectIndexRef.current,
         sources: data.sourcePaths
       }));
     }
-  }
+  }, [dispatch]);
 
   useEffect(() => {
     window.addEventListener("message", messageHandler);
     return () => window.removeEventListener("message", messageHandler);
-  }, []);
+  }, [messageHandler]);
 
-  const getSourceSections = () => {
-    if (sources.length === 0) {
-      return (
-        <VSCodeDataGridRow className="setting-section-grid-row">
-          <span><em>No source paths are configured.</em></span>
-        </VSCodeDataGridRow>
-      );
-    } else {
-      return sources.map((source, index) => {
-        return getSourceRowComponents(source, index);
-      });
-    }
-  };
-
-  const getEditRow = (id: string) => {
+  const renderEditRow = (id: string) => {
     return (
-      <VSCodeDataGridRow className="setting-section-grid-row" id={id}  key={id}>
-        <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-editable" gridColumn="1">
-          <VSCodeTextField
-              className="setting-section-grid-text"
-              value={editingSourcePath!}
-              placeholder="Source Root Path"
-              onInput={(e: any) => setEditingSourcePath(e.target.value)}>
-            <VSCodeButton slot="end" appearance="icon" title="Browse..." aria-label="Browse..." onClick={() => handleBrowse("source")}>
+      <div className="source-edit-row" key={id}>
+        <div className="source-edit-field">
+          <label>Source Path:</label>
+          <div className="source-edit-input-group">
+            <vscode-textfield
+                ref={sourceInputRef}
+                className="source-edit-input"
+                value={editingSourcePath ?? ""}
+                placeholder="Source Root Path">
+            </vscode-textfield>
+            <vscode-button icon-only title="Browse..." aria-label="Browse..." onClick={() => handleBrowse("source")}>
               <span className="codicon codicon-folder-opened"></span>
-            </VSCodeButton>
-          </VSCodeTextField>
-        </VSCodeDataGridCell>
-        <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-editable" gridColumn="2">
-          <VSCodeTextField style={{width: "55%"}}
-              className="setting-section-grid-text"
-              value={editingOutputPath!}
-              placeholder="Output Path"
-              onInput={(e: any) => setEditingOutputPath(e.target.value)}>
-            <VSCodeButton slot="end" appearance="icon" title="Browse..." aria-label="Browse..." onClick={() => handleBrowse("output")}>
+            </vscode-button>
+          </div>
+        </div>
+        <div className="source-edit-field">
+          <label>Output Path:</label>
+          <div className="source-edit-input-group">
+            <vscode-textfield
+                ref={outputInputRef}
+                className="source-edit-input"
+                value={editingOutputPath ?? ""}
+                placeholder="Output Path">
+            </vscode-textfield>
+            <vscode-button icon-only title="Browse..." aria-label="Browse..." onClick={() => handleBrowse("output")}>
               <span className="codicon codicon-folder-opened"></span>
-            </VSCodeButton>
-          </VSCodeTextField>
-          <VSCodeButton className="ml-1" appearance="primary" onClick={() => handleOK()}>OK</VSCodeButton>
-          <VSCodeButton className="ml-1" appearance="secondary" onClick={() => handleCancel()}>
-            Cancel
-          </VSCodeButton>
-        </VSCodeDataGridCell>
-      </VSCodeDataGridRow>
-    )
+            </vscode-button>
+          </div>
+        </div>
+        <div className="source-edit-actions">
+          <vscode-button onClick={() => handleOK()}>OK</vscode-button>
+          <vscode-button secondary onClick={() => handleCancel()}>Cancel</vscode-button>
+        </div>
+      </div>
+    );
   };
 
-  const getSourceRowComponents = (source: ClasspathEntry, index: number) => {
+  const renderSourceRow = (source: ClasspathEntry, index: number) => {
     if (editRow === index) {
-      return getEditRow(`sources-${index}`);
-    } else {
-      return (
-        <VSCodeDataGridRow className="setting-section-grid-row" id={`sources-${index}`} onMouseEnter={() => setHoveredRow(`sources-${index}`)} onMouseLeave={() => setHoveredRow(null)} key={source.path}>
-          <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-left setting-section-grid-cell-readonly" gridColumn="1">
-            {source.path}
-          </VSCodeDataGridCell>
-          <VSCodeDataGridCell className="setting-section-grid-cell setting-section-grid-cell-readonly" gridColumn="2">
-            <span>{source.output || defaultOutput}</span>
-            <div className={hoveredRow === `sources-${index}` ? "" : "hidden"}>
-              <VSCodeButton appearance='icon' onClick={() => handleEdit(source.path, source.output || defaultOutput, index)}>
-                <span className="codicon codicon-edit"></span>
-              </VSCodeButton>
-              <VSCodeButton appearance='icon' onClick={() => handleRemove(source.path)}>
-                <span className="codicon codicon-close"></span>
-              </VSCodeButton>
-            </div>
-          </VSCodeDataGridCell>
-        </VSCodeDataGridRow>
-      );
+      return renderEditRow(`sources-${index}`);
     }
-  };
-
-  const getAdditionalEditRow = () => {
-    if (editRow === null) {
-      return null;
-    }
-    if (editRow < sources.length) {
-      return null;
-    }
-    return getEditRow("sources-additional-editing");
+    const rowId = `sources-${index}`;
+    return (
+      <div
+        className="source-row"
+        key={source.path}
+        onMouseEnter={() => setHoveredRow(rowId)}
+        onMouseLeave={() => setHoveredRow(null)}
+      >
+        <div className="source-row-path">{source.path}</div>
+        <div className="source-row-output">
+          <span className="source-row-output-text">{source.output || defaultOutput}</span>
+          <div className={`source-row-actions ${hoveredRow === rowId ? "" : "hidden"}`}>
+            <vscode-button class="ghost-button" icon-only onClick={() => handleEdit(source.path, source.output || defaultOutput, index)} title="Edit">
+              <span className="codicon codicon-edit"></span>
+            </vscode-button>
+            <vscode-button class="ghost-button" icon-only onClick={() => handleRemove(source.path)} title="Remove">
+              <span className="codicon codicon-close"></span>
+            </vscode-button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="setting-section">
       <div id="list-actions" className="flex-center setting-list-actions">
-        <VSCodeButton className="pl-1 pr-1 pt-1 pb-1" slot="end" appearance="icon" onClick={() => handleAdd()}>
+        <vscode-button class="ghost-button" onClick={() => handleAdd()}>
           <span className="codicon codicon-add mr-1"></span>
           Add Source Root...
-        </VSCodeButton>
+        </vscode-button>
       </div>
-      <VSCodeDivider className="mb-0"/>
+      <vscode-divider></vscode-divider>
       <div className="setting-overflow-area">
-        <VSCodeDataGrid gridTemplateColumns="40% 60%" generateHeader="sticky">
-          <VSCodeDataGridRow className="setting-section-grid-row" rowType="header">
-            <VSCodeDataGridCell className="setting-section-grid-cell" cellType="columnheader" gridColumn="1">
-              <span className="setting-section-grid-row-header">Path</span>
-            </VSCodeDataGridCell>
-            <VSCodeDataGridCell className="setting-section-grid-cell" cellType="columnheader" gridColumn="2">
-              <span className="setting-section-grid-row-header">Output</span>
-            </VSCodeDataGridCell>
-          </VSCodeDataGridRow>
-          {getSourceSections()}
-          {getAdditionalEditRow()}
-        </VSCodeDataGrid>
+        <div className="source-list-header">
+          <div className="source-list-header-cell">Path</div>
+          <div className="source-list-header-cell">Output</div>
+        </div>
+        {sources.length === 0 ? (
+          <div className="source-row"><em>No source paths are configured.</em></div>
+        ) : (
+          sources.map((source, index) => renderSourceRow(source, index))
+        )}
+        {editRow !== null && editRow >= sources.length && renderEditRow("sources-additional-editing")}
       </div>
-      
     </div>
   );
 };

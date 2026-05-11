@@ -2,8 +2,9 @@
 // Licensed under the MIT license.
 
 import "./style.scss";
-import { VSCodePanelTab, VSCodePanels, VSCodePanelView } from "@vscode/webview-ui-toolkit/react";
-import React from 'react';
+import "@vscode-elements/elements/dist/vscode-tabs/index.js";
+import "@vscode-elements/elements/dist/vscode-tab-header/index.js";
+import "@vscode-elements/elements/dist/vscode-tab-panel/index.js";
 import CodeEditingPanel from "./tabs/CodeEditingPanel";
 import DebuggingPanel from "./tabs/DebuggingPanel";
 import FaqPanel from "./tabs/FaqPanel";
@@ -17,24 +18,24 @@ export default function BeginnerTips() {
           <h1 className="font-weight-light">Tips for Beginners</h1>
       </div>
       <div className="row">
-        <VSCodePanels activeid="tab-1">
-          <VSCodePanelTab id="tab-1">Quick Start</VSCodePanelTab>
-          <VSCodePanelTab id="tab-2">Code Editing</VSCodePanelTab>
-          <VSCodePanelTab id="tab-3">Debugging</VSCodePanelTab>
-          <VSCodePanelTab id="tab-4">FAQ</VSCodePanelTab>
-          <VSCodePanelView id="view-1">
+        <vscode-tabs selected-index={0}>
+          <vscode-tab-header slot="header">Quick Start</vscode-tab-header>
+          <vscode-tab-header slot="header">Code Editing</vscode-tab-header>
+          <vscode-tab-header slot="header">Debugging</vscode-tab-header>
+          <vscode-tab-header slot="header">FAQ</vscode-tab-header>
+          <vscode-tab-panel>
             <QuickStartPanel />
-          </VSCodePanelView>
-          <VSCodePanelView id="view-2">
+          </vscode-tab-panel>
+          <vscode-tab-panel>
             <CodeEditingPanel />
-          </VSCodePanelView>
-          <VSCodePanelView id="view-3">
+          </vscode-tab-panel>
+          <vscode-tab-panel>
             <DebuggingPanel />
-          </VSCodePanelView>
-          <VSCodePanelView id="view-4">
+          </vscode-tab-panel>
+          <vscode-tab-panel>
             <FaqPanel />
-          </VSCodePanelView>
-        </VSCodePanels>
+          </vscode-tab-panel>
+        </vscode-tabs>
       </div>
     </div>
   );

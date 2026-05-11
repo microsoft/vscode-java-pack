@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
+import "@vscode-elements/elements/dist/vscode-button/index.js";
+
 import { Dispatch } from "@reduxjs/toolkit";
-import React, { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ClasspathEntry, ProjectInfo } from "../../../../types";
 import { useDispatch, useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
@@ -127,18 +128,31 @@ const Footer = (): JSX.Element => {
       }
     }, []);
 
+  const isModified = classpathModified || mavenModified || compilerModified;
+  const applyBtnRef = useRef<HTMLElement>(null);
+
+  // Sync disabled attribute via ref for reliable web component behavior
+  useEffect(() => {
+    const el = applyBtnRef.current;
+    if (!el) return;
+    if (!isModified) {
+      el.setAttribute("disabled", "");
+    } else {
+      el.removeAttribute("disabled");
+    }
+  }, [isModified]);
+
   return (
     <div id="footer" className="pt-1">
-        {loadingState && <VSCodeButton className="ml-1" disabled>Applying...</VSCodeButton>}
+        {loadingState && <vscode-button className="ml-1" disabled>Applying...</vscode-button>}
         {!loadingState &&
-          <VSCodeButton
+          <vscode-button
+            ref={applyBtnRef}
             className="ml-1"
-            appearance="primary"
-            disabled={!classpathModified && !mavenModified && !compilerModified}
             onClick={() => handleApply()}
           >
             Apply Settings
-          </VSCodeButton>
+          </vscode-button>
         }
     </div>
   );

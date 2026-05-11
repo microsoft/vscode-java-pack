@@ -1,14 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React, { Dispatch, useEffect, useRef } from "react";
+import "@vscode-elements/elements/dist/vscode-divider/index.js";
+import "@vscode-elements/elements/dist/vscode-progress-ring/index.js";
+
+import { Dispatch, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ClasspathConfigurationView from "../../classpath/features/ClasspathConfigurationView";
 import { initializeClasspathData, loadClasspath, updateActiveTab } from "../../classpath/features/classpathConfigurationViewSlice";
 import "../style.scss";
 import { catchException, listProjects, setProjectType, updateActiveSection } from "./commonSlice";
 import ProjectSelector from "./component/ProjectSelector";
-import { VSCodeDivider, VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
+
 import Footer from "./component/Footer";
 import SideBar from "./component/SideBar";
 import MavenConfigurationView from "../../maven/features/MavenConfigurationView";
@@ -88,7 +91,7 @@ const ProjectSettingView = (): JSX.Element => {
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     window.addEventListener("message", onMessage);
     if (projects.length == 0) {
       // this makes sure the initialization only happens when the
@@ -116,19 +119,19 @@ const ProjectSettingView = (): JSX.Element => {
   if (exception) {
     return <Exception />;
   } else if (projects.length === 0) {
-    return <VSCodeProgressRing/>;
+    return <vscode-progress-ring/>;
   } else {
     return (
       <div className="root">
         <ProjectSelector />
-        <VSCodeDivider />
+        <vscode-divider />
         <div className="app-container">
           <SideBar />
           <div className="app-frame">
             {getSectionContent()}
           </div>
         </div>
-        <VSCodeDivider />
+        <vscode-divider />
         <Footer />
       </div>
     );

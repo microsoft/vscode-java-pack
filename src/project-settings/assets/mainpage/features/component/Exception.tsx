@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import React from "react";
 import { useSelector } from "react-redux";
 import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../../../../../utils/webview";
 import { ProjectSettingsException } from "../../../../types";

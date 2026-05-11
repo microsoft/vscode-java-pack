@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-import { VSCodeLink} from "@vscode/webview-ui-toolkit/react";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { ClasspathEntry, ProjectInfo } from "../../../../types";
 import { useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
@@ -59,7 +58,7 @@ const Hint = (): JSX.Element | null => {
         {(projectType[activeProjectIndex] === ProjectType.Gradle || projectType[activeProjectIndex] === ProjectType.Maven) &&
           <span className="setting-section-warning">
             '{projects[activeProjectIndex].name}' is imported by {projectType[activeProjectIndex]}, changes made to the classpath might be lost after reloading.
-            To make permanent changes, please edit the <VSCodeLink href="" onClick={() => handleOpenBuildFile()}>{buildFile}</VSCodeLink> file.
+            To make permanent changes, please edit the <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a> file.
           </span>
         }
     </div>
