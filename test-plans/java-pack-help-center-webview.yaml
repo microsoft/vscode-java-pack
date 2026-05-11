@@ -1,0 +1,38 @@
+# Test Plan: Java Extension Pack - Help Center webview
+#
+# Covers the React/vscode-elements webview migration by opening the local
+# vscode-java-pack Help Center and verifying key content from inside the webview.
+#
+# Usage after packaging vscode-java-pack:
+#   npx autotest run test-plans\java-pack-help-center-webview.yaml --vsix extension.vsix --no-llm
+
+name: "Java Extension Pack - Help Center Webview"
+description: |
+  Opens the Java Help Center webview from the installed vscode-java-pack VSIX
+  and verifies that the migrated React webview renders its main sections.
+
+setup:
+  extension: "redhat.java"
+  vscodeVersion: "stable"
+  timeout: 60
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
+
+steps:
+  - id: "open-help-center"
+    action: "executeVSCodeCommand java.welcome"
+    verifyEditorTab:
+      title: "Java Help Center"
+    timeout: 20
+
+  - id: "verify-help-center-content"
+    action: "wait 2 seconds"
+    verifyWebview:
+      contains:
+        - "Java Help Center"
+        - "Get Started"
+        - "Create a New Project"
+        - "Configure Java Runtime"
+        - "Open Java Settings"
+    timeout: 20
