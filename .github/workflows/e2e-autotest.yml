@@ -139,7 +139,7 @@ jobs:
           name: pr-vsix
           path: vsix
 
-      - name: Download VSIX files (manual trigger)
+      - name: Download VSIX files
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.vsix_urls != '' }}
         shell: pwsh
         run: |
