@@ -27,35 +27,41 @@ steps:
   # ── Wait for LS ready ────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
+    verify: "Java workspace has loaded; Explorer shows the project tree and Problems panel is settled"
     timeout: 120
 
   # ── Open dependency view ─────────────────────────────────
   # wiki: "The dependency explorer can show: Sources, JDK libraries, Maven Dependencies"
+  # Note: autotest's built-in `openDependencyExplorer` calls a legacy
+  # "Java: Focus on Java Dependencies View" command title that doesn't exist
+  # in current vscode-java-dependency. Use the actual palette title instead.
   - id: "open-dep-explorer"
-    action: "openDependencyExplorer"
-    verify: "Java Dependencies view opened"
+    action: "run command Explorer: Focus on Java Projects View"
+    verify: "Java Projects view opened in the Explorer side bar"
 
   - id: "wait-for-tree"
-    action: "wait 3 seconds"
-    verify: "Dependency tree loaded"
+    action: "wait 5 seconds"
+    # No `verify:` — passive wait; the next `expandTreeItem` steps assert
+    # the tree nodes are present.
 
   # ── Verify project node ─────────────────────────────────
   - id: "expand-project"
-    action: "expand salut tree item"
-    verify: "salut project node expanded"
-
-  # ── Verify JDK Libraries node ───────────────────────────
-  - id: "verify-jdk"
-    action: "expand JRE System Library tree item"
-    verify: "JDK Libraries node visible and expandable"
-
-  # Collapse JRE to free vertical space, then Maven Dependencies becomes visible
-  - id: "collapse-jdk"
-    action: "expand JRE System Library tree item"
+    action: "expandTreeItem salut"
+    verify: "salut project node expanded; child nodes visible"
 
   # ── Verify Maven Dependencies node ──────────────────────
+  # Verify Maven Dependencies BEFORE expanding JRE so the node is in viewport
+  # (JRE has many children which can push Maven Dependencies out of view).
   - id: "verify-maven-deps"
-    action: "expand Maven Dependencies tree item"
+    action: "expandTreeItem Maven Dependencies"
     verify: "Maven Dependencies node visible and expandable"
-    timeout: 10
+    timeout: 15
+
+  # ── Verify JDK Libraries node ───────────────────────────
+  # The wiki uses "JDK Libraries" as the category name but the actual
+  # tree label rendered by vscode-java-dependency is "JRE System Library".
+  # The verify text deliberately accepts either label so the LLM doesn't
+  # downgrade on a vocabulary mismatch.
+  - id: "verify-jdk"
+    action: "expandTreeItem JRE System Library"
+    verify: "JDK / JRE system library node is visible under the project in the Java Projects view"

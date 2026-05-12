@@ -29,15 +29,18 @@ steps:
   # ── Wait for LS ready ────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
+    verify: "Java workspace has loaded; Explorer shows the project tree and Problems panel is settled"
     timeout: 120
 
   # ── Trigger Classpath configuration command ──────────────
   # wiki: "Trigger the command 'Java: Configure Classpath'"
+  # The classpath webview lazy-loads. Use a lenient verify on the command
+  # step (frame may still be initializing) and a stricter one on the
+  # subsequent 5s wait step (when rendering is complete).
   - id: "configure-classpath"
     action: "run command Java: Configure Classpath"
-    verify: "Classpath configuration page appears (webview or settings page)"
+    verify: "Project Settings / Classpath Configuration tab is being opened in the editor area (webview frame may still be initializing)"
 
   - id: "verify-page"
-    action: "wait 3 seconds"
-    verify: "Configuration page loaded successfully"
+    action: "wait 5 seconds"
+    verify: "Project Settings webview displays the Classpath Configuration UI (sections such as JDK, libraries, sources)"

@@ -32,7 +32,7 @@ steps:
   #        no errors/problems in the problems view."
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java Language Server is ready"
+    verify: "Gradle workspace has loaded; Problems panel shows no errors"
     verifyProblems:
       errors: 0
     timeout: 300
@@ -48,14 +48,18 @@ steps:
 
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
-    verify: "Completion list appears with reasonable completion items"
     verifyCompletion:
       notEmpty: true
+    waitBefore: 3
+    # No `verify:` — the on-screen completion menu can lag behind the
+    # internal completion API on slower CI runners (screenshot may capture
+    # the "Loading..." indicator while the items are already in the list).
+    # Deterministic verifyCompletion above is authoritative.
 
   # Verify the editor can type and save normally
   - id: "goto-line"
-    action: "goToLine 5"
-    verify: "Cursor moved to line 5"
+    action: "goToLine 2"
+    verify: "Cursor moved to line 2"
 
   - id: "goto-end"
     action: "goToEndOfLine"

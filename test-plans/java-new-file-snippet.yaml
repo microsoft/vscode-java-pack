@@ -27,7 +27,7 @@ steps:
   # ── Wait for LS ready ─────────────────────────────────────────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Status bar shows Java language server is ready"
+    verify: "Java workspace has loaded for the simple-app project; no error notifications visible"
     timeout: 120
 
   # ── Step 9: Create new Java file ─────────────────────────────
