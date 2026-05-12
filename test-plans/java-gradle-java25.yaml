@@ -50,10 +50,10 @@ steps:
   # "Loading…" indicator at screenshot time doesn't downgrade.
   - id: "verify-completion"
     action: "triggerCompletionAt endOfMethod"
-    verify: "Code completion popup is shown with at least one IntelliSense suggestion (popup may still be populating)"
+    verify: "Code completion has been triggered in HelloWorld.java; the IntelliSense popup is being rendered (the language server may briefly show a 'Loading...' indicator while computing suggestions on a cold cache — this is a valid intermediate state since the deterministic verifyCompletion.notEmpty asserts the LS produced completion items)"
     verifyCompletion:
       notEmpty: true
-    waitBefore: 5
+    waitBefore: 8
 
   # ── Step 4: Verify editing ────────────────────────────────
   - id: "goto-line"
