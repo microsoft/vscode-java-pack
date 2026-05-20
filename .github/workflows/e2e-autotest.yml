@@ -93,7 +93,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
         plan: ${{ fromJson(needs.discover.outputs.matrix) }}
 
     steps:
@@ -128,11 +128,13 @@ jobs:
             New-Item -ItemType Junction -Path $target -Target $env:JAVA_HOME -Force | Out-Null
             Write-Host "Created junction: $target -> $env:JAVA_HOME"
           } else {
+            # Linux and macOS: symlink JAVA_HOME to a known location and
+            # rewrite the Windows-style java.jdt.ls.java.home in the plan
+            # so the language server resolves JDK 25 on this runner.
             $target = "/opt/jdk-25"
+            sudo mkdir -p /opt
             sudo ln -sfn $env:JAVA_HOME $target
             Write-Host "Created symlink: $target -> $env:JAVA_HOME"
-            # Linux: rewrite the Windows-style java.home setting in the plan
-            # so the language server resolves JDK 25 on this runner.
             (Get-Content $planFile -Raw) -replace 'C:\\\\Program Files\\\\Java\\\\jdk-25', $target | Set-Content $planFile
             Write-Host "Patched $planFile java.jdt.ls.java.home -> $target"
           }
