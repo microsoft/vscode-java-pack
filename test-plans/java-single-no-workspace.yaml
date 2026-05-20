@@ -31,6 +31,7 @@ steps:
     action: "waitForLanguageServer"
     verify: "Java extension has activated for the single-file (no-workspace) mode; no error notifications visible"
     timeout: 120
+    skipLlmVerify: true  # waitForLanguageServer is authoritative; LLM only sees the same status bar
 
   # ── Step 2: Verify file is open ──────────────────────────────
   - id: "verify-file-open"
@@ -52,6 +53,8 @@ steps:
       notEmpty: true
     waitBefore: 8
     timeout: 30
+    # Retry once on cold-cache "Loading..." LLM downgrades.
+    retries: 1
 
   # ── Step 4: Verify editing ────────────────────────────────────
   - id: "goto-line"

@@ -13,6 +13,13 @@ description: |
 
 setup:
   extension: "redhat.java"
+  # The Help Center webview lives in vscode-java-pack itself. On scheduled
+  # runs there is no built VSIX, so the pack must be installed from the
+  # marketplace; otherwise the `java.welcome` command is unregistered and
+  # the open-help-center step times out silently. On PR runs the
+  # build-pack job's VSIX takes precedence (--vsix overrides marketplace).
+  extensions:
+    - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
   timeout: 60
   settings:

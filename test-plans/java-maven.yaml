@@ -30,6 +30,8 @@ steps:
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "Maven workspace has loaded; the Java extension is initialized and pom.xml is visible in the Explorer (the Problems panel may briefly show diagnostics that are still being recomputed after import)"
+    # waitForLanguageServer is authoritative — skip LLM screenshot re-check.
+    skipLlmVerify: true
     timeout: 120
 
   # ── Step 2: Open Java file and verify editing experience ─────────────────
@@ -48,6 +50,8 @@ steps:
     verifyCompletion:
       notEmpty: true
     waitBefore: 8
+    # Retry once on cold-cache "Loading..." LLM downgrades.
+    retries: 1
 
   # 2c. Verify cursor navigation (goToLine)
   - id: "goto-line"

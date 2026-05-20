@@ -45,6 +45,9 @@ steps:
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "spring-petclinic project has been imported; Java extension is activated and ready for editing"
+    # waitForLanguageServer is authoritative — skip LLM screenshot re-check
+    # (status bar background indexing causes false downgrades).
+    skipLlmVerify: true
     timeout: 300
 
   # ── Verify completion ────────────────────────────────────
@@ -67,3 +70,6 @@ steps:
     verifyCompletion:
       notEmpty: true
     waitBefore: 5
+    # LLM may downgrade if it sees "Loading..." spinner on cold cache; retry
+    # gives the LS a warmed cache so the popup is fully rendered.
+    retries: 1

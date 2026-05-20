@@ -49,6 +49,8 @@ steps:
     action: "waitForLanguageServer"
     verify: "maven-resolve-type project has been imported; the Java extension is activated and pom.xml is visible in the Explorer"
     timeout: 180
+    # waitForLanguageServer is authoritative — skip LLM screenshot re-check.
+    skipLlmVerify: true
 
   # ── Open Java file ──────────────────────────────────────
   - id: "open-app"
@@ -103,6 +105,10 @@ steps:
       path: "~/pom.xml"
       contains: "com.google.code.gson"
     waitBefore: 2
+    # Disk-only insertLineInFile: pom.xml isn't in any editor, so before/after
+    # screenshots are necessarily identical. LLM always downgrades; verifyFile
+    # reading from disk is the only meaningful signal.
+    skipLlmVerify: true
 
   # Re-open pom.xml so the AFTER screenshot shows the new <dependency>
   # block. Loading fresh from disk avoids any in-memory/disk mismatch.
@@ -161,6 +167,10 @@ steps:
       errors: 0
     waitBefore: 20
     timeout: 90
+    # Maven re-import on a cold cache can take significantly longer than the
+    # waitBefore window; a single retry (with the LS likely already settled
+    # by then) recovers without inflating the happy-path wait further.
+    retries: 1
 
   # After save, the language server publishes diagnostics (status bar updates
   # to 0 errors, verified deterministically above). However, on Linux runners

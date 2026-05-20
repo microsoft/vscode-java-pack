@@ -38,6 +38,7 @@ steps:
     action: "waitForLanguageServer"
     verify: "maven-junit workspace has loaded; the Java extension is initialized for the project"
     timeout: 300
+    skipLlmVerify: true  # waitForLanguageServer is authoritative; LLM only sees the same status bar
 
   # ── Step 1: Open test file so CodeLens can render ───────────
   - id: "open-test-file"
@@ -52,7 +53,7 @@ steps:
   # ready — discovery is asynchronous and Test Explorer is initially empty.
   # On cold-cache CI runners 20s is sometimes too short; bump to 45s.
   - id: "wait-test-discovery"
-    action: "wait 45 seconds"
+    action: "wait 90 seconds"
 
   # ── Step 2: Run tests via Java Test Runner palette command ───────
   # autotest 0.7.1 ships `openTestExplorer`/`runAllTests` actions wired to
@@ -72,6 +73,11 @@ steps:
     action: "run command Java: Run Tests"
     verify: "Java: Run Tests command has been invoked from the palette; the Java Test Runner extension has responded (this may show as a Testing view becoming active, a run indicator in the status bar, or an informational notification such as 'No tests found in this file' if discovery is still in progress — all of these indicate the command executed successfully)"
     waitBefore: 3
+    # Test discovery is asynchronous in vscode-java-test; on cold-cache
+    # CI runners the first Run Tests invocation can land before discovery
+    # completes ("No tests have been found"). Allow one retry — by the
+    # second attempt the discovery cache is usually warm.
+    retries: 1
 
   - id: "wait-test-complete"
     action: "wait 45 seconds"

@@ -44,6 +44,7 @@ steps:
     verify: "Java workspace has loaded; Problems panel shows no errors"
     verifyProblems:
       errors: 0
+    skipLlmVerify: true  # waitForLanguageServer is authoritative; LLM only sees the same status bar
     timeout: 120
 
   # ── Open App.java ────────────────────────────────────────

@@ -36,6 +36,7 @@ steps:
     verifyProblems:
       errors: 0
     timeout: 300
+    skipLlmVerify: true  # waitForLanguageServer is authoritative; LLM only sees the same status bar
 
   # ── Step 2: Open Java file ───────────────────────────────
   # wiki: "Open Foo.java, make sure the editing experience is correctly working"
@@ -54,6 +55,8 @@ steps:
     verifyCompletion:
       notEmpty: true
     waitBefore: 8
+    # Retry once on cold-cache "Loading..." LLM downgrades.
+    retries: 1
 
   # ── Step 4: Verify editing ────────────────────────────────
   - id: "goto-line"

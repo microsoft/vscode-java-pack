@@ -48,6 +48,7 @@ steps:
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "Java extension has activated and the simple-app project tree is visible in the Explorer sidebar"
+    skipLlmVerify: true  # waitForLanguageServer reads the same status bar text the LLM would inspect
     verifyProblems:
       errors: 2
     timeout: 120
@@ -140,6 +141,10 @@ steps:
       path: "~/src/app/App.java"
       contains: "import java.io.File"
     timeout: 10
+    # Save All has no on-screen change (tab dirty dot clears on the saved
+    # tab but the active editor isn't the saved file). LLM downgrades on
+    # before==after by-design.
+    skipLlmVerify: true
 
   # ── Step 8: Rename Symbol (F2) ──────────────────────────────
   - id: "close-all-before-rename"

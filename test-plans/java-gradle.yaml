@@ -36,6 +36,7 @@ steps:
     verifyProblems:
       errors: 0
     timeout: 300
+    skipLlmVerify: true  # waitForLanguageServer is authoritative; LLM only sees the same status bar
 
   # ── Step 2: Open Foo.java and verify editing experience ─
   # wiki: "Open Foo.java file, make sure the editing experience

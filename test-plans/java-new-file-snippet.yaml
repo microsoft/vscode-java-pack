@@ -28,6 +28,8 @@ steps:
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "Java workspace has loaded for the simple-app project; no error notifications visible"
+    # waitForLanguageServer is authoritative — skip LLM screenshot re-check.
+    skipLlmVerify: true
     timeout: 120
 
   # ── Step 9: Create new Java file ─────────────────────────────
