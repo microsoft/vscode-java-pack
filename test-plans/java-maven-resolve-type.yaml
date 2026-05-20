@@ -49,6 +49,8 @@ steps:
     action: "waitForLanguageServer"
     verify: "maven-resolve-type project has been imported; the Java extension is activated and pom.xml is visible in the Explorer"
     timeout: 180
+    # waitForLanguageServer is authoritative — skip LLM screenshot re-check.
+    skipLlmVerify: true
 
   # ── Open Java file ──────────────────────────────────────
   - id: "open-app"
@@ -161,6 +163,10 @@ steps:
       errors: 0
     waitBefore: 20
     timeout: 90
+    # Maven re-import on a cold cache can take significantly longer than the
+    # waitBefore window; a single retry (with the LS likely already settled
+    # by then) recovers without inflating the happy-path wait further.
+    retries: 1
 
   # After save, the language server publishes diagnostics (status bar updates
   # to 0 errors, verified deterministically above). However, on Linux runners

@@ -28,6 +28,11 @@ steps:
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "Java workspace has loaded; Explorer shows the project tree and Problems panel is settled"
+    # waitForLanguageServer is the authoritative deterministic check — the
+    # status bar can still flicker "Java: Searching... 0%" for background
+    # indexing right after the LS reports ready, which has historically
+    # caused LLM screenshot downgrades. Skip LLM here.
+    skipLlmVerify: true
     timeout: 120
 
   # ── Open dependency view ─────────────────────────────────

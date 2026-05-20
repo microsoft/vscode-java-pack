@@ -55,6 +55,10 @@ steps:
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "Maven salut workspace has loaded; the Java extension and the pack webview commands are ready"
+    # waitForLanguageServer is authoritative — skip LLM screenshot re-check
+    # (status bar may still show "Java: Searching... 0%" for background
+    # indexing right after the LS reports ready).
+    skipLlmVerify: true
     timeout: 180
 
   # ══════════════════════════════════════════════════════════════════════

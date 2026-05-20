@@ -30,6 +30,9 @@ steps:
   - id: "ls-ready"
     action: "waitForLanguageServer"
     verify: "Java workspace has loaded; Explorer shows the project tree and Problems panel is settled"
+    # waitForLanguageServer is the authoritative deterministic check —
+    # status-bar background indexing can cause spurious LLM downgrades.
+    skipLlmVerify: true
     timeout: 120
 
   # ── Trigger Classpath configuration command ──────────────
