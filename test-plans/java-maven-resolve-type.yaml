@@ -105,6 +105,10 @@ steps:
       path: "~/pom.xml"
       contains: "com.google.code.gson"
     waitBefore: 2
+    # Disk-only insertLineInFile: pom.xml isn't in any editor, so before/after
+    # screenshots are necessarily identical. LLM always downgrades; verifyFile
+    # reading from disk is the only meaningful signal.
+    skipLlmVerify: true
 
   # Re-open pom.xml so the AFTER screenshot shows the new <dependency>
   # block. Loading fresh from disk avoids any in-memory/disk mismatch.

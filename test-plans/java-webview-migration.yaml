@@ -260,6 +260,9 @@ steps:
     verifyFile:
       path: "~/.vscode/java-formatter.xml"
       contains: "CodeFormatterProfile"
+    # Disk-only insertLineInFile against a file not in any editor.
+    # before/after screenshots are by-design identical.
+    skipLlmVerify: true
 
   - id: "close-profile-file-before-formatter"
     action: "run command View: Close All Editors"

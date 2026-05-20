@@ -50,6 +50,8 @@ steps:
     verifyCompletion:
       notEmpty: true
     waitBefore: 8
+    # Retry once on cold-cache "Loading..." LLM downgrades.
+    retries: 1
 
   # 2c. Verify cursor navigation (goToLine)
   - id: "goto-line"

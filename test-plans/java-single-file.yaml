@@ -52,6 +52,8 @@ steps:
     verifyCompletion:
       notEmpty: true
     waitBefore: 8
+    # Retry once on cold-cache "Loading..." LLM downgrades.
+    retries: 1
 
   # ── Step 4: Verify basic editing ────────────────────────────────
   - id: "goto-main"

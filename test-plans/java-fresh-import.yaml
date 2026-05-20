@@ -70,3 +70,6 @@ steps:
     verifyCompletion:
       notEmpty: true
     waitBefore: 5
+    # LLM may downgrade if it sees "Loading..." spinner on cold cache; retry
+    # gives the LS a warmed cache so the popup is fully rendered.
+    retries: 1

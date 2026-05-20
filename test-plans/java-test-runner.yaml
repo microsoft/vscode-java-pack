@@ -38,6 +38,7 @@ steps:
     action: "waitForLanguageServer"
     verify: "maven-junit workspace has loaded; the Java extension is initialized for the project"
     timeout: 300
+    skipLlmVerify: true  # waitForLanguageServer is authoritative; LLM only sees the same status bar
 
   # ── Step 1: Open test file so CodeLens can render ───────────
   - id: "open-test-file"

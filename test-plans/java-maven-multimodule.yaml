@@ -32,6 +32,7 @@ steps:
     action: "waitForLanguageServer"
     verify: "Multimodule Maven workspace has loaded; the Java extension is initialized for the project with module1 and module2 visible in the Explorer (the Problems panel may briefly show diagnostics that are still being recomputed after import — the verifyProblems checks below pin the final state)"
     timeout: 180
+    skipLlmVerify: true  # waitForLanguageServer is authoritative; LLM only sees the same status bar
 
   # ── Step 2: Verify module1 Foo.java ──────────────────────
   # wiki: "make sure the editing experience is correctly working
@@ -48,6 +49,8 @@ steps:
     verifyCompletion:
       notEmpty: true
     waitBefore: 8
+    # Retry once on cold-cache "Loading..." LLM downgrades.
+    retries: 1
 
   # Close module1's tab first so the next `open file Foo.java` request
   # disambiguates to module2/Foo.java rather than re-focusing the already-
@@ -69,3 +72,5 @@ steps:
     verifyCompletion:
       notEmpty: true
     waitBefore: 8
+    # Retry once on cold-cache "Loading..." LLM downgrades.
+    retries: 1
