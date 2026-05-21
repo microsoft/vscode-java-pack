@@ -11,6 +11,7 @@ import { removeReferencedLibrary, addLibraries } from "../classpathConfiguration
 import { ClasspathRequest } from "../../../vscode/utils";
 
 import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
+import { ProjectType } from "../../../../../utils/webview";
 
 const Libraries = (): JSX.Element => {
 
@@ -22,6 +23,7 @@ const Libraries = (): JSX.Element => {
   }, [activeProjectIndex]);
 
   const libraries: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.libraries[activeProjectIndex]);
+  const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleRemove = (index: number) => {
@@ -32,7 +34,7 @@ const Libraries = (): JSX.Element => {
   };
 
   const handleAdd = () => {
-    ClasspathRequest.onWillSelectLibraries();
+    ClasspathRequest.onWillSelectLibraries(projectType);
   };
 
   const onDidAddLibraries = (event: OnDidAddLibrariesEvent) => {

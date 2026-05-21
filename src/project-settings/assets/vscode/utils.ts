@@ -81,9 +81,10 @@ export namespace ClasspathRequest {
         });
     }
 
-    export function onWillSelectLibraries() {
+    export function onWillSelectLibraries(projectType: ProjectType) {
         vscode.postMessage({
-            command: "classpath.onWillSelectLibraries"
+            command: "classpath.onWillSelectLibraries",
+            projectType,
         });
     }
 

@@ -58,7 +58,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
                 await this.addNewJdk(this.currentProjectRoot);
                 break;
             case "classpath.onWillSelectLibraries":
-                await this.selectLibraries(this.currentProjectRoot);
+                await this.selectLibraries(this.currentProjectRoot, message.projectType);
                 break;
             case "classpath.onClickGotoProjectConfiguration":
                 this.gotoProjectConfigurationFile(message.rootUri, message.projectType);
@@ -197,7 +197,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
                         path: `org.eclipse.jdt.launching.JRE_CONTAINER/${vmInstallPath}`,
                     });
                 }
-                classpathEntries.push(...libraries);
+                classpathEntries.push(...libraries.map(library => this.toClasspathEntryForUpdate(library, currentProjectRoot)));
                 if (classpathEntries.length > 0) {
                     await vscode.commands.executeCommand(
                         "java.execute.workspaceCommand",
@@ -362,7 +362,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
     });
 
-    private selectLibraries = instrumentOperation("projectSettings.classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
+    private selectLibraries = instrumentOperation("projectSettings.classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri, projectType: ProjectType) => {
         const jarFiles: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
             openLabel: "Select Jar File",
@@ -374,23 +374,41 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             },
         });
         if (jarFiles) {
-            const jarPaths: string[] = jarFiles.map(uri => {
-                if (uri.fsPath.startsWith(currentProjectRoot.fsPath)) {
-                    return path.relative(currentProjectRoot.fsPath, uri.fsPath);
-                }
-                return uri.fsPath;
-            });
             this.webview.postMessage({
                 command: "classpath.onDidAddLibraries",
-                jars: jarPaths.map(jarPath => {
+                jars: jarFiles.map(uri => {
                     return {
                         kind: ClasspathEntryKind.Library,
-                        path: jarPath,
+                        path: this.toLibraryPathForProject(uri, currentProjectRoot, projectType),
                     };
                 }),
             });
         }
     });
+
+    private toLibraryPathForProject(uri: vscode.Uri, currentProjectRoot: vscode.Uri, projectType: ProjectType): string {
+        if (projectType !== ProjectType.UnmanagedFolder) {
+            return uri.fsPath;
+        }
+
+        const relativePath = path.relative(currentProjectRoot.fsPath, uri.fsPath);
+        if (relativePath && relativePath !== ".." && !relativePath.startsWith(".." + path.sep) && !path.isAbsolute(relativePath)) {
+            return relativePath;
+        }
+
+        return uri.fsPath;
+    }
+
+    private toClasspathEntryForUpdate(entry: ClasspathEntry, currentProjectRoot: vscode.Uri): ClasspathEntry {
+        if (entry.kind === ClasspathEntryKind.Library && !path.isAbsolute(entry.path)) {
+            return {
+                ...entry,
+                path: path.join(currentProjectRoot.fsPath, entry.path),
+            };
+        }
+
+        return entry;
+    }
 
     private updateUnmanagedFolderLibraries = instrumentOperation("projectSettings.classpath.updateUnmanagedFolderLibraries", async (_operationId: string, jarFilePaths: string[]) => {
         const setting = this.getReferencedLibrariesSetting();
