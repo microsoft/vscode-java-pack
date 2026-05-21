@@ -77,7 +77,8 @@ steps:
 
   - id: "apply-library-change"
     action: "clickInWebview text=Apply Settings"
-    verify: "Applying the classpath change succeeds and writes the selected JAR into .classpath"
+    verify: "Apply Settings is clicked; the persisted .classpath update is verified by the next deterministic file assertion"
+    skipLlmVerify: true
 
   - id: "verify-library-applied"
     action: "wait 5 seconds"
