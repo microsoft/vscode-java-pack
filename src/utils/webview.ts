@@ -54,6 +54,14 @@ export enum ProjectType {
   Others = "Others",
 }
 
+export function isProjectType(projectType: unknown): projectType is ProjectType {
+  return projectType === ProjectType.Default ||
+    projectType === ProjectType.UnmanagedFolder ||
+    projectType === ProjectType.Maven ||
+    projectType === ProjectType.Gradle ||
+    projectType === ProjectType.Others;
+}
+
 export enum NatureId {
   Maven = "org.eclipse.m2e.core.maven2Nature",
   Gradle = "org.eclipse.buildship.core.gradleprojectnature",

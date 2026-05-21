@@ -11,11 +11,12 @@ import { removeReferencedLibrary, addLibraries } from "../classpathConfiguration
 import { ClasspathRequest } from "../../../vscode/utils";
 
 import { ClasspathEntry, ClasspathEntryKind } from "../../../../types";
-import { ProjectType } from "../../../../../utils/webview";
+import { isProjectType } from "../../../../../utils/webview";
 
 const Libraries = (): JSX.Element => {
 
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const addLibraryBtnRef = useRef<HTMLElement>(null);
   const activeProjectIndex: number = useSelector((state: any) => state.commonConfig.ui.activeProjectIndex);
   const activeProjectIndexRef = useRef(activeProjectIndex);
   useEffect(() => {
@@ -23,7 +24,8 @@ const Libraries = (): JSX.Element => {
   }, [activeProjectIndex]);
 
   const libraries: ClasspathEntry[] = useSelector((state: any) => state.classpathConfig.data.libraries[activeProjectIndex]);
-  const projectType: ProjectType = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
+  const projectType: unknown = useSelector((state: any) => state.commonConfig.data.projectType[activeProjectIndex]);
+  const canAddLibrary = isProjectType(projectType);
   const dispatch: Dispatch<any> = useDispatch();
 
   const handleRemove = (index: number) => {
@@ -34,8 +36,21 @@ const Libraries = (): JSX.Element => {
   };
 
   const handleAdd = () => {
+    if (!canAddLibrary) {
+      return;
+    }
     ClasspathRequest.onWillSelectLibraries(projectType);
   };
+
+  useEffect(() => {
+    const el = addLibraryBtnRef.current;
+    if (!el) return;
+    if (canAddLibrary) {
+      el.removeAttribute("disabled");
+    } else {
+      el.setAttribute("disabled", "");
+    }
+  }, [canAddLibrary]);
 
   const onDidAddLibraries = (event: OnDidAddLibrariesEvent) => {
     const {data} = event;
@@ -112,7 +127,7 @@ const Libraries = (): JSX.Element => {
     <div className="setting-section">
       <div>
         <div id="list-actions" className="flex-center setting-list-actions">
-          <vscode-button class="ghost-button" onClick={() => handleAdd()}>
+          <vscode-button ref={addLibraryBtnRef} class="ghost-button" onClick={() => handleAdd()}>
             <span className="codicon codicon-add mr-1"></span>
             Add Library...
           </vscode-button>

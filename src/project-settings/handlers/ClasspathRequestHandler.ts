@@ -8,7 +8,7 @@ import { ClasspathComponent, VmInstall, ClasspathEntry, ClasspathEntryKind } fro
 import _ from "lodash";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
 import { getProjectType } from "../../utils/jdt";
-import { ProjectType } from "../../utils/webview";
+import { ProjectType, isProjectType } from "../../utils/webview";
 
 export class ClasspathRequestHandler implements vscode.Disposable {
     private webview: vscode.Webview;
@@ -362,7 +362,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
     });
 
-    private selectLibraries = instrumentOperation("projectSettings.classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri, projectType: ProjectType) => {
+    private selectLibraries = instrumentOperation("projectSettings.classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri, projectType: unknown) => {
         const jarFiles: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
             openLabel: "Select Jar File",
@@ -386,8 +386,8 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
     });
 
-    private toLibraryPathForProject(uri: vscode.Uri, currentProjectRoot: vscode.Uri, projectType: ProjectType): string {
-        if (projectType !== ProjectType.UnmanagedFolder) {
+    private toLibraryPathForProject(uri: vscode.Uri, currentProjectRoot: vscode.Uri, projectType: unknown): string {
+        if (isProjectType(projectType) && projectType !== ProjectType.UnmanagedFolder) {
             return uri.fsPath;
         }
 
