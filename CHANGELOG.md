@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.31.0
+
+- Refactor Java Pack webviews to React 19 and `@vscode-elements/elements` in https://github.com/microsoft/vscode-java-pack/pull/1616
+- Fix Project Settings UI absolute path updates in https://github.com/microsoft/vscode-java-pack/pull/1623
+
 ## 0.30.5
 
 - Remove IntelljCode from Java Pack in https://github.com/microsoft/vscode-java-pack/pull/1538
