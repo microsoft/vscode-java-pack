@@ -4,9 +4,7 @@
 
 - Refactor Java Pack webviews to React 19 and `@vscode-elements/elements` in https://github.com/microsoft/vscode-java-pack/pull/1616
 - Fix Project Settings UI absolute path updates in https://github.com/microsoft/vscode-java-pack/pull/1623
-- Add and expand E2E autotest plans, fixtures, and GitHub Actions coverage in https://github.com/microsoft/vscode-java-pack/pull/1605, https://github.com/microsoft/vscode-java-pack/pull/1607, https://github.com/microsoft/vscode-java-pack/pull/1619, https://github.com/microsoft/vscode-java-pack/pull/1621
 - Improve IssueLens automation, labeling rules, and workflow reliability in https://github.com/microsoft/vscode-java-pack/pull/1540, https://github.com/microsoft/vscode-java-pack/pull/1544, https://github.com/microsoft/vscode-java-pack/pull/1598, https://github.com/microsoft/vscode-java-pack/pull/1602
-- Add GitHub Actions CI workflow for PR build verification in https://github.com/microsoft/vscode-java-pack/pull/1563
 - Update runtime dependencies and build tooling, including Axios, Lodash, React DOM, `@xmldom/xmldom`, `@vscode/codicons`, Highlight.js, TypeScript, Webpack, Sass, and related loaders.
 
 ## 0.30.5
