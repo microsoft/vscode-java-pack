@@ -398,7 +398,7 @@
     "react-redux": "^9.0.0",
     "semver": "^7.8.1",
     "vscode-extension-telemetry-wrapper": "^0.15.2",
-    "vscode-tas-client": "^0.1.75"
+    "vscode-tas-client": "^0.2.1"
   },
   "overrides": {
     "tas-client": "~0.2.33"
