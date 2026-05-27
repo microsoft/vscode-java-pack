@@ -380,7 +380,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
     "@vscode-elements/elements": "^2.5.0",
-    "@vscode/codicons": "^0.0.44",
+    "@vscode/codicons": "^0.0.45",
     "@xmldom/xmldom": "^0.8.13",
     "axios": "^1.15.0",
     "bootstrap": "^5.3.8",
