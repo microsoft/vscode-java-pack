@@ -345,7 +345,7 @@
     "@types/expand-tilde": "^2.0.0",
     "@types/fs-extra": "^11.0.4",
     "@types/lodash": "^4.14.186",
-    "@types/node": "20.x",
+    "@types/node": "25.x",
     "@types/path-exists": "^4.0.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
