@@ -158,10 +158,12 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
 
         // Use a nonce to whitelist which scripts can be run
         const nonce = getNonce();
+        const cspSource = this.webviewPanel!.webview.cspSource;
         return `<!DOCTYPE html>
           <html lang="en">
           <head>
             <meta charset="utf-8">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource} https: data:;">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
             <title>Java Formatter Settings</title>
