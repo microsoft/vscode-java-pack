@@ -11,7 +11,7 @@ import "@vscode-elements/elements/dist/vscode-table-row/index.js";
 import "@vscode-elements/elements/dist/vscode-table-cell/index.js";
 
 
-import { Dispatch, useEffect } from "react";
+import { Dispatch, useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCompilerSettings, updateAvailableComplianceLevels } from "./compilerConfigurationViewSlice";
 import { CompilerRequest } from "../../vscode/utils";
@@ -54,6 +54,10 @@ const CompilerConfigurationView = (): JSX.Element | null => {
       Number(sourceLevel) > currentJdkComplianceLevel ||
       Number(targetLevel) > currentJdkComplianceLevel;
 
+  const complianceRef = useRef<HTMLElement>(null);
+  const sourceRef = useRef<HTMLElement>(null);
+  const targetRef = useRef<HTMLElement>(null);
+
   const onMessage = (event: any) => {
     const message = event.data;
     if (message.command === "compiler.onDidGetAvailableComplianceLevels") {
@@ -73,7 +77,58 @@ const CompilerConfigurationView = (): JSX.Element | null => {
     }
   }, []);
 
-  const jdkLevels = (selectedLevel: string, label: string, onClick: (value: string) => void) => {
+  // The vscode-single-select element renders its options in the shadow DOM and
+  // only emits a native `change` event on the host element, so the click handlers
+  // on the slotted vscode-option children never fire. Listen to `change` instead.
+  const useSelectChange = (ref: React.RefObject<HTMLElement | null>, onChange: (value: string) => void) => {
+    useEffect(() => {
+      const el = ref.current;
+      if (!el) {
+        return;
+      }
+      const handler = (e: Event) => {
+        const value = (e.target as any).value;
+        if (value) {
+          onChange(value);
+        }
+      };
+      el.addEventListener("change", handler);
+      return () => el.removeEventListener("change", handler);
+    }, [ref, onChange]);
+  };
+
+  const onChangeComplianceLevel = useCallback((value: string) => {
+    dispatch(updateCompilerSettings({ activeProjectIndex, complianceLevel: value }));
+  }, [dispatch, activeProjectIndex]);
+  const onChangeSourceLevel = useCallback((value: string) => {
+    dispatch(updateCompilerSettings({ activeProjectIndex, sourceLevel: value }));
+  }, [dispatch, activeProjectIndex]);
+  const onChangeTargetLevel = useCallback((value: string) => {
+    dispatch(updateCompilerSettings({ activeProjectIndex, targetLevel: value }));
+  }, [dispatch, activeProjectIndex]);
+
+  useSelectChange(complianceRef, onChangeComplianceLevel);
+  useSelectChange(sourceRef, onChangeSourceLevel);
+  useSelectChange(targetRef, onChangeTargetLevel);
+
+  // Keep the rendered selection in sync with the redux state.
+  useEffect(() => {
+    if (complianceRef.current && complianceLevel) {
+      (complianceRef.current as any).value = complianceLevel;
+    }
+  }, [complianceLevel, availableComplianceLevels]);
+  useEffect(() => {
+    if (sourceRef.current && sourceLevel) {
+      (sourceRef.current as any).value = sourceLevel;
+    }
+  }, [sourceLevel, availableComplianceLevels]);
+  useEffect(() => {
+    if (targetRef.current && targetLevel) {
+      (targetRef.current as any).value = targetLevel;
+    }
+  }, [targetLevel, availableComplianceLevels]);
+
+  const jdkLevels = (selectedLevel: string, label: string) => {
     return availableComplianceLevels.map((level) => {
 
       return (
@@ -81,8 +136,7 @@ const CompilerConfigurationView = (): JSX.Element | null => {
           className="setting-section-option"
           key={`${label}-${level}`}
           value={level}
-          selected={level === selectedLevel}
-          onClick={() => onClick(level)}
+          selected={level === selectedLevel ? true : undefined}
         >
           <span>{level}</span>
         </vscode-option>
@@ -101,27 +155,6 @@ const CompilerConfigurationView = (): JSX.Element | null => {
     dispatch(updateCompilerSettings({
       activeProjectIndex,
       enablePreview: e.target.checked
-    }));
-  };
-
-  const onClickComplianceLevel = (value: string) => {
-    dispatch(updateCompilerSettings({
-      activeProjectIndex,
-      complianceLevel: value
-    }));
-  };
-
-  const onClickSourceLevel = (value: string) => {
-    dispatch(updateCompilerSettings({
-      activeProjectIndex,
-      sourceLevel: value
-    }));
-  };
-
-  const onClickTargetLevel = (value: string) => {
-    dispatch(updateCompilerSettings({
-      activeProjectIndex,
-      targetLevel: value
     }));
   };
 
@@ -158,8 +191,8 @@ const CompilerConfigurationView = (): JSX.Element | null => {
                 <span>Bytecode version:</span>
               </vscode-table-cell>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
-                <vscode-single-select value={complianceLevel}>
-                  {jdkLevels(complianceLevel, "compliance", onClickComplianceLevel)}
+                <vscode-single-select ref={complianceRef}>
+                  {jdkLevels(complianceLevel, "compliance")}
                 </vscode-single-select>
               </vscode-table-cell>
             </vscode-table-row>
@@ -168,8 +201,8 @@ const CompilerConfigurationView = (): JSX.Element | null => {
                 <span>Source compatibility:</span>
               </vscode-table-cell>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
-                <vscode-single-select value={sourceLevel}>
-                  {jdkLevels(sourceLevel, "source", onClickSourceLevel)}
+                <vscode-single-select ref={sourceRef}>
+                  {jdkLevels(sourceLevel, "source")}
                 </vscode-single-select>
               </vscode-table-cell>
             </vscode-table-row>
@@ -178,8 +211,8 @@ const CompilerConfigurationView = (): JSX.Element | null => {
                 <span>Target compatibility:</span>
               </vscode-table-cell>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
-                <vscode-single-select value={targetLevel}>
-                  {jdkLevels(targetLevel, "target", onClickTargetLevel)}
+                <vscode-single-select ref={targetRef}>
+                  {jdkLevels(targetLevel, "target")}
                 </vscode-single-select>
               </vscode-table-cell>
             </vscode-table-row>
