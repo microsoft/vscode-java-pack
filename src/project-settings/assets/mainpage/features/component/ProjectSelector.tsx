@@ -4,7 +4,7 @@
 import "@vscode-elements/elements/dist/vscode-single-select/index.js";
 import "@vscode-elements/elements/dist/vscode-option/index.js";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ProjectInfo } from "../../../../types";
 import { Dispatch } from "@reduxjs/toolkit";
@@ -17,10 +17,37 @@ const ProjectSelector = (): JSX.Element | null => {
   const projects: ProjectInfo[] = useSelector((state: any) => state.commonConfig.data.projects);
 
   const dispatch: Dispatch<any> = useDispatch();
+  const selectRef = useRef<HTMLElement>(null);
 
-  const handleActiveProjectChange = (index: number) => {
+  const handleActiveProjectChange = useCallback((index: number) => {
     dispatch(activeProjectChange(index));
-  };
+  }, [dispatch]);
+
+  // The vscode-single-select element renders its options in the shadow DOM and
+  // only emits a native `change` event on the host element, so the click handlers
+  // on the slotted vscode-option children never fire. Listen to `change` instead.
+  useEffect(() => {
+    const el = selectRef.current;
+    if (!el) {
+      return;
+    }
+    const onChange = (e: Event) => {
+      const index = (e.target as any).selectedIndex;
+      if (typeof index === "number" && index >= 0) {
+        handleActiveProjectChange(index);
+      }
+    };
+    el.addEventListener("change", onChange);
+    return () => el.removeEventListener("change", onChange);
+  }, [handleActiveProjectChange]);
+
+  // Keep the rendered selection in sync with the active project index.
+  useEffect(() => {
+    const el = selectRef.current;
+    if (el && projects.length > 0) {
+      (el as any).selectedIndex = activeProjectIndex;
+    }
+  }, [activeProjectIndex, projects]);
 
   useEffect(() => {
     if (projects.length === 0) {
@@ -38,7 +65,12 @@ const ProjectSelector = (): JSX.Element | null => {
     }
 
     return (
-      <vscode-option className="setting-section-option" key={project.rootPath} onClick={() => handleActiveProjectChange(index)}>
+      <vscode-option
+        className="setting-section-option"
+        key={project.rootPath}
+        value={project.rootPath}
+        selected={index === activeProjectIndex ? true : undefined}
+      >
         {project.name}
       </vscode-option>
     );
@@ -48,7 +80,7 @@ const ProjectSelector = (): JSX.Element | null => {
     <div id="project-selector" className="setting-section">
       <div className="flex-center mt-2 mb-2">
         <span className="setting-section-description ml-1 mr-1">Project:</span>
-        <vscode-single-select className="setting-section-dropdown">
+        <vscode-single-select ref={selectRef} className="setting-section-dropdown">
             {projectSelections}
         </vscode-single-select>
       </div>
