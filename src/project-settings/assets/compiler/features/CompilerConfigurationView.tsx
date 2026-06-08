@@ -111,19 +111,21 @@ const CompilerConfigurationView = (): JSX.Element | null => {
   useSelectChange(sourceRef, onChangeSourceLevel);
   useSelectChange(targetRef, onChangeTargetLevel);
 
-  // Keep the rendered selection in sync with the redux state.
+  // Keep the rendered selection in sync with the redux state. Set the value
+  // unconditionally (even when the level is "") so the dropdown always reflects
+  // state instead of keeping the previous project's selection.
   useEffect(() => {
-    if (complianceRef.current && complianceLevel) {
+    if (complianceRef.current) {
       (complianceRef.current as any).value = complianceLevel;
     }
   }, [complianceLevel, availableComplianceLevels]);
   useEffect(() => {
-    if (sourceRef.current && sourceLevel) {
+    if (sourceRef.current) {
       (sourceRef.current as any).value = sourceLevel;
     }
   }, [sourceLevel, availableComplianceLevels]);
   useEffect(() => {
-    if (targetRef.current && targetLevel) {
+    if (targetRef.current) {
       (targetRef.current as any).value = targetLevel;
     }
   }, [targetLevel, availableComplianceLevels]);
