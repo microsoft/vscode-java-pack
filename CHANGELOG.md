@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.31.1
+
+- Exclude E2E test fixtures, test plans, and generated test results from the VSIX package in https://github.com/microsoft/vscode-java-pack/pull/1659
+
 ## 0.31.0
 
 - Refactor Java Pack webviews to React 19 and `@vscode-elements/elements` in https://github.com/microsoft/vscode-java-pack/pull/1616
