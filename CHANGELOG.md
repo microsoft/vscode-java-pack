@@ -2,7 +2,11 @@
 
 ## 0.31.1
 
+- Add Content Security Policy to webviews in https://github.com/microsoft/vscode-java-pack/pull/1648
+- Fix Project Settings dropdown updates in https://github.com/microsoft/vscode-java-pack/pull/1655
+- Bundle the codicon font in the Java Help Center webview in https://github.com/microsoft/vscode-java-pack/pull/1658
 - Exclude E2E test fixtures, test plans, and generated test results from the VSIX package in https://github.com/microsoft/vscode-java-pack/pull/1659
+- Update dependencies and build tooling.
 
 ## 0.31.0
 
