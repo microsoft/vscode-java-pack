@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.31.1
+
+- Add Content Security Policy to webviews in https://github.com/microsoft/vscode-java-pack/pull/1648
+- Fix Project Settings dropdown updates in https://github.com/microsoft/vscode-java-pack/pull/1655
+- Bundle the codicon font in the Java Help Center webview in https://github.com/microsoft/vscode-java-pack/pull/1658
+
 ## 0.31.0
 
 - Refactor Java Pack webviews to React 19 and `@vscode-elements/elements` in https://github.com/microsoft/vscode-java-pack/pull/1616
