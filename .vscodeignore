@@ -15,3 +15,6 @@ out/**/*.map
 *.vsix
 scripts
 .azure-pipelines/**
+test-fixtures/**
+test-plans/**
+test-results/**
