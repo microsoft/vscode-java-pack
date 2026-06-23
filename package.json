@@ -382,7 +382,7 @@
     "@vscode-elements/elements": "^2.5.0",
     "@vscode/codicons": "^0.0.45",
     "@xmldom/xmldom": "^0.8.13",
-    "axios": "^1.18.0",
+    "axios": "^1.18.1",
     "bootstrap": "^5.3.8",
     "compare-versions": "^6.1.1",
     "expand-home-dir": "0.0.3",
