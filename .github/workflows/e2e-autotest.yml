@@ -30,9 +30,9 @@ permissions:
   actions: read
 
 jobs:
-  # ── Job 1a: Build vscode-java-pack VSIX from the PR branch ───────
+  # ── Job 1a: Build vscode-java-pack VSIX from the PR/manual branch ───────
   build-pack:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,13 +50,13 @@ jobs:
       - name: Build extension
         run: npm run build
 
-      - name: Package PR VSIX
+      - name: Package branch VSIX
         run: npx @vscode/vsce@latest package -o vscode-java-pack-pr.vsix
 
-      - name: Upload PR VSIX
+      - name: Upload branch VSIX
         uses: actions/upload-artifact@v4
         with:
-          name: pr-vsix
+          name: pack-vsix
           path: vscode-java-pack-pr.vsix
           retention-days: 1
 
@@ -87,8 +87,8 @@ jobs:
   # ── Job 2: Run each test plan in parallel ───────────────
   e2e-test:
     needs: [discover, build-pack]
-    # build-pack is skipped on schedule/workflow_dispatch — only require it on PRs
-    if: ${{ always() && needs.discover.result == 'success' && (github.event_name != 'pull_request' || needs.build-pack.result == 'success') }}
+    # build-pack is skipped on schedule; PR/manual runs install this branch's pack VSIX first.
+    if: ${{ always() && needs.discover.result == 'success' && (github.event_name == 'schedule' || needs.build-pack.result == 'success') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -160,11 +160,11 @@ jobs:
           # Give Xvfb a moment to start before the autotest CLI launches VS Code.
           sleep 2
 
-      - name: Download PR VSIX (vscode-java-pack from branch)
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Download vscode-java-pack VSIX (from branch)
+        if: ${{ github.event_name != 'schedule' }}
         uses: actions/download-artifact@v4
         with:
-          name: pr-vsix
+          name: pack-vsix
           path: vsix
 
       - name: Download VSIX files
@@ -312,11 +312,14 @@ jobs:
         run: |
           $autotestArgs = @("run", "test-plans/${{ matrix.plan }}.yaml")
           if (Test-Path vsix) {
-            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
+            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" |
+              Sort-Object @{ Expression = { if ($_.Name -like "vscode-java-pack*") { 0 } else { 1 } } }, Name |
+              ForEach-Object { $_.FullName }) -join ","
             if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
 
-          # PRs test the branch-built VSIX against stable marketplace deps.
+          # PR/manual runs test the branch-built pack VSIX first, then any
+          # supplied VSIX overrides such as a vscode-java Actions run artifact.
           # LLM verification activates automatically when AZURE_OPENAI_* secrets
           # are available (e.g. internal PRs); fork PRs without secret access
           # simply skip the LLM step (LLMClient.isConfigured() returns false).
