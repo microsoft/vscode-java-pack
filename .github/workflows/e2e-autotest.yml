@@ -195,7 +195,6 @@ jobs:
           if ($artifactToken) {
             $githubArtifactHeaders.Authorization = "Bearer $artifactToken"
           }
-          $githubArtifactListHeaders = if ($env:VSCODE_JAVA_ARTIFACT_TOKEN) { $githubArtifactHeaders } else { $githubHeaders }
 
           function Select-VsixForPlatform {
             param(
@@ -232,7 +231,7 @@ jobs:
 
             Write-Host "Resolving GitHub Actions run: $Owner/$Repo#$RunId for platform $platformId"
             $artifactsUrl = "https://api.github.com/repos/$Owner/$Repo/actions/runs/$RunId/artifacts"
-            $artifacts = @((Invoke-RestMethod -Uri $artifactsUrl -Headers $githubArtifactListHeaders -UseBasicParsing).artifacts | Where-Object { -not $_.expired })
+            $artifacts = @((Invoke-RestMethod -Uri $artifactsUrl -Headers $githubArtifactHeaders -UseBasicParsing).artifacts | Where-Object { -not $_.expired })
             if (-not $artifacts) {
               throw "No non-expired artifacts found for GitHub Actions run $Owner/$Repo#$RunId"
             }
