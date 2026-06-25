@@ -303,6 +303,17 @@ jobs:
           Write-Host "Downloaded VSIX files:"
           Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { Write-Host "  $($_.Name) ($([math]::Round($_.Length/1MB, 1)) MB)" }
 
+      - name: Use vscode-java-pack as primary extension for VSIX override runs
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.vsix_urls != '' }}
+        shell: pwsh
+        run: |
+          $planFile = "test-plans/${{ matrix.plan }}.yaml"
+          $content = Get-Content $planFile -Raw
+          $content = $content -replace '(?m)^(\s*)extension:\s*"?redhat\.java"?\s*$', '$1extension: "vscjava.vscode-java-pack"'
+          $content = $content -replace '(?m)^(\s*)extensions:\s*\r?\n\1\s*-\s*"vscjava\.vscode-java-pack"\s*\r?\n', ''
+          Set-Content $planFile $content
+          Write-Host "Patched $planFile to install vscode-java through vscode-java-pack before applying VSIX overrides."
+
       - name: Run ${{ matrix.plan }}
         shell: pwsh
         env:
