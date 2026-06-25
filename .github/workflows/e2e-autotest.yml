@@ -15,7 +15,7 @@ on:
         default: ""
         type: string
       vsix_urls:
-        description: "VSIX URLs or GitHub release tag URLs, comma-separated (e.g. https://github.com/redhat-developer/vscode-java/releases/tag/v1.54.0,https://host/vscode-java-debug-0.58.0.vsix). Release tag URLs auto-resolve to the platform-specific VSIX for the runner OS."
+        description: "VSIX URLs, GitHub release tag URLs, GitHub Actions run URLs, or redhat-developer/vscode-java run IDs, comma-separated (e.g. https://github.com/redhat-developer/vscode-java/releases/tag/v1.54.0,https://github.com/redhat-developer/vscode-java/actions/runs/28102068371,https://host/vscode-java-debug-0.58.0.vsix). Release/run inputs auto-resolve to the platform-specific VSIX for the runner OS."
         required: false
         default: ""
         type: string
@@ -27,11 +27,12 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  # ── Job 1a: Build vscode-java-pack VSIX from the PR branch ───────
+  # ── Job 1a: Build vscode-java-pack VSIX from the PR/manual branch ───────
   build-pack:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -49,13 +50,13 @@ jobs:
       - name: Build extension
         run: npm run build
 
-      - name: Package PR VSIX
+      - name: Package branch VSIX
         run: npx @vscode/vsce@latest package -o vscode-java-pack-pr.vsix
 
-      - name: Upload PR VSIX
+      - name: Upload branch VSIX
         uses: actions/upload-artifact@v4
         with:
-          name: pr-vsix
+          name: pack-vsix
           path: vscode-java-pack-pr.vsix
           retention-days: 1
 
@@ -86,8 +87,8 @@ jobs:
   # ── Job 2: Run each test plan in parallel ───────────────
   e2e-test:
     needs: [discover, build-pack]
-    # build-pack is skipped on schedule/workflow_dispatch — only require it on PRs
-    if: ${{ always() && needs.discover.result == 'success' && (github.event_name != 'pull_request' || needs.build-pack.result == 'success') }}
+    # build-pack is skipped on schedule; PR/manual runs install this branch's pack VSIX first.
+    if: ${{ always() && needs.discover.result == 'success' && (github.event_name == 'schedule' || needs.build-pack.result == 'success') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -159,16 +160,19 @@ jobs:
           # Give Xvfb a moment to start before the autotest CLI launches VS Code.
           sleep 2
 
-      - name: Download PR VSIX (vscode-java-pack from branch)
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Download vscode-java-pack VSIX (from branch)
+        if: ${{ github.event_name != 'schedule' }}
         uses: actions/download-artifact@v4
         with:
-          name: pr-vsix
+          name: pack-vsix
           path: vsix
 
       - name: Download VSIX files
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.vsix_urls != '' }}
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VSCODE_JAVA_ARTIFACT_TOKEN: ${{ secrets.VSCODE_JAVA_ARTIFACT_TOKEN }}
         run: |
           New-Item -ItemType Directory -Path vsix -Force | Out-Null
           $urls = "${{ inputs.vsix_urls }}" -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
@@ -181,13 +185,94 @@ jobs:
           $platformId = "$platform-$arch"
           Write-Host "Runner platform: $platformId (${{ runner.os }}/${{ runner.arch }})"
 
+          $githubHeaders = @{
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+            "User-Agent" = "vscode-java-pack-autotest"
+          }
+          $artifactToken = if ($env:VSCODE_JAVA_ARTIFACT_TOKEN) { $env:VSCODE_JAVA_ARTIFACT_TOKEN } else { $env:GITHUB_TOKEN }
+          $githubArtifactHeaders = $githubHeaders.Clone()
+          if ($artifactToken) {
+            $githubArtifactHeaders.Authorization = "Bearer $artifactToken"
+          }
+
+          function Select-VsixForPlatform {
+            param(
+              [Parameter(Mandatory = $true)]
+              [System.IO.FileInfo[]] $VsixFiles,
+              [Parameter(Mandatory = $true)]
+              [string] $PlatformId
+            )
+
+            $platformVsix = $VsixFiles | Where-Object { $_.Name -like "*-$PlatformId-*" } | Sort-Object Name | Select-Object -First 1
+            if ($platformVsix) {
+              Write-Host "  Found platform-specific VSIX: $($platformVsix.Name)"
+              return $platformVsix
+            }
+
+            $universalVsix = $VsixFiles | Where-Object { $_.Name -notmatch '-(darwin|linux|win32)-' } | Sort-Object Name | Select-Object -First 1
+            if ($universalVsix) {
+              Write-Host "  No platform-specific VSIX found, using universal: $($universalVsix.Name)"
+              return $universalVsix
+            }
+
+            throw "No matching VSIX found for platform $PlatformId. Available VSIX files: $($VsixFiles.Name -join ', ')"
+          }
+
+          function Download-GitHubActionsRunVsix {
+            param(
+              [Parameter(Mandatory = $true)]
+              [string] $Owner,
+              [Parameter(Mandatory = $true)]
+              [string] $Repo,
+              [Parameter(Mandatory = $true)]
+              [string] $RunId
+            )
+
+            Write-Host "Resolving GitHub Actions run: $Owner/$Repo#$RunId for platform $platformId"
+            $artifactsUrl = "https://api.github.com/repos/$Owner/$Repo/actions/runs/$RunId/artifacts"
+            $artifacts = @((Invoke-RestMethod -Uri $artifactsUrl -Headers $githubArtifactHeaders -UseBasicParsing).artifacts | Where-Object { -not $_.expired })
+            if (-not $artifacts) {
+              throw "No non-expired artifacts found for GitHub Actions run $Owner/$Repo#$RunId"
+            }
+
+            $artifact = $artifacts | Where-Object { $_.name -eq "vscode-java" } | Select-Object -First 1
+            if (-not $artifact -and $artifacts.Count -eq 1) {
+              $artifact = $artifacts | Select-Object -First 1
+            }
+            if (-not $artifact) {
+              throw "No vscode-java artifact found for GitHub Actions run $Owner/$Repo#$RunId. Available artifacts: $($artifacts.name -join ', ')"
+            }
+
+            $safeArtifactName = $artifact.name -replace '[^\w.-]', '_'
+            $downloadDir = Join-Path "downloaded-artifacts" "$Owner-$Repo-$RunId-$safeArtifactName"
+            $zipPath = "$downloadDir.zip"
+            New-Item -ItemType Directory -Path $downloadDir -Force | Out-Null
+
+            Write-Host "  Downloading artifact: $($artifact.name)"
+            try {
+              Invoke-WebRequest -Uri $artifact.archive_download_url -OutFile $zipPath -Headers $githubArtifactHeaders -UseBasicParsing
+            } catch {
+              throw "Failed to download artifact $($artifact.name) from $Owner/$Repo#$RunId. Cross-repo artifact downloads may require a VSCODE_JAVA_ARTIFACT_TOKEN secret with actions:read access to the source repository. $($_.Exception.Message)"
+            }
+            Expand-Archive -LiteralPath $zipPath -DestinationPath $downloadDir -Force
+
+            $vsixFiles = @(Get-ChildItem $downloadDir -Recurse -Filter "*.vsix")
+            if ($vsixFiles.Count -eq 0) {
+              throw "Artifact $($artifact.name) from $Owner/$Repo#$RunId does not contain VSIX files"
+            }
+
+            $selectedVsix = Select-VsixForPlatform -VsixFiles $vsixFiles -PlatformId $platformId
+            Copy-Item -LiteralPath $selectedVsix.FullName -Destination (Join-Path "vsix" $selectedVsix.Name) -Force
+          }
+
           $resolvedUrls = @()
           foreach ($url in $urls) {
             if ($url -match '^https://github\.com/([^/]+)/([^/]+)/releases/tag/(.+)$') {
               $owner = $Matches[1]; $repo = $Matches[2]; $tag = $Matches[3]
               Write-Host "Resolving GitHub release: $owner/$repo@$tag for platform $platformId"
               $apiUrl = "https://api.github.com/repos/$owner/$repo/releases/tags/$tag"
-              $release = Invoke-RestMethod -Uri $apiUrl -Headers @{ Accept = "application/vnd.github.v3+json" } -UseBasicParsing
+              $release = Invoke-RestMethod -Uri $apiUrl -Headers $githubHeaders -UseBasicParsing
               $platformAsset = $release.assets | Where-Object { $_.name -like "*-$platformId-*" -and $_.name -like "*.vsix" } | Select-Object -First 1
               if ($platformAsset) {
                 Write-Host "  Found platform-specific VSIX: $($platformAsset.name)"
@@ -201,6 +286,10 @@ jobs:
                   Write-Host "::warning::No matching VSIX found in release $owner/$repo@$tag for platform $platformId"
                 }
               }
+            } elseif ($url -match '^https://github\.com/([^/]+)/([^/]+)/actions/runs/(\d+)') {
+              Download-GitHubActionsRunVsix -Owner $Matches[1] -Repo $Matches[2] -RunId $Matches[3]
+            } elseif ($url -match '^\d+$') {
+              Download-GitHubActionsRunVsix -Owner "redhat-developer" -Repo "vscode-java" -RunId $url
             } else {
               $resolvedUrls += $url
             }
@@ -214,6 +303,17 @@ jobs:
           Write-Host "Downloaded VSIX files:"
           Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { Write-Host "  $($_.Name) ($([math]::Round($_.Length/1MB, 1)) MB)" }
 
+      - name: Use vscode-java-pack as primary extension for VSIX override runs
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.vsix_urls != '' }}
+        shell: pwsh
+        run: |
+          $planFile = "test-plans/${{ matrix.plan }}.yaml"
+          $content = Get-Content $planFile -Raw
+          $content = $content -replace '(?m)^(\s*)extension:\s*"?redhat\.java"?\s*$', '$1extension: "vscjava.vscode-java-pack"'
+          $content = $content -replace '(?m)^(\s*)extensions:\s*\r?\n\1\s*-\s*"vscjava\.vscode-java-pack"\s*\r?\n', ''
+          Set-Content $planFile $content
+          Write-Host "Patched $planFile to install vscode-java through vscode-java-pack before applying VSIX overrides."
+
       - name: Run ${{ matrix.plan }}
         shell: pwsh
         env:
@@ -223,11 +323,14 @@ jobs:
         run: |
           $autotestArgs = @("run", "test-plans/${{ matrix.plan }}.yaml")
           if (Test-Path vsix) {
-            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" | ForEach-Object { $_.FullName }) -join ","
+            $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" |
+              Sort-Object @{ Expression = { if ($_.Name -like "vscode-java-pack*") { 0 } else { 1 } } }, Name |
+              ForEach-Object { $_.FullName }) -join ","
             if ($vsixFiles) { $autotestArgs += @("--vsix", $vsixFiles) }
           }
 
-          # PRs test the branch-built VSIX against stable marketplace deps.
+          # PR/manual runs test the branch-built pack VSIX first, then any
+          # supplied VSIX overrides such as a vscode-java Actions run artifact.
           # LLM verification activates automatically when AZURE_OPENAI_* secrets
           # are available (e.g. internal PRs); fork PRs without secret access
           # simply skip the LLM step (LLMClient.isConfigured() returns false).

@@ -99,6 +99,9 @@ steps:
     verifyProblems:
       errors: 0
     timeout: 60
+    # The deterministic diagnostics assertion is the ground truth here; the
+    # tab dirty indicator is not reliable enough for screenshot-only LLM checks.
+    skipLlmVerify: true
 
   # ══════════════════════════════════════════════════════════
   #  Steps 6-8: Completion, Organize Imports, Rename
@@ -155,9 +158,16 @@ steps:
     verify: "Foo.java is open in editor"
     timeout: 10
 
-  # Place cursor on "Foo" — use Find to locate the text, then close Find (cursor stays on it)
-  - id: "find-foo-class"
-    action: "findText Foo"
+  # Place the cursor inside the class declaration's "Foo". Searching just
+  # "Foo" can hit the Javadoc text first, where Java rename is unsupported.
+  - id: "find-foo-class-declaration"
+    action: "findText public class Foo"
+
+  - id: "collapse-selection-to-declaration-end"
+    action: "pressKey ArrowRight"
+
+  - id: "move-cursor-into-class-name"
+    action: "pressKey ArrowLeft"
 
   - id: "rename-foo-to-foonew"
     action: "renameSymbol FooNew"
