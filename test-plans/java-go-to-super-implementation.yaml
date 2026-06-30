@@ -1,0 +1,84 @@
+# Test Plan: Go to Super Implementation (hover link)
+#
+# Regression coverage for redhat-developer/vscode-java#4438 — the
+# "Go to super implementation" link in the hover popup of an overriding
+# method was not clickable in 1.55.0. This plan hovers the overriding
+# method, clicks the hover link, and verifies the editor navigates to the
+# super (base-class) implementation.
+#
+# Verifies: LS ready -> hover overriding method -> "Go to super
+# implementation" hover link is present and clickable -> editor opens
+# Base.java at Base#greet().
+#
+# Prerequisites:
+#   - JDK 11+ installed and available on PATH (the workflow installs JDK 21)
+#
+# Usage: autotest run test-plans/java-go-to-super-implementation.yaml
+
+name: "Java Navigation — Go to Super Implementation (hover link)"
+description: |
+  Validates the "Go to super implementation" hover link contributed by
+  vscode-java. Derived extends Base and overrides greet(); hovering the
+  overriding greet() shows a clickable link that navigates to Base#greet().
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../test-fixtures/super-implementation"
+  timeout: 300
+  workspaceSettings:
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.import.maven.enabled: true
+    editor.hover.sticky: true
+    editor.hover.delay: 100
+
+steps:
+  # ── Wait for LS ready ─────────────────────────────────────────
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "super-implementation project has been imported; the Java extension is activated and pom.xml is visible in the Explorer"
+    timeout: 300
+    waitBefore: 10
+    # waitForLanguageServer is authoritative — skip LLM screenshot re-check.
+    skipLlmVerify: true
+
+  # ── Open the overriding subclass ──────────────────────────────
+  - id: "open-derived"
+    action: "open file Derived.java"
+    verify: "Derived.java is open in the editor and shows the overriding greet() method"
+    verifyEditor:
+      contains: "public void greet"
+    waitBefore: 5
+    timeout: 15
+
+  # ── Hover the overriding method ───────────────────────────────
+  # The first "greet" occurrence in the visible editor is the overriding
+  # declaration. Hovering it renders vscode-java's hover popup which
+  # includes the "Go to super implementation" link. The after-step
+  # screenshot captures the open popup; the LLM verify confirms the link
+  # is actually shown (the regression for #4438 is exactly this link
+  # being absent / not rendered as a clickable link).
+  - id: "hover-greet"
+    action: "hoverOnText greet"
+    verify: "A hover popup is open over the overriding greet() method and it contains a clickable 'Go to super implementation' link"
+    waitBefore: 5
+    timeout: 30
+
+  # ── Click the hover link ──────────────────────────────────────
+  # This is the regression assertion for #4438: the link must be a
+  # clickable element that triggers navigation to the super method.
+  - id: "click-super-link"
+    action: "clickHoverAction Go to super implementation"
+    verify: "The 'Go to super implementation' hover link was clicked and the editor navigated from Derived.java to the base class — Base.java is now opening with the cursor moving onto Base#greet()"
+    timeout: 15
+
+  # ── Verify navigation landed on Base#greet() ──────────────────
+  - id: "verify-base-open"
+    action: "wait 2 seconds"
+    verify: "Base.java is the active editor tab and the cursor sits on the base greet() method (Hello from Base body visible) — navigation to the super implementation succeeded via the hover link"
+    verifyEditor:
+      fileName: "Base.java"
+      contains: "Hello from Base"
+    timeout: 15
