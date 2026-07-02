@@ -14,7 +14,7 @@ This skill analyzes GitHub issue content (title, body, comments) and applies app
 ## Workflow
 
 1. **Input**: Receive issue URL or issue number with repository (owner/repo)
-2. **Fetch labeling instructions**: Read `.github/llms.md` from the repository
+2. **Fetch labeling instructions**: Read `.github/llms.md` from the checked-out repository before deciding labels
 3. **Fetch issue**: Get issue details (title, body, existing labels)
 4. **Analyze issue**: Match issue content against labeling rules
 5. **Determine labels**: Select appropriate labels based on:
@@ -27,18 +27,18 @@ This skill analyzes GitHub issue content (title, body, comments) and applies app
 
 ## Reading Labeling Instructions
 
-Fetch `.github/llms.md` from the target repository using GitHub MCP tools. The file should define:
+Fetch `.github/llms.md` from the checked-out target repository. Do not use GitHub MCP tools. If repository content must be fetched remotely, use `gh api` with `GH_TOKEN`/`GITHUB_TOKEN`. The file should define:
 
 - **Available labels**: List of valid labels with descriptions
 - **Labeling rules**: Criteria for when to apply each label
 - **Keywords mapping**: Keywords that trigger specific labels
 
 **Only apply labels explicitly defined in this document. Do not apply any other labels.**
+The only exceptions are IssueLens lifecycle labels that are applied by the owning agent, such as `ai-triaged` and `duplicate`.
 
 If `.github/llms.md` is not found:
-1. Fetch the list of labels defined in the target repository using `github/list_labels`
-2. Create a brief summary of available labels based on their names and descriptions
-3. Use the summary to determine which labels best match the issue content
+1. Stop and report that labeling cannot continue because repository labeling instructions are missing.
+2. Do not fall back to applying labels from the repository label list alone.
 
 ## Issue Analysis
 
@@ -50,23 +50,21 @@ Analyze issue content to determine appropriate labels by:
 
 ## Applying Labels
 
-Run the bundled Python script to add labels:
+Run the bundled Python script from the repository root to validate labels against `.github/llms.md` and add them via `gh` CLI:
 
 ```bash
-# Install dependency
-pip install requests
-
 # Add labels to an issue
-python scripts/label_issue.py <owner> <repo> <issue_number> <labels>
+python .github/skills/label-issue/scripts/label_issue.py <owner> <repo> <issue_number> <labels>
 
-# Example: add bug and priority:high labels
-python scripts/label_issue.py microsoft vscode 123 "bug,priority:high"
+# Example: add bug and ai-triaged labels
+python .github/skills/label-issue/scripts/label_issue.py microsoft vscode 123 "bug,ai-triaged"
 
-# Example: add multiple area labels
-python scripts/label_issue.py microsoft vscode 123 "bug,area:ui,area:api"
+# Example: add needs more info and ai-triaged labels
+python .github/skills/label-issue/scripts/label_issue.py microsoft vscode 123 "needs more info,ai-triaged"
 ```
 
-The script [scripts/label_issue.py](scripts/label_issue.py) handles the GitHub API call.
+The script [scripts/label_issue.py](scripts/label_issue.py) handles the `gh issue edit` call.
+Do not use `gh issue edit --add-label` directly for IssueLens labeling because that bypasses `.github/llms.md` validation.
 
 ## Example Commands
 
@@ -103,12 +101,11 @@ Report the labeling decision with:
 
 The skill requires:
 
-1. **GITHUB_ACCESS_TOKEN** or **GITHUB_TOKEN** environment variable with `repo` scope
-2. **.github/llms.md** in target repository (optional but recommended)
+1. **GH_TOKEN** or **GITHUB_TOKEN** environment variable with `issues: write` permission
+2. **.github/llms.md** in target repository
 
 ## Fallback Behavior
 
 If labeling instructions are not found:
-1. Use default type detection rules
-2. Skip priority and area labels
-3. Report that default rules were used
+1. Do not apply labels.
+2. Report that `.github/llms.md` is required for labeling.
