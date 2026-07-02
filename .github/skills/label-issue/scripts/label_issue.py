@@ -1,43 +1,61 @@
 #!/usr/bin/env python3
 """
-Add labels to GitHub issues.
+Add labels to GitHub issues with gh CLI after validating them against .github/llms.md.
 
 Usage:
-    python label_issue.py <owner> <repo> <issue_number> <labels>
+    python label_issue.py <owner> <repo> <issue_number> <labels> [--dry-run]
 
 Environment Variables:
-    GITHUB_ACCESS_TOKEN or GITHUB_PAT: GitHub personal access token with repo scope
+    GH_TOKEN or GITHUB_TOKEN: GitHub token with issues: write permission
 """
 
-import os
 import sys
 import argparse
-import requests
+import re
+import subprocess
+from pathlib import Path
 
 
-def get_github_token() -> str:
-    """Get GitHub token from environment variables."""
-    token = os.environ.get("GITHUB_ACCESS_TOKEN") or os.environ.get("GITHUB_TOKEN") or os.environ.get("GITHUB_PAT")
-    if not token:
+LLMS_PATH = Path(".github/llms.md")
+LIFECYCLE_LABELS = {"ai-triaged", "duplicate"}
+
+
+def add_labels(owner: str, repo: str, issue_number: int, labels: list[str]) -> None:
+    """Add labels to a GitHub issue using gh CLI."""
+    subprocess.run(
+        [
+            "gh",
+            "issue",
+            "edit",
+            str(issue_number),
+            "--repo",
+            f"{owner}/{repo}",
+            "--add-label",
+            ",".join(labels),
+        ],
+        check=True,
+    )
+
+
+def load_allowed_labels(llms_path: Path = LLMS_PATH) -> set[str]:
+    """Load labels explicitly defined in .github/llms.md."""
+    if not llms_path.exists():
+        raise FileNotFoundError(f"Required labeling instructions not found: {llms_path}")
+
+    content = llms_path.read_text(encoding="utf-8")
+    labels = set(re.findall(r"^-\s+`([^`]+)`\s*:", content, flags=re.MULTILINE))
+    labels.update(LIFECYCLE_LABELS)
+    return labels
+
+
+def validate_labels(labels: list[str], allowed_labels: set[str]) -> None:
+    invalid_labels = [label for label in labels if label not in allowed_labels]
+    if invalid_labels:
+        allowed = ", ".join(sorted(allowed_labels))
+        invalid = ", ".join(invalid_labels)
         raise ValueError(
-            "GitHub token not found. Set GITHUB_ACCESS_TOKEN, GITHUB_TOKEN, or GITHUB_PAT environment variable."
+            f"Labels not allowed by .github/llms.md: {invalid}. Allowed labels: {allowed}"
         )
-    return token
-
-
-def add_labels(
-    owner: str, repo: str, issue_number: int, labels: list[str], token: str
-) -> dict:
-    """Add labels to a GitHub issue."""
-    url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/labels"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-    response = requests.post(url, headers=headers, json={"labels": labels})
-    response.raise_for_status()
-    return response.json()
 
 
 def main():
@@ -48,7 +66,10 @@ def main():
     parser.add_argument("repo", help="Repository name (e.g., 'vscode')")
     parser.add_argument("issue_number", type=int, help="Issue number to label")
     parser.add_argument(
-        "labels", help="Comma-separated list of labels (e.g., 'bug,priority:high')"
+        "labels", help="Comma-separated list of labels (e.g., 'bug,ai-triaged')"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Validate labels without calling the GitHub API"
     )
 
     args = parser.parse_args()
@@ -59,18 +80,22 @@ def main():
         sys.exit(1)
 
     try:
-        token = get_github_token()
-        result = add_labels(args.owner, args.repo, args.issue_number, labels, token)
-        applied_labels = [label["name"] for label in result]
-        print(f"✅ Labels added to issue #{args.issue_number}: {', '.join(applied_labels)}")
+        allowed_labels = load_allowed_labels()
+        validate_labels(labels, allowed_labels)
+        if args.dry_run:
+            print(f"✅ Labels valid for issue #{args.issue_number}: {', '.join(labels)}")
+            sys.exit(0)
+        add_labels(args.owner, args.repo, args.issue_number, labels)
+        print(f"✅ Labels added to issue #{args.issue_number}: {', '.join(labels)}")
         sys.exit(0)
-    except ValueError as e:
-        print(f"❌ Configuration error: {e}", file=sys.stderr)
+    except FileNotFoundError as e:
+        print(f"❌ Labeling instructions error: {e}", file=sys.stderr)
         sys.exit(1)
-    except requests.HTTPError as e:
-        print(f"❌ GitHub API error: {e}", file=sys.stderr)
-        if e.response is not None:
-            print(f"   Response: {e.response.text}", file=sys.stderr)
+    except ValueError as e:
+        print(f"❌ Label validation error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except subprocess.CalledProcessError as e:
+        print(f"❌ gh CLI error: {e}", file=sys.stderr)
         sys.exit(1)
 
 
