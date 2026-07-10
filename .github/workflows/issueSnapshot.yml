@@ -14,16 +14,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.repository.name }}
       - name: Save artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5 # v3.2.1
         with:
           path: ./*.json
           retention-days: 1
       - name: Log in to Azure
-        uses: azure/login@v1
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         with:
           creds: ${{ secrets.AZURE_CREDS }}
       - name: Upload to Azure
-        uses: azure/CLI@v1
+        uses: azure/CLI@4db43908b9df2e7ac93c8275a8f9a448c59338dd # v1.0.9
         with:
           inlineScript: |
             az storage blob upload-batch --account-name ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }} --auth-mode login -d ${{ vars.AZURE_STORAGE_CONTAINER_NAME }} -s .
