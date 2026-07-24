@@ -11,58 +11,126 @@ on:
         type: string
 
 permissions:
-  issues: write
   contents: read
+  issues: write
+  copilot-requests: write
+
+concurrency:
+  group: issue-lens-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
 
 jobs:
-  run-issuelens:
+  triage:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
       - name: Setup Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
-      
-      - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot
-      
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install tools
+        run: |
+          npm install -g @github/copilot@1.0.71-2
+          python -m pip install --disable-pip-version-check mcp==1.28.1
+
       - name: Determine issue number
         id: issue
-        run: |
-          if [ "${{ github.event_name }}" = "issues" ]; then
-            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
-          else
-            echo "number=${{ inputs.issue_number }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run IssueLens with Copilot CLI
-        id: issuelens
-        run: |
-          # Create MCP config
-          echo '{"mcpServers": {"javatooling-search": {"type": "http", "url": "${{ secrets.JAVATOOLING_INDEX_URL }}"}}}' > mcp-config.json
-
-          # Run copilot CLI with issuelens custom agent
-          output=$(copilot --agent=issuelens --allow-all --no-ask-user --additional-mcp-config @mcp-config.json --prompt "triage issue #${{ steps.issue.outputs.number }} for repo \"${{ github.repository }}\"" 2>&1 || true)
-          
-          echo "Raw output:"
-          echo "$output"
-          
-          # Save to file for artifact upload
-          echo "$output" > triage-output.txt
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.PAT }}
-          GH_TOKEN: ${{ github.token }}
+          EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
+          INPUT_ISSUE_NUMBER: ${{ inputs.issue_number }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "issues" ]; then
+            issue_number="$EVENT_ISSUE_NUMBER"
+          else
+            issue_number="$INPUT_ISSUE_NUMBER"
+          fi
+          if [[ ! "$issue_number" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Invalid issue number." >&2
+            exit 1
+          fi
+          echo "number=$issue_number" >> "$GITHUB_OUTPUT"
+
+      - name: Run IssueLens with constrained MCP tools
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_MCP_TOKEN: ${{ github.token }}
           JAVATOOLING_INDEX_URL: ${{ secrets.JAVATOOLING_INDEX_URL }}
           MAILING_URL: ${{ secrets.MAILING_URL }}
           REPORT_RECIPIENTS: ${{ secrets.REPORT_RECIPIENTS }}
-      
-      - name: Upload triage output
-        uses: actions/upload-artifact@v4
-        with:
-          name: triage-output
-          path: triage-output.txt
-          retention-days: 30
+          WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          set -euo pipefail
+          mcp_config="$RUNNER_TEMP/mcp-config.json"
+          cat > "$mcp_config" <<'JSON'
+          {
+            "mcpServers": {
+              "github_mcp": {
+                "type": "stdio",
+                "command": "docker",
+                "args": [
+                  "run",
+                  "-i",
+                  "--rm",
+                  "-e",
+                  "GITHUB_PERSONAL_ACCESS_TOKEN",
+                  "-e",
+                  "GITHUB_TOOLS",
+                  "ghcr.io/github/github-mcp-server@sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308"
+                ],
+                "env": {
+                  "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_MCP_TOKEN}",
+                  "GITHUB_TOOLS": "issue_read,search_issues,add_issue_comment,update_issue_labels"
+                },
+                "tools": ["issue_read", "search_issues", "add_issue_comment", "update_issue_labels"]
+              },
+              "mailing_mcp": {
+                "type": "stdio",
+                "command": "python",
+                "args": [".github/scripts/mailing_mcp.py"],
+                "env": {
+                  "MAILING_URL": "${MAILING_URL}",
+                  "REPORT_RECIPIENTS": "${REPORT_RECIPIENTS}",
+                  "WORKFLOW_RUN_URL": "${WORKFLOW_RUN_URL}"
+                },
+                "tools": ["send_email"]
+              },
+              "javatooling-search": {
+                "type": "http",
+                "url": "${JAVATOOLING_INDEX_URL}",
+                "tools": ["search_issues"]
+              }
+            }
+          }
+          JSON
+
+          copilot \
+            --agent=issuelens \
+            --prompt="Triage issue #$ISSUE_NUMBER in repository $GITHUB_REPOSITORY." \
+            --additional-mcp-config="@$mcp_config" \
+            --available-tools='view,glob,grep,github_mcp/*,mailing_mcp/*,javatooling-search/*' \
+            --allow-tool='read,github_mcp(issue_read),github_mcp(search_issues),github_mcp(add_issue_comment),github_mcp(update_issue_labels),mailing_mcp(send_email),javatooling-search(search_issues)' \
+            --disable-builtin-mcps \
+            --disallow-temp-dir \
+            --no-ask-user \
+            --no-custom-instructions \
+            --no-experimental \
+            --no-remote-export \
+            --log-level=none \
+            --no-color \
+            --output-format=text \
+            --stream=off \
+            --silent \
+            > "$RUNNER_TEMP/issuelens-output.txt"
