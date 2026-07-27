@@ -8,6 +8,8 @@ name: $(Date:yyyyMMdd).$(Rev:r) # Use the current date and a revision number for
 variables:
   - name: Codeql.Enabled
     value: true
+  - name: npm_config_userconfig
+    value: $(Agent.TempDirectory)/.npmrc
 resources:
   repositories:
     - repository: self
@@ -46,21 +48,7 @@ extends:
                 displayName: 'Use Node.js 20.x'
                 inputs:
                   version: '20.x'
-              # Keep in sync with .azure-pipelines/.npmrc. This release job has no
-              # `checkout` step, so the file tracked in the repository is not on disk.
-              - task: PowerShell@2
-                displayName: 'Configure CFS npm registry'
-                inputs:
-                  targetType: inline
-                  script: |-
-                    @(
-                      'registry=https://pkgs.dev.azure.com/mseng/VSJava/_packaging/vscjava/npm/registry/'
-                      'always-auth=true'
-                    ) | Set-Content -Path '$(Agent.TempDirectory)/.npmrc'
-              - task: NpmAuthenticate@0
-                displayName: 'Authenticate to CFS feed'
-                inputs:
-                  workingFile: $(Agent.TempDirectory)/.npmrc
+              - template: npm-cfs.yml
               - task: AzureCLI@2
                 displayName: 'vsce publish'
                 inputs:
@@ -68,5 +56,3 @@ extends:
                   scriptType: pscore
                   scriptLocation: inlineScript
                   inlineScript: 'npx @vscode/vsce@3.9.2 publish -i ''$(Build.SourcesDirectory)/extension.vsix'' --manifestPath ''$(Build.SourcesDirectory)/extension.manifest'' --signaturePath ''$(Build.SourcesDirectory)/extension.signature.p7s'' --azure-credential'
-                env:
-                  npm_config_userconfig: $(Agent.TempDirectory)/.npmrc

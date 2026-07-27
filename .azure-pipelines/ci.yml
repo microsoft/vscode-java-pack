@@ -2,6 +2,8 @@ name: $(Date:yyyyMMdd).$(Rev:r)
 variables:
   - name: Codeql.Enabled
     value: true
+  - name: npm_config_userconfig
+    value: $(Agent.TempDirectory)/.npmrc
 resources:
   repositories:
     - repository: self
@@ -47,22 +49,15 @@ extends:
                 displayName: Use Node 20.x
                 inputs:
                   versionSpec: 20.x
-              - task: NpmAuthenticate@0
-                displayName: Authenticate to CFS feed
-                inputs:
-                  workingFile: .azure-pipelines/.npmrc
+              - template: npm-cfs.yml
               - task: CmdLine@2
                 displayName: npm ci
                 inputs:
                   script: npm ci
-                env:
-                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - task: CmdLine@2
                 displayName: Command Line Script
                 inputs:
                   script: npx vsce package
-                env:
-                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - task: CopyFiles@2
                 displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
                 inputs:

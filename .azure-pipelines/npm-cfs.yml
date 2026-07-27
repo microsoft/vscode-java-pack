@@ -1,0 +1,37 @@
+# Single source of truth for routing npm package restore through the Central Feed
+# Service (CFS), as required by SFI Network Isolation. Every build pipeline in this
+# directory consumes this template, so the feed URL is declared exactly once.
+#
+# The .npmrc is generated at build time into the agent temp directory rather than
+# being committed to the repository, so that:
+#   * open source contributors and the GitHub Actions workflows keep restoring from
+#     the public npm registry -- npm rewrites the host of every `resolved` URL in
+#     package-lock.json to the configured registry, so a single lockfile serves both;
+#   * the credential that NpmAuthenticate injects never lands inside the workspace;
+#   * release jobs, which have no `checkout` step, work the same way as build jobs.
+#
+# Pipelines consuming this template must also declare the pipeline level variable
+#   npm_config_userconfig: $(Agent.TempDirectory)/.npmrc
+# npm matches npm_config_* environment variables case insensitively, so the
+# uppercased form that Azure Pipelines exports applies to every step on every OS.
+
+parameters:
+  - name: npmrcPath
+    type: string
+    default: $(Agent.TempDirectory)/.npmrc
+
+steps:
+  - task: PowerShell@2
+    displayName: Configure CFS npm registry
+    inputs:
+      targetType: inline
+      script: |-
+        @(
+          'registry=https://pkgs.dev.azure.com/mseng/VSJava/_packaging/vscjava/npm/registry/'
+          'always-auth=true'
+        ) | Set-Content -Path '${{ parameters.npmrcPath }}'
+
+  - task: NpmAuthenticate@0
+    displayName: Authenticate to CFS feed
+    inputs:
+      workingFile: ${{ parameters.npmrcPath }}

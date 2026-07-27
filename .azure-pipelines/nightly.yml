@@ -2,6 +2,8 @@ name: $(Date:yyyyMMdd).$(Rev:r)
 variables:
   - name: Codeql.Enabled
     value: true
+  - name: npm_config_userconfig
+    value: $(Agent.TempDirectory)/.npmrc
 schedules:
   - cron: 0 0 * * *
     branches:
@@ -48,16 +50,11 @@ extends:
                 displayName: Use Node 20.x
                 inputs:
                   versionSpec: 20.x
-              - task: NpmAuthenticate@0
-                displayName: Authenticate to CFS feed
-                inputs:
-                  workingFile: .azure-pipelines/.npmrc
+              - template: npm-cfs.yml
               - task: CmdLine@2
                 displayName: npm ci
                 inputs:
                   script: npm ci
-                env:
-                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - task: CmdLine@2
                 displayName: Replace AI Key
                 inputs:
@@ -75,8 +72,6 @@ extends:
                 displayName: VSCE package --pre-release
                 inputs:
                   script: npx vsce package --pre-release -o extension.vsix
-                env:
-                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               ### Copy files for APIScan
               - task: CopyFiles@2
                 displayName: "Copy Files for APIScan"
@@ -98,8 +93,6 @@ extends:
                   AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
               - script: npx vsce generate-manifest -i extension.vsix -o extension.manifest
                 displayName: 'Generate extension manifest'
-                env:
-                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - script: copy extension.manifest extension.signature.p7s
                 displayName: 'Prepare manifest for signing'
               - task: CmdLine@2
