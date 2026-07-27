@@ -338,7 +338,12 @@
     "compile": "webpack --config webpack.config.js",
     "watch": "webpack --config webpack.config.js --watch",
     "build": "webpack --config webpack.config.js --mode=\"production\"",
-    "update-tpn": "node scripts/update-third-party-notice.js"
+    "update-tpn": "node scripts/update-third-party-notice.js",
+    "set-ai-key": "node scripts/set-ai-key.js",
+    "package": "vsce package",
+    "package-release": "vsce package -o extension.vsix",
+    "package-pre-release": "vsce package --pre-release -o extension.vsix",
+    "generate-manifest": "vsce generate-manifest -i extension.vsix -o extension.manifest"
   },
   "devDependencies": {
     "@types/bytes": "^3.1.5",
@@ -353,6 +358,7 @@
     "@types/vscode": "^1.74.0",
     "@types/winreg": "^1.2.31",
     "@types/xmldom": "^0.1.31",
+    "@vscode/vsce": "^3.9.2",
     "autoprefixer": "^10.5.4",
     "bytes": "^3.1.2",
     "css-loader": "^7.1.2",

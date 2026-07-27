@@ -48,14 +48,22 @@ extends:
                 displayName: Use Node 20.x
                 inputs:
                   versionSpec: 20.x
-              - task: Npm@1
-                displayName: npm install
+              - task: NpmAuthenticate@0
+                displayName: Authenticate to CFS feed
                 inputs:
-                  verbose: false
+                  workingFile: .azure-pipelines/.npmrc
+              - task: CmdLine@2
+                displayName: npm ci
+                inputs:
+                  script: npm ci
+                env:
+                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - task: CmdLine@2
                 displayName: Replace AI Key
                 inputs:
-                  script: npx json@9.0.6 -I -f package.json -e "this.aiKey=\"%AI_KEY%\""
+                  script: npm run set-ai-key
+                env:
+                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - task: PowerShell@2
                 displayName: update version in package json
                 inputs:
@@ -66,7 +74,9 @@ extends:
               - task: CmdLine@2
                 displayName: VSCE package --pre-release
                 inputs:
-                  script: npx @vscode/vsce@latest package --pre-release -o extension.vsix
+                  script: npm run package-pre-release
+                env:
+                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               ### Copy files for APIScan
               - task: CopyFiles@2
                 displayName: "Copy Files for APIScan"
@@ -86,8 +96,10 @@ extends:
                 condition: and(succeeded(), ne(variables['DisableAPIScan'], 'true'))
                 env:
                   AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
-              - script: npx @vscode/vsce@latest generate-manifest -i extension.vsix -o extension.manifest
+              - script: npm run generate-manifest
                 displayName: 'Generate extension manifest'
+                env:
+                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - script: copy extension.manifest extension.signature.p7s
                 displayName: 'Prepare manifest for signing'
               - task: CmdLine@2

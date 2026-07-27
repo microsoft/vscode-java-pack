@@ -47,14 +47,22 @@ extends:
                 displayName: Use Node 20.x
                 inputs:
                   versionSpec: 20.x
-              - task: Npm@1
-                displayName: npm install
+              - task: NpmAuthenticate@0
+                displayName: Authenticate to CFS feed
                 inputs:
-                  verbose: false
+                  workingFile: .azure-pipelines/.npmrc
+              - task: CmdLine@2
+                displayName: npm ci
+                inputs:
+                  script: npm ci
+                env:
+                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - task: CmdLine@2
                 displayName: Command Line Script
                 inputs:
-                  script: npx @vscode/vsce@latest package
+                  script: npm run package
+                env:
+                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - task: CopyFiles@2
                 displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
                 inputs:
