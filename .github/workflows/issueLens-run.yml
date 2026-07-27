@@ -134,3 +134,12 @@ jobs:
             --stream=off \
             --silent \
             > "$RUNNER_TEMP/issuelens-output.txt"
+
+      - name: Upload IssueLens output
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: issuelens-output-${{ steps.issue.outputs.number || 'unknown' }}
+          path: ${{ runner.temp }}/issuelens-output.txt
+          if-no-files-found: ignore
+          retention-days: 7
