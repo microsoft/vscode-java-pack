@@ -73,7 +73,7 @@ def create_payload(title: str, body: str, recipients: list[str], workflow_run_ur
 
 @server.tool()
 def send_email(title: str, body: str) -> str:
-    """Send a plain-text issue triage report to the configured recipients."""
+    """Render and send a plain-text issue triage report as an HTML email."""
     mailing_url, recipients, workflow_run_url = require_environment()
     request = urllib.request.Request(
         mailing_url,
