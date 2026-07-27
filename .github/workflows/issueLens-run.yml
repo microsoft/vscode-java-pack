@@ -88,13 +88,17 @@ jobs:
                     "GITHUB_PERSONAL_ACCESS_TOKEN",
                     "-e",
                     "GITHUB_TOOLS",
+                    "-e",
+                    "GITHUB_FEATURES",
                     "ghcr.io/github/github-mcp-server@sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308"
                   ],
                   env: {
                     GITHUB_PERSONAL_ACCESS_TOKEN: "${GITHUB_MCP_TOKEN}",
-                    GITHUB_TOOLS: "issue_read,search_issues,add_issue_comment,update_issue_labels"
+                    GITHUB_TOOLS: "issue_read,search_issues,add_issue_comment,update_issue_labels",
+                    GITHUB_FEATURES: "issues_granular"
                   },
-                  tools: ["issue_read", "search_issues", "add_issue_comment", "update_issue_labels"]
+                  tools: ["issue_read", "search_issues", "add_issue_comment", "update_issue_labels"],
+                  deferTools: "never"
                 },
                 mailing_mcp: {
                   type: "stdio",
@@ -105,12 +109,14 @@ jobs:
                     REPORT_RECIPIENTS: "${REPORT_RECIPIENTS}",
                     WORKFLOW_RUN_URL: "${WORKFLOW_RUN_URL}"
                   },
-                  tools: ["send_email"]
+                  tools: ["send_email"],
+                  deferTools: "never"
                 },
                 "javatooling-search": {
                   type: "http",
                   url: $javatooling_url,
-                  tools: ["search_issues"]
+                  tools: ["search_issues"],
+                  deferTools: "never"
                 }
               }
             }
@@ -120,7 +126,7 @@ jobs:
             --agent=issuelens \
             --prompt="Triage issue #$ISSUE_NUMBER in repository $GITHUB_REPOSITORY." \
             --additional-mcp-config="@$mcp_config" \
-            --available-tools='view,glob,grep,github_mcp/*,mailing_mcp/*,javatooling-search/*' \
+            --available-tools='view,glob,grep,github_mcp-issue_read,github_mcp-search_issues,github_mcp-add_issue_comment,github_mcp-update_issue_labels,mailing_mcp-send_email,javatooling-search-search_issues' \
             --allow-tool='read,github_mcp(issue_read),github_mcp(search_issues),github_mcp(add_issue_comment),github_mcp(update_issue_labels),mailing_mcp(send_email),javatooling-search(search_issues)' \
             --disable-builtin-mcps \
             --disallow-temp-dir \
