@@ -1,0 +1,45 @@
+# Single source of truth for routing npm package restore through the Central Feed
+# Service (CFS), as required by SFI Network Isolation. Every build pipeline in this
+# directory consumes this template, so the feed URL is declared exactly once.
+#
+# The .npmrc is generated at build time into the agent temp directory rather than
+# being committed to the repository, so that:
+#   * open source contributors and the GitHub Actions workflows keep restoring from
+#     the public npm registry -- npm rewrites the host of every `resolved` URL in
+#     package-lock.json to the configured registry, so a single lockfile serves both;
+#   * the credential that NpmAuthenticate injects never lands inside the workspace;
+#   * the configuration does not depend on the repository being checked out, so
+#     release jobs consuming a prebuilt artifact work the same way as build jobs.
+#
+# Pipelines consuming this template must also declare the pipeline level variable
+#   npm_config_userconfig: $(Agent.TempDirectory)/.npmrc
+# npm matches npm_config_* environment variables case insensitively, so the
+# uppercased form that Azure Pipelines exports applies to every step on every OS.
+#
+# The file is written with `npm config set` rather than a shell redirect because the
+# pipelines span both Windows (VSEng-MicroBuildVSStable) and Linux
+# (1ES_JavaTooling_Ubuntu-2004) pools. `script:` maps to CmdLine@2, which runs on
+# both, and the npm invocation itself is shell agnostic. PowerShell@2 is avoided
+# because it resolves `pwsh` before `powershell` and hard fails when neither is on
+# PATH, which is not guaranteed on a custom Linux image.
+#
+# This template must run after the Node install task, and before any step that
+# restores packages -- including `npx`, which resolves downloads through the
+# configured registry.
+
+parameters:
+  - name: npmrcPath
+    type: string
+    default: $(Agent.TempDirectory)/.npmrc
+
+steps:
+  - script: npm config set registry https://pkgs.dev.azure.com/mseng/VSJava/_packaging/vscjava/npm/registry/ --location=user --userconfig="${{ parameters.npmrcPath }}"
+    displayName: Configure CFS npm registry
+
+  # Appends `//pkgs.dev.azure.com/.../registry/:_authToken=<token>` for every registry
+  # it finds in the file above. `always-auth` is deliberately not written: it is not
+  # read by this task and is rejected outright by the npm 10 shipped with Node 20.
+  - task: NpmAuthenticate@0
+    displayName: Authenticate to CFS feed
+    inputs:
+      workingFile: ${{ parameters.npmrcPath }}

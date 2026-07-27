@@ -2,6 +2,8 @@ name: $(Date:yyyyMMdd).$(Rev:r)
 variables:
   - name: Codeql.Enabled
     value: true
+  - name: npm_config_userconfig
+    value: $(Agent.TempDirectory)/.npmrc
 resources:
   repositories:
     - repository: self
@@ -47,10 +49,11 @@ extends:
                 displayName: Use Node 20.x
                 inputs:
                   versionSpec: 20.x
-              - task: Npm@1
+              - template: npm-cfs.yml
+              - task: CmdLine@2
                 displayName: npm install
                 inputs:
-                  verbose: false
+                  script: npm install
               - task: CmdLine@2
                 displayName: Command Line Script
                 inputs:
