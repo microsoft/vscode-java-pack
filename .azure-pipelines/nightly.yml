@@ -58,9 +58,7 @@ extends:
               - task: CmdLine@2
                 displayName: Replace AI Key
                 inputs:
-                  script: node ./scripts/set-ai-key.js
-                env:
-                  AI_KEY: $(AI_KEY)
+                  script: npx json@9.0.6 -I -f package.json -e "this.aiKey=\"%AI_KEY%\""
               - task: PowerShell@2
                 displayName: update version in package json
                 inputs:
