@@ -56,13 +56,13 @@ extends:
               - task: CmdLine@2
                 displayName: Replace AI Key
                 inputs:
-                  script: npm run set-ai-key
+                  script: node ./scripts/set-ai-key.js
                 env:
-                  npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
+                  AI_KEY: $(AI_KEY)
               - task: CmdLine@2
                 displayName: VSCE package
                 inputs:
-                  script: npm run package-release
+                  script: npx vsce package -o extension.vsix
                 env:
                   npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               ### Copy files for APIScan
@@ -84,7 +84,7 @@ extends:
                 condition: and(succeeded(), ne(variables['DisableAPIScan'], 'true'))
                 env:
                   AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
-              - script: npm run generate-manifest
+              - script: npx vsce generate-manifest -i extension.vsix -o extension.manifest
                 displayName: 'Generate extension manifest'
                 env:
                   npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc

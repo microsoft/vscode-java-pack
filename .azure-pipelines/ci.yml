@@ -60,7 +60,7 @@ extends:
               - task: CmdLine@2
                 displayName: Command Line Script
                 inputs:
-                  script: npm run package
+                  script: npx vsce package
                 env:
                   npm_config_userconfig: $(Build.SourcesDirectory)/.azure-pipelines/.npmrc
               - task: CopyFiles@2
