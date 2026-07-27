@@ -74,47 +74,47 @@ jobs:
         run: |
           set -euo pipefail
           mcp_config="$RUNNER_TEMP/mcp-config.json"
-          cat > "$mcp_config" <<'JSON'
-          {
-            "mcpServers": {
-              "github_mcp": {
-                "type": "stdio",
-                "command": "docker",
-                "args": [
-                  "run",
-                  "-i",
-                  "--rm",
-                  "-e",
-                  "GITHUB_PERSONAL_ACCESS_TOKEN",
-                  "-e",
-                  "GITHUB_TOOLS",
-                  "ghcr.io/github/github-mcp-server@sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308"
-                ],
-                "env": {
-                  "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_MCP_TOKEN}",
-                  "GITHUB_TOOLS": "issue_read,search_issues,add_issue_comment,update_issue_labels"
+          jq -n --arg javatooling_url "$JAVATOOLING_INDEX_URL" '
+            {
+              mcpServers: {
+                github_mcp: {
+                  type: "stdio",
+                  command: "docker",
+                  args: [
+                    "run",
+                    "-i",
+                    "--rm",
+                    "-e",
+                    "GITHUB_PERSONAL_ACCESS_TOKEN",
+                    "-e",
+                    "GITHUB_TOOLS",
+                    "ghcr.io/github/github-mcp-server@sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308"
+                  ],
+                  env: {
+                    GITHUB_PERSONAL_ACCESS_TOKEN: "${GITHUB_MCP_TOKEN}",
+                    GITHUB_TOOLS: "issue_read,search_issues,add_issue_comment,update_issue_labels"
+                  },
+                  tools: ["issue_read", "search_issues", "add_issue_comment", "update_issue_labels"]
                 },
-                "tools": ["issue_read", "search_issues", "add_issue_comment", "update_issue_labels"]
-              },
-              "mailing_mcp": {
-                "type": "stdio",
-                "command": "python",
-                "args": [".github/scripts/mailing_mcp.py"],
-                "env": {
-                  "MAILING_URL": "${MAILING_URL}",
-                  "REPORT_RECIPIENTS": "${REPORT_RECIPIENTS}",
-                  "WORKFLOW_RUN_URL": "${WORKFLOW_RUN_URL}"
+                mailing_mcp: {
+                  type: "stdio",
+                  command: "python",
+                  args: [".github/scripts/mailing_mcp.py"],
+                  env: {
+                    MAILING_URL: "${MAILING_URL}",
+                    REPORT_RECIPIENTS: "${REPORT_RECIPIENTS}",
+                    WORKFLOW_RUN_URL: "${WORKFLOW_RUN_URL}"
+                  },
+                  tools: ["send_email"]
                 },
-                "tools": ["send_email"]
-              },
-              "javatooling-search": {
-                "type": "http",
-                "url": "${JAVATOOLING_INDEX_URL}",
-                "tools": ["search_issues"]
+                "javatooling-search": {
+                  type: "http",
+                  url: $javatooling_url,
+                  tools: ["search_issues"]
+                }
               }
             }
-          }
-          JSON
+          ' > "$mcp_config"
 
           copilot \
             --agent=issuelens \
