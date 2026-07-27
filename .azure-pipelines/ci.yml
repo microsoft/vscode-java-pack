@@ -51,13 +51,13 @@ extends:
                   versionSpec: 20.x
               - template: npm-cfs.yml
               - task: CmdLine@2
-                displayName: npm ci
+                displayName: npm install
                 inputs:
-                  script: npm ci
+                  script: npm install
               - task: CmdLine@2
                 displayName: Command Line Script
                 inputs:
-                  script: npx vsce package
+                  script: npx @vscode/vsce@latest package
               - task: CopyFiles@2
                 displayName: "Copy Files to: $(Build.ArtifactStagingDirectory)"
                 inputs:

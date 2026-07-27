@@ -55,4 +55,4 @@ extends:
                   azureSubscription: 'VSCode-Ext-Publishing'
                   scriptType: pscore
                   scriptLocation: inlineScript
-                  inlineScript: 'npx @vscode/vsce@3.9.2 publish -i ''$(Build.SourcesDirectory)/extension.vsix'' --manifestPath ''$(Build.SourcesDirectory)/extension.manifest'' --signaturePath ''$(Build.SourcesDirectory)/extension.signature.p7s'' --azure-credential --allow-all-proposed-apis'
+                  inlineScript: 'npx @vscode/vsce@latest publish -i ''$(Build.SourcesDirectory)/extension.vsix'' --manifestPath ''$(Build.SourcesDirectory)/extension.manifest'' --signaturePath ''$(Build.SourcesDirectory)/extension.signature.p7s'' --azure-credential --allow-all-proposed-apis'

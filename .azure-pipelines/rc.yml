@@ -47,9 +47,9 @@ extends:
                   versionSpec: 20.x
               - template: npm-cfs.yml
               - task: CmdLine@2
-                displayName: npm ci
+                displayName: npm install
                 inputs:
-                  script: npm ci
+                  script: npm install
               - task: CmdLine@2
                 displayName: Replace AI Key
                 inputs:
@@ -57,7 +57,7 @@ extends:
               - task: CmdLine@2
                 displayName: VSCE package
                 inputs:
-                  script: npx vsce package -o extension.vsix
+                  script: npx @vscode/vsce@latest package -o extension.vsix
               ### Copy files for APIScan
               - task: CopyFiles@2
                 displayName: "Copy Files for APIScan"
@@ -77,7 +77,7 @@ extends:
                 condition: and(succeeded(), ne(variables['DisableAPIScan'], 'true'))
                 env:
                   AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
-              - script: npx vsce generate-manifest -i extension.vsix -o extension.manifest
+              - script: npx @vscode/vsce@latest generate-manifest -i extension.vsix -o extension.manifest
                 displayName: 'Generate extension manifest'
               - script: copy extension.manifest extension.signature.p7s
                 displayName: 'Prepare manifest for signing'
