@@ -49,7 +49,7 @@ extends:
                 displayName: Use Node 20.x
                 inputs:
                   versionSpec: 20.x
-              - template: npm-cfs.yml
+              - template: /.azure-pipelines/npm-cfs.yml@self
               - task: CmdLine@2
                 displayName: npm install
                 inputs:
