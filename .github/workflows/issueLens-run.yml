@@ -74,6 +74,10 @@ jobs:
         run: |
           set -euo pipefail
           mcp_config="$RUNNER_TEMP/mcp-config.json"
+          copilot_log_dir="$RUNNER_TEMP/copilot-logs"
+          output_file="$RUNNER_TEMP/issuelens-output.txt"
+          mkdir -p "$copilot_log_dir"
+          trap 'rm -f "$mcp_config"; rm -rf "$copilot_log_dir"' EXIT
           jq -n --arg javatooling_url "$JAVATOOLING_INDEX_URL" '
             {
               mcpServers: {
@@ -122,6 +126,8 @@ jobs:
             }
           ' > "$mcp_config"
 
+          copilot --version
+          set +e
           copilot \
             --agent=issuelens \
             --prompt="Triage issue #$ISSUE_NUMBER in repository $GITHUB_REPOSITORY." \
@@ -134,12 +140,22 @@ jobs:
             --no-custom-instructions \
             --no-experimental \
             --no-remote-export \
-            --log-level=none \
+            --log-dir="$copilot_log_dir" \
+            --log-level=info \
             --no-color \
             --output-format=text \
             --stream=off \
-            --silent \
-            > "$RUNNER_TEMP/issuelens-output.txt"
+            | tee "$output_file"
+          copilot_status=$?
+          set -e
+
+          echo "::group::Copilot MCP diagnostics"
+          find "$copilot_log_dir" -type f -name '*.log' -exec \
+            grep -hE '\[(INFO|WARN|ERROR)\].*(MCP|mcp|rmcp|Service initialized as client)' {} + \
+            || true
+          echo "::endgroup::"
+
+          exit "$copilot_status"
 
       - name: Upload IssueLens output
         if: always()
