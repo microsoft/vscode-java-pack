@@ -1,11 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 import axios from "axios";
-import * as https from "https";
-
-// workaround: certificate expired, will be fixed when vscode adopts Electron v15.1.0
-// see: https://github.com/node-fetch/node-fetch/issues/568#issuecomment-932435180
-https.globalAgent.options.rejectUnauthorized = false;
 
 /**
  * 
