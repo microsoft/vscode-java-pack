@@ -110,7 +110,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Setup Java 25 (for java25 test plans)
         if: contains(matrix.plan, 'java25')
@@ -361,7 +361,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install autotest CLI
         run: npm install -g @vscjava/vscode-autotest
