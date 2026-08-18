@@ -26,7 +26,11 @@ extends:
             templateContext:
               mb:
                  signing:
-                   enabled: false
+                   enabled: true
+                   signType: real
+                   signWithProd: true
+                   zipSources: false
+                   feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
               outputs:
                 - output: pipelineArtifact
                   artifactName: vsix
@@ -36,19 +40,6 @@ extends:
               - checkout: self
                 clean: true
                 fetchTags: false
-              # Pin the last known-good Windows plugin while the 1.1.1374 client certificate regression is unresolved.
-              - task: NuGetAuthenticate@1
-                displayName: Authenticate MicroBuild feed
-              - task: MicroBuildSigningPlugin@4
-                displayName: Install Signing Plugin 1.1.1330
-                inputs:
-                  signType: real
-                  version: '1.1.1330'
-                  zipSources: false
-                  ConnectedPMEServiceName: '40012d40-9ded-4f75-8476-d60758200346'
-                  feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
-                env:
-                  MicroBuildOutputFolderOverride: '$(Agent.TempDirectory)'
               - task: NodeTool@0
                 displayName: Use Node 20.x
                 inputs:
