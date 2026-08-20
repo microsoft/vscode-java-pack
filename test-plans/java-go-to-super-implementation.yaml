@@ -82,3 +82,6 @@ steps:
       fileName: "Base.java"
       contains: "Hello from Base"
     timeout: 15
+    # Navigation completed in the previous step, so this settle-and-assert
+    # step is visually unchanged by design. verifyEditor is authoritative.
+    skipLlmVerify: true

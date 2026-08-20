@@ -72,4 +72,10 @@ steps:
 
   - id: "save-file"
     action: "saveFile"
-    verify: "File saved"
+    verify: "Test1.java is saved to disk"
+    verifyFile:
+      path: "~/project1/src/main/java/project1/Test1.java"
+      contains: "// gradle test marker"
+    # The disk assertion proves saveFile persisted the in-memory edit. The
+    # screenshot-only check can misread the small tab dirty-dot transition.
+    skipLlmVerify: true

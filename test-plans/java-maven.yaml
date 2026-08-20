@@ -70,4 +70,10 @@ steps:
   # 2e. Save file
   - id: "save-file"
     action: "saveFile"
-    verify: "File saved"
+    verify: "Foo.java is saved to disk"
+    verifyFile:
+      path: "~/src/main/java/java/Foo.java"
+      contains: "// autotest marker"
+    # The disk assertion proves saveFile persisted the in-memory edit. The
+    # screenshot-only check can misread the small tab dirty-dot transition.
+    skipLlmVerify: true
