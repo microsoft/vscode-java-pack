@@ -25,6 +25,9 @@ setup:
   extension: "redhat.java"
   extensions:
     - "vscjava.vscode-java-pack"
+  # vscode-java 1.55.0 stable contains the #4438 regression covered by this
+  # plan; use the pre-release carrying the fix on PR runs as schedules do.
+  preRelease: true
   vscodeVersion: "stable"
   workspace: "../test-fixtures/super-implementation"
   timeout: 300
@@ -82,3 +85,6 @@ steps:
       fileName: "Base.java"
       contains: "Hello from Base"
     timeout: 15
+    # Navigation completed in the previous step, so this settle-and-assert
+    # step is visually unchanged by design. verifyEditor is authoritative.
+    skipLlmVerify: true

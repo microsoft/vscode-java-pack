@@ -153,12 +153,33 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          Xvfb :99 -screen 0 1920x1080x24 &
+          if ! command -v Xvfb >/dev/null 2>&1; then
+            echo "Xvfb is not preinstalled; installing it with bounded apt operations."
+            apt_options=(
+              -o Acquire::Retries=3
+              -o Acquire::http::Timeout=15
+              -o Acquire::https::Timeout=15
+            )
+            if ! sudo timeout 120s apt-get "${apt_options[@]}" update; then
+              echo "::error::Timed out while refreshing apt metadata for Xvfb."
+              exit 1
+            fi
+            if ! sudo timeout 120s apt-get "${apt_options[@]}" install -y --no-install-recommends xvfb; then
+              echo "::error::Timed out while installing Xvfb."
+              exit 1
+            fi
+          fi
+
+          Xvfb :99 -screen 0 1920x1080x24 >"$RUNNER_TEMP/xvfb.log" 2>&1 &
+          xvfb_pid=$!
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
           # Give Xvfb a moment to start before the autotest CLI launches VS Code.
           sleep 2
+          if ! kill -0 "$xvfb_pid" 2>/dev/null; then
+            cat "$RUNNER_TEMP/xvfb.log"
+            echo "::error::Xvfb failed to start."
+            exit 1
+          fi
 
       - name: Download vscode-java-pack VSIX (from branch)
         if: ${{ github.event_name != 'schedule' }}
