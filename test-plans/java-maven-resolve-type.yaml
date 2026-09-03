@@ -75,6 +75,7 @@ steps:
       atLeast: true
     waitBefore: 8
     timeout: 60
+    skipLlmVerify: true  # verifyEditor and verifyProblems are authoritative.
 
   # Close all editors before modifying pom.xml on disk. Having pom.xml
   # open in the editor while `insertLineInFile` writes to disk can leave
@@ -122,6 +123,7 @@ steps:
       contains: "com.google.code.gson"
     waitBefore: 3
     timeout: 10
+    skipLlmVerify: true  # verifyEditor is authoritative; screenshot rendering can lag.
 
   # Explicitly trigger a Maven re-import so the newly-added gson dependency is
   # picked up on the classpath. With `java.configuration.updateBuildConfiguration:
