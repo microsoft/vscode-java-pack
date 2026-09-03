@@ -56,6 +56,8 @@ steps:
   - id: "open-app"
     action: "open file App.java"
     verify: "App.java file is open in the editor"
+    verifyProblems:
+      errors: 0
     waitBefore: 5
     timeout: 15
 
@@ -63,18 +65,22 @@ steps:
   # wiki: "type 'Gson gson;'" — line 4 places the field inside the class body.
   # The Problems panel is not auto-opened by autotest and the red squiggle
   # may take a moment to render, so verify text describes only the
-  # inserted code line. The deterministic verifyProblems.errors >= 1
-  # polls the diagnostics API and is the ground truth for the LS error.
+  # inserted code line. The deterministic file assertion proves the edit
+  # landed inside the class, while the exact error count establishes the
+  # expected 0 → 1 diagnostic transition.
   - id: "insert-unknown-type"
     action: "insertLineInFile src/main/java/com/example/App.java 4         Gson gson;"
     verify: "App.java editor now shows the inserted 'Gson gson;' declaration inside the class body"
+    verifyFile:
+      path: "~/src/main/java/com/example/App.java"
+      matches: 'public class App \{\r?\n[ \t]*Gson gson;'
     verifyEditor:
       contains: "Gson gson;"
     verifyProblems:
       errors: 1
-      atLeast: true
     waitBefore: 8
     timeout: 60
+    skipLlmVerify: true  # File, editor, and diagnostic checks are authoritative.
 
   # Close all editors before modifying pom.xml on disk. Having pom.xml
   # open in the editor while `insertLineInFile` writes to disk can leave
@@ -120,8 +126,11 @@ steps:
     verify: "pom.xml is open in the editor and shows the inserted <dependency> block referencing com.google.code.gson"
     verifyEditor:
       contains: "com.google.code.gson"
+    verifyEditorTab:
+      title: "pom.xml"
     waitBefore: 3
     timeout: 10
+    skipLlmVerify: true  # Editor content and visible tab checks are authoritative.
 
   # Explicitly trigger a Maven re-import so the newly-added gson dependency is
   # picked up on the classpath. With `java.configuration.updateBuildConfiguration:
