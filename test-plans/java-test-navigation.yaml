@@ -1,0 +1,86 @@
+# Test Plan: Java Test Navigation
+#
+# Regression coverage for Java Test Runner navigation between a production
+# class and its corresponding test class.
+#
+# Verifies: LS ready -> Go to Test opens CalculatorTest.java ->
+# Go to Test Subject returns to Calculator.java.
+#
+# Prerequisites:
+#   - JDK 11+ installed and available
+#
+# Usage: autotest run test-plans/java-test-navigation.yaml
+
+name: "Java Test Runner - Navigate Between Test and Subject"
+description: |
+  Verifies that Java Test Runner can discover the corresponding test and
+  production classes and navigate between them using command palette actions.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  preRelease: true
+  vscodeVersion: "stable"
+  workspace: "../test-fixtures/maven-junit"
+  timeout: 360
+  workspaceSettings:
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.import.maven.enabled: true
+
+steps:
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    verify: "The maven-junit workspace has loaded and the Java language server is ready"
+    timeout: 300
+    skipLlmVerify: true
+
+  - id: "open-subject"
+    action: "open file Calculator.java"
+    verify: "Calculator.java is open in the editor"
+    verifyEditor:
+      fileName: "Calculator.java"
+      contains: "public class Calculator"
+    timeout: 15
+    waitBefore: 5
+    skipLlmVerify: true
+
+  # Test discovery and Java search indexing continue asynchronously after the
+  # language server reports ready, especially on cold CI runners.
+  - id: "wait-for-indexing"
+    action: "wait 90 seconds"
+
+  - id: "go-to-test"
+    action: "run command Java: Go to Test"
+    verify: "The Java: Go to Test command was selected and dispatched from the command palette"
+    timeout: 30
+    waitBefore: 3
+    skipLlmVerify: true
+
+  # Command Palette dismissal only proves that VS Code dispatched the command.
+  # Navigation completes asynchronously on macOS, so verify the resulting
+  # editor state in a separate settle step.
+  - id: "verify-test-open"
+    action: "wait 15 seconds"
+    verify: "CalculatorTest.java is the active editor after Java: Go to Test"
+    verifyEditor:
+      fileName: "CalculatorTest.java"
+      contains: "public class CalculatorTest"
+    timeout: 30
+    skipLlmVerify: true
+
+  - id: "go-to-test-subject"
+    action: "run command Java: Go to Test Subject"
+    verify: "The Java: Go to Test Subject command was selected and dispatched from the command palette"
+    timeout: 30
+    waitBefore: 3
+    skipLlmVerify: true
+
+  - id: "verify-subject-open"
+    action: "wait 15 seconds"
+    verify: "Calculator.java is the active editor after Java: Go to Test Subject"
+    verifyEditor:
+      fileName: "Calculator.java"
+      contains: "public class Calculator"
+    timeout: 30
+    skipLlmVerify: true
