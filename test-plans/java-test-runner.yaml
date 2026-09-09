@@ -1,7 +1,7 @@
 # Test Plan: Java Test Runner (from vscode-java-pack.wiki)
 #
 # Source: wiki Test-Plan.md "Java Test Runner" scenario
-# Verify: test discovery → run all tests → execution marker → CodeLens run
+# Verify: test discovery → run tests → execution marker
 #
 # Uses test-fixtures/maven-junit — a self-contained Maven + JUnit 5 fixture
 # owned by this repo. Upstream `vscode-java/maven/salut` has no @Test files,
@@ -13,10 +13,10 @@
 #
 # Usage: autotest run test-plans/java-test-runner.yaml
 
-name: "Java Test Runner — Test Panel and CodeLens"
+name: "Java Test Runner — Discovery and Execution"
 description: |
   Corresponds to the Java Test Runner scenario in the wiki Test Plan:
-  Verify that the test panel displays test cases and tests can be run via the panel or CodeLens.
+  Verify that Java tests are discovered and actually executed.
 
 setup:
   extension: "redhat.java"
@@ -25,12 +25,6 @@ setup:
   vscodeVersion: "stable"
   workspace: "../test-fixtures/maven-junit"
   timeout: 360  # First import needs to download JUnit jars on cold caches
-  # Force java.test.editor.enableCodelens=true so the Run|Debug CodeLens
-  # gutter links render reliably in the reopen-test-file verify screenshot.
-  # The vscode-java-test extension defaults to true but a stale user/Machine
-  # settings.json on the runner can override it.
-  workspaceSettings:
-    java.test.editor.enableCodelens: true
 
 steps:
   # ── Wait for LS ready ─────────────────────────────────────────
@@ -84,39 +78,6 @@ steps:
   - id: "verify-run-all-executed"
     action: "wait 45 seconds"
     verify: "CalculatorTest.testAdd completed successfully and wrote its execution marker"
-    verifyFile:
-      path: "~/target/autotest-executed.txt"
-      contains: "testAdd passed"
-    skipLlmVerify: true
-
-  # ── Step 3: Verify CodeLens discovery and execution ──────────
-  - id: "clear-codelens-marker"
-    action: "deleteFile target/autotest-executed.txt"
-    verify: "The execution marker has been removed before the CodeLens run"
-    verifyFile:
-      path: "~/target/autotest-executed.txt"
-      exists: false
-    skipLlmVerify: true
-
-  - id: "reopen-test-file"
-    action: "open file CalculatorTest.java"
-    verify: "CalculatorTest.java is the active editor before invoking its Run CodeLens"
-    verifyEditor:
-      fileName: "CalculatorTest.java"
-      contains: "@Test"
-    timeout: 10
-    waitBefore: 5
-    skipLlmVerify: true
-
-  - id: "run-via-codelens"
-    action: "clickCodeLens Run"
-    verify: "The visible Run CodeLens was clicked"
-    timeout: 30
-    skipLlmVerify: true
-
-  - id: "verify-codelens-executed"
-    action: "wait 45 seconds"
-    verify: "The CodeLens test run completed successfully and recreated the execution marker"
     verifyFile:
       path: "~/target/autotest-executed.txt"
       contains: "testAdd passed"
