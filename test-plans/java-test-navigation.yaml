@@ -52,20 +52,35 @@ steps:
 
   - id: "go-to-test"
     action: "run command Java: Go to Test"
-    verify: "The editor navigated from Calculator.java to CalculatorTest.java"
-    verifyEditor:
-      fileName: "CalculatorTest.java"
-      contains: "public class CalculatorTest"
+    verify: "The Java: Go to Test command was selected and dispatched from the command palette"
     timeout: 30
     waitBefore: 3
     skipLlmVerify: true
 
+  # Command Palette dismissal only proves that VS Code dispatched the command.
+  # Navigation completes asynchronously on macOS, so verify the resulting
+  # editor state in a separate settle step.
+  - id: "verify-test-open"
+    action: "wait 15 seconds"
+    verify: "CalculatorTest.java is the active editor after Java: Go to Test"
+    verifyEditor:
+      fileName: "CalculatorTest.java"
+      contains: "public class CalculatorTest"
+    timeout: 30
+    skipLlmVerify: true
+
   - id: "go-to-test-subject"
     action: "run command Java: Go to Test Subject"
-    verify: "The editor navigated from CalculatorTest.java back to Calculator.java"
+    verify: "The Java: Go to Test Subject command was selected and dispatched from the command palette"
+    timeout: 30
+    waitBefore: 3
+    skipLlmVerify: true
+
+  - id: "verify-subject-open"
+    action: "wait 15 seconds"
+    verify: "Calculator.java is the active editor after Java: Go to Test Subject"
     verifyEditor:
       fileName: "Calculator.java"
       contains: "public class Calculator"
     timeout: 30
-    waitBefore: 3
     skipLlmVerify: true
