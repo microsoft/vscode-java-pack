@@ -56,9 +56,15 @@ steps:
 
   # ── Set breakpoint ───────────────────────────────────────
   # App.java line 5: System.out.println("Hello Java");
+  # Do not use LLM screenshot verification for the gutter dot: breakpoint
+  # decorations can render too late on macOS. The later debugStepOver action
+  # is authoritative — without a working breakpoint this one-line program
+  # exits during the settle wait and debugStepOver fails with no active
+  # debug session.
   - id: "set-breakpoint"
     action: "setBreakpoint 5"
-    verify: "Red breakpoint dot is shown in the gutter of App.java line 5"
+    verify: "Debug: Toggle Breakpoint was dispatched for App.java line 5"
+    skipLlmVerify: true
 
   # ── Start debug session ─────────────────────────────────
   - id: "start-debug"
@@ -67,17 +73,12 @@ steps:
     timeout: 30
 
   # ── Verify breakpoint hit ───────────────────────────────
-  # wiki: "verify if the breakpoint is hit". The deterministic ground
-  # truth is the next step `debugStepOver` — it can only succeed if the
-  # debugger is paused. The verify text is intentionally lenient: the
-  # yellow execution-line marker can be off-viewport when the debug
-  # toolbar pushes the editor down, so we accept either the marker or
-  # the debug toolbar in paused state as evidence.
-  - id: "verify-breakpoint"
+  # Allow the program to reach the breakpoint. The next debugStepOver action
+  # deterministically fails if the debug session already exited.
+  - id: "wait-for-breakpoint"
     action: "wait 10 seconds"
-    verify: "Program is paused at the breakpoint — debug toolbar visible in paused state or the yellow execution-line marker appears on/near App.java line 5"
 
-  # ── Continue execution ──────────────────────────────────
+  # ── Verify breakpoint and continue execution ────────────
   - id: "continue-debug"
     action: "debugStepOver"
     verify: "Program has stepped one statement and remains paused (debug toolbar still in paused state)"
