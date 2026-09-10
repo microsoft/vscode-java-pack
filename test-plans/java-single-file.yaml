@@ -57,8 +57,8 @@ steps:
 
   # ── Step 4: Verify basic editing ────────────────────────────────
   - id: "goto-main"
-    action: "goToLine 6"
-    verify: "Cursor moved to main method"
+    action: "goToLine 5"
+    verify: "Cursor moved to the existing statement inside the main method"
 
   - id: "goto-end"
     action: "goToEndOfLine"
