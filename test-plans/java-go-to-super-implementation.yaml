@@ -68,6 +68,9 @@ steps:
     verify: "A hover popup is open over the overriding greet() method and it contains a clickable 'Go to super implementation' link"
     waitBefore: 5
     timeout: 30
+    # The popup can still show "Loading..." when the screenshot is captured on
+    # macOS. The next step deterministically proves that the link is available.
+    skipLlmVerify: true
 
   # ── Click the hover link ──────────────────────────────────────
   # This is the regression assertion for #4438: the link must be a
