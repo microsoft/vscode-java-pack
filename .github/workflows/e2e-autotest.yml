@@ -146,8 +146,10 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install autotest CLI
-        run: npm install -g @vscjava/vscode-autotest
+      - name: Install latest autotest CLI
+        run: |
+          npm install -g @vscjava/vscode-autotest@latest
+          npm list -g @vscjava/vscode-autotest --depth=0
 
       - name: Setup virtual display (Linux)
         if: runner.os == 'Linux'
@@ -342,7 +344,12 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
         run: |
-          $autotestArgs = @("run", "test-plans/${{ matrix.plan }}.yaml")
+          $autotestArgs = @(
+            "run",
+            "test-plans/${{ matrix.plan }}.yaml",
+            "--analysis-mode",
+            "case"
+          )
           if (Test-Path vsix) {
             $vsixFiles = (Get-ChildItem vsix -Filter "*.vsix" |
               Sort-Object @{ Expression = { if ($_.Name -like "vscode-java-pack*") { 0 } else { 1 } } }, Name |
@@ -352,9 +359,10 @@ jobs:
 
           # PR/manual runs test the branch-built pack VSIX first, then any
           # supplied VSIX overrides such as a vscode-java Actions run artifact.
-          # LLM verification activates automatically when AZURE_OPENAI_* secrets
-          # are available (e.g. internal PRs); fork PRs without secret access
-          # simply skip the LLM step (LLMClient.isConfigured() returns false).
+          # Case mode always captures the evidence bundle. LLM verification and
+          # case analysis activate when AZURE_OPENAI_* secrets are available;
+          # runs without secret access retain the evidence and record the
+          # unavailable analysis without changing the test verdict.
           # Scheduled & manual runs default to --pre-release unless explicitly disabled.
           $isPR = "${{ github.event_name }}" -eq "pull_request"
           if (-not $isPR -and "${{ inputs.pre_release }}" -ne "false") {
@@ -374,7 +382,7 @@ jobs:
 
   # ── Job 3: Aggregate analysis ───────────────────────────
   analyze:
-    if: ${{ always() && needs.e2e-test.result != 'skipped' && github.event_name != 'pull_request' && inputs.test_plan == '' }}
+    if: ${{ always() && needs.e2e-test.result != 'skipped' && github.event_name != 'pull_request' }}
     needs: e2e-test
     runs-on: ubuntu-latest
 
@@ -384,8 +392,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install autotest CLI
-        run: npm install -g @vscjava/vscode-autotest
+      - name: Install latest autotest CLI
+        run: |
+          npm install -g @vscjava/vscode-autotest@latest
+          npm list -g @vscjava/vscode-autotest --depth=0
 
       - name: Download all results
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -414,7 +424,7 @@ jobs:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-        run: autotest analyze test-results --output test-results
+        run: autotest analyze test-results --output test-results --analysis-mode case --report-only
 
       - name: Write Job Summary
         if: always()
@@ -428,5 +438,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: e2e-aggregate-summary
-          path: test-results/summary.md
+          path: |
+            test-results/summary.md
+            test-results/*/results.json
+            test-results/*/analysis/
+            test-results/*/evidence/manifest.json
           retention-days: 30
