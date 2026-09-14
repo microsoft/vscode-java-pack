@@ -382,7 +382,7 @@ jobs:
 
   # ── Job 3: Aggregate analysis ───────────────────────────
   analyze:
-    if: ${{ always() && needs.e2e-test.result != 'skipped' && github.event_name != 'pull_request' }}
+    if: ${{ always() && needs.e2e-test.result != 'skipped' && github.event_name != 'pull_request' && inputs.test_plan == '' }}
     needs: e2e-test
     runs-on: ubuntu-latest
 
