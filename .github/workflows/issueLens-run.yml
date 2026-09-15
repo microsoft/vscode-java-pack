@@ -2,7 +2,9 @@ name: Run IssueLens Agent
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
+  issue_comment:
+    types: [created, edited]
   workflow_dispatch:
     inputs:
       issue_number:
@@ -10,142 +12,37 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: read
-  issues: write
-  copilot-requests: write
+permissions: {}
 
 concurrency:
-  group: issue-lens-${{ github.event.issue.number || inputs.issue_number }}
+  group: issuelens-${{ github.repository }}-issue-${{ github.event.issue.number || inputs.issue_number || github.run_id }}
   cancel-in-progress: false
 
 jobs:
   triage:
+    if: >-
+      ${{ (github.event_name != 'issue_comment' ||
+           (github.event.issue.pull_request == null &&
+            github.event.sender.type == 'User' &&
+            github.event.comment.user.type == 'User')) &&
+          (github.event_name != 'workflow_dispatch' ||
+           github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: read
+      id-token: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Run IssueLens issue loop
+        uses: microsoft/IssueLens/.github/actions/issuelens@49df3d97547069f891a68248be6ed722c2aeca2f
         with:
-          persist-credentials: false
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '22'
-
-      - name: Setup Python 3.12
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12'
-
-      - name: Install tools
-        run: |
-          npm install -g @github/copilot@1.0.71-2
-          python -m pip install --disable-pip-version-check mcp==1.28.1
-
-      - name: Determine issue number
-        id: issue
-        env:
-          EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-          INPUT_ISSUE_NUMBER: ${{ inputs.issue_number }}
-        run: |
-          set -euo pipefail
-          if [ "$GITHUB_EVENT_NAME" = "issues" ]; then
-            issue_number="$EVENT_ISSUE_NUMBER"
-          else
-            issue_number="$INPUT_ISSUE_NUMBER"
-          fi
-          if [[ ! "$issue_number" =~ ^[1-9][0-9]*$ ]]; then
-            echo "Invalid issue number." >&2
-            exit 1
-          fi
-          echo "number=$issue_number" >> "$GITHUB_OUTPUT"
-
-      - name: Run IssueLens with constrained MCP tools
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ github.token }}
-          GITHUB_MCP_TOKEN: ${{ github.token }}
-          JAVATOOLING_INDEX_URL: ${{ secrets.JAVATOOLING_INDEX_URL }}
-          MAILING_URL: ${{ secrets.MAILING_URL }}
-          REPORT_RECIPIENTS: ${{ secrets.REPORT_RECIPIENTS }}
-          WORKFLOW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
-        run: |
-          set -euo pipefail
-          mcp_config="$RUNNER_TEMP/mcp-config.json"
-          jq -n --arg javatooling_url "$JAVATOOLING_INDEX_URL" '
-            {
-              mcpServers: {
-                github_mcp: {
-                  type: "stdio",
-                  command: "docker",
-                  args: [
-                    "run",
-                    "-i",
-                    "--rm",
-                    "-e",
-                    "GITHUB_PERSONAL_ACCESS_TOKEN",
-                    "-e",
-                    "GITHUB_TOOLS",
-                    "-e",
-                    "GITHUB_FEATURES",
-                    "ghcr.io/github/github-mcp-server@sha256:c491ffdf6f4c85cb5397021bc655edb8ab825c6f5f568e7597d77a1bd7c4d308"
-                  ],
-                  env: {
-                    GITHUB_PERSONAL_ACCESS_TOKEN: "${GITHUB_MCP_TOKEN}",
-                    GITHUB_TOOLS: "issue_read,search_issues,add_issue_comment,update_issue_labels",
-                    GITHUB_FEATURES: "issues_granular"
-                  },
-                  tools: ["issue_read", "search_issues", "add_issue_comment", "update_issue_labels"],
-                  deferTools: "never"
-                },
-                mailing_mcp: {
-                  type: "stdio",
-                  command: "python",
-                  args: [".github/scripts/mailing_mcp.py"],
-                  env: {
-                    MAILING_URL: "${MAILING_URL}",
-                    REPORT_RECIPIENTS: "${REPORT_RECIPIENTS}",
-                    WORKFLOW_RUN_URL: "${WORKFLOW_RUN_URL}"
-                  },
-                  tools: ["send_email"],
-                  deferTools: "never"
-                },
-                "javatooling-search": {
-                  type: "http",
-                  url: $javatooling_url,
-                  tools: ["search_issues"],
-                  deferTools: "never"
-                }
-              }
-            }
-          ' > "$mcp_config"
-
-          copilot \
-            --agent=issuelens \
-            --prompt="Triage issue #$ISSUE_NUMBER in repository $GITHUB_REPOSITORY." \
-            --additional-mcp-config="@$mcp_config" \
-            --available-tools='view,glob,grep,github_mcp-issue_read,github_mcp-search_issues,github_mcp-add_issue_comment,github_mcp-update_issue_labels,mailing_mcp-send_email,javatooling-search-search_issues' \
-            --allow-tool='read,github_mcp(issue_read),github_mcp(search_issues),github_mcp(add_issue_comment),github_mcp(update_issue_labels),mailing_mcp(send_email),javatooling-search(search_issues)' \
-            --disable-builtin-mcps \
-            --disallow-temp-dir \
-            --no-ask-user \
-            --no-custom-instructions \
-            --no-experimental \
-            --no-remote-export \
-            --log-level=none \
-            --no-color \
-            --output-format=text \
-            --stream=off \
-            --silent \
-            > "$RUNNER_TEMP/issuelens-output.txt"
-
-      - name: Upload IssueLens output
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: issuelens-output-${{ steps.issue.outputs.number || 'unknown' }}
-          path: ${{ runner.temp }}/issuelens-output.txt
-          if-no-files-found: ignore
-          retention-days: 7
+          request-type: issue-loop
+          issue-number: ${{ inputs.issue_number }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          agent-url: ${{ secrets.ISSUELENS_AGENT_URL }}
+          agent-scope: ${{ secrets.ISSUELENS_AGENT_SCOPE }}
+          output-mode: activity
+          summary-mode: status
