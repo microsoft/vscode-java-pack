@@ -178,7 +178,11 @@ steps:
 
   - id: "verify-jdk-dropdown"
     action: "wait 2 seconds"
-    verify: "screenshot shows the JDK dropdown expanded with at least one runtime entry"
+    verify: >
+      After waiting, the JDK dropdown is expanded with at least one visible
+      runtime entry. This checks the current state, not an opening transition.
+      If the dropdown was already expanded before waiting, unchanged screenshots
+      are expected and should pass, provided a runtime entry is still visible.
 
   - id: "close-java-runtime"
     action: "run command View: Close All Editors"
