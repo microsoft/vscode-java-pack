@@ -65,9 +65,27 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.scan.outputs.matrix }}
+      autotest_version: ${{ steps.autotest.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Resolve AutoTest version for this run
+        id: autotest
+        shell: bash
+        run: |
+          version=$(npm view @vscjava/vscode-autotest@latest version)
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid AutoTest version returned by npm: $version"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Using AutoTest $version for all jobs in this run"
 
       - name: Resolve test plan matrix
         id: scan
@@ -146,9 +164,9 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Install latest autotest CLI
+      - name: Install resolved AutoTest CLI
         run: |
-          npm install -g @vscjava/vscode-autotest@latest
+          npm install -g "@vscjava/vscode-autotest@${{ needs.discover.outputs.autotest_version }}"
           npm list -g @vscjava/vscode-autotest --depth=0
 
       - name: Setup virtual display (Linux)
@@ -382,8 +400,8 @@ jobs:
 
   # ── Job 3: Aggregate analysis ───────────────────────────
   analyze:
-    if: ${{ always() && needs.e2e-test.result != 'skipped' && github.event_name != 'pull_request' && inputs.test_plan == '' }}
-    needs: e2e-test
+    if: ${{ always() && needs.discover.result == 'success' && needs.e2e-test.result != 'skipped' && github.event_name != 'pull_request' && inputs.test_plan == '' }}
+    needs: [discover, e2e-test]
     runs-on: ubuntu-latest
 
     steps:
@@ -392,9 +410,9 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install latest autotest CLI
+      - name: Install resolved AutoTest CLI
         run: |
-          npm install -g @vscjava/vscode-autotest@latest
+          npm install -g "@vscjava/vscode-autotest@${{ needs.discover.outputs.autotest_version }}"
           npm list -g @vscjava/vscode-autotest --depth=0
 
       - name: Download all results
