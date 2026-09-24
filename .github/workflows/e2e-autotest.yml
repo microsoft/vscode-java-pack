@@ -442,6 +442,7 @@ jobs:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          AUTOTEST_AGGREGATE_ANALYSIS_MAX_TOKENS: "16000"
         run: autotest analyze test-results --output test-results --analysis-mode case --report-only
 
       - name: Write Job Summary
