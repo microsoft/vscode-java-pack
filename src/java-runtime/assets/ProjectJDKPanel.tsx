@@ -19,7 +19,7 @@ import { onWillListRuntimes, openBuildScript } from "./vscode.api";
 interface Props {
   jdkEntries: JavaRuntimeEntry[];
   projectRuntimes: ProjectRuntimeEntry[];
-  javaDotHome?: string;
+  javaDotHome: string;
   toolingJreVersion?: number;
   requiredJdkVersion: number;
 }
@@ -75,7 +75,7 @@ export function ProjectJDKPanel({ jdkEntries, projectRuntimes, javaDotHome, tool
   return (
     <div className="container">
       <h1>Configure Runtime for Projects</h1>
-      {javaDotHome && <p>Java Language Server uses <code>{javaDotHome}</code> (Java {toolingJreVersion}). JDK {requiredJdkVersion}+ is required for the language server only; your projects can use older JDKs.</p>}
+      <p>Language server runtime reported by redhat.java: <code>{javaDotHome}</code> (Java {toolingJreVersion}). JDK {requiredJdkVersion}+ is required for the language server only; your projects can use older JDKs.</p>
       {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
       {
         projectEntries.length > 0 ?

@@ -49,7 +49,7 @@ export default function FaqPanel({ requiredJdkVersion }: { requiredJdkVersion: n
 
       <h2 className="font-weight-light">Why do I see the JDK errors?</h2>
       <p>
-        <strong><code>JDK {requiredJdkVersion}+</code> is required</strong> to run the installed Java language support (redhat.java) extension. A compatible bundled runtime can satisfy this requirement; otherwise, a compatible local JDK is needed. You see this error because we failed to find one. The <a href="command:java.runtime">Configure Java Runtime</a> guide can help you understand how JDK path is searched and provides download links if you need to install one.
+        <strong><code>JDK {requiredJdkVersion}+</code> is required</strong> to run the installed Java language support (redhat.java) extension. A compatible bundled runtime can satisfy this requirement; otherwise, a compatible local JDK is needed. The <a href="command:java.runtime">Configure Java Runtime</a> guide shows the runtime reported by redhat.java, or compatible candidates if its selection is not yet available. Java Pack does not choose the runtime. The guide also provides download links if you need to install a JDK.
       </p>
 
       <h2 className="font-weight-light">Can I run my Java 8 project with JDK 1.8?</h2>

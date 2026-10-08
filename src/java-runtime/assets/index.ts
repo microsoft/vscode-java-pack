@@ -7,11 +7,12 @@ import "./style.scss";
 import { ProjectJDKPanel } from "./ProjectJDKPanel";
 import { onWillListRuntimes } from "./vscode.api";
 import { ToolingJDKPanel } from "./ToolingJDKPanel";
+import { JavaRuntimeData } from "../types";
 
 const container = document.getElementById("content")!;
 const root = createRoot(container);
 
-const onInitialize = (event: any) => {
+const onInitialize = (event: MessageEvent<{command: string; args: JavaRuntimeData}>) => {
   const { data } = event;
   if (data.command === "showJavaRuntimeEntries") {
     showJavaRuntimeEntries(data.args);
@@ -21,23 +22,16 @@ const onInitialize = (event: any) => {
 window.addEventListener("message", onInitialize);
 onWillListRuntimes();
 
-function showJavaRuntimeEntries(args: any) {
-  if (args.javaHomeError) {
-    const props = {
-      jdkEntries: args.javaRuntimes,
-      javaHomeError: args.javaHomeError,
-      javaDotHome: args.javaDotHome,
-      requiredJdkVersion: args.requiredJdkVersion
-    };
-    root.render(createElement(ToolingJDKPanel, props));
+function showJavaRuntimeEntries(args: JavaRuntimeData) {
+  if (args.javaHomeError || !args.javaDotHome) {
+    root.render(createElement(ToolingJDKPanel, args));
   } else {
-    const props = {
+    root.render(createElement(ProjectJDKPanel, {
       jdkEntries: args.javaRuntimes,
       projectRuntimes: args.projectRuntimes,
       javaDotHome: args.javaDotHome,
       toolingJreVersion: args.toolingJreVersion,
-      requiredJdkVersion: args.requiredJdkVersion,
-    }
-    root.render(createElement(ProjectJDKPanel, props));
+      requiredJdkVersion: args.requiredJdkVersion
+    }));
   }
 }
