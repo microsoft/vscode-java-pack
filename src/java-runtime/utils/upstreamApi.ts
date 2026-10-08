@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
-// based on https://github.com/redhat-developer/vscode-java/blob/c4cdbed1190fc705c364179dab525645acf03898/src/requirements.ts
+// based on https://github.com/redhat-developer/vscode-java/blob/4e49f187a903b8c7b1ed7277a3b2535691fd59f3/src/requirements.ts
 
+import { compareVersions } from "compare-versions";
 import * as fse from "fs-extra";
 import { findRuntimes, getRuntime, getSources, IJavaRuntime, JAVAC_FILENAME, JAVA_FILENAME } from 'jdk-utils';
 import * as path from "path";
@@ -10,101 +11,115 @@ import * as vscode from "vscode";
 import { env, workspace } from 'vscode';
 
 const expandHomeDir = require("expand-home-dir");
-export const REQUIRED_JDK_VERSION = 17;
 
-export async function resolveRequirements(): Promise<{
+export interface RequirementsData {
     tooling_jre: string | undefined;  // Used to launch Java extension.
     tooling_jre_version: number;
     java_home: string | undefined; // Used as default project JDK.
     java_version: number;
-}> {
-    const javaExtPath: string | undefined = vscode.extensions.getExtension("redhat.java")?.extensionPath
+}
+
+export function getRequiredJdkVersion(): number {
+    const javaExt = vscode.extensions.getExtension("redhat.java");
+    // Installation guidance uses the current release's minimum when the extension is absent.
+    if (!javaExt || compareVersions(javaExt.packageJSON.version, "1.57.0") >= 0) {
+        return 25;
+    }
+    if (compareVersions(javaExt.packageJSON.version, "1.39.0") >= 0) {
+        return 21;
+    }
+    return 17;
+}
+
+export async function resolveRequirements(): Promise<RequirementsData> {
+    const javaExt = vscode.extensions.getExtension<{ javaRequirement?: RequirementsData }>("redhat.java");
+    if (!javaExt) {
+        throw new Error("The required extension 'redhat.java' is not installed.");
+    }
+    const requiredJdkVersion = getRequiredJdkVersion();
+    const requirements = javaExt.isActive ? javaExt.exports?.javaRequirement : undefined;
+    if (requirements) {
+        if (!requirements.tooling_jre || requirements.tooling_jre_version < requiredJdkVersion) {
+            throw new Error(getJdkRequirementError(requiredJdkVersion));
+        }
+        return requirements;
+    }
+
+    const javaExtPath = javaExt.extensionPath;
     let toolingJre: string | undefined = await findEmbeddedJRE(javaExtPath);
     let toolingJreVersion: number = await getMajorVersion(toolingJre);
-    return new Promise(async (resolve, reject) => {
-        let source: string;
-        const javaPreferences = checkJavaPreferences();
-        let preferenceName = javaPreferences.preference;
-        let javaVersion: number = 0;
-        let javaHome = javaPreferences.javaHome;
-        if (javaHome) { // java.jdt.ls.java.home or java.home setting has highest priority.
-            source = `java.home variable defined in ${env.appName} settings`;
-            javaHome = expandHomeDir(javaHome);
-            if (!await fse.pathExists(javaHome!)) {
-                invalidJavaHome(reject, `The ${source} points to a missing or inaccessible folder (${javaHome})`);
-            } else if (!await fse.pathExists(path.resolve(javaHome!, 'bin', JAVAC_FILENAME))) {
-                let msg: string;
-                if (await fse.pathExists(path.resolve(javaHome!, JAVAC_FILENAME))) {
-                    msg = `'bin' should be removed from the ${source} (${javaHome})`;
-                } else {
-                    msg = `The ${source} (${javaHome}) does not point to a JDK.`;
-                }
-                invalidJavaHome(reject, msg);
-            }
-            javaVersion = await getMajorVersion(javaHome);
-            if (preferenceName === "java.jdt.ls.java.home" || !toolingJre) {
-                toolingJre = javaHome;
-                toolingJreVersion = javaVersion;
-            }
-        }
+    if (toolingJreVersion < requiredJdkVersion) {
+        toolingJre = undefined;
+        toolingJreVersion = 0;
+    }
 
-        // java.home not specified, search valid JDKs from env.JAVA_HOME, env.PATH, SDKMAN, jEnv, jabba, Common directories
-        const javaRuntimes = await findRuntimes({checkJavac: true, withVersion: true, withTags: true});
-        if (!toolingJre) { // universal version
-            // as latest version as possible.
-            sortJdksByVersion(javaRuntimes);
-            const validJdks = javaRuntimes.filter(r => r.version && r.version.major >= REQUIRED_JDK_VERSION);
-            if (validJdks.length > 0) {
-                sortJdksBySource(validJdks);
-                javaHome = validJdks[0].homedir;
-                javaVersion = validJdks[0].version?.major ?? 0;
+    const javaPreferences = checkJavaPreferences();
+    const preferenceName = javaPreferences.preference;
+    let javaVersion = 0;
+    let javaHome = javaPreferences.javaHome;
+    if (javaHome) {
+        const source = `${preferenceName} variable defined in ${env.appName} settings`;
+        javaHome = expandHomeDir(javaHome);
+        if (!await fse.pathExists(javaHome!)) {
+            throw new Error(`The ${source} points to a missing or inaccessible folder (${javaHome})`);
+        } else if (!await fse.pathExists(path.resolve(javaHome!, 'bin', JAVAC_FILENAME))) {
+            if (await fse.pathExists(path.resolve(javaHome!, JAVAC_FILENAME))) {
+                throw new Error(`'bin' should be removed from the ${source} (${javaHome})`);
+            }
+            throw new Error(`The ${source} (${javaHome}) does not point to a JDK.`);
+        }
+        javaVersion = await getMajorVersion(javaHome);
+        if (preferenceName === "java.jdt.ls.java.home" || !toolingJre) {
+            if (javaVersion >= requiredJdkVersion) {
                 toolingJre = javaHome;
                 toolingJreVersion = javaVersion;
-            }
-        } else { // pick a default project JDK/JRE
-            /**
-             * For legacy users, we implicitly following the order below to
-             * set a default project JDK during initialization:
-             * java.home > env.JDK_HOME > env.JAVA_HOME > env.PATH
-             *
-             * We'll keep it for compatibility.
-             */
-            if (javaHome && (await getRuntime(javaHome) !== undefined)) {
-                const runtime = await getRuntime(javaHome, {withVersion: true});
-                if (runtime) {
-                    javaHome = runtime.homedir;
-                    javaVersion = runtime.version?.major ?? 0;
-                }
-            } else if (javaRuntimes.length) {
-                sortJdksBySource(javaRuntimes);
-                javaHome = javaRuntimes[0].homedir;
-                javaVersion = javaRuntimes[0].version?.major ?? 0;
-            } else if (javaHome = (await findDefaultRuntimeFromSettings() ?? "")) {
-                javaVersion = await getMajorVersion(javaHome);
             } else {
-                /**
-                 * Originally it was:
-                 * invalidJavaHome(reject, "Please download and install a JDK to compile your project. You can configure your projects with different JDKs by the setting ['java.configuration.runtimes'](https://github.com/redhat-developer/vscode-java/wiki/JDK-Requirements#java.configuration.runtimes)");
-                 * 
-                 * here we focus on tooling jre, so we swallow the error.
-                 * 
-                 */
+                console.warn(`The Java runtime set by '${preferenceName}' does not meet the minimum required version of '${requiredJdkVersion}' and will not be used to launch the Java Language Server.`);
             }
         }
-        
+    }
 
-        if (!toolingJre || toolingJreVersion < REQUIRED_JDK_VERSION) {
-            // For universal version, we still require users to install a qualified JDK to run Java extension.
-            invalidJavaHome(reject, `Java ${REQUIRED_JDK_VERSION} or more recent is required to run the Java extension. Please download and install a recent JDK. You can still compile your projects with older JDKs by configuring ['java.configuration.runtimes'](https://github.com/redhat-developer/vscode-java/wiki/JDK-Requirements#java.configuration.runtimes)`);
+    if (!toolingJre) {
+        const javaRuntimes = await findRuntimes({checkJavac: true, withVersion: true, withTags: true});
+        const validJdks: IJavaRuntime[] = [];
+        for (const runtime of javaRuntimes) {
+            if (runtime.version && runtime.version.major >= requiredJdkVersion &&
+                (await fse.pathExists(path.join(runtime.homedir, "lib", "rt.jar")) ||
+                 await fse.pathExists(path.join(runtime.homedir, "jre", "lib", "rt.jar")) ||
+                 await fse.pathExists(path.join(runtime.homedir, "lib", "jrt-fs.jar")))) {
+                validJdks.push(runtime);
+            }
         }
+        sortJdksByVersion(validJdks);
+        sortJdksBySource(validJdks);
+        if (validJdks.length > 0) {
+            toolingJre = validJdks[0].homedir;
+            toolingJreVersion = validJdks[0].version?.major ?? 0;
+            if (!javaHome) {
+                javaHome = toolingJre;
+                javaVersion = toolingJreVersion;
+            }
+        }
+    } else if (!javaHome) {
+        javaHome = await findDefaultRuntimeFromSettings();
+        if (javaHome) {
+            javaVersion = await getMajorVersion(javaHome);
+        } else {
+            javaHome = toolingJre;
+            javaVersion = toolingJreVersion;
+        }
+    }
 
-        resolve({
-            tooling_jre: toolingJre,  // Used to launch Java extension.
-            tooling_jre_version: toolingJreVersion,
-            java_home: javaHome, // Used as default project JDK.
-            java_version: javaVersion,
-        });
-    });
+    if (!toolingJre || toolingJreVersion < requiredJdkVersion) {
+        throw new Error(getJdkRequirementError(requiredJdkVersion));
+    }
+
+    return {
+        tooling_jre: toolingJre,
+        tooling_jre_version: toolingJreVersion,
+        java_home: javaHome,
+        java_version: javaVersion,
+    };
 }
 
 async function findEmbeddedJRE(javaExtPath?: string): Promise<string | undefined> {
@@ -150,17 +165,20 @@ async function findDefaultRuntimeFromSettings(): Promise<string | undefined> {
 }
 
 function sortJdksBySource(jdks: IJavaRuntime[]) {
-    const rankedJdks = jdks as Array<IJavaRuntime & { rank: number }>;
     const sources = ["JDK_HOME", "JAVA_HOME", "PATH"];
-    for (const [index, source] of sources.entries()) {
-        for (const jdk of rankedJdks) {
-            if (jdk.rank === undefined && getSources(jdk).includes(source)) {
-                jdk.rank = index;
-            }
+    const jdkManagers = ["SDKMAN", "jEnv", "jabba", "asdf"];
+    const rank = (jdk: IJavaRuntime) => {
+        const detectedSources = getSources(jdk);
+        const sourceIndex = sources.findIndex(source => detectedSources.includes(source));
+        if (sourceIndex >= 0) {
+            return sourceIndex;
         }
-    }
-    rankedJdks.filter(jdk => jdk.rank === undefined).forEach(jdk => jdk.rank = sources.length);
-    rankedJdks.sort((a, b) => a.rank - b.rank);
+        if (detectedSources.some(source => jdkManagers.includes(source))) {
+            return sources.length + 1;
+        }
+        return detectedSources.length === 0 ? sources.length + 2 : sources.length + 3;
+    };
+    jdks.sort((a, b) => rank(a) - rank(b));
 }
 
 /**
@@ -184,8 +202,8 @@ function checkJavaPreferences(){
 	};
 }
 
-function invalidJavaHome(reject: any, reason: string) {
-    reject(new Error(reason));
+function getJdkRequirementError(requiredJdkVersion: number): string {
+    return `Java ${requiredJdkVersion} or more recent is required to run the Java extension. Please download and install a recent JDK. You can still compile your projects with older JDKs by configuring ['java.configuration.runtimes'](https://github.com/redhat-developer/vscode-java/wiki/JDK-Requirements#java.configuration.runtimes)`;
 }
 
 async function getMajorVersion(javaHome?: string): Promise<number> {

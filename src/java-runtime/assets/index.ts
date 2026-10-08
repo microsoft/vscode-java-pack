@@ -23,17 +23,20 @@ onWillListRuntimes();
 
 function showJavaRuntimeEntries(args: any) {
   if (args.javaHomeError) {
-    // TODO: remove after tooling JDK is embedded
     const props = {
       jdkEntries: args.javaRuntimes,
       javaHomeError: args.javaHomeError,
-      javaDotHome: args.javaDotHome
+      javaDotHome: args.javaDotHome,
+      requiredJdkVersion: args.requiredJdkVersion
     };
     root.render(createElement(ToolingJDKPanel, props));
   } else {
     const props = {
       jdkEntries: args.javaRuntimes,
       projectRuntimes: args.projectRuntimes,
+      javaDotHome: args.javaDotHome,
+      toolingJreVersion: args.toolingJreVersion,
+      requiredJdkVersion: args.requiredJdkVersion,
     }
     root.render(createElement(ProjectJDKPanel, props));
   }

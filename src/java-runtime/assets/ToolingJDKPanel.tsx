@@ -7,15 +7,14 @@ import { useState } from "react";
 import { JavaRuntimeEntry } from "../types";
 import { onWillBrowseForJDK, onWillRunCommandFromWebview } from './vscode.api';
 
-const REQUIRED_JDK_VERSION = 17;
-
 interface Props {
   jdkEntries?: JavaRuntimeEntry[];
   javaDotHome?: string;
   javaHomeError?: any;
+  requiredJdkVersion: number;
 }
 
-export function ToolingJDKPanel({ javaHomeError }: Props) {
+export function ToolingJDKPanel({ javaHomeError, requiredJdkVersion }: Props) {
   const [isDirty, setIsDirty] = useState(false);
 
   const onClickBrowseJDKButton = () => {
@@ -30,7 +29,7 @@ export function ToolingJDKPanel({ javaHomeError }: Props) {
   return (
     <div className="container">
       <h1>Configure Runtime for Language Server</h1>
-      <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK {REQUIRED_JDK_VERSION}+ to launch itself.</div>
+      <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK {requiredJdkVersion}+ to launch itself. Your projects can use older JDKs.</div>
 
       {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
 

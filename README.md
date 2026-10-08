@@ -25,6 +25,12 @@ By installing Extension Pack for Java, the following extensions are installed:
 - [📦 Project Manager for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
     - Manage Java projects, referenced libraries, resource files, packages, classes, and class members
 
+## Java Runtime Requirements
+
+The JDK used to launch the Java language server is separate from the JDK used to compile and run your projects. The tooling minimum depends on the installed Language Support for Java extension: `redhat.java` 1.57.0 and newer requires JDK 25+, versions 1.39.0-1.56.x require JDK 21+, and earlier supported versions require JDK 17+. A compatible bundled runtime satisfies the tooling requirement; Java 27 project support does not require JDK 27 just to launch the language server.
+
+Use **Java: Configure Java Runtime** to inspect the selected language-server runtime and configure project JDKs. An explicitly configured tooling JDK below the minimum is not used to launch the language server; the extension can fall back to a compatible bundled runtime or a discovered local JDK. Older project targets remain supported through `java.configuration.runtimes` and your Maven or Gradle build configuration.
+
 ## Other Recommendations
 
 You can do more with VS Code. Here are some more recommendations that could help.

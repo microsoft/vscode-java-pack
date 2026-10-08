@@ -10,7 +10,7 @@ import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
 import { ProjectType } from "../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
-import { REQUIRED_JDK_VERSION, resolveRequirements } from "./utils/upstreamApi";
+import { getRequiredJdkVersion, resolveRequirements } from "./utils/upstreamApi";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: IJavaRuntime[];
@@ -121,10 +121,14 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         });
         if (javaHomeUri) {
           const javaHome = javaHomeUri[0].fsPath;
-          if (await getRuntime(javaHome)) {
-            await vscode.workspace.getConfiguration("java").update("jdt.ls.java.home", javaHome, vscode.ConfigurationTarget.Global);
+          const runtime = await getRuntime(javaHome, {checkJavac: true, withVersion: true});
+          const requiredJdkVersion = getRequiredJdkVersion();
+          if (!runtime?.hasJavac) {
+            await vscode.window.showWarningMessage(`${javaHome} is not a valid JDK home directory.`);
+          } else if (!runtime.version || runtime.version.major < requiredJdkVersion) {
+            await vscode.window.showWarningMessage(`Java ${requiredJdkVersion} or more recent is required to launch the Java Language Server. "${javaHome}" doesn't meet the requirement.`);
           } else {
-            await vscode.window.showWarningMessage(`${javaHome} is not a valid Java runtime home directory.`);
+            await vscode.workspace.getConfiguration("java").update("jdt.ls.java.home", javaHome, vscode.ConfigurationTarget.Global);
           }
         }
         break;
@@ -198,15 +202,11 @@ export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer 
 }
 
 export async function validateJavaRuntime() {
-  // TODO:
-  // option a) should check Java LS exported API for java_home
-  // * option b) use the same way to check java_home as vscode-java
   try {
-    const runtime = await resolveRequirements();
-    if (runtime.tooling_jre_version >= REQUIRED_JDK_VERSION && runtime.tooling_jre) {
-      return true;
-    }
+    await resolveRequirements();
+    return true;
   } catch (error) {
+    console.warn(error);
   }
 
   return false;
@@ -215,9 +215,12 @@ export async function validateJavaRuntime() {
 export async function findJavaRuntimeEntries(): Promise<{
   javaRuntimes?: JavaRuntimeEntry[],
   projectRuntimes?: ProjectRuntimeEntry[],
+  requiredJdkVersion: number;
   javaDotHome?: string;
+  toolingJreVersion?: number;
   javaHomeError?: string;
 }> {
+  const requiredJdkVersion = getRequiredJdkVersion();
   if (!javaHomes) {
     const runtimes: IJavaRuntime[] = await findRuntimes({ checkJavac: true, withVersion: true });
     javaHomes = runtimes.filter(r => r.hasJavac);
@@ -230,14 +233,12 @@ export async function findJavaRuntimeEntries(): Promise<{
   })).sort((a, b) => b.majorVersion - a.majorVersion);
 
   let javaDotHome;
+  let toolingJreVersion;
   let javaHomeError;
   try {
     const runtime = await resolveRequirements();
     javaDotHome = runtime.tooling_jre;
-    const javaVersion = runtime.tooling_jre_version;
-    if (!javaVersion || javaVersion < REQUIRED_JDK_VERSION) {
-      javaHomeError = `Java ${REQUIRED_JDK_VERSION} or more recent is required by the Java language support (redhat.java) extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
-    }
+    toolingJreVersion = runtime.tooling_jre_version;
   } catch (error) {
     javaHomeError = (error as Error).message;
   }
@@ -250,7 +251,9 @@ export async function findJavaRuntimeEntries(): Promise<{
   return {
     javaRuntimes,
     projectRuntimes,
+    requiredJdkVersion,
     javaDotHome,
+    toolingJreVersion,
     javaHomeError
   };
 }
