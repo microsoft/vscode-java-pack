@@ -28,7 +28,6 @@ export interface ProjectRuntimeEntry {
 
 export interface ToolingRuntimeInfo {
   requiredJdkVersion: number;
-  toolingRuntimes: JavaRuntimeEntry[];
   javaDotHome?: string;
   toolingJreVersion?: number;
   javaHomeError?: string;
@@ -38,4 +37,5 @@ export interface ToolingRuntimeInfo {
 export interface JavaRuntimeData extends ToolingRuntimeInfo {
   javaRuntimes: JavaRuntimeEntry[];
   projectRuntimes: ProjectRuntimeEntry[];
+  projectJdkError?: string;
 }

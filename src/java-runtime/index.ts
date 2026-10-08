@@ -148,16 +148,8 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
     } catch (error) {
       console.warn(error);
       if (!disposed) {
-        await webviewPanel.webview.postMessage({
-          command: "showJavaRuntimeEntries",
-          args: {
-            requiredJdkVersion: getRequiredJdkVersion(),
-            javaRuntimes: [],
-            projectRuntimes: [],
-            toolingRuntimes: [],
-            javaHomeError: error instanceof Error ? error.message : String(error)
-          } satisfies JavaRuntimeData
-        });
+        const message = error instanceof Error ? error.message : String(error);
+        await vscode.window.showErrorMessage(`Unable to refresh Configure Java Runtime: ${message}`);
       }
     }
   }
@@ -215,22 +207,8 @@ export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer 
   }
 }
 
-export async function validateJavaRuntime() {
-  try {
-    const info = await getToolingRuntimeInfo();
-    if (!info.javaHomeError) {
-      // Before activation, this checks availability, not the selected runtime.
-      return !!info.javaDotHome || info.toolingRuntimes.length > 0;
-    }
-    console.warn(info.javaHomeError);
-  } catch (error) {
-    console.warn(error);
-  }
-
-  return false;
-}
-
 export async function findJavaRuntimeEntries(): Promise<JavaRuntimeData> {
+  let projectJdkError: string | undefined;
   try {
     if (!javaHomes) {
       const runtimes: IJavaRuntime[] = await findRuntimes({ checkJavac: true, withVersion: true });
@@ -238,22 +216,15 @@ export async function findJavaRuntimeEntries(): Promise<JavaRuntimeData> {
     }
   } catch (error) {
     console.warn(error);
-    const toolingInfo = await getToolingRuntimeInfo([]);
-    return {
-      ...toolingInfo,
-      javaRuntimes: [],
-      projectRuntimes: [],
-      javaHomeError: error instanceof Error ? error.message : String(error)
-    };
+    const message = error instanceof Error ? error.message : String(error);
+    projectJdkError = `Unable to list installed project JDKs: ${message}`;
   }
-  const javaRuntimes: JavaRuntimeEntry[] = javaHomes.map(elem => ({
+  const javaRuntimes: JavaRuntimeEntry[] = (javaHomes ?? []).map(elem => ({
     name: elem.homedir,
     fspath: elem.homedir,
     majorVersion: elem.version?.major || 0,
     type: "from jdk-utils"
   })).sort((a, b) => b.majorVersion - a.majorVersion);
-
-  const toolingInfo = await getToolingRuntimeInfo(javaHomes);
 
   let projectRuntimes = await getProjectRuntimesFromPM();
   if (_.isEmpty(projectRuntimes)) {
@@ -263,7 +234,8 @@ export async function findJavaRuntimeEntries(): Promise<JavaRuntimeData> {
   return {
     javaRuntimes,
     projectRuntimes,
-    ...toolingInfo
+    projectJdkError,
+    ...getToolingRuntimeInfo()
   };
 }
 
