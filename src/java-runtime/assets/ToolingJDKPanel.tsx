@@ -3,22 +3,11 @@
 
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 
-import { useState } from "react";
 import { ToolingRuntimeInfo } from "../types";
-import { onWillBrowseForJDK, onWillListRuntimes, onWillRunCommandFromWebview } from './vscode.api';
+import { JDKActions } from "./components/JDKActions";
+import { onWillListRuntimes } from './vscode.api';
 
 export function ToolingJDKPanel({ javaHomeError, javaHomeWarning, javaDotHome, toolingJreVersion, requiredJdkVersion }: ToolingRuntimeInfo) {
-  const [isDirty, setIsDirty] = useState(false);
-
-  const onClickBrowseJDKButton = () => {
-    onWillBrowseForJDK();
-    setIsDirty(true);
-  };
-
-  const onClickInstallButton = () => {
-    onWillRunCommandFromWebview("java.runtime", "download", "java.installJdk");
-  };
-
   return (
     <div className="container">
       <h1>Configure Runtime for Language Server</h1>
@@ -34,13 +23,7 @@ export function ToolingJDKPanel({ javaHomeError, javaHomeWarning, javaDotHome, t
 
       <p><a href="command:java.open.logs">Open Java Logs</a> for details. Runtime selection and startup diagnostics are provided by redhat.java.</p>
 
-      <div className="jdk-action">
-        <vscode-button secondary onClick={onClickBrowseJDKButton}><a href="#">Locate an <b>Existing JDK</b></a></vscode-button>
-        {isDirty && <vscode-button><a href="command:workbench.action.reloadWindow">Reload</a></vscode-button>}
-      </div>
-      <div className="jdk-action">
-        <vscode-button secondary onClick={onClickInstallButton}><a href="#">Install a <b>New JDK</b></a></vscode-button>
-      </div>
+      <JDKActions />
       <vscode-button onClick={onWillListRuntimes}>Refresh<span slot="start" className="codicon codicon-refresh"></span></vscode-button>
     </div>
   );

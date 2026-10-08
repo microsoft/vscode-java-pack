@@ -13,6 +13,7 @@ import { useState } from "react";
 import { encodeCommandUriWithTelemetry, ProjectType } from "../../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
 import { DefaultJDKSelector } from "./components/DefaultJDKSelector";
+import { JDKActions } from "./components/JDKActions";
 import { ProjectTypeHint } from "./components/ProjectTypeHint";
 import { onWillListRuntimes, openBuildScript } from "./vscode.api";
 
@@ -86,6 +87,7 @@ export function ProjectJDKPanel({ jdkEntries, projectRuntimes, javaDotHome, tool
       <p>JDK {requiredJdkVersion}+ is required for the language server only; your projects can use older JDKs. <a href={toolingSettingsCommand}>Open language-server runtime settings</a>.</p>
       {javaHomeWarning && <p className="warning-box">{javaHomeWarning} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
       {projectJdkError && <p className="java-home-error">{projectJdkError}</p>}
+      {!javaDotHome && <JDKActions />}
       {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
       {
         projectEntries.length > 0 ?
