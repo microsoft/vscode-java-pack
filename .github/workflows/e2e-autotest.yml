@@ -234,6 +234,17 @@ jobs:
         with:
           gradle-version: ${{ matrix.plan == 'java-gradle-java25' && '9.8.1' || '8.5' }}
 
+      - name: Test Gradle toolchain binding
+        if: matrix.plan == 'java-gradle' || matrix.plan == 'java-gradle-java25'
+        run: node --test tests/gradle-toolchain.test.js
+
+      - name: Bind CI toolchain for Gradle import tests
+        if: matrix.plan == 'java-gradle' || matrix.plan == 'java-gradle-java25'
+        shell: pwsh
+        env:
+          GRADLE_TEST_PLAN: ${{ matrix.plan }}
+        run: ./.github/scripts/bind-gradle-toolchain.ps1 -PlanName $env:GRADLE_TEST_PLAN
+
       - name: Install resolved AutoTest CLI
         run: |
           npm install -g "@vscjava/vscode-autotest@${{ needs.discover.outputs.autotest_version }}"

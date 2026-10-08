@@ -1,6 +1,7 @@
 # Gradle 8.5 compatibility: the importer/daemon and project use JDK 21.
 # The language server uses redhat.java's bundled JDK, independently of Gradle.
 # Prerequisites: JDK 21, JAVA21_HOME, and Gradle 8.5 on PATH (provisioned by CI).
+# CI binds absolute Node/Gradle/JDK paths and saves diagnostics in test-results.
 # Explicit JDK selection is intentional; this does not test automatic fallback.
 
 name: "Java Gradle Project — Gradle 8.5 with JDK 21"

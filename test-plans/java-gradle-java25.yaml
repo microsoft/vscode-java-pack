@@ -1,5 +1,6 @@
 # Gradle 9.8.1 compatibility: the language server, Gradle and project use JDK 25.
 # Prerequisites: JDK 25, JAVA25_HOME, and Gradle 9.8.1 on PATH (provisioned by CI).
+# CI binds absolute Node/Gradle/JDK paths and saves diagnostics in test-results.
 # Explicit JDK selection is intentional; this does not test automatic fallback.
 
 name: "Gradle Java 25 — Import, Dependency Completion and Build"
