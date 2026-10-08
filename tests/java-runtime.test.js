@@ -8,19 +8,59 @@ const test = require("node:test");
 const vm = require("node:vm");
 const ts = require("typescript");
 
-function loadSource(relativePath, mocks, warnings) {
+function loadSource(relativePath, mocks, warnings, globals = {}, resolve = require) {
     const filename = path.join(__dirname, "..", relativePath);
     const { outputText } = ts.transpileModule(fs.readFileSync(filename, "utf8"), {
-        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2016, esModuleInterop: true },
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2016, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
         fileName: filename,
     });
     const module = { exports: {} };
     vm.runInNewContext(outputText, {
         module, exports: module.exports, process, performance,
-        require: name => Object.prototype.hasOwnProperty.call(mocks, name) ? mocks[name] : require(name),
+        require: name => Object.prototype.hasOwnProperty.call(mocks, name) ? mocks[name] : resolve(name),
         console: { warn: warning => warnings.push(warning) },
+        ...globals,
     }, { filename });
     return module.exports;
+}
+
+function setupComponents() {
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const cache = new Map();
+    const messages = [];
+    let receive;
+    let html;
+    const globals = {
+        acquireVsCodeApi: () => ({ postMessage: message => messages.push(message) }),
+        document: { getElementById: () => ({}) },
+        window: { addEventListener: (_, listener) => { receive = listener; } },
+    };
+    const mocks = {
+        "react-dom/client": { createRoot: () => ({ render: element => { html = renderToStaticMarkup(element); } }) },
+    };
+    function load(relativePath) {
+        if (!cache.has(relativePath)) {
+            cache.set(relativePath, loadSource(relativePath, mocks, [], globals, name => {
+                if (name.endsWith(".scss") || name.startsWith("@vscode-elements/")) {
+                    return {};
+                }
+                if (!name.startsWith(".")) {
+                    return require(name);
+                }
+                const source = path.resolve(__dirname, "..", path.dirname(relativePath), name);
+                const filename = fs.existsSync(source + ".tsx") ? source + ".tsx" : source + ".ts";
+                return load(path.relative(path.join(__dirname, ".."), filename));
+            }));
+        }
+        return cache.get(relativePath);
+    }
+    return {
+        load, messages,
+        show: args => {
+            receive({ data: { command: "showJavaRuntimeEntries", args } });
+            return html;
+        },
+    };
 }
 
 function setup(version = "1.57.0") {
@@ -299,6 +339,73 @@ test("a project scan failure is displayed only as a project inventory problem", 
     assert.equal(s.messages.at(-1).args.javaHomeError, undefined);
     assert.equal(s.writes.length, 0);
     assert.equal(s.calls.activation, 0);
+});
+
+for (const projectType of ["Maven", "Unmanaged folder"]) {
+    test(`component rendering keeps ${projectType} controls when refresh reports an upstream error`, () => {
+        const s = setup();
+        s.report(s.addJdk(25));
+        const components = setupComponents();
+        components.load(path.join("src", "java-runtime", "assets", "index.ts"));
+        const projectRuntimes = [{ name: "sample", rootPath: "file:///sample", projectType, sourceLevel: "17" }];
+        const show = () => components.show({
+            ...s.api.getToolingRuntimeInfo(), javaRuntimes: [], projectRuntimes,
+        });
+        assert.match(show(), /Configure Runtime for Projects/);
+        s.extension.exports.status = "Error";
+        const html = show();
+        assert.match(html, /Configure Runtime for Projects/);
+        assert.match(html, /redhat.java reports an error/);
+        assert.match(html, /href="command:java.open.logs"/);
+        assert.match(html, /sample/);
+        assert.match(html, /title="Edit"/);
+        assert.match(html, /Language server runtime reported by redhat.java/);
+        assert.doesNotMatch(html, /Configure Runtime for Language Server/);
+        assert.equal(components.messages.length, 1);
+        assert.equal(components.messages[0].command, "onWillListRuntimes");
+    });
+}
+
+test("component rendering preserves existing tooling error controls without project entries", () => {
+    const s = setup();
+    s.report(s.addJdk(25));
+    s.extension.exports.status = "Error";
+    const components = setupComponents();
+    components.load(path.join("src", "java-runtime", "assets", "index.ts"));
+    const html = components.show({
+        ...s.api.getToolingRuntimeInfo(), javaRuntimes: [], projectRuntimes: [],
+    });
+    assert.match(html, /Configure Runtime for Language Server/);
+    assert.match(html, /redhat.java reports an error/);
+    assert.match(html, /Locate an <b>Existing JDK<\/b>/);
+    assert.match(html, /Install a <b>New JDK<\/b>/);
+});
+
+test("component rendering leaves unknown metadata informational with manual setup available", () => {
+    const components = setupComponents();
+    components.load(path.join("src", "java-runtime", "assets", "index.ts"));
+    const html = components.show({
+        ...setup().api.getToolingRuntimeInfo(), javaRuntimes: [], projectRuntimes: [],
+    });
+    assert.match(html, /Configure Runtime for Projects/);
+    assert.match(html, /runtime information is not available yet/);
+    assert.match(html, /Locate an <b>Existing JDK<\/b>/);
+    assert.match(html, /Install a <b>New JDK<\/b>/);
+    assert.doesNotMatch(html, /redhat.java reports an error/);
+});
+
+test("FAQ component distinguishes project configuration from the language-server setting", () => {
+    const { createElement } = require("react");
+    const { renderToStaticMarkup } = require("react-dom/server");
+    const { default: FaqPanel } = setupComponents().load(path.join("src", "beginner-tips", "assets", "tabs", "FaqPanel.tsx"));
+    const html = renderToStaticMarkup(createElement(FaqPanel, { requiredJdkVersion: 25 }));
+    assert.match(html, /JDK 25\+/);
+    assert.match(html, /href="command:java.runtime">Configure Java Runtime<\/a> page configures project JDKs/);
+    assert.match(html, /href="command:java.open.logs"/);
+    const settingLinks = [...html.matchAll(/href="command:java.webview.runCommand\?([^"]+)"/g)]
+        .map(match => JSON.parse(decodeURIComponent(match[1])));
+    assert.deepEqual(settingLinks.find(link => link.command === "workbench.action.openSettings").args, ["java.jdt.ls.java.home"]);
+    assert.doesNotMatch(html, /guide shows the runtime reported/);
 });
 
 test("startup preserves welcome and release-note scheduling without runtime preflight or setup", async () => {

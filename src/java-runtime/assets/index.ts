@@ -23,7 +23,7 @@ window.addEventListener("message", onInitialize);
 onWillListRuntimes();
 
 function showJavaRuntimeEntries(args: JavaRuntimeData) {
-  if (args.javaHomeError) {
+  if (args.javaHomeError && args.projectRuntimes.length === 0) {
     root.render(createElement(ToolingJDKPanel, args));
   } else {
     root.render(createElement(ProjectJDKPanel, {
@@ -32,6 +32,7 @@ function showJavaRuntimeEntries(args: JavaRuntimeData) {
       javaDotHome: args.javaDotHome,
       toolingJreVersion: args.toolingJreVersion,
       requiredJdkVersion: args.requiredJdkVersion,
+      javaHomeError: args.javaHomeError,
       javaHomeWarning: args.javaHomeWarning,
       projectJdkError: args.projectJdkError
     }));

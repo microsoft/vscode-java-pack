@@ -23,11 +23,12 @@ interface Props {
   javaDotHome?: string;
   toolingJreVersion?: number;
   requiredJdkVersion: number;
+  javaHomeError?: string;
   javaHomeWarning?: string;
   projectJdkError?: string;
 }
 
-export function ProjectJDKPanel({ jdkEntries, projectRuntimes, javaDotHome, toolingJreVersion, requiredJdkVersion, javaHomeWarning, projectJdkError }: Props) {
+export function ProjectJDKPanel({ jdkEntries, projectRuntimes, javaDotHome, toolingJreVersion, requiredJdkVersion, javaHomeError, javaHomeWarning, projectJdkError }: Props) {
   const [showHintFor, setShowHintFor] = useState<"Maven" | "Gradle" | "Others" | undefined>();
 
   const projectTypeHint = (projectType: ProjectType) => {
@@ -85,6 +86,7 @@ export function ProjectJDKPanel({ jdkEntries, projectRuntimes, javaDotHome, tool
         <p>Language server runtime information is not available yet. Use Refresh after redhat.java starts, or <a href="command:java.open.logs">open the Java logs</a> for details.</p>
       )}
       <p>JDK {requiredJdkVersion}+ is required for the language server only; your projects can use older JDKs. <a href={toolingSettingsCommand}>Open language-server runtime settings</a>.</p>
+      {javaHomeError && <p className="java-home-error">{javaHomeError} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
       {javaHomeWarning && <p className="warning-box">{javaHomeWarning} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
       {projectJdkError && <p className="java-home-error">{projectJdkError}</p>}
       {!javaDotHome && <JDKActions />}
