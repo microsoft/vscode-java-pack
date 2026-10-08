@@ -130,6 +130,36 @@ jobs:
         with:
           node-version: 22
 
+      - name: Setup Java 27 (for java27 test plans)
+        if: contains(matrix.plan, 'java27')
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 27
+
+      - name: Configure JDK 27 path for runner OS
+        if: contains(matrix.plan, 'java27')
+        shell: pwsh
+        run: |
+          $planFile = "test-plans/${{ matrix.plan }}.yaml"
+          if ($IsWindows) {
+            $target = "C:\Program Files\Java\jdk-27"
+            New-Item -ItemType Junction -Path $target -Target $env:JAVA_HOME -Force | Out-Null
+          } else {
+            $target = "/opt/jdk-27"
+            sudo mkdir -p /opt
+            sudo ln -sfn $env:JAVA_HOME $target
+            (Get-Content $planFile -Raw) -replace 'C:\\\\Program Files\\\\Java\\\\jdk-27', $target | Set-Content $planFile
+          }
+          "JAVA27_HOME=$target" >> $env:GITHUB_ENV
+          Write-Host "Java 27 project toolchain: $target"
+
+      - name: Setup Gradle for Java 27
+        if: contains(matrix.plan, 'java27') && contains(matrix.plan, 'gradle')
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          gradle-version: '9.8.1'
+
       - name: Setup Java 25 (for java25 test plans)
         if: contains(matrix.plan, 'java25')
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1

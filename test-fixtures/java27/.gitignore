@@ -1,0 +1,9 @@
+.autotest/
+.classpath
+.gradle/
+.project
+.settings/*
+!.settings/org.eclipse.jdt.core.prefs
+.vscode/
+build/
+target/

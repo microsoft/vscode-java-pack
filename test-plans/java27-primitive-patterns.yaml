@@ -1,0 +1,68 @@
+name: "Java 27 - Primitive Patterns"
+description: |
+  Verify JEP 532 primitive patterns in switch, instanceof, and nested record
+  patterns. A temporary unresolved type proves the language server is
+  analyzing the file before zero-error and runtime assertions.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../test-fixtures/java27"
+  timeout: 180
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
+  workspaceSettings:
+    java.configuration.runtimes:
+      - name: "JavaSE-27"
+        path: "C:\\Program Files\\Java\\jdk-27"
+        default: true
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.import.maven.enabled: true
+    java.import.gradle.enabled: false
+
+steps:
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    skipLlmVerify: true
+
+  - id: "open-primitive-patterns"
+    action: "open file PrimitivePatterns.java"
+    verifyEditorTab:
+      title: "PrimitivePatterns.java"
+    verifyProblems:
+      errors: 0
+    timeout: 90
+
+  - id: "prove-semantic-analysis"
+    action: "insertLineInFile src/main/java/example/PrimitivePatterns.java 4 MissingJava27Type sentinel;"
+    verifyFile:
+      path: "~/src/main/java/example/PrimitivePatterns.java"
+      contains: "MissingJava27Type sentinel;"
+    verifyProblems:
+      errors: 1
+    timeout: 90
+
+  - id: "find-unresolved-type"
+    action: "findText MissingJava27Type sentinel;"
+
+  - id: "remove-unresolved-type"
+    action: "pressKey Backspace"
+
+  - id: "verify-patterns-accepted"
+    action: "saveFile"
+    verifyProblems:
+      errors: 0
+    timeout: 90
+
+  - id: "create-pattern-terminal"
+    action: 'executeVSCodeCommand workbench.action.terminal.new {"cwd":"${workspaceFolder}"}'
+
+  - id: "build-and-run-patterns"
+    action: 'executeVSCodeCommand workbench.action.terminal.sendSequence {"text":"node verify.mjs maven patterns\u000d"}'
+    verify: "All primitive pattern variants compile and produce the expected exact and inexact conversion results."
+    verifyTerminal:
+      contains: "JDK27_PATTERNS_PASSED"
+    timeout: 360

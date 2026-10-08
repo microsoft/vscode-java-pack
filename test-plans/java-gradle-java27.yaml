@@ -1,0 +1,57 @@
+name: "Gradle Java 27 - Project Import, Build and Run"
+description: |
+  Import the fixture with Gradle 9.8.1 and a Java 27 project toolchain.
+  Verify source compliance, diagnostics, Java 27 bytecode, and execution.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../test-fixtures/java27"
+  timeout: 300
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
+  workspaceSettings:
+    java.configuration.runtimes:
+      - name: "JavaSE-27"
+        path: "C:\\Program Files\\Java\\jdk-27"
+        default: true
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.import.generatesMetadataFilesAtProjectRoot: true
+    java.import.maven.enabled: false
+    java.import.gradle.enabled: true
+    java.import.gradle.version: "9.8.1"
+    java.import.gradle.java.home: "C:\\Program Files\\Java\\jdk-27"
+
+steps:
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    skipLlmVerify: true
+
+  - id: "open-project-smoke"
+    action: "open file ProjectSmoke.java"
+    verifyEditorTab:
+      title: "ProjectSmoke.java"
+    verifyProblems:
+      errors: 0
+    timeout: 120
+
+  - id: "verify-source-release"
+    action: "open file build.gradle"
+    verifyFile:
+      path: "~/.settings/org.eclipse.jdt.core.prefs"
+      contains: "org.eclipse.jdt.core.compiler.source=27"
+    verifyEditorTab:
+      title: "build.gradle"
+
+  - id: "create-build-terminal"
+    action: 'executeVSCodeCommand workbench.action.terminal.new {"cwd":"${workspaceFolder}"}'
+
+  - id: "build-and-run-java27"
+    action: 'executeVSCodeCommand workbench.action.terminal.sendSequence {"text":"node verify.mjs gradle project\u000d"}'
+    verify: "A clean Gradle build produces Java 27 bytecode and runs successfully on JDK 27."
+    verifyTerminal:
+      contains: "JDK27_PROJECT_PASSED"
+    timeout: 360
