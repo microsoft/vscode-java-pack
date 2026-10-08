@@ -1,71 +1,123 @@
-# Test Plan: Gradle Java 25 (from vscode-java-pack.wiki)
-#
-# Source: wiki Test-Plan.md "Gradle - Java 11" scenario (upgraded to Java 25)
-# Verify: Open Gradle project with JDK 25 → LS ready → editing experience works
-#
-# Uses the eclipse.jdt.ls subprojects project (Gradle 8.5)
-#
-# Prerequisites:
-#   - eclipse.jdt.ls repo is cloned locally
-#   - JDK 25 is installed (C:\Program Files\Java\jdk-25)
-#
-# Usage: autotest run test-plans/java-gradle-java25.yaml
+# Gradle 9.8.1 compatibility: the language server, Gradle and project use JDK 25.
+# Prerequisites: JDK 25, JAVA25_HOME, and Gradle 9.8.1 on PATH (provisioned by CI).
+# Explicit JDK selection is intentional; this does not test automatic fallback.
 
-name: "Gradle Java 25 — JDK 25 Compatibility"
+name: "Gradle Java 25 — Import, Dependency Completion and Build"
 description: |
-  Corresponds to the Gradle Java 11 scenario in the wiki Test Plan (upgraded to Java 25):
-  Open a Gradle 8.5 project with JDK 25,
-  verify the language server starts normally and the editing experience works.
+  Import a real Java 25 project with Gradle 9.8.1 and a JDK 25 daemon.
+  Verify the Gradle model, Java 25 source level and dependency-backed completion,
+  then build and run a Java 25 ScopedValue program with Java 25 bytecode.
+  The incomplete completion probe may temporarily produce a diagnostic;
+  it is removed and saved before the final zero-error and build checks.
 
 setup:
   extension: "redhat.java"
   extensions:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
-  workspace: "../../eclipse.jdt.ls/org.eclipse.jdt.ls.tests/projects/gradle/subprojects"
+  workspace: "../test-fixtures/gradle-import"
   timeout: 180
   settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
     java.jdt.ls.java.home: "C:\\Program Files\\Java\\jdk-25"
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.configuration.runtimes:
+      - name: "JavaSE-25"
+        path: "C:\\Program Files\\Java\\jdk-25"
+        default: true
+    java.import.maven.enabled: false
+    java.import.gradle.enabled: true
+    java.import.gradle.wrapper.enabled: false
+    java.import.gradle.version: "9.8.1"
+    java.import.gradle.java.home: "C:\\Program Files\\Java\\jdk-25"
+    java.import.gradle.arguments:
+      - "-PjavaRelease=25"
+    java.import.generatesMetadataFilesAtProjectRoot: true
 
 steps:
-  # ── Step 1: Wait for LS ready ────────────────────────────
-  # wiki: "check the status bar icon is 👍, and there should be no errors"
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Gradle subprojects workspace has loaded under JDK 25; Problems panel shows no errors"
     verifyProblems:
       errors: 0
     timeout: 300
-    skipLlmVerify: true  # waitForLanguageServer is authoritative; LLM only sees the same status bar
+    skipLlmVerify: true
 
-  # ── Step 2: Open Java file ───────────────────────────────
-  # wiki: "Open Foo.java, make sure the editing experience is correctly working"
-  - id: "open-test1"
-    action: "open file Test1.java"
-    verify: "Test1.java file is opened in the editor"
+  - id: "verify-gradle-model"
+    action: "open file GradleSmoke25.java"
+    verifyFile:
+      path: "~/.project"
+      matches: '<nature>(org\.eclipse\.buildship\.core\.gradleprojectnature|com\.microsoft\.gradle\.bs\.importer\.GradleBuildServerProjectNature)</nature>'
+    skipLlmVerify: true
+
+  - id: "verify-java-source"
+    action: "waitForLanguageServer"
+    verifyEditorTab:
+      title: "GradleSmoke25.java"
+      active: true
+    verifyFile:
+      path: "~/.settings/org.eclipse.jdt.core.prefs"
+      contains: "org.eclipse.jdt.core.compiler.source=25"
+    verifyProblems:
+      errors: 0
     timeout: 15
 
-  # ── Step 3: Verify completion ───────────────────────────
-  # verify text describes the rendered popup; verifyCompletion.notEmpty
-  # is the deterministic ground truth — kept lenient so a transient
-  # "Loading…" indicator at screenshot time doesn't downgrade.
-  - id: "verify-completion"
-    action: "triggerCompletionAt endOfMethod"
-    verify: "Code completion has been triggered in HelloWorld.java; the IntelliSense popup is being rendered (the language server may briefly show a 'Loading...' indicator while computing suggestions on a cold cache — this is a valid intermediate state since the deterministic verifyCompletion.notEmpty asserts the LS produced completion items)"
+  - id: "verify-gradle-classpath"
+    action: "saveFile"
+    verifyFile:
+      path: "~/.classpath"
+      matches: 'org\.eclipse\.buildship\.core\.gradleclasspathcontainer|commons-lang3-3\.18\.0\.jar'
+    skipLlmVerify: true
+
+  - id: "insert-dependency-probe"
+    action: "insertLineInFile src/java25/example/GradleSmoke25.java 8 String probe = StringUtils.cap;"
+    verifyFile:
+      path: "~/src/java25/example/GradleSmoke25.java"
+      contains: "String probe = StringUtils.cap;"
+    skipLlmVerify: true
+
+  - id: "select-completion-line"
+    action: "goToLine 8"
+    verifyEditorTab:
+      title: "GradleSmoke25.java"
+      active: true
+
+  - id: "move-to-probe-end"
+    action: "executeVSCodeCommand cursorEnd"
+
+  - id: "move-before-semicolon"
+    action: "pressKey ArrowLeft"
+
+  - id: "verify-dependency-completion"
+    action: "triggerCompletion"
     verifyCompletion:
-      notEmpty: true
-    waitBefore: 8
-    # Retry once on cold-cache "Loading..." LLM downgrades.
-    retries: 1
+      contains: ["capitalize"]
 
-  # ── Step 4: Verify editing ────────────────────────────────
-  - id: "goto-line"
-    action: "goToLine 3"
+  - id: "dismiss-completion"
+    action: "pressKey Escape"
 
-  - id: "goto-end"
-    action: "goToEndOfLine"
+  - id: "select-probe-line"
+    action: "goToLine 8"
 
-  - id: "type-code"
-    action: "typeInEditor // JDK 25 gradle test marker"
-    verifyEditor:
-      contains: "// JDK 25 gradle test marker"
+  - id: "remove-dependency-probe"
+    action: "executeVSCodeCommand editor.action.deleteLines"
+
+  - id: "save-source"
+    action: "saveFile"
+    verifyFile:
+      path: "~/src/java25/example/GradleSmoke25.java"
+      matches: '^(?![\s\S]*String probe = StringUtils\.cap;)'
+    skipLlmVerify: true
+
+  - id: "open-build-terminal"
+    action: 'executeVSCodeCommand workbench.action.terminal.new {"cwd":"${workspaceFolder}"}'
+    skipLlmVerify: true
+
+  - id: "verify-build-and-run"
+    action: 'executeVSCodeCommand workbench.action.terminal.sendSequence {"text":"node verify.mjs 25 9.8.1\u000d"}'
+    verifyTerminal:
+      contains: "GRADLE_JAVA25_BUILD_PASSED"
+    verifyProblems:
+      errors: 0
+    timeout: 300
+    skipLlmVerify: true
