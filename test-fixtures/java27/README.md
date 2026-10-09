@@ -64,6 +64,9 @@ comparisons, use `test_plan=java-gradle-java27`, `pre_release=false`, and an exa
 vscode-java release URL in `vsix_urls`; keep the failed run's release unchanged
 when isolating a toolchain failure.
 
+Release metadata lookup uses the workflow's read-only `GITHUB_TOKEN` to avoid
+shared-runner anonymous API limits. Asset downloads do not forward that token.
+
 For local runs, install Maven, JDK 27, and Gradle 9.8.1, set `JAVA27_HOME`, and
 adjust the plan's `JavaSE-27` runtime path if necessary. Run with the platform
 VSIX from redhat-developer/vscode-java v1.57.0, or another release whose JDT

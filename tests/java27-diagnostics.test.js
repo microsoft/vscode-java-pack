@@ -292,3 +292,41 @@ test("PowerShell CI resolution selects one executable when Get-Command returns m
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout.trim(), "/ci/gradle-9.8.1/bin/gradle");
 });
+
+test("PowerShell release lookup authenticates metadata without forwarding credentials to asset downloads", () => {
+    const workflow = fs.readFileSync(path.join(__dirname, "..", ".github", "workflows", "e2e-autotest.yml"), "utf8");
+    const headers = workflow.match(/^\s*\$githubHeaders = @\{[\s\S]*?^\s*\}/m)?.[0];
+    const request = workflow.match(/^\s*\$release = Invoke-RestMethod .+$/m)?.[0];
+    const assetDownload = workflow.match(/^\s*Invoke-WebRequest -Uri \$url -OutFile .+$/m)?.[0];
+    assert.ok(headers, "The workflow must define GitHub metadata headers");
+    assert.ok(request, "The workflow must resolve the requested release");
+    assert.ok(assetDownload, "The workflow must download the selected asset");
+    assert.doesNotMatch(assetDownload, /-Headers/);
+    const script = `
+        $ErrorActionPreference = "Stop"
+        $env:GITHUB_TOKEN = "autotest-test-token"
+        ${headers}
+        function Invoke-RestMethod {
+            [CmdletBinding()]
+            param([string] $Uri, [hashtable] $Headers, [switch] $UseBasicParsing)
+            if ($Uri -ne "https://api.github.com/repos/redhat-developer/vscode-java/releases/tags/v1.57.0") {
+                throw "Unexpected release URL"
+            }
+            if ($Headers.Authorization -cne "Bearer autotest-test-token") {
+                throw "Release metadata lookup must use the workflow token"
+            }
+            if ($Headers.Accept -ne "application/vnd.github+json") {
+                throw "Expected GitHub API metadata"
+            }
+            [pscustomobject]@{ tag_name = "v1.57.0" }
+        }
+        $apiUrl = "https://api.github.com/repos/redhat-developer/vscode-java/releases/tags/v1.57.0"
+        ${request}
+        if ($release.tag_name -ne "v1.57.0") { throw "Unexpected release" }
+        Write-Output "authenticated-release-metadata"
+    `;
+    const result = spawnSync("pwsh", ["-NoProfile", "-NonInteractive", "-Command", script], { encoding: "utf8" });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), "authenticated-release-metadata");
+});
