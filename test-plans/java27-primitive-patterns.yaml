@@ -42,8 +42,13 @@ steps:
     action: "select Language Support for Java"
     skipLlmVerify: true
 
+  - id: "filter-java-trace-level"
+    # Keyboard confirmation avoids the extra default-level button in this row.
+    action: "typeInQuickInput Trace"
+    skipLlmVerify: true
+
   - id: "enable-lsp-protocol-logging"
-    action: "select Trace"
+    action: "confirmQuickInput"
     skipLlmVerify: true
 
   - id: "open-primitive-patterns"
