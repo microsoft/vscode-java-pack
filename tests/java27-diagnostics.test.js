@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
@@ -169,4 +170,27 @@ test("relative CI control paths are rejected instead of silently using PATH agai
     const s = execute("darwin", { ciGradle: "gradle" });
     assert.throws(s.run, /absolute JAVA27_CI_GRADLE/);
     assert.equal(s.calls.length, 0);
+});
+
+test("PowerShell CI resolution selects one executable when Get-Command returns multiple applications", () => {
+    const workflow = fs.readFileSync(path.join(__dirname, "..", ".github", "workflows", "e2e-autotest.yml"), "utf8");
+    const expression = workflow.match(/^\s*\$ciGradle = (.+)$/m)?.[1];
+    assert.ok(expression, "The workflow must resolve the CI control executable");
+    const script = `
+        function Get-Command {
+            [CmdletBinding()]
+            param([string] $Name, [object] $CommandType)
+            [pscustomobject]@{ Source = "/ci/gradle-9.8.1/bin/gradle" }
+            [pscustomobject]@{ Source = "/other/gradle" }
+        }
+        $resolved = ${expression}
+        if ($resolved -isnot [string] -or $resolved -ne "/ci/gradle-9.8.1/bin/gradle") {
+            throw "Expected one executable, got: $resolved"
+        }
+        Write-Output $resolved
+    `;
+    const result = spawnSync("pwsh", ["-NoProfile", "-NonInteractive", "-Command", script], { encoding: "utf8" });
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), "/ci/gradle-9.8.1/bin/gradle");
 });
