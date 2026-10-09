@@ -29,6 +29,11 @@ setup:
     java.import.gradle.enabled: false
 
 steps:
+  - id: "enable-lsp-protocol-logging"
+    # VS Code LogLevel.Trace is 1; Info suppresses Java protocol messages.
+    action: "executeVSCodeCommand workbench.action.setDefaultLogLevel 1"
+    skipLlmVerify: true
+
   - id: "ls-ready"
     action: "waitForLanguageServer"
     skipLlmVerify: true
