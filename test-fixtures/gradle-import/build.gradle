@@ -11,6 +11,7 @@ if (expectedGradle == null) {
 if (gradle.gradleVersion != expectedGradle || JavaVersion.current().majorVersion != javaRelease.toString()) {
     throw new GradleException("Expected Gradle ${expectedGradle}/Java ${javaRelease}, got Gradle ${gradle.gradleVersion}/Java ${JavaVersion.current()}")
 }
+logger.lifecycle("GRADLE_MODEL:${gradle.gradleVersion}:${javaRelease}:${JavaVersion.current().majorVersion}")
 
 java {
     toolchain {

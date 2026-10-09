@@ -1,13 +1,13 @@
 # Gradle 8.5 compatibility: the importer/daemon and project use JDK 21.
 # The language server uses redhat.java's bundled JDK, independently of Gradle.
-# Prerequisites: JDK 21, JAVA21_HOME, and Gradle 8.5 on PATH (provisioned by CI).
-# CI binds absolute Node/Gradle/JDK paths and saves diagnostics in test-results.
+# Prerequisites: JDK 21, JAVA21_HOME, Gradle 8.5, ORG_GRADLE_PROJECT_javaRelease=21.
+# CI binds the IDE/terminal toolchain and saves Gradle diagnostics in test-results.
 # Explicit JDK selection is intentional; this does not test automatic fallback.
 
 name: "Java Gradle Project — Gradle 8.5 with JDK 21"
 description: |
   Import a Gradle 8.5 project using JDK 21 for the Gradle daemon.
-  Verify the Gradle model, Java 21 source level and dependency-backed completion,
+  Verify BSP import, the Gradle task model, Java 21 source level and dependency-backed completion,
   then build and run the saved project with Java 21 bytecode.
   The incomplete completion probe may temporarily produce a diagnostic;
   it is removed and saved before the final zero-error and build checks.
@@ -35,6 +35,9 @@ setup:
     java.import.gradle.arguments:
       - "-PjavaRelease=21"
     java.import.generatesMetadataFilesAtProjectRoot: true
+    java.gradle.buildServer.enabled: "on"
+    java.trace.server: "verbose"
+    gradle.debug: true
 
 steps:
   - id: "ls-ready"
@@ -42,6 +45,46 @@ steps:
     verifyProblems:
       errors: 0
     timeout: 300
+    skipLlmVerify: true
+
+  - id: "show-gradle-task-model"
+    action: "executeVSCodeCommand gradleTasksView.focus"
+    verifyTreeItem:
+      name: "gradle-import-regression"
+      exact: true
+      inView: "Gradle Projects"
+    timeout: 300
+
+  - id: "expand-gradle-tasks"
+    action: "expandTreeItem Tasks"
+    verifyTreeItem:
+      name: "build"
+      exact: true
+      level: 3
+      inView: "Gradle Projects"
+
+  - id: "verify-gradle-build-task"
+    action: "expandTreeItem build"
+    verifyTreeItem:
+      name: "build"
+      exact: true
+      level: 4
+      inView: "Gradle Projects"
+
+  - id: "verify-gradle-run-task"
+    action: "expandTreeItem application"
+    verifyTreeItem:
+      name: "run"
+      exact: true
+      level: 4
+      inView: "Gradle Projects"
+
+  - id: "verify-gradle-model-toolchain"
+    action: "executeVSCodeCommand gradle.showLogs"
+    verifyOutputChannel:
+      channel: "Gradle for Java"
+      contains: "GRADLE_MODEL:8.5:21:21"
+      notContains: "Error getting build"
     skipLlmVerify: true
 
   - id: "verify-gradle-model"
@@ -63,6 +106,13 @@ steps:
       errors: 0
     timeout: 15
 
+  - id: "verify-bsp-import"
+    action: "waitForLanguageServer"
+    verifyFile:
+      path: "~/.project"
+      contains: "com.microsoft.gradle.bs.importer.GradleBuildServerProjectNature"
+    skipLlmVerify: true
+
   - id: "verify-gradle-classpath"
     action: "saveFile"
     verifyFile:
@@ -76,6 +126,15 @@ steps:
     action: "insertLineInFile src/java21/example/GradleSmoke21.java 8 String probe = StringUtils.cap;"
     verifyFile:
       path: "~/src/java21/example/GradleSmoke21.java"
+      contains: "String probe = StringUtils.cap;"
+    skipLlmVerify: true
+
+  - id: "reload-dependency-probe"
+    action: "executeVSCodeCommand workbench.action.files.revert"
+    verifyEditorTab:
+      title: "GradleSmoke21.java"
+      active: true
+    verifyEditor:
       contains: "String probe = StringUtils.cap;"
     skipLlmVerify: true
 
@@ -106,7 +165,7 @@ steps:
     action: "executeVSCodeCommand editor.action.deleteLines"
 
   - id: "save-source"
-    action: "saveFile"
+    action: "executeVSCodeCommand workbench.action.files.save"
     verifyFile:
       path: "~/src/java21/example/GradleSmoke21.java"
       matches: '^(?![\s\S]*String probe = StringUtils\.cap;)'
@@ -123,4 +182,12 @@ steps:
     verifyProblems:
       errors: 0
     timeout: 300
+    skipLlmVerify: true
+
+  - id: "verify-gradle-model-remains-healthy"
+    action: "executeVSCodeCommand gradle.showLogs"
+    verifyOutputChannel:
+      channel: "Gradle for Java"
+      contains: "GRADLE_MODEL:8.5:21:21"
+      notContains: "Error getting build"
     skipLlmVerify: true

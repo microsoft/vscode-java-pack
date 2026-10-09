@@ -31,11 +31,16 @@ writeFileSync(path.join(logDirectory, "toolchain.json"), JSON.stringify({
     gradleVersion,
     javaHome,
     javaRelease: release,
+    projectJavaRelease: process.env.ORG_GRADLE_PROJECT_javaRelease ?? null,
     workspace,
 }, null, 2));
 process.on("uncaughtExceptionMonitor", error => {
     writeFileSync(path.join(logDirectory, "failure.log"), error.stack ?? String(error));
 });
+if (process.env.GITHUB_ACTIONS === "true") {
+    assert.equal(process.env.ORG_GRADLE_PROJECT_javaRelease, release,
+        `CI requires javaRelease=${release} to be shared with the IDE, not only passed to the terminal`);
+}
 console.log(`Node ${process.version}: ${process.execPath}`);
 console.log(`Gradle ${gradleVersion}: ${gradleExecutable}`);
 console.log(`JDK ${release}: ${javaHome}`);

@@ -342,6 +342,32 @@ jobs:
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
           & autotest @autotestArgs
 
+      - name: Collect Gradle IDE diagnostics
+        if: ${{ always() && (matrix.plan == 'java-gradle' || matrix.plan == 'java-gradle-java25') }}
+        shell: pwsh
+        env:
+          GRADLE_TEST_PLAN: ${{ matrix.plan }}
+        run: |
+          $source = Join-Path (Get-Location).Path ".vscode-test/user-data/logs"
+          $destination = "test-results/toolchains/$env:GRADLE_TEST_PLAN/ide"
+          if (-not (Test-Path -LiteralPath $source -PathType Container)) {
+            Write-Warning "VS Code log directory is unavailable: $source"
+          } else {
+            $files = @(Get-ChildItem -LiteralPath $source -File -Recurse | Where-Object {
+              $_.Name -eq "exthost.log" -or $_.Name -like "*Gradle*.log" -or
+              $_.Name -like "*Language Support for Java*.log"
+            })
+            if ($files.Count -eq 0) {
+              Write-Warning "No Gradle, Java output-channel or extension-host logs found in $source"
+            }
+            foreach ($file in $files) {
+              $target = Join-Path $destination ([System.IO.Path]::GetRelativePath($source, $file.FullName))
+              New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
+              Copy-Item -LiteralPath $file.FullName -Destination $target
+            }
+            Write-Host "Preserved $($files.Count) IDE diagnostic logs in $destination"
+          }
+
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

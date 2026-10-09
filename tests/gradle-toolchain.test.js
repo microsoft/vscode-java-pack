@@ -46,6 +46,7 @@ function execute(platform, release = "21", options = {}) {
                             JAVA_HOME: paths.join(root, "wrong-jdk"),
                             [`JAVA${release}_HOME`]: bound ? paths.join(root, "wrong-jdk") : javaHome,
                             GITHUB_ACTIONS: options.ci === false ? undefined : "true",
+                            ORG_GRADLE_PROJECT_javaRelease: "projectRelease" in options ? options.projectRelease : release,
                         },
                         on: (event, callback) => { if (event === "uncaughtExceptionMonitor") monitor = callback; },
                     },
@@ -95,6 +96,7 @@ for (const platform of ["win32", "linux", "darwin"]) {
             const identity = JSON.parse(s.files.get(s.paths.join(s.logDirectory, "toolchain.json")));
             assert.equal(identity.gradle, s.gradle);
             assert.equal(identity.javaHome, s.javaHome);
+            assert.equal(identity.projectJavaRelease, release);
             assert.ok(s.files.has(s.paths.join(s.logDirectory, "build-and-run.log")));
             assert.ok(s.messages.includes(`GRADLE_JAVA${release}_BUILD_PASSED`));
         });
@@ -112,6 +114,16 @@ test("relative bound executable paths are rejected before any command runs", () 
     assert.throws(s.run, /Expected an absolute toolchain path/);
     assert.equal(s.calls.length, 0);
 });
+
+for (const projectRelease of [undefined, "21"]) {
+    test(`Java 25 CI rejects a ${projectRelease === undefined ? "missing" : "conflicting"} shared project release`, () => {
+        const s = execute("darwin", "25", { projectRelease });
+        assert.throws(s.run, /CI requires javaRelease=25 to be shared with the IDE/);
+        assert.equal(s.calls.length, 0);
+        assert.match(s.files.get(s.paths.join(s.logDirectory, "failure.log")), /CI requires javaRelease=25/);
+        assert.ok(!s.messages.includes("GRADLE_JAVA25_BUILD_PASSED"));
+    });
+}
 
 test("local two-argument calls preserve PATH Gradle and project JDK environment behavior", () => {
     const s = execute("linux", "21", { bound: false, ci: false });
@@ -134,5 +146,21 @@ for (const [name, options, expected] of [
         assert.ok(s.files.has(s.paths.join(s.logDirectory, "toolchain.json")));
         assert.match(s.files.get(s.paths.join(s.logDirectory, "failure.log")), expected);
         assert.ok(!s.messages.includes("GRADLE_JAVA21_BUILD_PASSED"));
+    });
+}
+
+for (const plan of ["java-gradle", "java-gradle-java25"]) {
+    test(`${plan} verifies the reloaded probe before consuming completion`, () => {
+        const content = fs.readFileSync(path.join(__dirname, "..", "test-plans", `${plan}.yaml`), "utf8");
+        const ids = [...content.matchAll(/^\s*- id: "([^"]+)"/gm)].map(match => match[1]);
+        assert.match(content, /java\.gradle\.buildServer\.enabled: "on"/);
+        assert.ok(ids.indexOf("ls-ready") < ids.indexOf("show-gradle-task-model"));
+        assert.ok(ids.indexOf("show-gradle-task-model") < ids.indexOf("expand-gradle-tasks"));
+        assert.ok(ids.indexOf("expand-gradle-tasks") < ids.indexOf("verify-gradle-build-task"));
+        assert.ok(ids.indexOf("insert-dependency-probe") < ids.indexOf("reload-dependency-probe"));
+        assert.ok(ids.indexOf("reload-dependency-probe") < ids.indexOf("verify-dependency-completion"));
+        assert.ok(ids.indexOf("remove-dependency-probe") < ids.indexOf("save-source"));
+        assert.ok(ids.indexOf("save-source") < ids.indexOf("verify-build-and-run"));
+        assert.ok(ids.indexOf("verify-gradle-model-remains-healthy") > ids.indexOf("verify-build-and-run"));
     });
 }

@@ -22,7 +22,12 @@ if ($LASTEXITCODE -ne 0 -or -not [System.IO.Path]::IsPathFullyQualified($node)) 
     throw "Could not resolve the setup-selected Node executable"
 }
 $gradle = (Get-Command gradle -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+$gradleHome = Split-Path (Split-Path $gradle -Parent) -Parent
+if (-not (Test-Path -LiteralPath (Join-Path $gradleHome "lib") -PathType Container)) {
+    throw "The selected Gradle executable must belong to a Gradle installation: $gradle"
+}
 $env:JAVA_HOME = $javaHome
+$env:ORG_GRADLE_PROJECT_javaRelease = $release
 
 $nodeVersion = (& $node --version 2>&1 | Out-String).Trim()
 $nodeExitCode = $LASTEXITCODE
@@ -49,6 +54,12 @@ $originalAction = 'executeVSCodeCommand workbench.action.terminal.sendSequence {
     "$release $gradleVersion" + '\u000d"}'
 $planFile = Join-Path "test-plans" "$PlanName.yaml"
 $content = Get-Content -LiteralPath $planFile -Raw
+$versionSetting = '    java.import.gradle.version: "' + $gradleVersion + '"'
+if (-not $content.Contains($versionSetting)) {
+    throw "Could not find the expected Gradle version setting in $planFile"
+}
+$content = $content.Replace($versionSetting,
+    $versionSetting + "`n    java.import.gradle.home: " + ($gradleHome | ConvertTo-Json -Compress))
 $originalValue = "'" + $originalAction + "'"
 if (-not $content.Contains($originalValue)) {
     throw "Could not find the expected build helper command in $planFile"
@@ -57,15 +68,25 @@ if (-not $content.Contains($originalValue)) {
 $boundValue = "'" + $action.Replace("'", "''") + "'"
 Set-Content -LiteralPath $planFile -Value $content.Replace($originalValue, $boundValue)
 
+if ($env:GITHUB_ACTIONS -eq "true") {
+    if (-not $env:GITHUB_ENV) {
+        throw "GITHUB_ENV is required to share the project release with VS Code and Gradle"
+    }
+    "ORG_GRADLE_PROJECT_javaRelease=$release" >> $env:GITHUB_ENV
+}
+
 @{
     node = $node
     nodeVersion = $nodeVersion
     gradle = $gradle
     gradleVersion = $gradleVersion
+    gradleHome = $gradleHome
     javaHome = $javaHome
     javaRelease = $release
+    projectJavaRelease = $env:ORG_GRADLE_PROJECT_javaRelease
     terminalCommand = $terminalCommand
 } | ConvertTo-Json | Set-Content (Join-Path $logDirectory "ci-toolchain.json")
 Write-Host "Bound Node $nodeVersion at $node"
 Write-Host "Bound Gradle $gradleVersion at $gradle with JDK $release at $javaHome"
+Write-Host "Bound IDE Gradle home: $gradleHome; shared project release: $release"
 Write-Host "Toolchain diagnostics: $logDirectory"

@@ -1,12 +1,12 @@
 # Gradle 9.8.1 compatibility: the language server, Gradle and project use JDK 25.
-# Prerequisites: JDK 25, JAVA25_HOME, and Gradle 9.8.1 on PATH (provisioned by CI).
-# CI binds absolute Node/Gradle/JDK paths and saves diagnostics in test-results.
+# Prerequisites: JDK 25, JAVA25_HOME, Gradle 9.8.1, ORG_GRADLE_PROJECT_javaRelease=25.
+# CI binds the IDE/terminal toolchain and saves Gradle diagnostics in test-results.
 # Explicit JDK selection is intentional; this does not test automatic fallback.
 
 name: "Gradle Java 25 — Import, Dependency Completion and Build"
 description: |
   Import a real Java 25 project with Gradle 9.8.1 and a JDK 25 daemon.
-  Verify the Gradle model, Java 25 source level and dependency-backed completion,
+  Verify BSP import, the Gradle task model, Java 25 source level and dependency-backed completion,
   then build and run a Java 25 ScopedValue program with Java 25 bytecode.
   The incomplete completion probe may temporarily produce a diagnostic;
   it is removed and saved before the final zero-error and build checks.
@@ -35,6 +35,9 @@ setup:
     java.import.gradle.arguments:
       - "-PjavaRelease=25"
     java.import.generatesMetadataFilesAtProjectRoot: true
+    java.gradle.buildServer.enabled: "on"
+    java.trace.server: "verbose"
+    gradle.debug: true
 
 steps:
   - id: "ls-ready"
@@ -42,6 +45,46 @@ steps:
     verifyProblems:
       errors: 0
     timeout: 300
+    skipLlmVerify: true
+
+  - id: "show-gradle-task-model"
+    action: "executeVSCodeCommand gradleTasksView.focus"
+    verifyTreeItem:
+      name: "gradle-import-regression"
+      exact: true
+      inView: "Gradle Projects"
+    timeout: 300
+
+  - id: "expand-gradle-tasks"
+    action: "expandTreeItem Tasks"
+    verifyTreeItem:
+      name: "build"
+      exact: true
+      level: 3
+      inView: "Gradle Projects"
+
+  - id: "verify-gradle-build-task"
+    action: "expandTreeItem build"
+    verifyTreeItem:
+      name: "build"
+      exact: true
+      level: 4
+      inView: "Gradle Projects"
+
+  - id: "verify-gradle-run-task"
+    action: "expandTreeItem application"
+    verifyTreeItem:
+      name: "run"
+      exact: true
+      level: 4
+      inView: "Gradle Projects"
+
+  - id: "verify-gradle-model-toolchain"
+    action: "executeVSCodeCommand gradle.showLogs"
+    verifyOutputChannel:
+      channel: "Gradle for Java"
+      contains: "GRADLE_MODEL:9.8.1:25:25"
+      notContains: "Error getting build"
     skipLlmVerify: true
 
   - id: "verify-gradle-model"
@@ -63,6 +106,13 @@ steps:
       errors: 0
     timeout: 15
 
+  - id: "verify-bsp-import"
+    action: "waitForLanguageServer"
+    verifyFile:
+      path: "~/.project"
+      contains: "com.microsoft.gradle.bs.importer.GradleBuildServerProjectNature"
+    skipLlmVerify: true
+
   - id: "verify-gradle-classpath"
     action: "saveFile"
     verifyFile:
@@ -74,6 +124,15 @@ steps:
     action: "insertLineInFile src/java25/example/GradleSmoke25.java 8 String probe = StringUtils.cap;"
     verifyFile:
       path: "~/src/java25/example/GradleSmoke25.java"
+      contains: "String probe = StringUtils.cap;"
+    skipLlmVerify: true
+
+  - id: "reload-dependency-probe"
+    action: "executeVSCodeCommand workbench.action.files.revert"
+    verifyEditorTab:
+      title: "GradleSmoke25.java"
+      active: true
+    verifyEditor:
       contains: "String probe = StringUtils.cap;"
     skipLlmVerify: true
 
@@ -104,7 +163,7 @@ steps:
     action: "executeVSCodeCommand editor.action.deleteLines"
 
   - id: "save-source"
-    action: "saveFile"
+    action: "executeVSCodeCommand workbench.action.files.save"
     verifyFile:
       path: "~/src/java25/example/GradleSmoke25.java"
       matches: '^(?![\s\S]*String probe = StringUtils\.cap;)'
@@ -121,4 +180,12 @@ steps:
     verifyProblems:
       errors: 0
     timeout: 300
+    skipLlmVerify: true
+
+  - id: "verify-gradle-model-remains-healthy"
+    action: "executeVSCodeCommand gradle.showLogs"
+    verifyOutputChannel:
+      channel: "Gradle for Java"
+      contains: "GRADLE_MODEL:9.8.1:25:25"
+      notContains: "Error getting build"
     skipLlmVerify: true
