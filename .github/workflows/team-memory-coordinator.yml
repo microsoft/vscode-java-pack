@@ -69,7 +69,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: microsoft/IssueLens
-          ref: 4175ea71e170938826fb847e6bd5108f0f5597cf # merged PR 50
+          ref: 521b1ff80a70140e286ced7500d0b150cf9e6d6c # shared dispatcher prerequisite
           path: .issuelens-client
           persist-credentials: false
           sparse-checkout: /.github/actions/issuelens/

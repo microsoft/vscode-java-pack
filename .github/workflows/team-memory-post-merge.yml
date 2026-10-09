@@ -19,13 +19,11 @@ jobs:
       contents: read
       actions: write
     steps:
-      - name: Load dispatcher from trusted push revision
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.workflow_sha }}
-          persist-credentials: false
-          sparse-checkout: /.github/actions/queue-team-memory/
-          sparse-checkout-cone-mode: false
-
       - name: Queue team-memory update
-        uses: ./.github/actions/queue-team-memory
+        uses: microsoft/IssueLens/.github/actions/queue-team-memory@521b1ff80a70140e286ced7500d0b150cf9e6d6c
+        with:
+          coordinator-repository: microsoft/vscode-java-pack
+          coordinator-workflow: team-memory-coordinator.yml
+          coordinator-ref: main
+          source-token: ${{ github.token }}
+          dispatch-token: ${{ github.token }}

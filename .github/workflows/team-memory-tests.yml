@@ -23,14 +23,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Load reviewed IssueLens client
+      - name: Load reviewed IssueLens client and shared dispatcher
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: microsoft/IssueLens
-          ref: 4175ea71e170938826fb847e6bd5108f0f5597cf
+          ref: 521b1ff80a70140e286ced7500d0b150cf9e6d6c
           path: .issuelens-client
           persist-credentials: false
-          sparse-checkout: /.github/actions/issuelens/
+          sparse-checkout: |
+            /.github/actions/issuelens/
+            /.github/actions/queue-team-memory/
           sparse-checkout-cone-mode: false
 
       - name: Check source trust, dispatch, discovery, and receipts offline

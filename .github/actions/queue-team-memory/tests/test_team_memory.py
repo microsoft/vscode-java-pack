@@ -3,6 +3,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -47,6 +48,8 @@ class TeamMemoryTests(unittest.TestCase):
         self.before, self.merge, self.after, self.tip = [letter * 40 for letter in "daef"]
         self.project = self.make_project(self.repository)
         self.central = self.make_project(action.COORDINATOR)
+        self.coordinator_workflow = {"id": 789, "path": action.COORDINATOR_WORKFLOW, "state": "active"}
+        self.coordinator_branch = {"name": "main", "commit": {"sha": self.tip}}
         self.environment = {
             "GITHUB_REPOSITORY": action.COORDINATOR, "GITHUB_EVENT_NAME": "workflow_dispatch",
             "GITHUB_REF": "refs/heads/main", "GITHUB_SHA": self.tip, "GITHUB_WORKFLOW_SHA": self.tip,
@@ -57,6 +60,8 @@ class TeamMemoryTests(unittest.TestCase):
             "GITHUB_OUTPUT": str(self.directory / "output.txt"),
             "COORDINATOR_TOKEN": "test-coordinator-token", "GH_TOKEN": "test-source-token",
             "DISPATCH_TOKEN": "test-dispatch-token", "SOURCE_REPOSITORY": self.repository,
+            "COORDINATOR_REPOSITORY": action.COORDINATOR,
+            "COORDINATOR_WORKFLOW": "team-memory-coordinator.yml", "COORDINATOR_REF": "main",
             "SOURCE_RUN_ID": "123456", "SOURCE_RUN_ATTEMPT": "2", "SOURCE_ARTIFACT_ID": "456",
             "DISPATCH_PR": "", "OUTPUT_MODE": "quiet", "SUMMARY_MODE": "none",
             "AGENT_URL": "https://test.services.ai.azure.com/agents/test/protocols/invocations",
@@ -117,8 +122,8 @@ class TeamMemoryTests(unittest.TestCase):
         self.api_reads = []
         self.mock_read = patch.object(action, "github_read", side_effect=self.api_read).start()
         self.addCleanup(patch.stopall)
-        patch.object(self.client, "github_read", side_effect=lambda path, payload=None: self.api_read(
-            path, os.environ["GH_TOKEN"], payload)).start()
+        patch.object(self.client, "github_read", side_effect=lambda path, payload=None, **kwargs: self.api_read(
+            path, kwargs.get("token") or os.environ["GH_TOKEN"], payload)).start()
         patch.object(action, "load_client", return_value=self.client).start()
         self.opener = Mock()
         self.opener.open.return_value = Response()
@@ -138,6 +143,8 @@ class TeamMemoryTests(unittest.TestCase):
             f"/repos/{self.repository}/actions/artifacts/456": self.artifact,
             f"/repos/{self.repository}/pulls/27": self.pull,
             f"/repos/{self.repository}/compare/{self.before}...{self.after}?per_page=1&page=2": self.comparison,
+            f"/repos/{action.COORDINATOR}/actions/workflows/team-memory-coordinator.yml": self.coordinator_workflow,
+            f"/repos/{action.COORDINATOR}/branches/main": self.coordinator_branch,
             "/graphql": self.graphql,
         }
         self.assertIn(path, responses, "Unexpected API access")
@@ -168,7 +175,10 @@ class TeamMemoryTests(unittest.TestCase):
         self.write_event(self.push)
 
     def execute(self, command):
-        action.run(command)
+        if command in {"prepare-dispatch", "dispatch"}:
+            self.client.run(command)
+        else:
+            action.run(command)
         self.azure.assert_not_called()
 
     def test_identity_only_source_excludes_all_untrusted_text_and_tokens(self):
@@ -184,8 +194,26 @@ class TeamMemoryTests(unittest.TestCase):
         self.assertNotIn("test-source-token", path.read_text())
         self.opener.open.assert_not_called()
 
+    def test_shared_dispatcher_snapshot_passes_java_preflight_without_translation(self):
+        coordinator_environment = dict(os.environ)
+        self.select_push()
+        self.execute("prepare-dispatch")
+        self.assertEqual(json.loads(action.source_event_path().read_bytes()), self.snapshot)
+        Path(os.environ["GITHUB_OUTPUT"]).unlink()
+        os.environ.clear()
+        os.environ.update(coordinator_environment)
+        self.write_event({"repository": self.central})
+        self.execute("validate-dispatch")
+        Path(os.environ["GITHUB_OUTPUT"]).unlink()
+        self.execute("preflight")
+        metadata = self.envelope()["metadata"]
+        self.assertEqual(metadata["repository"], self.repository)
+        self.assertEqual(metadata["push_after"], self.after)
+        self.assertEqual(metadata["required_wiki_repository"], action.COORDINATOR)
+        self.opener.open.assert_not_called()
+
     def test_maximum_inventory_fits_and_matches_upstream_limits(self):
-        self.assertEqual(action.MAX_PUSH_COMMITS, self.client.MAX_PUSH_COMMITS)
+        self.assertEqual(self.client.MAX_PUSH_COMMITS, 1000)
         self.assertEqual(action.MAX_SOURCE_BYTES, self.client.MAX_SOURCE_BYTES)
         self.select_push()
         event = copy.deepcopy(self.push)
@@ -201,10 +229,11 @@ class TeamMemoryTests(unittest.TestCase):
                 **original, "GITHUB_REPOSITORY": repository, "GITHUB_EVENT_NAME": "push",
                 "GITHUB_REF": "refs/heads/" + branch, "GITHUB_SHA": self.after, "GITHUB_WORKFLOW_SHA": self.after,
                 "GITHUB_WORKFLOW_REF": repository + "/" + action.SOURCE_WORKFLOW + "@refs/heads/" + branch,
-            }, clear=True), patch.object(action, "github_read", return_value=self.make_project(repository)):
+            }, clear=True), patch.object(self.client, "github_read", return_value=self.make_project(repository)):
                 self.write_event({**self.push, "repository": {"id": identity, "full_name": repository},
                                   "ref": "refs/heads/" + branch})
-                snapshot = action.push_snapshot()
+                self.client.prepare_dispatch()
+                snapshot = json.loads(action.source_event_path().read_bytes())
                 self.assertEqual(snapshot["metadata"]["repository_id"], identity)
                 self.assertEqual(snapshot["metadata"]["base_ref"], branch)
                 self.assertEqual(snapshot["event"]["repository"]["full_name"], repository)
@@ -225,13 +254,13 @@ class TeamMemoryTests(unittest.TestCase):
                 self.assertFalse(action.source_event_path().exists())
                 self.assertEqual(self.output(), {})
 
-    def test_push_rejects_wrong_workflow_branch_revision_and_repository(self):
+    def test_push_rejects_wrong_workflow_branch_revision_and_event(self):
         self.select_push()
         original = dict(os.environ)
         for name, value in (
             ("GITHUB_WORKFLOW_REF", self.repository + "/.github/workflows/untrusted.yml@refs/heads/develop"),
             ("GITHUB_REF", "refs/heads/main"), ("GITHUB_WORKFLOW_SHA", self.tip),
-            ("GITHUB_EVENT_NAME", "pull_request"), ("GITHUB_REPOSITORY", "microsoft/vscode-spring-initializr"),
+            ("GITHUB_EVENT_NAME", "pull_request"),
         ):
             with self.subTest(name=name), patch.dict(os.environ, {**original, name: value}, clear=True):
                 with self.assertRaises(SystemExit):
@@ -245,6 +274,8 @@ class TeamMemoryTests(unittest.TestCase):
         self.assertEqual([(path, token) for path, token, _ in self.api_reads], [
             (f"/repos/{self.repository}", "test-source-token"),
             (f"/repos/{action.COORDINATOR}", "test-dispatch-token"),
+            (f"/repos/{action.COORDINATOR}/actions/workflows/team-memory-coordinator.yml", "test-dispatch-token"),
+            (f"/repos/{action.COORDINATOR}/branches/main", "test-dispatch-token"),
         ])
         self.opener.open.assert_called_once()
         request = self.opener.open.call_args.args[0]
@@ -277,11 +308,31 @@ class TeamMemoryTests(unittest.TestCase):
         self.mock_read.assert_not_called()
         self.opener.open.assert_not_called()
 
-    def test_dispatch_revalidates_the_original_event_not_only_saved_metadata(self):
+    def test_dispatch_revalidates_saved_push_inventory_before_target_access(self):
         self.select_push()
         self.snapshot["event"]["before"] = self.merge
         self.write_source()
-        with self.assertRaisesRegex(SystemExit, "Source event changed"):
+        with self.assertRaisesRegex(SystemExit, "Push commit inventory"):
+            self.execute("dispatch")
+        self.opener.open.assert_not_called()
+        self.assertFalse(any(token == "test-dispatch-token" for _, token, _ in self.api_reads))
+
+    def test_shared_dispatch_rejects_inactive_or_wrong_target_workflow_without_post(self):
+        self.select_push()
+        self.write_source()
+        original = copy.deepcopy(self.coordinator_workflow)
+        for changes in ({"state": "disabled_manually"}, {"path": ".github/workflows/untrusted.yml"}):
+            with self.subTest(changes=changes):
+                self.coordinator_workflow = {**original, **changes}
+                with self.assertRaisesRegex(SystemExit, "Coordinator workflow identity"):
+                    self.execute("dispatch")
+        self.opener.open.assert_not_called()
+
+    def test_shared_dispatch_rejects_wrong_target_branch_without_post(self):
+        self.select_push()
+        self.write_source()
+        self.coordinator_branch["name"] = "develop"
+        with self.assertRaisesRegex(SystemExit, "Coordinator branch identity"):
             self.execute("dispatch")
         self.opener.open.assert_not_called()
 
@@ -584,12 +635,18 @@ class WiringTests(unittest.TestCase):
     def test_workflows_share_new_opt_in_and_only_coordinator_invokes(self):
         source = (ROOT / ".github/workflows/team-memory-post-merge.yml").read_text()
         central = (ROOT / ".github/workflows/team-memory-coordinator.yml").read_text()
-        composite = (ACTION / "action.yml").read_text()
+        shared = Path(os.environ["ISSUELENS_CLIENT_PATH"]).resolve().parent.parent / "queue-team-memory" / "action.yml"
+        composite = shared.read_text()
+        self.assertFalse((ACTION / "action.yml").exists())
+        for command in ("prepare_dispatch", "dispatch", "push_snapshot"):
+            self.assertFalse(hasattr(action, command), "Source dispatch belongs only to the shared action")
         for workflow in (source, central):
             self.assertIn("ISSUELENS_TEAM_MEMORY_COORDINATOR_ENABLED == 'true'", workflow)
             self.assertNotIn("ISSUELENS_TEAM_MEMORY_ENABLED", workflow)
             self.assertIn("permissions: {}", workflow)
-            self.assertIn("persist-credentials: false", workflow)
+        self.assertNotIn("actions/checkout@", source)
+        self.assertNotIn("python", source)
+        self.assertIn("persist-credentials: false", central)
         self.assertNotIn("concurrency:", source)
         self.assertNotIn("workflow_dispatch:", source)
         for text in (source, composite):
@@ -607,9 +664,14 @@ class WiringTests(unittest.TestCase):
         self.assertIn("retention-days: 7", composite)
         self.assertIn("GH_TOKEN: ${{ inputs.source-token }}", composite)
         self.assertIn("DISPATCH_TOKEN: ${{ inputs.dispatch-token }}", composite)
+        for name, value in (("repository", action.COORDINATOR), ("workflow", "team-memory-coordinator.yml"), ("ref", "main")):
+            self.assertIn(f"coordinator-{name}: {value}", source)
 
     def test_client_pin_matches_coordinator_tests_and_documentation(self):
-        revision = "4175ea71e170938826fb847e6bd5108f0f5597cf"
+        source = (ROOT / ".github/workflows/team-memory-post-merge.yml").read_text()
+        match = re.search(r"uses: microsoft/IssueLens/\.github/actions/queue-team-memory@([0-9a-f]{40})", source)
+        self.assertIsNotNone(match)
+        revision = match.group(1)
         for relative in (".github/workflows/team-memory-coordinator.yml", ".github/workflows/team-memory-tests.yml"):
             self.assertIn("ref: " + revision, (ROOT / relative).read_text())
         self.assertIn(revision, (ACTION / "README.md").read_text())
