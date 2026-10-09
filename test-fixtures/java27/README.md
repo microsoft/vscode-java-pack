@@ -37,6 +37,23 @@ Compiler/runtime logs are written to `.autotest/` in the isolated workspace.
 The preview-disabled case requires a real preview-disabled compiler diagnostic,
 not just any nonzero build exit code.
 
+For `java-gradle-java27`, CI also exports `JAVA27_DIAGNOSTICS_DIR` and
+`JAVA27_CI_GRADLE`. The helper keeps its original PATH-based Gradle invocation
+and persists its actual terminal Node/PATH/JDK identity, command exit metadata,
+and full compiler/runtime output outside AutoTest's temporary worktree.
+Gradle builds additionally use `--stacktrace --info`, not `--debug`.
+After a failed PATH-based build, a labelled control uses the absolute
+CI-provisioned Gradle with the same arguments, workspace and JDK, and checks
+Java 27 bytecode and execution. The control never replaces the original failure
+or prints the plan's success marker.
+
+The workflow prints the terminal logs in Actions and includes them with the
+CI toolchain identity and Gradle/Java/extension-host logs under
+`toolchains/java-gradle-java27/` in each existing results artifact. For release
+comparisons, use `test_plan=java-gradle-java27`, `pre_release=false`, and an exact
+vscode-java release URL in `vsix_urls`; keep the failed run's release unchanged
+when isolating a toolchain failure.
+
 For local runs, install Maven, JDK 27, and Gradle 9.8.1, set `JAVA27_HOME`, and
 adjust the plan's `JavaSE-27` runtime path if necessary. Run with the platform
 VSIX from redhat-developer/vscode-java v1.57.0, or another release whose JDT

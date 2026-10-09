@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -23,20 +23,83 @@ env[pathKey] = `${path.join(env.JAVA_HOME, "bin")}${path.delimiter}${env[pathKey
 const java = path.join(env.JAVA_HOME, "bin", process.platform === "win32" ? "java.exe" : "java");
 const logDirectory = path.join(workspace, ".autotest");
 mkdirSync(logDirectory, { recursive: true });
+const diagnosticDirectory = process.env.JAVA27_DIAGNOSTICS_DIR;
+const ciGradle = process.env.JAVA27_CI_GRADLE;
+if (diagnosticDirectory) {
+    assert.ok(path.isAbsolute(diagnosticDirectory), "JAVA27_DIAGNOSTICS_DIR must be absolute");
+    mkdirSync(diagnosticDirectory, { recursive: true });
+    if (builder === "gradle") {
+        assert.ok(ciGradle && path.isAbsolute(ciGradle), "Gradle diagnostics require an absolute JAVA27_CI_GRADLE");
+    }
+}
 
-function run(command, args, logName) {
+function saveLog(name, content) {
+    writeFileSync(path.join(logDirectory, name), content);
+    if (diagnosticDirectory) writeFileSync(path.join(diagnosticDirectory, name), content);
+}
+
+function capture(command, args, logName, windowsVerbatimArguments = false) {
+    const startedAt = new Date().toISOString();
     const result = spawnSync(command, args, {
         cwd: workspace,
         env,
         encoding: "utf8",
         timeout: 240_000,
         maxBuffer: 16 * 1024 * 1024,
+        windowsVerbatimArguments,
     });
     const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-    writeFileSync(path.join(logDirectory, logName), output);
+    saveLog(logName, output);
+    if (diagnosticDirectory) {
+        saveLog(`${logName}.json`, JSON.stringify({
+            command, args, cwd: workspace, startedAt,
+            completedAt: new Date().toISOString(),
+            status: result.status ?? null,
+            signal: result.signal ?? null,
+            error: result.error ? {
+                name: result.error.name,
+                message: result.error.message,
+                code: result.error.code,
+            } : null,
+        }, null, 2));
+    }
+    return { ...result, output };
+}
+
+function checkProcess(result) {
     if (result.error) throw result.error;
-    assert.notEqual(result.status, null, `Process terminated by ${result.signal}: ${output}`);
-    return { status: result.status, output, stdout: result.stdout };
+    assert.notEqual(result.status, null, `Process terminated by ${result.signal}: ${result.output}`);
+    return result;
+}
+
+function run(command, args, logName) {
+    return checkProcess(capture(command, args, logName));
+}
+
+function captureBuilder(command, args, logName) {
+    if (process.platform !== "win32") return capture(command, args, logName);
+    const absolute = path.isAbsolute(command);
+    const commandLine = absolute ? `""${command}" ${args.join(" ")}"` : `${command} ${args.join(" ")}`;
+    return capture(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", commandLine], logName, absolute);
+}
+
+if (diagnosticDirectory) {
+    const identity = {
+        builder, scenario, workspace,
+        node: process.execPath,
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        shell: process.env.SHELL ?? process.env.ComSpec ?? null,
+        inheritedJavaHome: process.env.JAVA_HOME ?? null,
+        projectJavaHome: env.JAVA_HOME,
+        inheritedPath: process.env[pathKey] ?? null,
+        childPath: env[pathKey],
+        ciGradle,
+    };
+    saveLog("terminal-toolchain.json", JSON.stringify(identity, null, 2));
+    process.on("uncaughtExceptionMonitor", error => saveLog("failure.log", error.stack ?? String(error)));
+    console.log(`[diagnostic] Terminal toolchain: ${JSON.stringify(identity)}`);
 }
 
 const version = run(java, ["-XshowSettings:properties", "-version"], "java-version.log");
@@ -53,10 +116,55 @@ const command = builder === "maven" ? "mvn" : "gradle";
 const args = builder === "maven"
     ? ["--batch-mode", "--no-transfer-progress", "--quiet", "clean", "compile"]
     : ["--no-daemon", "--console=plain", "clean", "classes"];
-const build = process.platform === "win32"
-    ? run(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", `${command} ${args.join(" ")}`], `${builder}-${scenario}-build.log`)
-    : run(command, args, `${builder}-${scenario}-build.log`);
+if (diagnosticDirectory && builder === "gradle") {
+    args.push("--stacktrace", "--info");
+    const lookup = process.platform === "win32"
+        ? capture(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", "where gradle"], "gradle-path-lookup.log")
+        : capture("/usr/bin/which", ["-a", "gradle"], "gradle-path-lookup.log");
+    console.log(`[diagnostic] PATH Gradle lookup: exit=${lookup.status ?? lookup.signal}; ${lookup.error?.message ?? lookup.output}`);
+}
+const build = captureBuilder(command, args, `${builder}-${scenario}-build.log`);
 console.log(build.output);
+
+if (diagnosticDirectory && builder === "gradle") {
+    for (const [executable, name] of [[command, "gradle-path-version.log"], [ciGradle, "gradle-ci-version.log"]]) {
+        const probe = captureBuilder(executable, ["--version"], name);
+        console.log(`[diagnostic] ${name}: exit=${probe.status ?? probe.signal}; ${probe.error?.message ?? probe.output}`);
+    }
+    // Controls never replace the primary result or emit its success marker.
+    if (build.status !== 0) {
+        const control = captureBuilder(ciGradle, args, "gradle-ci-control-build.log");
+        const report = {
+            primaryStatus: build.status ?? null,
+            controlStatus: control.status ?? null,
+            controlSignal: control.signal ?? null,
+            controlError: control.error?.message ?? null,
+            bytecodeMajor: null,
+            applicationStatus: null,
+            applicationOutput: null,
+            verified: false,
+        };
+        if (!control.error && control.status === 0) {
+            const classFile = path.join(workspace, "build", "classes", "java", "main", "example", "ProjectSmoke.class");
+            if (existsSync(classFile)) {
+                const bytecode = readFileSync(classFile);
+                if (bytecode.length >= 8 && bytecode.readUInt32BE(0) === 0xcafebabe) {
+                    report.bytecodeMajor = bytecode.readUInt16BE(6);
+                }
+            }
+            const application = capture(java, [
+                "--enable-preview", "-cp", path.dirname(path.dirname(classFile)), "example.ProjectSmoke",
+            ], "gradle-ci-control-run.log");
+            report.applicationStatus = application.status ?? null;
+            report.applicationOutput = application.stdout?.trim() ?? null;
+            report.verified = report.bytecodeMajor === 71 && !application.error &&
+                application.status === 0 && report.applicationOutput === cases.project[1];
+        }
+        saveLog("gradle-ci-control.json", JSON.stringify(report, null, 2));
+        console.log(`[diagnostic] CI Gradle control: ${JSON.stringify(report)}`);
+    }
+}
+checkProcess(build);
 
 if (scenario === "preview-disabled") {
     assert.notEqual(build.status, 0, "Compilation must fail with preview disabled");
