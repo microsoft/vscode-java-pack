@@ -84,3 +84,13 @@ Release API requests use `GITHUB_TOKEN`. Cross-repository Actions artifacts use 
 For `java-gradle` and `java-gradle-java25`, CI validates the setup-selected Node 22 and Gradle versions, then rewrites the build terminal command with absolute Node, Gradle, JDK and diagnostic paths. This avoids tools being reselected by terminal shell initialization. The helper keeps its version, program-output and bytecode assertions, and writes toolchain identity, command output and uncaught failures under `test-results/toolchains/<plan>/` for artifact upload. Local two-argument helper invocations retain their existing PATH/JDK-environment behavior; GitHub Actions requires explicit paths.
 
 The same binding sets the IDE's `java.import.gradle.home` and exports `ORG_GRADLE_PROJECT_javaRelease` before VS Code starts. Local runs must set that project property as documented in the fixture README. These plans require BSP import, actual Gradle `build`/`run` tasks, and the exact configuration marker in Gradle for Java output; terminal success alone is insufficient. CI also preserves Gradle/Java output-channel and extension-host logs under `test-results/toolchains/<plan>/ide/`.
+
+For framework diagnostics, dispatch with `autotest_ref` set to a branch, tag or
+commit in `wenytang-ms/javaext-autotest`. Discover builds one package and all
+jobs use that artifact and recorded commit; an empty ref retains published-latest
+behavior. To test Java 1.57.0, set `vsix_urls` to
+`https://github.com/redhat-developer/vscode-java/releases/tag/v1.57.0`
+and `pre_release` to `false`. Select one scenario with `test_plan`.
+The effective plan, package/source identity, console output and exit code are
+uploaded under `test-results/runner/<plan>/`; Gradle command and assertion
+details remain under `test-results/toolchains/<plan>/`.

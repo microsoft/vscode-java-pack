@@ -30,3 +30,7 @@ file version, and emits its success marker only after all checks pass.
 Generated IDE metadata and build logs are not fixture inputs.
 CI preserves Gradle/Java output-channel and extension-host logs alongside the terminal
 diagnostics so BSP transport failures cannot be inferred from JDT logs alone.
+The terminal diagnostics include `command-*.json` (command, arguments, working
+directory, JDK, timing, exit code and signal), `stage.json`, and `failure.json`
+with the failing stage and full assertion stack. These accompany the existing
+version/build output logs; the success marker and all assertions are unchanged.

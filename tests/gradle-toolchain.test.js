@@ -98,6 +98,13 @@ for (const platform of ["win32", "linux", "darwin"]) {
             assert.equal(identity.javaHome, s.javaHome);
             assert.equal(identity.projectJavaRelease, release);
             assert.ok(s.files.has(s.paths.join(s.logDirectory, "build-and-run.log")));
+            const commands = [1, 2, 3].map(number =>
+                JSON.parse(s.files.get(s.paths.join(s.logDirectory, `command-${number}.json`))));
+            assert.deepEqual(commands.map(command => command.stage), ["java-version", "gradle-version", "build-and-run"]);
+            assert.equal(commands[2].exitCode, 0);
+            assert.equal(commands[2].javaHome, s.javaHome);
+            assert.deepEqual(commands[2].args, Array.from(s.calls[2].args));
+            assert.equal(JSON.parse(s.files.get(s.paths.join(s.logDirectory, "stage.json"))).stage, "passed");
             assert.ok(s.messages.includes(`GRADLE_JAVA${release}_BUILD_PASSED`));
         });
     }
@@ -145,6 +152,10 @@ for (const [name, options, expected] of [
         assert.throws(s.run, expected);
         assert.ok(s.files.has(s.paths.join(s.logDirectory, "toolchain.json")));
         assert.match(s.files.get(s.paths.join(s.logDirectory, "failure.log")), expected);
+        const failure = JSON.parse(s.files.get(s.paths.join(s.logDirectory, "failure.json")));
+        assert.match(failure.message, expected);
+        assert.ok(failure.stage);
+        assert.match(failure.stack, expected);
         assert.ok(!s.messages.includes("GRADLE_JAVA21_BUILD_PASSED"));
     });
 }
