@@ -38,14 +38,24 @@ The preview-disabled case requires a real preview-disabled compiler diagnostic,
 not just any nonzero build exit code.
 
 For `java-gradle-java27`, CI also exports `JAVA27_DIAGNOSTICS_DIR` and
-`JAVA27_CI_GRADLE`. The helper keeps its original PATH-based Gradle invocation
-and persists its actual terminal Node/PATH/JDK identity, command exit metadata,
-and full compiler/runtime output outside AutoTest's temporary worktree.
+`JAVA27_CI_GRADLE`. When `GITHUB_ACTIONS=true` or `CI=true`, the helper requires
+an absolute `JAVA27_CI_GRADLE` and uses that executable for the actual build
+instead of resolving Gradle from the terminal's PATH. Missing or relative CI
+paths fail explicitly, even when diagnostics are disabled; a failed CI build
+does not retry with PATH Gradle. Node, the existing JDK 27 configuration and
+terminal profiles are unchanged.
+
+The helper persists its actual terminal Node/PATH/JDK identity, selected Gradle
+command, command exit metadata, and full compiler/runtime output outside
+AutoTest's temporary worktree. It records both PATH Gradle and CI Gradle
+versions so macOS PATH reordering remains visible without affecting the build.
 Gradle builds additionally use `--stacktrace --info`, not `--debug`.
-After a failed PATH-based build, a labelled control uses the absolute
+Local runs keep their original PATH-based invocation. When local diagnostics
+are enabled, a failed PATH-based build runs a labelled control using the absolute
 CI-provisioned Gradle with the same arguments, workspace and JDK, and checks
 Java 27 bytecode and execution. The control never replaces the original failure
-or prints the plan's success marker.
+or prints the plan's success marker. CI already uses that executable for the
+primary build and does not run a duplicate control after failure.
 
 The workflow prints the terminal logs in Actions and includes them with the
 CI toolchain identity and Gradle/Java/extension-host logs under

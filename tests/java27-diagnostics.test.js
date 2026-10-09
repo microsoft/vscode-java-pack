@@ -35,19 +35,23 @@ function execute(platform, options = {}) {
                     fileURLToPath: () => paths.join(workspace, "verify.mjs"),
                     mkdirSync: () => {},
                     writeFileSync: (location, content) => files.set(location, content),
-                    readFileSync: () => bytecode,
+                    readFileSync: location => location.endsWith("pom.xml")
+                        ? "<maven.compiler.enablePreview>true</maven.compiler.enablePreview>"
+                        : bytecode,
                     existsSync: () => classWritten,
                     console: { log: message => messages.push(message) },
                     process: {
-                        argv: ["node", filename, "gradle", "project"],
+                        argv: ["node", filename, options.builder ?? "gradle", "project"],
                         platform, arch: platform === "darwin" ? "arm64" : "x64",
                         execPath: paths.join(root, "terminal-node"), version: "v24.20.0",
                         env: {
+                            CI: options.ci ? "true" : undefined,
+                            GITHUB_ACTIONS: options.githubActions ? "true" : undefined,
                             PATH: paths.join(root, "terminal-tools"),
                             JAVA_HOME: paths.join(root, "jdk-21"),
                             JAVA27_HOME: javaHome,
                             JAVA27_DIAGNOSTICS_DIR: options.diagnostics === false ? undefined : diagnosticDirectory,
-                            JAVA27_CI_GRADLE: options.ciGradle ?? ciGradle,
+                            JAVA27_CI_GRADLE: Object.hasOwn(options, "ciGradle") ? options.ciGradle : ciGradle,
                         },
                         on: (event, callback) => { if (event === "uncaughtExceptionMonitor") monitor = callback; },
                     },
@@ -64,11 +68,12 @@ function execute(platform, options = {}) {
                         if (args.includes("--enable-preview")) {
                             return { status: options.applicationStatus ?? 0, stdout: "JDK27_PROJECT:27\n", stderr: "" };
                         }
-                        if (args.includes("--version") || invocation.endsWith("--version")) {
+                        if (args.includes("--version") || /(?:^|\s)--version"?$/.test(invocation)) {
                             return { status: 0, stdout: `Gradle ${control ? "9.8.1" : "9.7.1"}\n`, stderr: "" };
                         }
-                        if (!control && options.spawnError) {
-                            return { status: null, error: options.spawnError, stdout: "", stderr: "Cannot start PATH Gradle\n" };
+                        const spawnError = control ? options.controlSpawnError : options.spawnError;
+                        if (spawnError) {
+                            return { status: null, error: spawnError, stdout: "", stderr: "Cannot start Gradle\n" };
                         }
                         const status = control ? (options.controlStatus ?? 0) : (options.buildStatus ?? 0);
                         if (status === 0) classWritten = true;
@@ -88,6 +93,41 @@ function execute(platform, options = {}) {
 }
 
 for (const platform of ["win32", "linux", "darwin"]) {
+    test(`${platform} CI builds use the absolute Gradle without changing Node or JDK`, () => {
+        const s = execute(platform, { ci: true, buildStatus: 1 });
+        s.run();
+        const builds = s.calls.filter(call => call.args.join(" ").includes("clean classes"));
+        assert.equal(builds.length, 1);
+        const [build] = builds;
+        if (platform === "win32") {
+            assert.equal(build.args[3], `""${s.ciGradle}" --no-daemon --console=plain clean classes --stacktrace --info"`);
+            assert.equal(build.options.windowsVerbatimArguments, true);
+        } else {
+            assert.equal(build.command, s.ciGradle);
+        }
+        assert.equal(build.options.env.JAVA_HOME, s.javaHome);
+        const identity = JSON.parse(s.files.get(s.paths.join(s.diagnosticDirectory, "terminal-toolchain.json")));
+        assert.equal(identity.nodeVersion, "v24.20.0");
+        assert.equal(identity.gradleCommand, s.ciGradle);
+        assert.equal(identity.projectJavaHome, s.javaHome);
+        assert.match(s.files.get(s.paths.join(s.diagnosticDirectory, "gradle-path-version.log")), /Gradle 9\.7\.1/);
+        assert.match(s.files.get(s.paths.join(s.diagnosticDirectory, "gradle-ci-version.log")), /Gradle 9\.8\.1/);
+        assert.ok(!s.files.has(s.paths.join(s.diagnosticDirectory, "gradle-ci-control.json")));
+        assert.ok(s.messages.includes("JDK27_PROJECT_PASSED"));
+    });
+
+    test(`${platform} a failed bound CI build cannot fall back to PATH or retry a control`, () => {
+        const s = execute(platform, { ci: true, controlStatus: 1 });
+        assert.throws(s.run, /Original Gradle compilation error/);
+        const builds = s.calls.filter(call => call.args.join(" ").includes("clean classes"));
+        assert.equal(builds.length, 1);
+        const metadata = JSON.parse(s.files.get(s.paths.join(s.diagnosticDirectory, "gradle-project-build.log.json")));
+        assert.equal(metadata.status, 1);
+        assert.ok(!s.files.has(s.paths.join(s.diagnosticDirectory, "gradle-ci-control.json")));
+        assert.match(s.files.get(s.paths.join(s.diagnosticDirectory, "failure.log")), /Original Gradle compilation error/);
+        assert.ok(s.messages.every(message => !message.includes("JDK27_PROJECT_PASSED")));
+    });
+
     test(`${platform} keeps the primary PATH Gradle and records terminal identity`, () => {
         const s = execute(platform);
         s.run();
@@ -130,6 +170,64 @@ for (const platform of ["win32", "linux", "darwin"]) {
         assert.match(s.files.get(s.paths.join(s.diagnosticDirectory, "gradle-project-build.log")), /Complete stacktrace/);
     });
 }
+
+test("GitHub Actions binds Gradle independently of opt-in diagnostics", () => {
+    const s = execute("darwin", { githubActions: true, diagnostics: false, buildStatus: 1 });
+    s.run();
+    assert.equal(s.calls.length, 3);
+    assert.equal(s.calls[1].command, s.ciGradle);
+    assert.deepEqual(Array.from(s.calls[1].args), ["--no-daemon", "--console=plain", "clean", "classes"]);
+    assert.ok(!s.files.has(s.paths.join(s.diagnosticDirectory, "terminal-toolchain.json")));
+    assert.ok(s.messages.includes("JDK27_PROJECT_PASSED"));
+});
+
+for (const [name, options] of [
+    ["missing CI binding", { ci: true, ciGradle: undefined }],
+    ["missing GitHub Actions binding", { githubActions: true, ciGradle: undefined }],
+    ["empty CI binding", { ci: true, ciGradle: "" }],
+    ["relative CI binding", { ci: true, ciGradle: "gradle" }],
+]) {
+    test(`${name} fails explicitly even when diagnostics are disabled`, () => {
+        const s = execute("darwin", { diagnostics: false, ...options });
+        assert.throws(s.run, /CI Gradle builds require an absolute JAVA27_CI_GRADLE/);
+        assert.equal(s.calls.length, 0);
+        assert.ok(s.messages.every(message => !message.includes("JDK27_PROJECT_PASSED")));
+    });
+}
+
+for (const [name, options, message] of [
+    ["wrong CI bytecode", { bytecodeMajor: 70 }, /Expected Java 27 bytecode/],
+    ["failed CI application", { applicationStatus: 1 }, /JDK27_PROJECT:27/],
+]) {
+    test(`${name} still fails after a successful bound build`, () => {
+        const s = execute("darwin", { ci: true, ...options });
+        assert.throws(s.run, message);
+        assert.ok(s.messages.every(output => !output.includes("JDK27_PROJECT_PASSED")));
+    });
+}
+
+test("CI Maven builds do not require a Gradle binding", () => {
+    const s = execute("darwin", { ci: true, builder: "maven", ciGradle: undefined, diagnostics: false });
+    s.run();
+    assert.equal(s.calls[1].command, "mvn");
+    assert.ok(s.messages.includes("JDK27_PROJECT_PASSED"));
+});
+
+test("an unavailable bound CI executable retains its error without falling back", () => {
+    const s = execute("darwin", {
+        ci: true,
+        controlSpawnError: Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
+    });
+    assert.throws(s.run, /ENOENT/);
+    const builds = s.calls.filter(call => call.args.join(" ").includes("clean classes"));
+    assert.equal(builds.length, 1);
+    assert.equal(builds[0].command, s.ciGradle);
+    const metadata = JSON.parse(s.files.get(s.paths.join(s.diagnosticDirectory, "gradle-project-build.log.json")));
+    assert.equal(metadata.error.code, "ENOENT");
+    assert.ok(!s.files.has(s.paths.join(s.diagnosticDirectory, "gradle-ci-control.json")));
+    assert.match(s.files.get(s.paths.join(s.diagnosticDirectory, "failure.log")), /ENOENT/);
+    assert.ok(s.messages.every(message => !message.includes("JDK27_PROJECT_PASSED")));
+});
 
 test("diagnostics remain opt-in and preserve the original command and success marker", () => {
     const s = execute("darwin", { diagnostics: false });

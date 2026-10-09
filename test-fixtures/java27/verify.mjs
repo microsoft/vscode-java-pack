@@ -25,6 +25,11 @@ const logDirectory = path.join(workspace, ".autotest");
 mkdirSync(logDirectory, { recursive: true });
 const diagnosticDirectory = process.env.JAVA27_DIAGNOSTICS_DIR;
 const ciGradle = process.env.JAVA27_CI_GRADLE;
+const isCI = process.env.GITHUB_ACTIONS === "true" || process.env.CI === "true";
+if (builder === "gradle" && isCI) {
+    assert.ok(ciGradle && path.isAbsolute(ciGradle), "CI Gradle builds require an absolute JAVA27_CI_GRADLE");
+}
+const command = builder === "maven" ? "mvn" : isCI ? ciGradle : "gradle";
 if (diagnosticDirectory) {
     assert.ok(path.isAbsolute(diagnosticDirectory), "JAVA27_DIAGNOSTICS_DIR must be absolute");
     mkdirSync(diagnosticDirectory, { recursive: true });
@@ -95,6 +100,7 @@ if (diagnosticDirectory) {
         projectJavaHome: env.JAVA_HOME,
         inheritedPath: process.env[pathKey] ?? null,
         childPath: env[pathKey],
+        gradleCommand: builder === "gradle" ? command : null,
         ciGradle,
     };
     saveLog("terminal-toolchain.json", JSON.stringify(identity, null, 2));
@@ -112,7 +118,6 @@ if (builder === "maven") {
         `pom.xml must have preview ${expectedPreview ? "enabled" : "disabled"}`);
 }
 
-const command = builder === "maven" ? "mvn" : "gradle";
 const args = builder === "maven"
     ? ["--batch-mode", "--no-transfer-progress", "--quiet", "clean", "compile"]
     : ["--no-daemon", "--console=plain", "clean", "classes"];
@@ -127,12 +132,12 @@ const build = captureBuilder(command, args, `${builder}-${scenario}-build.log`);
 console.log(build.output);
 
 if (diagnosticDirectory && builder === "gradle") {
-    for (const [executable, name] of [[command, "gradle-path-version.log"], [ciGradle, "gradle-ci-version.log"]]) {
+    for (const [executable, name] of [["gradle", "gradle-path-version.log"], [ciGradle, "gradle-ci-version.log"]]) {
         const probe = captureBuilder(executable, ["--version"], name);
         console.log(`[diagnostic] ${name}: exit=${probe.status ?? probe.signal}; ${probe.error?.message ?? probe.output}`);
     }
     // Controls never replace the primary result or emit its success marker.
-    if (build.status !== 0) {
+    if (build.status !== 0 && command !== ciGradle) {
         const control = captureBuilder(ciGradle, args, "gradle-ci-control-build.log");
         const report = {
             primaryStatus: build.status ?? null,

@@ -194,7 +194,7 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Prepare Gradle Java 27 diagnostics
+      - name: Prepare Gradle Java 27 toolchain and diagnostics
         if: matrix.plan == 'java-gradle-java27'
         shell: pwsh
         run: |
