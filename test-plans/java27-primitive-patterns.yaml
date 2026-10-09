@@ -4,6 +4,10 @@ description: |
   patterns. A temporary unresolved type proves the language server is
   analyzing the file before zero-error and runtime assertions.
 
+logging:
+  enabled: true
+  outputDir: "../test-results/run-logs"
+
 setup:
   extension: "redhat.java"
   extensions:
@@ -14,6 +18,7 @@ setup:
   settings:
     java.help.showReleaseNotes: false
     java.help.firstView: "none"
+    java.trace.server: "verbose"
   workspaceSettings:
     java.configuration.runtimes:
       - name: "JavaSE-27"

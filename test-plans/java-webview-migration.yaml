@@ -35,6 +35,10 @@ description: |
   used so the Maven tab in Project Settings and the project list in Configure
   Java Runtime become visible.
 
+logging:
+  enabled: true
+  outputDir: "../test-results/run-logs"
+
 setup:
   extension: "redhat.java"
   extensions:

@@ -3,6 +3,10 @@ description: |
   Import the fixture with Gradle 9.8.1 and a Java 27 project toolchain.
   Verify source compliance, diagnostics, Java 27 bytecode, and execution.
 
+logging:
+  enabled: true
+  outputDir: "../test-results/run-logs"
+
 setup:
   extension: "redhat.java"
   extensions:
@@ -13,6 +17,7 @@ setup:
   settings:
     java.help.showReleaseNotes: false
     java.help.firstView: "none"
+    java.trace.server: "verbose"
   workspaceSettings:
     java.configuration.runtimes:
       - name: "JavaSE-27"

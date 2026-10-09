@@ -457,14 +457,15 @@ jobs:
           }
 
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
+          "AUTOTEST_RUN_STARTED=$((Get-Date).ToUniversalTime().ToString('o'))" >> $env:GITHUB_ENV
           & autotest @autotestArgs
 
-      - name: Collect Gradle Java 27 IDE logs
-        if: ${{ always() && matrix.plan == 'java-gradle-java27' }}
+      - name: Collect affected Java 27 IDE logs
+        if: ${{ always() && (matrix.plan == 'java-gradle-java27' || matrix.plan == 'java27-primitive-patterns') }}
         shell: pwsh
         run: |
           $source = Join-Path (Join-Path (Join-Path (Get-Location).Path ".vscode-test") "user-data") "logs"
-          $root = Join-Path (Join-Path (Join-Path (Get-Location).Path "test-results") "toolchains") "java-gradle-java27"
+          $root = Join-Path (Join-Path (Join-Path (Get-Location).Path "test-results") "toolchains") "${{ matrix.plan }}"
           $destination = Join-Path $root "ide"
           if (-not (Test-Path -LiteralPath $source -PathType Container)) {
             Write-Warning "VS Code logs unavailable: $source"
@@ -480,6 +481,30 @@ jobs:
               Copy-Item -LiteralPath $file.FullName -Destination $target
             }
             Write-Host "Preserved $($files.Count) IDE logs in $destination"
+          }
+
+      - name: Collect macOS AutoTest crash reports
+        if: ${{ always() && runner.os == 'macOS' && matrix.plan == 'java-webview-migration' }}
+        shell: pwsh
+        run: |
+          $source = Join-Path $env:HOME "Library/Logs/DiagnosticReports"
+          if (-not $env:AUTOTEST_RUN_STARTED) {
+            Write-Warning "AutoTest did not start; no run-specific crash reports can be selected."
+          } elseif (-not (Test-Path -LiteralPath $source -PathType Container)) {
+            Write-Warning "macOS crash reports unavailable: $source"
+          } else {
+            $started = [DateTimeOffset]::Parse($env:AUTOTEST_RUN_STARTED).UtcDateTime
+            $reports = @(Get-ChildItem -LiteralPath $source -File | Where-Object {
+              $_.Name -match '^(node|Electron|Code|java)[-_ .].*\.(ips|crash)$' -and
+              $_.LastWriteTimeUtc -ge $started
+            })
+            $destination = Join-Path (Join-Path (Join-Path (Get-Location).Path "test-results") "run-logs") "macos-crashes"
+            foreach ($report in $reports) {
+              New-Item -ItemType Directory -Path $destination -Force | Out-Null
+              Copy-Item -LiteralPath $report.FullName -Destination (Join-Path $destination $report.Name)
+              Write-Host "Preserved macOS crash report: $($report.Name)"
+            }
+            if ($reports.Count -eq 0) { Write-Warning "No node, Electron, Code or Java crash reports found for this AutoTest run." }
           }
 
       - name: Print Gradle Java 27 terminal diagnostics

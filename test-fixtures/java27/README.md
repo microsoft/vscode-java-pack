@@ -64,6 +64,15 @@ comparisons, use `test_plan=java-gradle-java27`, `pre_release=false`, and an exa
 vscode-java release URL in `vsix_urls`; keep the failed run's release unchanged
 when isolating a toolchain failure.
 
+The Gradle import and primitive-pattern plans also enable AutoTest file logging.
+Their YAML-relative `../test-results/run-logs` directory is included in the
+existing CI results artifact, even when execution stops before `results.json`
+is written. Logging does not change the actions or verification criteria.
+Both plans enable verbose Java LSP tracing, and CI preserves the full
+Java/extension-host output alongside the bounded AutoTest log copies.
+The webview migration plan uses the same logging directory; macOS CI also
+collects run-specific Node, Electron, Code and Java native crash reports.
+
 Release metadata lookup uses the workflow's read-only `GITHUB_TOKEN` to avoid
 shared-runner anonymous API limits. Asset downloads do not forward that token.
 
