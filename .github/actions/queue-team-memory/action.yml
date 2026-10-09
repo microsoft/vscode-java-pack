@@ -1,0 +1,46 @@
+name: Queue Java team memory
+description: Preserve an allowlisted default-branch push and dispatch the central Java wiki coordinator.
+
+inputs:
+  source-token:
+    description: Source repository read token for push provenance validation.
+    required: false
+    default: ${{ github.token }}
+  dispatch-token:
+    description: Token with Actions write access to microsoft/vscode-java-pack.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  source-artifact-id:
+    description: Uploaded identity artifact ID; not proof of dispatch acceptance or successful maintenance.
+    value: ${{ steps.artifact.outputs.artifact-id }}
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare identity-only source event
+      id: source
+      shell: bash
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        GH_TOKEN: ${{ inputs.source-token }}
+      run: python3 -I "$GITHUB_ACTION_PATH/team_memory.py" prepare-dispatch
+
+    - name: Preserve source event for the coordinator
+      id: artifact
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: issuelens-team-memory-source-${{ github.run_attempt }}
+        path: ${{ steps.source.outputs.source-event-path }}
+        if-no-files-found: error
+        retention-days: 7
+
+    - name: Queue one team-memory request
+      shell: bash
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        GH_TOKEN: ${{ inputs.source-token }}
+        DISPATCH_TOKEN: ${{ inputs.dispatch-token }}
+        SOURCE_ARTIFACT_ID: ${{ steps.artifact.outputs.artifact-id }}
+      run: python3 -I "$GITHUB_ACTION_PATH/team_memory.py" dispatch

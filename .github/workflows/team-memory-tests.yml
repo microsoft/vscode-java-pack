@@ -1,0 +1,39 @@
+name: Java team-memory adapter checks
+
+on:
+  pull_request:
+    paths:
+      - .github/actions/queue-team-memory/**
+      - .github/workflows/team-memory*.yml
+  push:
+    branches: [main]
+    paths:
+      - .github/actions/queue-team-memory/**
+      - .github/workflows/team-memory*.yml
+
+permissions: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Load reviewed IssueLens client
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: microsoft/IssueLens
+          ref: 4175ea71e170938826fb847e6bd5108f0f5597cf
+          path: .issuelens-client
+          persist-credentials: false
+          sparse-checkout: /.github/actions/issuelens/
+          sparse-checkout-cone-mode: false
+
+      - name: Check source trust, dispatch, discovery, and receipts offline
+        env:
+          ISSUELENS_CLIENT_PATH: .issuelens-client/.github/actions/issuelens/issuelens_action.py
+        run: python3 -m unittest discover -s .github/actions/queue-team-memory/tests

@@ -1,0 +1,137 @@
+name: Coordinate Java team memory (opt-in)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_repository:
+        description: Allowlisted Java source repository (owner/name)
+        required: true
+        default: microsoft/vscode-java-pack
+        type: string
+      source_run_id:
+        description: Source push workflow run ID (automatic dispatch only)
+        required: false
+        type: string
+      source_run_attempt:
+        description: Source workflow attempt (required with source_run_id)
+        required: false
+        type: string
+      source_artifact_id:
+        description: Immutable source event artifact ID (required with source_run_id)
+        required: false
+        type: string
+      pull_request_number:
+        description: Merged source PR to reconcile manually (instead of source inputs)
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: issuelens-team-memory-wiki-microsoft-vscode-java-pack
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: >-
+      vars.ISSUELENS_TEAM_MEMORY_COORDINATOR_ENABLED == 'true' &&
+      github.repository == 'microsoft/vscode-java-pack' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+      id-token: write
+    env:
+      COORDINATOR_TOKEN: ${{ github.token }}
+      SOURCE_REPOSITORY: ${{ inputs.source_repository }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      SOURCE_RUN_ATTEMPT: ${{ inputs.source_run_attempt }}
+      SOURCE_ARTIFACT_ID: ${{ inputs.source_artifact_id }}
+      DISPATCH_PR: ${{ inputs.pull_request_number }}
+      ISSUELENS_CLIENT_PATH: .issuelens-client/.github/actions/issuelens/issuelens_action.py
+      OUTPUT_MODE: activity
+      SUMMARY_MODE: status
+    steps:
+      - name: Load Java adapter from trusted workflow revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: /.github/actions/queue-team-memory/
+          sparse-checkout-cone-mode: false
+
+      - name: Load reviewed IssueLens client
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: microsoft/IssueLens
+          ref: 4175ea71e170938826fb847e6bd5108f0f5597cf # merged PR 50
+          path: .issuelens-client
+          persist-credentials: false
+          sparse-checkout: /.github/actions/issuelens/
+          sparse-checkout-cone-mode: false
+
+      - name: Validate coordinator and source selection
+        id: selection
+        shell: bash
+        run: python3 -I .github/actions/queue-team-memory/team_memory.py select-source
+
+      - name: Get read-only token for the selected external source
+        if: steps.selection.outputs.external == 'true'
+        id: source-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          client-id: ${{ secrets.ISSUELENS_SOURCE_READ_APP_CLIENT_ID }}
+          private-key: ${{ secrets.ISSUELENS_SOURCE_READ_APP_PRIVATE_KEY }}
+          owner: microsoft
+          repositories: ${{ steps.selection.outputs.source-name }}
+          permission-actions: read
+          permission-contents: read
+          permission-pull-requests: read
+
+      - name: Verify queued source before download
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.selection.outputs.external == 'false' && github.token || steps.source-token.outputs.token }}
+        run: python3 -I .github/actions/queue-team-memory/team_memory.py validate-dispatch
+
+      - name: Download verified source event
+        if: steps.source.outputs.automatic == 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ steps.source.outputs.source-artifact-id }}
+          run-id: ${{ steps.source.outputs.source-run-id }}
+          repository: ${{ steps.source.outputs.source-repository }}
+          github-token: ${{ steps.selection.outputs.external == 'false' && github.token || steps.source-token.outputs.token }}
+          path: ${{ runner.temp }}/issuelens-team-memory-source
+          digest-mismatch: error
+
+      - name: Revalidate source and prepare bounded maintenance request
+        id: preflight
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.selection.outputs.external == 'false' && github.token || steps.source-token.outputs.token }}
+        run: python3 -I .github/actions/queue-team-memory/team_memory.py preflight
+
+      - name: Azure login for the existing agent endpoint
+        if: steps.preflight.outputs.eligible == 'true'
+        uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Invoke IssueLens and validate the final maintenance receipt
+        if: steps.preflight.outputs.eligible == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.selection.outputs.external == 'false' && github.token || steps.source-token.outputs.token }}
+          REQUEST_PATH: ${{ steps.preflight.outputs.request-path }}
+          AGENT_URL: ${{ secrets.ISSUELENS_AGENT_URL }}
+          AGENT_SCOPE: ${{ secrets.ISSUELENS_AGENT_SCOPE }}
+        run: python3 -I "$ISSUELENS_CLIENT_PATH" submit
