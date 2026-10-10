@@ -37,7 +37,9 @@ Compiler/runtime logs are written to `.autotest/` in the isolated workspace.
 The preview-disabled case requires a real preview-disabled compiler diagnostic,
 not just any nonzero build exit code.
 
-For `java-gradle-java27`, CI also exports `JAVA27_DIAGNOSTICS_DIR` and
+CI exports a case-specific `JAVA27_DIAGNOSTICS_DIR` for all five Java 27 plans,
+so Maven as well as Gradle compiler/runtime logs and command metadata survive
+temporary workspace cleanup. For `java-gradle-java27`, CI also exports
 `JAVA27_CI_GRADLE`. When `GITHUB_ACTIONS=true` or `CI=true`, the helper requires
 an absolute `JAVA27_CI_GRADLE` and uses that executable for the actual build
 instead of resolving Gradle from the terminal's PATH. Missing or relative CI
@@ -57,22 +59,37 @@ Java 27 bytecode and execution. The control never replaces the original failure
 or prints the plan's success marker. CI already uses that executable for the
 primary build and does not run a duplicate control after failure.
 
-The workflow prints the terminal logs in Actions and includes them with the
-CI toolchain identity and Gradle/Java/extension-host logs under
-`toolchains/java-gradle-java27/` in each existing results artifact. For release
-comparisons, use `test_plan=java-gradle-java27`, `pre_release=false`, and an exact
+Gradle preparation only resolves the provisioned executable, verifies version
+9.8.1 and binds it for the terminal helper. Version output is saved under
+`diagnostics/gradle-version.log`, not printed into the workflow log.
+For release comparisons, use `test_plan=java-gradle-java27`, `pre_release=false`, and an exact
 vscode-java release URL in `vsix_urls`; keep the failed run's release unchanged
 when isolating a toolchain failure.
 
-The Gradle import and primitive-pattern plans also enable AutoTest file logging.
-Their YAML-relative `../test-results/run-logs` directory is included in the
-existing CI results artifact, even when execution stops before `results.json`
-is written. Logging does not change the actions or verification criteria.
-Both plans enable verbose Java LSP tracing, and CI preserves the full
-Java/extension-host output alongside the bounded AutoTest log copies.
-The primitive-patterns plan also preserves its `Java 27 AutoTest` lifecycle log.
-The webview migration plan uses the same logging directory; macOS CI also
-collects run-specific Node, Electron, Code and Java native crash reports.
+Every E2E case enables AutoTest file logging through the CI CLI flags and writes
+all output under `test-results/<plan>/`. Its existing
+`results-<plan>-<os>` artifact contains:
+
+| Path in the artifact | Contents |
+| --- | --- |
+| `results.json`, `screenshots/`, `analysis/`, `evidence/` | Verdicts, screenshots, per-case LLM analysis and deterministic diagnostic evidence |
+| `logs/` | AutoTest console, launch/failure logs, and bounded component logs |
+| `logs/ide/`, `logs/jdtls/` | Full VS Code/extension-host logs and JDT LS workspace logs |
+| `logs/xvfb.log`, `logs/crashes/` | Linux virtual-display output or current-run macOS crash reports, when available |
+| `diagnostics/ci-toolchain.json` | CI Node/Java/Gradle paths, project runtime and PATH |
+| `diagnostics/*-version.log` | CI Node/Java version probes and the selected Gradle version |
+| `diagnostics/terminal/` | Java 27 compiler/runtime logs, terminal toolchain identity and process exit metadata |
+
+Actions prints only the case summary and exit status; detailed console output
+and diagnostics remain in the artifact. Collection and upload run after
+failures too, including when startup stops before `results.json` exists.
+Pre-run logs are staged outside AutoTest's output directory until collection,
+because AutoTest clears that directory when a run starts.
+Artifact names and the per-case LLM/evidence/verdict behavior are unchanged.
+The Gradle import, primitive-pattern and webview migration plans use the same
+case-local log layout for local runs. The first two retain verbose Java LSP
+tracing; the primitive-patterns helper's lifecycle log is included in
+`logs/ide/`. macOS crash collection applies to every case, not only webviews.
 
 The primitive-patterns plan loads the test-only extension in
 `../java27-autotest-support`; it is excluded from the pack VSIX. For its temporary

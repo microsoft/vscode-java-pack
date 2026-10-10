@@ -105,7 +105,7 @@ if (diagnosticDirectory) {
     };
     saveLog("terminal-toolchain.json", JSON.stringify(identity, null, 2));
     process.on("uncaughtExceptionMonitor", error => saveLog("failure.log", error.stack ?? String(error)));
-    console.log(`[diagnostic] Terminal toolchain: ${JSON.stringify(identity)}`);
+    console.log(`[diagnostic] Logs and terminal toolchain: ${diagnosticDirectory}`);
 }
 
 const version = run(java, ["-XshowSettings:properties", "-version"], "java-version.log");
@@ -123,18 +123,16 @@ const args = builder === "maven"
     : ["--no-daemon", "--console=plain", "clean", "classes"];
 if (diagnosticDirectory && builder === "gradle") {
     args.push("--stacktrace", "--info");
-    const lookup = process.platform === "win32"
+    process.platform === "win32"
         ? capture(process.env.ComSpec ?? "cmd.exe", ["/d", "/s", "/c", "where gradle"], "gradle-path-lookup.log")
         : capture("/usr/bin/which", ["-a", "gradle"], "gradle-path-lookup.log");
-    console.log(`[diagnostic] PATH Gradle lookup: exit=${lookup.status ?? lookup.signal}; ${lookup.error?.message ?? lookup.output}`);
 }
 const build = captureBuilder(command, args, `${builder}-${scenario}-build.log`);
-console.log(build.output);
+if (!diagnosticDirectory) console.log(build.output);
 
 if (diagnosticDirectory && builder === "gradle") {
     for (const [executable, name] of [["gradle", "gradle-path-version.log"], [ciGradle, "gradle-ci-version.log"]]) {
-        const probe = captureBuilder(executable, ["--version"], name);
-        console.log(`[diagnostic] ${name}: exit=${probe.status ?? probe.signal}; ${probe.error?.message ?? probe.output}`);
+        captureBuilder(executable, ["--version"], name);
     }
     // Controls never replace the primary result or emit its success marker.
     if (build.status !== 0 && command !== ciGradle) {
@@ -166,7 +164,7 @@ if (diagnosticDirectory && builder === "gradle") {
                 application.status === 0 && report.applicationOutput === cases.project[1];
         }
         saveLog("gradle-ci-control.json", JSON.stringify(report, null, 2));
-        console.log(`[diagnostic] CI Gradle control: ${JSON.stringify(report)}`);
+        console.log(`[diagnostic] CI Gradle control: exit=${report.controlStatus}; verified=${report.verified}; see ${diagnosticDirectory}`);
     }
 }
 checkProcess(build);

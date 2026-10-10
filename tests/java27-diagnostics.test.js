@@ -214,6 +214,20 @@ test("CI Maven builds do not require a Gradle binding", () => {
     assert.ok(s.messages.includes("JDK27_PROJECT_PASSED"));
 });
 
+for (const platform of ["win32", "linux", "darwin"]) {
+    test(`${platform} CI Maven diagnostics persist full output without flooding the terminal`, () => {
+        const s = execute(platform, { ci: true, builder: "maven", ciGradle: undefined });
+        s.run();
+        assert.match(s.files.get(s.paths.join(s.diagnosticDirectory, "maven-project-build.log")), /BUILD SUCCESSFUL/);
+        const metadata = JSON.parse(s.files.get(s.paths.join(s.diagnosticDirectory, "maven-project-build.log.json")));
+        assert.equal(metadata.status, 0);
+        assert.ok(s.files.has(s.paths.join(s.diagnosticDirectory, "maven-project-run.log")));
+        assert.ok(s.messages.includes("JDK27_PROJECT_PASSED"));
+        assert.ok(s.messages.every(message => !message.includes("BUILD SUCCESSFUL")));
+        assert.ok(s.calls.every(call => !call.args.join(" ").includes("--stacktrace")));
+    });
+}
+
 test("an unavailable bound CI executable retains its error without falling back", () => {
     const s = execute("darwin", {
         ci: true,
@@ -339,7 +353,7 @@ test("affected plans keep file logs inside the existing CI artifact directory", 
         const plan = fs.readFileSync(filename, "utf8");
         const directory = plan.match(/^logging:\r?\n  enabled: true\r?\n  outputDir: "([^"]+)"/m)?.[1];
         assert.ok(directory, `${name} must enable AutoTest file logs`);
-        assert.equal(path.resolve(path.dirname(filename), directory), path.join(root, "test-results", "run-logs"));
+        assert.equal(path.resolve(path.dirname(filename), directory), path.join(root, "test-results", name, "logs"));
     }
 });
 
@@ -361,6 +375,7 @@ test("PowerShell crash collection preserves only relevant reports from the curre
         const script = `
             $ErrorActionPreference = "Stop"
             $env:HOME = ${quote(home)}
+            $env:AUTOTEST_OUTPUT_DIR = ${quote(path.join(root, "test-results", "java-webview-migration"))}
             $env:AUTOTEST_RUN_STARTED = "${new Date(Date.now() - 5_000).toISOString()}"
             Set-Location -LiteralPath ${quote(root)}
             ${step}
@@ -368,7 +383,7 @@ test("PowerShell crash collection preserves only relevant reports from the curre
         const result = spawnSync("pwsh", ["-NoProfile", "-NonInteractive", "-Command", script], { encoding: "utf8" });
         assert.ifError(result.error);
         assert.equal(result.status, 0, result.stderr);
-        assert.deepEqual(fs.readdirSync(path.join(root, "test-results", "run-logs", "macos-crashes")).sort(),
+        assert.deepEqual(fs.readdirSync(path.join(root, "test-results", "java-webview-migration", "logs", "crashes")).sort(),
             ["Code Helper (Renderer)_recent.crash", "java_recent.ips", "node_recent.ips"].sort());
     } finally {
         fs.rmSync(root, { recursive: true, force: true });

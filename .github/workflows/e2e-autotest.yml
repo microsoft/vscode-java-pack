@@ -119,6 +119,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare case artifact directory
+        shell: pwsh
+        env:
+          AUTOTEST_PLAN: ${{ matrix.plan }}
+        run: |
+          $plan = $env:AUTOTEST_PLAN
+          if ($plan -notmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') { throw "Invalid AutoTest plan name: $plan" }
+          $outputDirectory = Join-Path (Join-Path $env:GITHUB_WORKSPACE "test-results") $plan
+          # AutoTest clears --output at startup; keep pre-run logs outside it.
+          $stagingDirectory = Join-Path $env:RUNNER_TEMP "autotest-$plan"
+          New-Item -ItemType Directory -Path $outputDirectory, (Join-Path $outputDirectory "logs") -Force | Out-Null
+          New-Item -ItemType Directory -Path $stagingDirectory -Force | Out-Null
+          "AUTOTEST_OUTPUT_DIR=$outputDirectory" >> $env:GITHUB_ENV
+          "AUTOTEST_STAGING_DIR=$stagingDirectory" >> $env:GITHUB_ENV
+          if ($plan.Contains("java27")) {
+            $terminalDirectory = Join-Path (Join-Path $outputDirectory "diagnostics") "terminal"
+            "JAVA27_DIAGNOSTICS_DIR=$terminalDirectory" >> $env:GITHUB_ENV
+          }
+
       - name: Clone vscode-java (test projects)
         run: git clone --depth 1 https://github.com/redhat-developer/vscode-java.git ../vscode-java
 
@@ -194,43 +213,22 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Prepare Gradle Java 27 toolchain and diagnostics
+      - name: Bind Gradle Java 27 toolchain
         if: matrix.plan == 'java-gradle-java27'
         shell: pwsh
         run: |
-          $root = Join-Path (Join-Path (Join-Path (Get-Location).Path "test-results") "toolchains") "java-gradle-java27"
-          $ciDirectory = Join-Path $root "ci"
-          $terminalDirectory = Join-Path $root "terminal"
-          New-Item -ItemType Directory -Path $ciDirectory, $terminalDirectory -Force | Out-Null
           $ciGradle = (Get-Command gradle -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
-          "JAVA27_DIAGNOSTICS_DIR=$terminalDirectory" >> $env:GITHUB_ENV
-          "JAVA27_CI_GRADLE=$ciGradle" >> $env:GITHUB_ENV
-
-          $nodeVersion = & node --version 2>&1 | Out-String
-          if ($LASTEXITCODE -ne 0) { throw "CI Node version probe failed" }
-          $javaVersion = & java -XshowSettings:properties -version 2>&1 | Out-String
-          if ($LASTEXITCODE -ne 0) { throw "CI Java version probe failed" }
+          $versionLog = Join-Path $env:AUTOTEST_STAGING_DIR "gradle-version.log"
+          $PSNativeCommandUseErrorActionPreference = $false
           $gradleVersion = & $ciGradle --version 2>&1 | Out-String
-          if ($LASTEXITCODE -ne 0) { throw "CI Gradle version probe failed: $gradleVersion" }
+          $versionExit = $LASTEXITCODE
+          "Command: $ciGradle --version`n$gradleVersion" | Set-Content -LiteralPath $versionLog
+          if ($versionExit -ne 0) { throw "CI Gradle version probe exited with $versionExit; see diagnostics/gradle-version.log in this case's results artifact." }
           if ($gradleVersion -notmatch '(?m)^Gradle 9\.8\.1\s*$') {
-            throw "CI did not select the provisioned Gradle 9.8.1: $ciGradle`n$gradleVersion"
+            throw "CI did not select the provisioned Gradle 9.8.1: $ciGradle; see $versionLog"
           }
-          $identity = [ordered]@{
-            node = (Get-Command node -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
-            nodeVersion = $nodeVersion.Trim()
-            gradle = $ciGradle
-            gradleCandidates = @(Get-Command gradle -CommandType Application -ErrorAction Stop | ForEach-Object { $_.Source })
-            java = (Get-Command java -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
-            javaHome = $env:JAVA_HOME
-            projectJavaHome = $env:JAVA27_HOME
-            path = $env:PATH
-          }
-          $identity | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $ciDirectory "ci-toolchain.json")
-          $javaVersion | Set-Content (Join-Path $ciDirectory "java-version.log")
-          $gradleVersion | Set-Content (Join-Path $ciDirectory "gradle-version.log")
-          Write-Host ($identity | ConvertTo-Json -Depth 5)
-          Write-Host $javaVersion
-          Write-Host $gradleVersion
+          "JAVA27_CI_GRADLE=$ciGradle" >> $env:GITHUB_ENV
+          Write-Host "Bound Gradle 9.8.1: $ciGradle"
 
       - name: Install resolved AutoTest CLI
         run: |
@@ -434,6 +432,11 @@ jobs:
           $autotestArgs = @(
             "run",
             "test-plans/${{ matrix.plan }}.yaml",
+            "--output",
+            $env:AUTOTEST_OUTPUT_DIR,
+            "--logs",
+            "--log-output",
+            (Join-Path $env:AUTOTEST_OUTPUT_DIR "logs"),
             "--analysis-mode",
             "case"
           )
@@ -458,24 +461,69 @@ jobs:
 
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
           "AUTOTEST_RUN_STARTED=$((Get-Date).ToUniversalTime().ToString('o'))" >> $env:GITHUB_ENV
-          & autotest @autotestArgs
+          $consoleLog = Join-Path $env:AUTOTEST_STAGING_DIR "console.log"
+          $PSNativeCommandUseErrorActionPreference = $false
+          & autotest @autotestArgs *> $consoleLog
+          $testExit = $LASTEXITCODE
+          Write-Host "AutoTest exit code: $testExit. Logs and diagnostics are in this case's results artifact."
+          if ($testExit -ne 0) {
+            Write-Host "::error::AutoTest exited with code $testExit. See this case's results artifact for logs and diagnostics."
+          }
+          exit $testExit
 
-      - name: Collect affected Java 27 IDE logs
-        if: ${{ always() && (matrix.plan == 'java-gradle-java27' || matrix.plan == 'java27-primitive-patterns') }}
+      - name: Collect case logs and diagnostics
+        if: always()
         shell: pwsh
         run: |
-          $source = Join-Path (Join-Path (Join-Path (Get-Location).Path ".vscode-test") "user-data") "logs"
-          $root = Join-Path (Join-Path (Join-Path (Get-Location).Path "test-results") "toolchains") "${{ matrix.plan }}"
-          $destination = Join-Path $root "ide"
+          $diagnosticDirectory = Join-Path $env:AUTOTEST_OUTPUT_DIR "diagnostics"
+          $logsDirectory = Join-Path $env:AUTOTEST_OUTPUT_DIR "logs"
+          New-Item -ItemType Directory -Path $diagnosticDirectory, $logsDirectory -Force | Out-Null
+          foreach ($entry in @(
+            @{ Name = "console.log"; Directory = $logsDirectory },
+            @{ Name = "gradle-version.log"; Directory = $diagnosticDirectory }
+          )) {
+            $staged = Join-Path $env:AUTOTEST_STAGING_DIR $entry.Name
+            if (Test-Path -LiteralPath $staged -PathType Leaf) {
+              Copy-Item -LiteralPath $staged -Destination (Join-Path $entry.Directory $entry.Name)
+            }
+          }
+
+          $identity = [ordered]@{
+            javaHome = $env:JAVA_HOME
+            projectJavaHome = $env:JAVA27_HOME
+            gradle = $env:JAVA27_CI_GRADLE
+            runnerOs = $env:RUNNER_OS
+            runnerArch = $env:RUNNER_ARCH
+            path = $env:PATH
+          }
+          $PSNativeCommandUseErrorActionPreference = $false
+          foreach ($probe in @(
+            @{ Name = "node"; Arguments = @("--version") },
+            @{ Name = "java"; Arguments = @("-XshowSettings:properties", "-version") }
+          )) {
+            $command = Get-Command $probe.Name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $command) {
+              Write-Warning "$($probe.Name) unavailable; its CI setup may have failed."
+              $identity[$probe.Name] = $null
+              continue
+            }
+            $identity[$probe.Name] = $command.Source
+            $arguments = $probe.Arguments
+            $version = & $command.Source @arguments 2>&1 | Out-String
+            $identity["$($probe.Name)VersionExitCode"] = $LASTEXITCODE
+            $version | Set-Content -LiteralPath (Join-Path $diagnosticDirectory "$($probe.Name)-version.log")
+            if ($LASTEXITCODE -ne 0) { Write-Warning "$($probe.Name) version probe failed; see its diagnostic log." }
+          }
+          $identity | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $diagnosticDirectory "ci-toolchain.json")
+
+          $userData = Join-Path (Join-Path $env:GITHUB_WORKSPACE ".vscode-test") "user-data"
+          $source = Join-Path $userData "logs"
+          $destination = Join-Path $logsDirectory "ide"
           if (-not (Test-Path -LiteralPath $source -PathType Container)) {
             Write-Warning "VS Code logs unavailable: $source"
           } else {
-            $files = @(Get-ChildItem -LiteralPath $source -File -Recurse | Where-Object {
-              $_.Name -eq "exthost.log" -or $_.Name -like "*Gradle*.log" -or
-              $_.Name -like "*Language Support for Java*.log" -or
-              $_.Name -like "*Java 27 AutoTest*.log"
-            })
-            if ($files.Count -eq 0) { Write-Warning "No Gradle, Java or extension-host logs found" }
+            $files = @(Get-ChildItem -LiteralPath $source -File -Recurse -Force)
+            if ($files.Count -eq 0) { Write-Warning "No VS Code or extension-host logs found" }
             foreach ($file in $files) {
               $target = Join-Path $destination ([System.IO.Path]::GetRelativePath($source, $file.FullName))
               New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
@@ -484,8 +532,32 @@ jobs:
             Write-Host "Preserved $($files.Count) IDE logs in $destination"
           }
 
+          $storageDirectory = Join-Path (Join-Path $userData "User") "workspaceStorage"
+          if (Test-Path -LiteralPath $storageDirectory -PathType Container) {
+            foreach ($storage in Get-ChildItem -LiteralPath $storageDirectory -Directory) {
+              $jdtLog = Join-Path $storage.FullName "redhat.java" "jdt_ws" ".metadata" ".log"
+              if (Test-Path -LiteralPath $jdtLog -PathType Leaf) {
+                $jdtDirectory = Join-Path $logsDirectory "jdtls"
+                New-Item -ItemType Directory -Path $jdtDirectory -Force | Out-Null
+                Copy-Item -LiteralPath $jdtLog -Destination (Join-Path $jdtDirectory "$($storage.Name).log")
+              }
+            }
+          }
+          if ($env:RUNNER_TEMP) {
+            $displayLog = Join-Path $env:RUNNER_TEMP "xvfb.log"
+            if (Test-Path -LiteralPath $displayLog -PathType Leaf) {
+              Copy-Item -LiteralPath $displayLog -Destination (Join-Path $logsDirectory "xvfb.log")
+            }
+          }
+
+          $resultFile = Join-Path $env:AUTOTEST_OUTPUT_DIR "results.json"
+          if (Test-Path -LiteralPath $resultFile) {
+            $summary = (Get-Content -LiteralPath $resultFile -Raw | ConvertFrom-Json).summary
+            Write-Host "AutoTest: $($summary.passed)/$($summary.total) passed, $($summary.failed) failed, $($summary.errors) errors."
+          }
+
       - name: Collect macOS AutoTest crash reports
-        if: ${{ always() && runner.os == 'macOS' && matrix.plan == 'java-webview-migration' }}
+        if: ${{ always() && runner.os == 'macOS' }}
         shell: pwsh
         run: |
           $source = Join-Path $env:HOME "Library/Logs/DiagnosticReports"
@@ -499,28 +571,13 @@ jobs:
               $_.Name -match '^(node|Electron|Code|java)[-_ .].*\.(ips|crash)$' -and
               $_.LastWriteTimeUtc -ge $started
             })
-            $destination = Join-Path (Join-Path (Join-Path (Get-Location).Path "test-results") "run-logs") "macos-crashes"
+            $destination = Join-Path (Join-Path $env:AUTOTEST_OUTPUT_DIR "logs") "crashes"
             foreach ($report in $reports) {
               New-Item -ItemType Directory -Path $destination -Force | Out-Null
               Copy-Item -LiteralPath $report.FullName -Destination (Join-Path $destination $report.Name)
               Write-Host "Preserved macOS crash report: $($report.Name)"
             }
-            if ($reports.Count -eq 0) { Write-Warning "No node, Electron, Code or Java crash reports found for this AutoTest run." }
-          }
-
-      - name: Print Gradle Java 27 terminal diagnostics
-        if: ${{ always() && matrix.plan == 'java-gradle-java27' }}
-        shell: pwsh
-        run: |
-          $root = Join-Path (Join-Path (Join-Path (Get-Location).Path "test-results") "toolchains") "java-gradle-java27"
-          $terminalDirectory = Join-Path $root "terminal"
-          if (-not (Test-Path -LiteralPath (Join-Path $terminalDirectory "terminal-toolchain.json"))) {
-            throw "The terminal helper did not produce diagnostics; inspect the preceding setup/UI failure."
-          }
-          Get-ChildItem -LiteralPath $terminalDirectory -File | Sort-Object Name | ForEach-Object {
-            Write-Host "::group::$($_.Name)"
-            Get-Content -LiteralPath $_.FullName
-            Write-Host "::endgroup::"
+            if ($reports.Count -eq 0) { Write-Host "No current-run macOS native crash reports." }
           }
 
       - name: Upload results
@@ -528,7 +585,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: results-${{ matrix.plan }}-${{ matrix.os }}
-          path: test-results/
+          path: test-results/${{ matrix.plan }}/
           retention-days: 30
 
   # ── Job 3: Aggregate analysis ───────────────────────────
@@ -563,9 +620,11 @@ jobs:
           for dir in all-results/results-*/; do
             artifact=$(basename "$dir")          # results-<plan>-<os>
             suffix="${artifact#results-}"        # <plan>-<os>
-            find "$dir" -name "results.json" -exec dirname {} \; | while read d; do
-              cp -r "$d" "test-results/$suffix"
-            done
+            if [ -f "$dir/results.json" ]; then
+              cp -r "$dir" "test-results/$suffix"
+            else
+              echo "::warning::No results.json in $artifact; setup/startup logs remain in that artifact."
+            fi
           done
           echo "Organized results:"
           ls test-results/

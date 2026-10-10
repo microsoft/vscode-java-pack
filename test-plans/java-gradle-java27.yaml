@@ -5,7 +5,7 @@ description: |
 
 logging:
   enabled: true
-  outputDir: "../test-results/run-logs"
+  outputDir: "../test-results/java-gradle-java27/logs"
 
 setup:
   extension: "redhat.java"

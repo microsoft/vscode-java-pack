@@ -6,7 +6,7 @@ description: |
 
 logging:
   enabled: true
-  outputDir: "../test-results/run-logs"
+  outputDir: "../test-results/java27-primitive-patterns/logs"
 
 setup:
   extension: "redhat.java"

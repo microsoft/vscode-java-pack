@@ -37,7 +37,7 @@ description: |
 
 logging:
   enabled: true
-  outputDir: "../test-results/run-logs"
+  outputDir: "../test-results/java-webview-migration/logs"
 
 setup:
   extension: "redhat.java"
