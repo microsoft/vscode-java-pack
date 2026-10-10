@@ -18,7 +18,7 @@ function loadSource(relativePath, mocks, warnings, globals = {}, resolve = requi
     vm.runInNewContext(outputText, {
         module, exports: module.exports, process, performance,
         require: name => Object.prototype.hasOwnProperty.call(mocks, name) ? mocks[name] : resolve(name),
-        console: { warn: warning => warnings.push(warning) },
+        console: { warn: warning => warnings.push(warning), error: error => warnings.push(error) },
         ...globals,
     }, { filename });
     return module.exports;
@@ -65,6 +65,7 @@ function setupComponents() {
 
 function setup(version = "1.57.0") {
     const extension = { packageJSON: { version }, isActive: false, exports: {} };
+    const projectManager = { isActive: false };
     const preferences = {};
     const discovered = [];
     const writes = [];
@@ -87,8 +88,12 @@ function setup(version = "1.57.0") {
         onDidDispose: () => ({ dispose() {} }),
     };
     const vscode = {
-        extensions: { getExtension: id => id === "redhat.java" ? extension : undefined },
-        Uri: { file: fsPath => ({ fsPath }) }, ViewColumn: { One: 1 }, ConfigurationTarget: { Global: 1 },
+        extensions: {
+            getExtension: id => id === "redhat.java" ? extension :
+                id === "vscjava.vscode-java-dependency" ? projectManager : undefined,
+        },
+        Uri: { file: fsPath => ({ fsPath }), parse: uri => ({ fsPath: new URL(uri).pathname }) },
+        ViewColumn: { One: 1 }, ConfigurationTarget: { Global: 1 },
         window: {
             createWebviewPanel: () => panel, showOpenDialog: async () => undefined,
             showWarningMessage: async message => warnings.push(message),
@@ -108,8 +113,12 @@ function setup(version = "1.57.0") {
     };
     const mocks = { vscode, "jdk-utils": jdkUtils, "expand-home-dir": home => home };
     const api = loadSource(path.join("src", "java-runtime", "utils", "upstreamApi.ts"), mocks, warnings);
+    const webviewUtils = loadSource(path.join("src", "utils", "webview.ts"), {}, warnings);
+    const jdt = loadSource(path.join("src", "utils", "jdt.ts"), {
+        vscode, "./webview": webviewUtils,
+    }, warnings);
     const loadView = () => loadSource(path.join("src", "java-runtime", "index.ts"), {
-        ...mocks, "../utils": { getNonce: () => "nonce" }, "../utils/jdt": {}, "../utils/webview": {},
+        ...mocks, "../utils": { getNonce: () => "nonce" }, "../utils/jdt": jdt, "../utils/webview": webviewUtils,
         "./utils/misc": {}, "./utils/upstreamApi": api,
     }, warnings);
     const addJdk = (major, hasJavac = true) => {
@@ -134,10 +143,23 @@ function setup(version = "1.57.0") {
         return view;
     };
     return {
-        api, extension, preferences, discovered, writes, warnings, messages, calls, jdkUtils, vscode,
+        api, extension, projectManager, preferences, discovered, writes, warnings, messages, calls, jdkUtils, vscode,
         addJdk, report, loadView, openView,
         send: (command, payload = {}) => receiveMessage({ command, ...payload }),
     };
+}
+
+function setupInventory(s, source, projects) {
+    s.projectManager.isActive = source === "PM";
+    s.vscode.workspace.workspaceFolders = [{ uri: { toString: () => "file:///workspace" } }];
+    s.vscode.commands.executeCommand = async (_, command) =>
+        command === "java.project.list" ?
+            projects.map(uri => ({ uri, name: path.basename(new URL(uri).pathname) })) : projects;
+    s.extension.exports.getProjectSettings = async () => ({
+        "org.eclipse.jdt.ls.core.natureIds": ["org.eclipse.m2e.core.maven2Nature"],
+        "org.eclipse.jdt.core.compiler.source": "17",
+        "org.eclipse.jdt.ls.core.vm.location": "project-jdk",
+    });
 }
 
 for (const [version, minimum] of [
@@ -287,6 +309,101 @@ test("a failed project inventory is visible without claiming an unknown runtime 
     assert.match(entries.projectJdkError, /Project discovery failed/);
 });
 
+for (const source of ["PM", "LS"]) {
+    test(`${source} preserves tooling and successful projects when settings or nature IDs are unavailable`, async () => {
+        const s = setup();
+        const actual = s.addJdk(25);
+        s.report(actual);
+        setupInventory(s, source, [
+            "file:///before", "file:///failed", "file:///missing-type", "file:///invalid-type", "file:///after",
+        ]);
+        const getSettings = s.extension.exports.getProjectSettings;
+        s.extension.exports.getProjectSettings = async uri => {
+            if (uri === "file:///failed") {
+                throw new Error("Settings request failed");
+            }
+            const settings = await getSettings();
+            if (uri === "file:///missing-type") {
+                delete settings["org.eclipse.jdt.ls.core.natureIds"];
+            } else if (uri === "file:///invalid-type") {
+                settings["org.eclipse.jdt.ls.core.natureIds"] = [null];
+            } else if (uri === "file:///after") {
+                settings["org.eclipse.jdt.ls.core.natureIds"] = [];
+            }
+            return settings;
+        };
+        const entries = await s.loadView().findJavaRuntimeEntries();
+        assert.equal(entries.javaDotHome, actual.homedir);
+        assert.equal(entries.toolingJreVersion, 25);
+        assert.equal(entries.javaHomeError, undefined);
+        assert.deepEqual(Array.from(entries.projectRuntimes, entry => entry.name), ["before", "after"]);
+        assert.deepEqual(Array.from(entries.projectRuntimes, entry => entry.projectType), ["Maven", "Others"]);
+        assert.ok(entries.projectRuntimes.every(entry => entry.sourceLevel === "17"));
+        assert.match(entries.projectJdkError, /failed.*Settings request failed/);
+        assert.match(entries.projectJdkError, /missing-type.*Project type information is unavailable/);
+        assert.match(entries.projectJdkError, /invalid-type.*Project type information is unavailable/);
+        assert.doesNotMatch(entries.projectJdkError, /includes/);
+        assert.equal(s.writes.length, 0);
+        assert.equal(s.calls.activation, 0);
+    });
+}
+
+test("a failed PM list falls back to LS while preserving its diagnostic", async () => {
+    const s = setup();
+    const actual = s.addJdk(25);
+    s.report(actual);
+    setupInventory(s, "PM", ["file:///sample"]);
+    const executeCommand = s.vscode.commands.executeCommand;
+    s.vscode.commands.executeCommand = async (...args) => {
+        if (args[1] === "java.project.list") {
+            throw new Error("PM list failed");
+        }
+        return executeCommand(...args);
+    };
+    const entries = await s.loadView().findJavaRuntimeEntries();
+    assert.equal(entries.javaDotHome, actual.homedir);
+    assert.deepEqual(Array.from(entries.projectRuntimes, entry => entry.name), ["sample"]);
+    assert.match(entries.projectJdkError, /workspace.*PM list failed/);
+});
+
+test("a failed PM workspace does not repeat previous projects or discard successful entries", async () => {
+    const s = setup();
+    s.report(s.addJdk(25));
+    setupInventory(s, "PM", ["file:///sample"]);
+    s.vscode.workspace.workspaceFolders.push({ uri: { toString: () => "file:///failed-workspace" } });
+    const executeCommand = s.vscode.commands.executeCommand;
+    s.vscode.commands.executeCommand = async (...args) => {
+        assert.equal(args[1], "java.project.list");
+        if (args[2] === "file:///failed-workspace") {
+            throw new Error("Workspace list failed");
+        }
+        return executeCommand(...args);
+    };
+    const entries = await s.loadView().findJavaRuntimeEntries();
+    assert.deepEqual(Array.from(entries.projectRuntimes, entry => entry.name), ["sample"]);
+    assert.match(entries.projectJdkError, /failed-workspace.*Workspace list failed/);
+});
+
+test("failed disk and LS inventories publish tooling metadata and separate upstream diagnostics", async () => {
+    const s = setup();
+    const actual = s.addJdk(25);
+    s.report(actual);
+    s.extension.exports.status = "Error";
+    s.jdkUtils.findRuntimes = async () => { throw new Error("Disk scan failed"); };
+    s.vscode.commands.executeCommand = async () => { throw new Error("LS list failed"); };
+    await s.openView();
+    await s.send("onWillListRuntimes");
+    const entries = s.messages.at(-1).args;
+    assert.equal(entries.javaDotHome, actual.homedir);
+    assert.equal(entries.toolingJreVersion, 25);
+    assert.match(entries.javaHomeError, /redhat.java reports an error/);
+    assert.doesNotMatch(entries.javaHomeError, /Disk scan failed|LS list failed/);
+    assert.equal(entries.projectRuntimes.length, 0);
+    assert.match(entries.projectJdkError, /Disk scan failed/);
+    assert.match(entries.projectJdkError, /LS list failed/);
+    assert.ok(s.warnings.every(warning => !String(warning).includes("Unable to refresh Configure Java Runtime")));
+});
+
 test("project cache remains unchanged while refresh reads the latest upstream result", async () => {
     const s = setup();
     s.discovered.push(s.addJdk(8));
@@ -380,6 +497,32 @@ test("component rendering preserves existing tooling error controls without proj
     assert.match(html, /Locate an <b>Existing JDK<\/b>/);
     assert.match(html, /Install a <b>New JDK<\/b>/);
 });
+
+for (const status of [undefined, "Error"]) {
+    test(`component rendering shows inventory errors without projects when upstream status is ${status}`, () => {
+        const s = setup();
+        const actual = s.addJdk(25);
+        s.report(actual);
+        s.extension.exports.status = status;
+        const components = setupComponents();
+        components.load(path.join("src", "java-runtime", "assets", "index.ts"));
+        const html = components.show({
+            ...s.api.getToolingRuntimeInfo(), javaRuntimes: [], projectRuntimes: [],
+            projectJdkError: "Unable to list projects: Settings request failed",
+        });
+        assert.match(html, /Language server runtime reported by redhat.java/);
+        assert.ok(html.includes(actual.homedir));
+        assert.match(html, /Settings request failed/);
+        assert.match(html, /href="command:java.open.logs"/);
+        assert.doesNotMatch(html, /No project detected yet/);
+        if (status === "Error") {
+            assert.match(html, /Configure Runtime for Language Server/);
+            assert.match(html, /redhat.java reports an error/);
+        } else {
+            assert.match(html, /Project information could not be fully loaded/);
+        }
+    });
+}
 
 test("component rendering leaves unknown metadata informational with manual setup available", () => {
     const components = setupComponents();

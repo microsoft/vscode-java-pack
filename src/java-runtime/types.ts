@@ -21,8 +21,8 @@ export interface JdkData {
 export interface ProjectRuntimeEntry {
   name: string;
   rootPath: string;
-  runtimePath: string;
-  sourceLevel: string;
+  runtimePath?: string;
+  sourceLevel?: string;
   projectType: ProjectType;
 }
 

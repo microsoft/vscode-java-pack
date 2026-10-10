@@ -3,11 +3,13 @@
 
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 
-import { ToolingRuntimeInfo } from "../types";
+import { JavaRuntimeData, ToolingRuntimeInfo } from "../types";
 import { JDKActions } from "./components/JDKActions";
 import { onWillListRuntimes } from './vscode.api';
 
-export function ToolingJDKPanel({ javaHomeError, javaHomeWarning, javaDotHome, toolingJreVersion, requiredJdkVersion }: ToolingRuntimeInfo) {
+type Props = ToolingRuntimeInfo & Pick<JavaRuntimeData, "projectJdkError">;
+
+export function ToolingJDKPanel({ javaHomeError, javaHomeWarning, javaDotHome, toolingJreVersion, requiredJdkVersion, projectJdkError }: Props) {
   return (
     <div className="container">
       <h1>Configure Runtime for Language Server</h1>
@@ -20,6 +22,7 @@ export function ToolingJDKPanel({ javaHomeError, javaHomeWarning, javaDotHome, t
       )}
       {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
       {javaHomeWarning && (<p className="warning-box">{javaHomeWarning}</p>)}
+      {projectJdkError && (<p className="java-home-error">{projectJdkError}</p>)}
 
       <p><a href="command:java.open.logs">Open Java Logs</a> for details. Runtime selection and startup diagnostics are provided by redhat.java.</p>
 

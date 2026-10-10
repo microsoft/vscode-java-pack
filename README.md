@@ -35,6 +35,8 @@ To set the language-server launch JDK explicitly, configure `java.jdt.ls.java.ho
 
 Previously opened legacy runtime tabs can still be restored for compatibility; they are not opened by the current **Java: Configure Java Runtime** command. These tabs show the runtime reported by `redhat.java`, with **Refresh** and explicit JDK browsing/installation actions when no runtime is reported. Missing information is not treated as a startup failure, and upstream errors are shown alongside any available project configuration. The legacy tab's **Locate an Existing JDK** action saves an explicit tooling choice to `java.jdt.ls.java.home`, unlike the current project-settings picker.
 
+Project inventory failures do not hide the reported language-server runtime or successfully queried projects. The legacy tab displays the query errors and indicates when project information could not be fully loaded; projects with unavailable type information are not treated as ordinary unmanaged projects.
+
 ## Other Recommendations
 
 You can do more with VS Code. Here are some more recommendations that could help.

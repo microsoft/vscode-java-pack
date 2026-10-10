@@ -88,7 +88,7 @@ export function ProjectJDKPanel({ jdkEntries, projectRuntimes, javaDotHome, tool
       <p>JDK {requiredJdkVersion}+ is required for the language server only; your projects can use older JDKs. <a href={toolingSettingsCommand}>Open language-server runtime settings</a>.</p>
       {javaHomeError && <p className="java-home-error">{javaHomeError} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
       {javaHomeWarning && <p className="warning-box">{javaHomeWarning} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
-      {projectJdkError && <p className="java-home-error">{projectJdkError}</p>}
+      {projectJdkError && <p className="java-home-error">{projectJdkError} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
       {!javaDotHome && <JDKActions />}
       {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
       {
@@ -105,7 +105,11 @@ export function ProjectJDKPanel({ jdkEntries, projectRuntimes, javaDotHome, tool
           </vscode-table>
           :
           <div>
-            <p>No project detected yet. Please refresh later if Java extension is importing your projects.</p>
+            {projectJdkError ?
+              <p>Project information could not be fully loaded. Please refresh to try again.</p>
+              :
+              <p>No project detected yet. Please refresh later if Java extension is importing your projects.</p>
+            }
           </div>
       }
       <vscode-button onClick={onWillListRuntimes}>Refresh<span slot="start" className="codicon codicon-refresh"></span></vscode-button>
