@@ -12,18 +12,27 @@ jobs:
       ${{ vars.ISSUELENS_TEAM_MEMORY_COORDINATOR_ENABLED == 'true' &&
           github.repository == 'microsoft/vscode-java-pack' &&
           github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
-          github.event_name == 'push' }}
+          github.event_name == 'push' &&
+          github.workflow_sha == github.sha &&
+          github.event.created == false &&
+          github.event.deleted == false &&
+          github.event.forced == false }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     permissions:
       contents: read
       actions: write
     steps:
       - name: Queue team-memory update
-        uses: microsoft/IssueLens/.github/actions/queue-team-memory@521b1ff80a70140e286ced7500d0b150cf9e6d6c
+        uses: microsoft/IssueLens/.github/actions/queue-team-memory@a81d2d96167fc0e69ac631c2edc85f858e693289
         with:
           coordinator-repository: microsoft/vscode-java-pack
           coordinator-workflow: team-memory-coordinator.yml
           coordinator-ref: main
-          source-token: ${{ github.token }}
           dispatch-token: ${{ github.token }}
+          workflow-inputs: >-
+            {"source_repository":"${{ github.repository }}",
+             "source_run_id":"${{ github.run_id }}",
+             "source_run_attempt":"${{ github.run_attempt }}",
+             "push_before":"${{ github.event.before }}",
+             "push_after":"${{ github.sha }}"}

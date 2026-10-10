@@ -1,4 +1,4 @@
-name: Java team-memory adapter checks
+name: Java team-memory contract checks
 
 on:
   pull_request:
@@ -23,11 +23,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Load reviewed IssueLens client and shared dispatcher
+      - name: Load pinned shared actions for offline contract tests only
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: microsoft/IssueLens
-          ref: 521b1ff80a70140e286ced7500d0b150cf9e6d6c
+          ref: a81d2d96167fc0e69ac631c2edc85f858e693289
           path: .issuelens-client
           persist-credentials: false
           sparse-checkout: |
@@ -35,7 +35,7 @@ jobs:
             /.github/actions/queue-team-memory/
           sparse-checkout-cone-mode: false
 
-      - name: Check source trust, dispatch, discovery, and receipts offline
+      - name: Check dispatch, source authorization, discovery, and receipts offline
         env:
-          ISSUELENS_CLIENT_PATH: .issuelens-client/.github/actions/issuelens/issuelens_action.py
+          ISSUELENS_ACTIONS_PATH: .issuelens-client/.github/actions
         run: python3 -m unittest discover -s .github/actions/queue-team-memory/tests

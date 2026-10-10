@@ -3,23 +3,43 @@ import importlib.util
 import io
 import json
 import os
-import re
+import subprocess
 import tempfile
 import unittest
-from datetime import datetime, timedelta, timezone
 from email.message import Message
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-ACTION = Path(__file__).resolve().parents[1]
-ROOT = ACTION.parents[2]
-spec = importlib.util.spec_from_file_location("java_team_memory", ACTION / "team_memory.py")
-action = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(action)
+import yaml
+
+ROOT = Path(__file__).resolve().parents[4]
+SHARED = Path(os.environ["ISSUELENS_ACTIONS_PATH"]).resolve()
+PIN = "a81d2d96167fc0e69ac631c2edc85f858e693289"
+COORDINATOR = "microsoft/vscode-java-pack"
+
+
+def load(path, name):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def read_yaml(path):
+    return yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+
+
+invoker = load(SHARED / "issuelens" / "issuelens_action.py", "shared_invoker")
+dispatcher = load(SHARED / "queue-team-memory" / "dispatch.py", "shared_dispatcher")
+source_workflow = read_yaml(ROOT / ".github" / "workflows" / "team-memory-post-merge.yml")
+central_workflow = read_yaml(ROOT / ".github" / "workflows" / "team-memory-coordinator.yml")
+source_job = source_workflow["jobs"]["dispatch"]
+central_job = central_workflow["jobs"]["reconcile"]
+ALLOWED = json.loads(central_job["env"]["ISSUELENS_SOURCE_REPOSITORIES"])
 
 
 class Response:
-    def __init__(self, content=b"", status=204):
+    def __init__(self, content=b"", status=200):
         self.content = io.BytesIO(content)
         self.status = status
         self.headers = Message()
@@ -31,650 +51,497 @@ class Response:
     def __exit__(self, *args):
         return False
 
+    def read(self, limit):
+        return self.content.read(limit)
+
     def readline(self, limit):
         return self.content.readline(limit)
 
 
-class TeamMemoryTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.client = action.load_client()
-
+class ContractTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temporary.cleanup)
-        self.directory = Path(self.temporary.name)
-        self.repository = "microsoft/vscode-gradle"
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.directory = Path(self.temp.name)
         self.before, self.merge, self.after, self.tip = [letter * 40 for letter in "daef"]
-        self.project = self.make_project(self.repository)
-        self.central = self.make_project(action.COORDINATOR)
-        self.coordinator_workflow = {"id": 789, "path": action.COORDINATOR_WORKFLOW, "state": "active"}
-        self.coordinator_branch = {"name": "main", "commit": {"sha": self.tip}}
+        self.source = "microsoft/vscode-gradle"
+        self.central = self.project(COORDINATOR)
+        self.source_project = self.project(self.source)
         self.environment = {
-            "GITHUB_REPOSITORY": action.COORDINATOR, "GITHUB_EVENT_NAME": "workflow_dispatch",
+            "GITHUB_REPOSITORY": COORDINATOR, "GITHUB_EVENT_NAME": "workflow_dispatch",
             "GITHUB_REF": "refs/heads/main", "GITHUB_SHA": self.tip, "GITHUB_WORKFLOW_SHA": self.tip,
-            "GITHUB_WORKFLOW_REF": action.COORDINATOR + "/" + action.COORDINATOR_WORKFLOW + "@refs/heads/main",
+            "GITHUB_WORKFLOW_REF": COORDINATOR + "/.github/workflows/team-memory-coordinator.yml@refs/heads/main",
             "GITHUB_ACTOR": "maintainer", "GITHUB_TRIGGERING_ACTOR": "rerunner",
             "GITHUB_RUN_ID": "999", "GITHUB_RUN_ATTEMPT": "1",
             "GITHUB_EVENT_PATH": str(self.directory / "event.json"), "RUNNER_TEMP": str(self.directory),
             "GITHUB_OUTPUT": str(self.directory / "output.txt"),
-            "COORDINATOR_TOKEN": "test-coordinator-token", "GH_TOKEN": "test-source-token",
-            "DISPATCH_TOKEN": "test-dispatch-token", "SOURCE_REPOSITORY": self.repository,
-            "COORDINATOR_REPOSITORY": action.COORDINATOR,
-            "COORDINATOR_WORKFLOW": "team-memory-coordinator.yml", "COORDINATOR_REF": "main",
-            "SOURCE_RUN_ID": "123456", "SOURCE_RUN_ATTEMPT": "2", "SOURCE_ARTIFACT_ID": "456",
-            "DISPATCH_PR": "", "OUTPUT_MODE": "quiet", "SUMMARY_MODE": "none",
+            "GH_TOKEN": "test-coordinator-token", "SOURCE_GH_TOKEN": "test-source-token",
+            "SOURCE_REPOSITORY": self.source, "SOURCE_REPOSITORIES": json.dumps(ALLOWED),
+            "SOURCE_RUN_ID": "123456", "SOURCE_RUN_ATTEMPT": "2",
+            "PUSH_BEFORE": self.before, "PUSH_AFTER": self.after, "DISPATCH_PR": "",
+            "REQUEST_TYPE": "team-memory", "TASK_INPUT": "", "OUTPUT_MODE": "quiet", "SUMMARY_MODE": "none",
             "AGENT_URL": "https://test.services.ai.azure.com/agents/test/protocols/invocations",
-            "AGENT_SCOPE": "api://test/.default",
+            "AGENT_SCOPE": "api://test/.default", "DISPATCH_TOKEN": "test-dispatch-token",
+            "COORDINATOR_REPOSITORY": COORDINATOR, "COORDINATOR_WORKFLOW": "team-memory-coordinator.yml",
+            "COORDINATOR_REF": "main",
         }
         self.env_patch = patch.dict(os.environ, self.environment, clear=True)
         self.env_patch.start()
         self.addCleanup(self.env_patch.stop)
-        self.write_event({"repository": self.central})
+        Path(os.environ["GITHUB_EVENT_PATH"]).write_text(json.dumps({"repository": self.central}))
         self.source_run = {
-            "id": 123456, "run_attempt": 2, "event": "push", "path": action.SOURCE_WORKFLOW,
-            "head_branch": "develop", "head_sha": self.after,
-            "repository": self.project, "head_repository": self.project,
-            "actor": {"login": "maintainer"}, "triggering_actor": {"login": "rerunner"},
+            "id": 123456, "run_attempt": 2, "event": "push", "path": invoker.DISPATCH_WORKFLOW,
+            "head_branch": "develop", "head_sha": self.after, "repository": self.source_project,
+            "head_repository": self.source_project, "actor": {"login": "maintainer"},
+            "triggering_actor": {"login": "rerunner"},
         }
-        now = datetime.now(timezone.utc) - timedelta(minutes=1)
-        self.artifact = {
-            "id": 456, "name": "issuelens-team-memory-source-2", "expired": False, "size_in_bytes": 2048,
-            "digest": "sha256:" + "1" * 64, "created_at": now.isoformat(),
-            "expires_at": (now + timedelta(days=7)).isoformat(),
-            "workflow_run": {
-                "id": 123456, "repository_id": self.project["id"], "head_repository_id": self.project["id"],
-                "head_branch": "develop", "head_sha": self.after,
-            },
-        }
-        self.metadata = {
-            "repository": self.repository, "repository_id": self.project["id"], "base_ref": "develop",
-            "event_name": "push", "event_action": "push", "actor_login": "maintainer", "triggering_actor": "rerunner",
-            "workflow_ref": self.repository + "/" + action.SOURCE_WORKFLOW + "@refs/heads/develop",
-            "workflow_sha": self.after, "run_id": 123456, "run_attempt": 2,
-        }
-        self.push = {
-            "repository": {"id": self.project["id"], "full_name": self.repository}, "ref": "refs/heads/develop",
-            "before": self.before, "after": self.after, "created": False, "deleted": False, "forced": False,
-            "commits": [{"id": self.merge}, {"id": self.after}], "head_commit": {"id": self.after},
-        }
-        self.snapshot = {"metadata": self.metadata, "event": self.push}
+        self.branch = {"name": "develop", "commit": {"sha": self.tip}}
+        self.ancestry = self.comparison(self.after, 1)
+        self.inventory = self.comparison(self.before, 2, [self.merge, self.after])
         self.pull = {
             "number": 27, "merged": True, "state": "closed", "merge_commit_sha": self.merge,
-            "merged_at": "2026-10-08T00:00:00Z", "base": {"ref": "develop", "repo": self.project},
+            "merged_at": "2026-10-09T00:00:00Z", "base": {"ref": "develop", "repo": self.source_project},
         }
-        self.comparison = {
-            "base_commit": {"sha": self.before}, "merge_base_commit": {"sha": self.before}, "status": "ahead",
-            "ahead_by": 2, "behind_by": 0, "total_commits": 2, "commits": [{"sha": self.after}],
-        }
-        node = {
-            "number": 27, "state": "MERGED", "merged": True, "mergedAt": self.pull["merged_at"],
-            "baseRefName": "develop", "baseRepository": {"databaseId": self.project["id"], "nameWithOwner": self.repository},
-            "mergeCommit": {"oid": self.merge},
-        }
-        connection = {"totalCount": 1, "pageInfo": {"hasNextPage": False}, "nodes": [node]}
-        self.graphql = {"data": {"repository": {
-            "databaseId": self.project["id"], "nameWithOwner": self.repository,
-            "defaultBranchRef": {"name": "develop", "target": {"oid": self.tip}},
-            "c0": {"oid": self.merge, "associatedPullRequests": copy.deepcopy(connection)},
-            "c1": {"oid": self.after, "associatedPullRequests": copy.deepcopy(connection)},
-        }}}
-        self.api_reads = []
-        self.mock_read = patch.object(action, "github_read", side_effect=self.api_read).start()
-        self.addCleanup(patch.stopall)
-        patch.object(self.client, "github_read", side_effect=lambda path, payload=None, **kwargs: self.api_read(
-            path, kwargs.get("token") or os.environ["GH_TOKEN"], payload)).start()
-        patch.object(action, "load_client", return_value=self.client).start()
+        self.graphql = self.associations([self.merge, self.after])
+        self.target_workflow = {"id": 789, "path": ".github/workflows/team-memory-coordinator.yml", "state": "active"}
+        self.target_branch = {"name": "main", "commit": {"sha": self.tip}}
+        self.submit_response = Response()
+        self.requests = []
         self.opener = Mock()
-        self.opener.open.return_value = Response()
-        patch("urllib.request.build_opener", return_value=self.opener).start()
-        self.azure = patch.object(self.client.subprocess, "check_output", return_value="test-azure-token").start()
-        self.log = patch("sys.stdout", new_callable=io.StringIO).start()
+        self.opener.open.side_effect = self.respond
+        self.patches = [
+            patch("urllib.request.build_opener", return_value=self.opener),
+            patch.object(invoker.subprocess, "check_output", return_value="test-azure-token"),
+            patch("sys.stdout", new_callable=io.StringIO),
+        ]
+        _, self.azure, self.log = [item.start() for item in self.patches]
+        for item in self.patches:
+            self.addCleanup(item.stop)
 
-    def make_project(self, repository):
-        identity, branch = action.SOURCES[repository]
-        return {"full_name": repository, "id": identity, "default_branch": branch, "private": False, "archived": False}
+    def project(self, name):
+        branch = "develop" if name in {"microsoft/vscode-gradle", "microsoft/build-server-for-gradle"} else "main"
+        return {"id": ALLOWED[name], "full_name": name, "default_branch": branch, "visibility": "public"}
 
-    def api_read(self, path, token, payload=None):
-        self.api_reads.append((path, token, payload))
+    def comparison(self, before, count, shas=()):
+        return {"base_commit": {"sha": before}, "merge_base_commit": {"sha": before},
+                "status": "ahead", "ahead_by": count, "behind_by": 0, "total_commits": count,
+                "commits": [{"sha": sha} for sha in shas]}
+
+    def associations(self, shas):
+        result = {"databaseId": self.source_project["id"], "nameWithOwner": self.source,
+                  "defaultBranchRef": {"name": self.source_project["default_branch"], "target": {"oid": self.tip}}}
+        for index, sha in enumerate(shas):
+            node = {"number": 27, "state": "MERGED", "merged": True, "mergedAt": self.pull["merged_at"],
+                    "baseRefName": self.source_project["default_branch"],
+                    "baseRepository": {"databaseId": self.source_project["id"], "nameWithOwner": self.source},
+                    "mergeCommit": {"oid": self.merge}}
+            result[f"c{index}"] = {"oid": sha, "associatedPullRequests": {
+                "totalCount": 1, "pageInfo": {"hasNextPage": False}, "nodes": [node]}}
+        return {"data": {"repository": result}}
+
+    def select_source(self, name):
+        self.source = name
+        self.source_project = self.project(name)
+        os.environ["SOURCE_REPOSITORY"] = name
+        self.source_run.update(repository=self.source_project, head_repository=self.source_project,
+                               head_branch=self.source_project["default_branch"])
+        self.branch["name"] = self.source_project["default_branch"]
+        self.pull["base"] = {"ref": self.source_project["default_branch"], "repo": self.source_project}
+        self.graphql = self.associations([self.merge, self.after])
+
+    def respond(self, request, timeout):
+        self.requests.append(request)
+        path = request.full_url.removeprefix("https://api.github.com")
+        if request.full_url == os.environ["AGENT_URL"]:
+            return self.submit_response
+        if path.endswith("/dispatches"):
+            return Response(status=204)
         responses = {
-            f"/repos/{action.COORDINATOR}": self.central, f"/repos/{self.repository}": self.project,
-            f"/repos/{self.repository}/actions/runs/123456/attempts/2": self.source_run,
-            f"/repos/{self.repository}/actions/artifacts/456": self.artifact,
-            f"/repos/{self.repository}/pulls/27": self.pull,
-            f"/repos/{self.repository}/compare/{self.before}...{self.after}?per_page=1&page=2": self.comparison,
-            f"/repos/{action.COORDINATOR}/actions/workflows/team-memory-coordinator.yml": self.coordinator_workflow,
-            f"/repos/{action.COORDINATOR}/branches/main": self.coordinator_branch,
-            "/graphql": self.graphql,
+            f"/repos/{COORDINATOR}": self.central, f"/repos/{self.source}": self.source_project,
+            f"/repos/{COORDINATOR}/actions/workflows/team-memory-coordinator.yml": self.target_workflow,
+            f"/repos/{COORDINATOR}/branches/main": self.target_branch,
+            f"/repos/{self.source}/actions/runs/123456/attempts/2": self.source_run,
+            f"/repos/{self.source}/branches/{self.source_project['default_branch']}": self.branch,
+            f"/repos/{self.source}/compare/{self.after}...{self.tip}?per_page=1&page=2": self.ancestry,
+            f"/repos/{self.source}/compare/{self.before}...{self.after}?per_page=100&page=1": self.inventory,
+            f"/repos/{self.source}/pulls/27": self.pull, "/graphql": self.graphql,
         }
-        self.assertIn(path, responses, "Unexpected API access")
-        return copy.deepcopy(responses[path])
+        self.assertIn(path, responses, "Unexpected network path")
+        return Response(json.dumps(responses[path]).encode())
 
-    def write_event(self, event):
-        Path(os.environ["GITHUB_EVENT_PATH"]).write_text(json.dumps(event), encoding="utf-8")
-
-    def write_source(self, content=None):
-        path = action.source_event_path()
-        path.parent.mkdir(exist_ok=True)
-        path.write_bytes(json.dumps(self.snapshot).encode() if content is None else content)
-        return path
-
-    def output(self):
+    def outputs(self):
         path = Path(os.environ["GITHUB_OUTPUT"])
         return dict(line.split("=", 1) for line in path.read_text().splitlines()) if path.exists() else {}
 
-    def envelope(self):
-        return json.loads(Path(self.output()["request-path"]).read_text())
-
-    def select_push(self):
-        os.environ.update(
-            GITHUB_REPOSITORY=self.repository, GITHUB_EVENT_NAME="push", GITHUB_SHA=self.after,
-            GITHUB_WORKFLOW_SHA=self.after, GITHUB_REF="refs/heads/develop",
-            GITHUB_WORKFLOW_REF=self.metadata["workflow_ref"], GITHUB_RUN_ID="123456", GITHUB_RUN_ATTEMPT="2",
-        )
-        self.write_event(self.push)
-
-    def execute(self, command):
-        if command in {"prepare-dispatch", "dispatch"}:
-            self.client.run(command)
-        else:
-            action.run(command)
+    def preflight(self):
+        invoker.run("preflight")
         self.azure.assert_not_called()
+        self.assertFalse(any(request.get_method() == "POST" and not request.full_url.endswith("/graphql")
+                             for request in self.requests))
+        return json.loads(Path(self.outputs()["request-path"]).read_text()) if self.outputs().get("eligible") == "true" else None
 
-    def test_identity_only_source_excludes_all_untrusted_text_and_tokens(self):
-        self.select_push()
-        event = copy.deepcopy(self.push)
-        event["commits"][0]["message"] = "UNTRUSTED_COMMIT_MESSAGE"
-        event["repository"]["description"] = "UNTRUSTED_REPOSITORY_TEXT"
-        self.write_event(event)
-        self.execute("prepare-dispatch")
-        path = Path(self.output()["source-event-path"])
-        self.assertEqual(json.loads(path.read_bytes()), self.snapshot)
-        self.assertNotIn("UNTRUSTED", path.read_text())
-        self.assertNotIn("test-source-token", path.read_text())
-        self.opener.open.assert_not_called()
+    def dispatch_inputs(self):
+        content = source_job["steps"][0]["with"]["workflow-inputs"]
+        replacements = {"github.repository": self.source, "github.run_id": "123456", "github.run_attempt": "2",
+                        "github.event.before": self.before, "github.sha": self.after}
+        for name, value in replacements.items():
+            content = content.replace("${{ " + name + " }}", value)
+        return content
 
-    def test_shared_dispatcher_snapshot_passes_java_preflight_without_translation(self):
-        coordinator_environment = dict(os.environ)
-        self.select_push()
-        self.execute("prepare-dispatch")
-        self.assertEqual(json.loads(action.source_event_path().read_bytes()), self.snapshot)
-        Path(os.environ["GITHUB_OUTPUT"]).unlink()
-        os.environ.clear()
-        os.environ.update(coordinator_environment)
-        self.write_event({"repository": self.central})
-        self.execute("validate-dispatch")
-        Path(os.environ["GITHUB_OUTPUT"]).unlink()
-        self.execute("preflight")
-        metadata = self.envelope()["metadata"]
-        self.assertEqual(metadata["repository"], self.repository)
-        self.assertEqual(metadata["push_after"], self.after)
-        self.assertEqual(metadata["required_wiki_repository"], action.COORDINATOR)
-        self.opener.open.assert_not_called()
+    def test_source_main_and_develop_dispatch_scalar_inputs_to_central_main(self):
+        for name in (COORDINATOR, "microsoft/vscode-gradle"):
+            with self.subTest(source=name):
+                self.select_source(name)
+                self.requests.clear()
+                os.environ["WORKFLOW_INPUTS"] = self.dispatch_inputs()
+                dispatcher.run()
+                posted, = [request for request in self.requests if request.get_method() == "POST"]
+                self.assertEqual(json.loads(posted.data), {"ref": "main", "inputs": {
+                    "source_repository": name, "source_run_id": "123456", "source_run_attempt": "2",
+                    "push_before": self.before, "push_after": self.after,
+                }})
+                self.assertEqual(len(self.requests), 4)
+                self.assertTrue(all(request.get_header("Authorization") == "Bearer test-dispatch-token"
+                                    for request in self.requests))
+                self.azure.assert_not_called()
 
-    def test_maximum_inventory_fits_and_matches_upstream_limits(self):
-        self.assertEqual(self.client.MAX_PUSH_COMMITS, 1000)
-        self.assertEqual(action.MAX_SOURCE_BYTES, self.client.MAX_SOURCE_BYTES)
-        self.select_push()
-        event = copy.deepcopy(self.push)
-        event["commits"] = [{"id": f"{number:040x}"} for number in range(1, 1000)] + [{"id": self.after}]
-        self.write_event(event)
-        self.execute("prepare-dispatch")
-        self.assertLess(action.source_event_path().stat().st_size, action.MAX_SOURCE_BYTES)
+    def test_generic_dispatch_payload_drives_shared_invocation_without_artifacts(self):
+        os.environ["WORKFLOW_INPUTS"] = self.dispatch_inputs()
+        dispatcher.run()
+        inputs = json.loads(self.requests[-1].data)["inputs"]
+        os.environ.update({name.upper(): value for name, value in inputs.items()})
+        self.requests.clear()
+        metadata = self.preflight()["metadata"]
+        self.assertEqual(metadata["repository"], self.source)
+        self.assertEqual(metadata["required_wiki_repository"], COORDINATOR)
+        self.assertEqual(metadata["range_origin"], "authorized-reconciliation")
+        self.assertFalse(any("artifact" in request.full_url for request in self.requests))
 
-    def test_every_allowlisted_source_uses_its_own_identity_and_default_branch(self):
-        original = dict(os.environ)
-        for repository, (identity, branch) in action.SOURCES.items():
-            with self.subTest(repository=repository), patch.dict(os.environ, {
-                **original, "GITHUB_REPOSITORY": repository, "GITHUB_EVENT_NAME": "push",
-                "GITHUB_REF": "refs/heads/" + branch, "GITHUB_SHA": self.after, "GITHUB_WORKFLOW_SHA": self.after,
-                "GITHUB_WORKFLOW_REF": repository + "/" + action.SOURCE_WORKFLOW + "@refs/heads/" + branch,
-            }, clear=True), patch.object(self.client, "github_read", return_value=self.make_project(repository)):
-                self.write_event({**self.push, "repository": {"id": identity, "full_name": repository},
-                                  "ref": "refs/heads/" + branch})
-                self.client.prepare_dispatch()
-                snapshot = json.loads(action.source_event_path().read_bytes())
-                self.assertEqual(snapshot["metadata"]["repository_id"], identity)
-                self.assertEqual(snapshot["metadata"]["base_ref"], branch)
-                self.assertEqual(snapshot["event"]["repository"]["full_name"], repository)
+    def test_dispatch_ambiguous_post_has_no_retry_or_completion_claim(self):
+        os.environ["WORKFLOW_INPUTS"] = self.dispatch_inputs()
+        original = self.respond
 
-    def test_push_rejects_unsafe_or_incomplete_identities(self):
-        self.select_push()
-        cases = [
-            {"forced": True}, {"created": True}, {"deleted": True}, {"before": "0" * 40},
-            {"after": self.before}, {"head_commit": {"id": self.merge}}, {"ref": "refs/heads/main"},
-            {"commits": []}, {"commits": [{"id": self.after}] * 2},
-            {"commits": [{"id": self.after}] * 1001}, {"commits": [{"id": "short"}]},
-        ]
-        for changes in cases:
-            with self.subTest(changes=changes):
-                self.write_event({**self.push, **changes})
-                with self.assertRaises(SystemExit):
-                    self.execute("prepare-dispatch")
-                self.assertFalse(action.source_event_path().exists())
-                self.assertEqual(self.output(), {})
+        def fail_post(request, timeout):
+            if request.get_method() == "POST":
+                self.requests.append(request)
+                raise OSError("PRIVATE_TRANSPORT_DETAIL")
+            return original(request, timeout)
 
-    def test_push_rejects_wrong_workflow_branch_revision_and_event(self):
-        self.select_push()
-        original = dict(os.environ)
-        for name, value in (
-            ("GITHUB_WORKFLOW_REF", self.repository + "/.github/workflows/untrusted.yml@refs/heads/develop"),
-            ("GITHUB_REF", "refs/heads/main"), ("GITHUB_WORKFLOW_SHA", self.tip),
-            ("GITHUB_EVENT_NAME", "pull_request"),
-        ):
-            with self.subTest(name=name), patch.dict(os.environ, {**original, name: value}, clear=True):
-                with self.assertRaises(SystemExit):
-                    self.execute("prepare-dispatch")
-                self.assertEqual(self.output(), {})
-
-    def test_dispatch_sends_one_post_to_central_main_with_separate_tokens(self):
-        self.select_push()
-        self.write_source()
-        self.execute("dispatch")
-        self.assertEqual([(path, token) for path, token, _ in self.api_reads], [
-            (f"/repos/{self.repository}", "test-source-token"),
-            (f"/repos/{action.COORDINATOR}", "test-dispatch-token"),
-            (f"/repos/{action.COORDINATOR}/actions/workflows/team-memory-coordinator.yml", "test-dispatch-token"),
-            (f"/repos/{action.COORDINATOR}/branches/main", "test-dispatch-token"),
-        ])
-        self.opener.open.assert_called_once()
-        request = self.opener.open.call_args.args[0]
-        self.assertEqual(request.full_url,
-                         f"https://api.github.com/repos/{action.COORDINATOR}/actions/workflows/team-memory-coordinator.yml/dispatches")
-        self.assertEqual(request.get_method(), "POST")
-        self.assertEqual(json.loads(request.data), {"ref": "main", "inputs": {
-            "source_repository": self.repository, "source_run_id": "123456",
-            "source_run_attempt": "2", "source_artifact_id": "456",
-        }})
-        self.assertNotIn(b"test-", request.data)
-        self.assertIn("completion is reported by the coordinator", self.log.getvalue())
-
-    def test_dispatch_does_not_retry_ambiguous_failure_or_leak_transport_details(self):
-        self.select_push()
-        self.write_source()
-        self.opener.open.side_effect = OSError("PRIVATE_TRANSPORT_DETAIL")
+        self.opener.open.side_effect = fail_post
         with self.assertRaisesRegex(SystemExit, "outcome is unknown"):
-            self.execute("dispatch")
-        self.opener.open.assert_called_once()
+            dispatcher.run()
+        self.assertEqual(sum(request.get_method() == "POST" for request in self.requests), 1)
         self.assertNotIn("PRIVATE_TRANSPORT_DETAIL", self.log.getvalue())
-        self.assertEqual(self.output(), {})
+        self.assertEqual(self.outputs(), {})
 
-    def test_explicit_empty_dispatch_token_fails_before_any_network_access(self):
-        self.select_push()
-        for token in ("", " \t"):
-            with self.subTest(token=token), patch.dict(os.environ, {"DISPATCH_TOKEN": token}):
-                with self.assertRaisesRegex(SystemExit, "dispatch-token must be non-empty"):
-                    self.execute("dispatch")
-        self.mock_read.assert_not_called()
+    def test_dispatch_empty_token_and_invalid_payloads_fail_before_network(self):
+        for changes in ({"DISPATCH_TOKEN": ""}, {"WORKFLOW_INPUTS": '{"run":1}'},
+                        {"WORKFLOW_INPUTS": '{"run":"1","run":"2"}'},
+                        {"WORKFLOW_INPUTS": "\u20ac" * 22000}, {"COORDINATOR_WORKFLOW": "../bad.yml"}):
+            with self.subTest(changes=changes), patch.dict(os.environ, changes), self.assertRaises(SystemExit):
+                dispatcher.run()
         self.opener.open.assert_not_called()
 
-    def test_dispatch_revalidates_saved_push_inventory_before_target_access(self):
-        self.select_push()
-        self.snapshot["event"]["before"] = self.merge
-        self.write_source()
-        with self.assertRaisesRegex(SystemExit, "Push commit inventory"):
-            self.execute("dispatch")
-        self.opener.open.assert_not_called()
-        self.assertFalse(any(token == "test-dispatch-token" for _, token, _ in self.api_reads))
+    def test_inactive_target_workflow_or_wrong_branch_cannot_dispatch(self):
+        os.environ["WORKFLOW_INPUTS"] = self.dispatch_inputs()
+        self.target_workflow["state"] = "disabled_manually"
+        with self.assertRaisesRegex(SystemExit, "workflow is inactive"):
+            dispatcher.run()
+        self.target_workflow["state"] = "active"
+        self.target_branch["name"] = "develop"
+        with self.assertRaisesRegex(SystemExit, "branch identity"):
+            dispatcher.run()
+        self.assertFalse(any(request.get_method() == "POST" for request in self.requests))
 
-    def test_shared_dispatch_rejects_inactive_or_wrong_target_workflow_without_post(self):
-        self.select_push()
-        self.write_source()
-        original = copy.deepcopy(self.coordinator_workflow)
-        for changes in ({"state": "disabled_manually"}, {"path": ".github/workflows/untrusted.yml"}):
-            with self.subTest(changes=changes):
-                self.coordinator_workflow = {**original, **changes}
-                with self.assertRaisesRegex(SystemExit, "Coordinator workflow identity"):
-                    self.execute("dispatch")
-        self.opener.open.assert_not_called()
+    def test_all_eight_trusted_ids_use_current_source_default_branch(self):
+        for name, identity in ALLOWED.items():
+            with self.subTest(source=name):
+                self.select_source(name)
+                metadata = self.preflight()["metadata"]
+                self.assertEqual(metadata["repository_id"], identity)
+                self.assertEqual(metadata["base_ref"], self.source_project["default_branch"])
+                self.assertEqual(metadata["coordinator_repository"], COORDINATOR)
+                self.assertEqual(metadata["required_wiki_repository"], COORDINATOR)
 
-    def test_shared_dispatch_rejects_wrong_target_branch_without_post(self):
-        self.select_push()
-        self.write_source()
-        self.coordinator_branch["name"] = "develop"
-        with self.assertRaisesRegex(SystemExit, "Coordinator branch identity"):
-            self.execute("dispatch")
-        self.opener.open.assert_not_called()
-
-    def test_invalid_mixed_and_missing_inputs_fail_before_network(self):
-        cases = [
-            {"SOURCE_REPOSITORY": ""}, {"SOURCE_REPOSITORY": "microsoft/IssueLens"},
-            {"SOURCE_RUN_ID": ""}, {"SOURCE_RUN_ATTEMPT": ""}, {"SOURCE_ARTIFACT_ID": ""},
-            {"SOURCE_RUN_ID": "1; unsafe"}, {"SOURCE_RUN_ATTEMPT": "0"}, {"SOURCE_ARTIFACT_ID": "01"},
-            {"DISPATCH_PR": "27"}, {name: "" for name in action.SOURCE_INPUTS},
-        ]
-        for changes in cases:
-            with self.subTest(changes=changes), patch.dict(os.environ, changes):
-                with self.assertRaises(SystemExit):
-                    self.execute("select-source")
-        self.mock_read.assert_not_called()
-
-    def test_only_central_default_branch_coordinator_may_select_a_source(self):
-        for change in (
-            {"GITHUB_REPOSITORY": self.repository}, {"GITHUB_EVENT_NAME": "push"},
-            {"GITHUB_REF": "refs/heads/feature"}, {"GITHUB_WORKFLOW_SHA": "short"},
-            {"GITHUB_WORKFLOW_REF": action.COORDINATOR + "/.github/workflows/untrusted.yml@refs/heads/main"},
-        ):
-            with self.subTest(change=change), patch.dict(os.environ, change):
-                with self.assertRaises(SystemExit):
-                    self.execute("select-source")
-        self.assertEqual(self.output(), {})
-
-    def test_source_selection_precedes_external_token_minting(self):
-        self.execute("select-source")
-        self.assertEqual(self.output(), {"external": "true", "source-name": "vscode-gradle"})
-        self.assertEqual(self.api_reads, [(f"/repos/{action.COORDINATOR}", "test-coordinator-token", None)])
-
-    def test_java_pack_manual_source_needs_no_external_credentials(self):
-        self.repository = action.COORDINATOR
-        self.project = self.central
-        self.pull["base"] = {"ref": "main", "repo": self.central}
-        os.environ.update({**{name: "" for name in action.SOURCE_INPUTS},
-                           "DISPATCH_PR": "27", "SOURCE_REPOSITORY": action.COORDINATOR,
-                           "GH_TOKEN": "test-coordinator-token"})
-        self.execute("select-source")
-        self.assertEqual(self.output(), {"external": "false", "source-name": "vscode-java-pack"})
-        Path(os.environ["GITHUB_OUTPUT"]).unlink()
-        self.execute("preflight")
-        metadata = self.envelope()["metadata"]
-        self.assertEqual(metadata["repository"], action.COORDINATOR)
-        self.assertEqual(metadata["base_ref"], "main")
-        self.assertEqual(metadata["required_wiki_repository"], action.COORDINATOR)
-        self.assertTrue(all(token == "test-coordinator-token" for _, token, _ in self.api_reads))
-
-    def test_validates_external_source_run_and_artifact_before_download(self):
-        self.execute("validate-dispatch")
-        self.assertEqual(self.output(), {
-            "automatic": "true", "source-repository": self.repository,
-            "source-run-id": "123456", "source-artifact-id": "456",
-        })
-        self.assertEqual([path for path, _, _ in self.api_reads], [
-            f"/repos/{action.COORDINATOR}", f"/repos/{self.repository}",
-            f"/repos/{self.repository}/actions/runs/123456/attempts/2",
-            f"/repos/{self.repository}/actions/artifacts/456",
-        ])
-        self.assertTrue(all(token == "test-source-token" for _, token, _ in self.api_reads[1:]))
-        self.opener.open.assert_not_called()
-
-    def test_rejects_changed_identity_visibility_or_default_branch(self):
-        original = copy.deepcopy(self.project)
-        for changes in (
-            {"id": original["id"] + 1}, {"full_name": "microsoft/other"}, {"default_branch": "main"},
-            {"private": True}, {"private": None}, {"archived": True},
-        ):
-            with self.subTest(changes=changes):
-                self.project = {**original, **changes}
-                with self.assertRaises(SystemExit):
-                    self.execute("validate-dispatch")
-        self.assertFalse(any("/actions/" in path for path, _, _ in self.api_reads))
-
-    def test_forged_run_cannot_proceed_to_artifact_validation(self):
-        original = copy.deepcopy(self.source_run)
-        for changes in (
-            {"id": 123457}, {"run_attempt": 1}, {"event": "workflow_dispatch"}, {"path": "untrusted.yml"},
-            {"head_branch": "main"}, {"head_sha": "short"},
-            {"repository": self.central}, {"head_repository": self.central},
-            {"actor": {"login": "unsafe\nactor"}},
-        ):
-            with self.subTest(changes=changes):
-                self.source_run = {**original, **changes}
-                with self.assertRaises(SystemExit):
-                    self.execute("validate-dispatch")
-        self.assertFalse(any("/artifacts/" in path for path, _, _ in self.api_reads))
-
-    def test_foreign_expired_oversized_or_digestless_artifacts_fail(self):
-        original = copy.deepcopy(self.artifact)
-        for changes in (
-            {"id": 457}, {"name": "issuelens-team-memory-source-1"}, {"expired": True}, {"digest": None},
-            {"digest": "short"}, {"size_in_bytes": 0}, {"size_in_bytes": True},
-            {"size_in_bytes": action.MAX_SOURCE_BYTES + 1},
-            {"workflow_run": {**original["workflow_run"], "id": 123457}},
-            {"workflow_run": {**original["workflow_run"], "repository_id": self.central["id"]}},
-            {"workflow_run": {**original["workflow_run"], "head_sha": self.merge}},
-        ):
-            with self.subTest(changes=changes):
-                self.artifact = {**original, **changes}
-                with self.assertRaises(SystemExit):
-                    self.execute("validate-dispatch")
-        self.assertEqual(self.output(), {})
-
-    def test_expiry_timestamps_are_checked_not_only_expired_flag(self):
-        original = copy.deepcopy(self.artifact)
-        now = datetime.now(timezone.utc)
-        for changes in (
-            {"expires_at": (now - timedelta(seconds=1)).isoformat()},
-            {"expires_at": (now + timedelta(days=8)).isoformat()},
-            {"created_at": (now + timedelta(hours=1)).isoformat()},
-            {"expires_at": "2026-10-01T00:00:00"}, {"created_at": "invalid"},
-        ):
-            with self.subTest(changes=changes):
-                self.artifact = {**original, **changes}
-                with self.assertRaises(SystemExit):
-                    self.execute("validate-dispatch")
-
-    def test_preflight_reuses_discovery_and_keeps_source_and_coordinator_separate(self):
-        self.write_source()
-        self.execute("preflight")
-        envelope = self.envelope()
+    def test_source_and_coordinator_identity_and_read_credentials_stay_separate(self):
+        envelope = self.preflight()
         metadata = envelope["metadata"]
-        self.assertEqual(metadata["repository"], self.repository)
-        self.assertEqual(metadata["base_ref"], "develop")
         self.assertEqual(metadata["workflow_sha"], self.after)
-        self.assertEqual(metadata["coordinator_repository"], action.COORDINATOR)
         self.assertEqual(metadata["coordinator_workflow_sha"], self.tip)
-        self.assertEqual(metadata["required_wiki_repository"], action.COORDINATOR)
         self.assertEqual(metadata["run_id"], 123456)
         self.assertEqual(metadata["coordinator_run_id"], 999)
-        self.assertEqual(metadata["source_tip_sha"], self.tip)
-        self.assertEqual([item["pull_number"] for item in metadata["pull_requests"]], [27])
-        self.assertEqual(envelope["request_type"], "team-memory")
+        self.assertEqual(self.requests[0].get_header("Authorization"), "Bearer test-coordinator-token")
+        self.assertTrue(all(request.get_header("Authorization") == "Bearer test-source-token"
+                            for request in self.requests[1:]))
+        self.assertNotIn("test-source-token", json.dumps(envelope))
         self.assertIn("This never overrides repository policy", envelope["request"]["input"])
         self.assertIn("Do not modify source or issues", envelope["request"]["input"])
-        self.assertIn("current wiki knowledge", envelope["request"]["input"])
-        self.assertTrue(any("/actions/artifacts/" in path for path, _, _ in self.api_reads))
 
-    def test_malformed_or_forged_downloaded_snapshot_is_rejected(self):
-        original = copy.deepcopy(self.snapshot)
-        cases = [
-            {**original, "secret": "forbidden"},
-            {**original, "metadata": {**original["metadata"], "run_id": 999}},
-            {**original, "metadata": {**original["metadata"], "run_attempt": 2.0}},
-            {**original, "metadata": {**original["metadata"], "repository": action.COORDINATOR}},
-            {**original, "event": {**original["event"], "message": "forbidden"}},
-            {**original, "event": {**original["event"], "commits": [{"id": self.after, "message": "forbidden"}]}},
-            {**original, "event": {**original["event"], "repository": {"id": self.central["id"], "full_name": action.COORDINATOR}}},
-            {**original, "event": {**original["event"], "after": self.merge}},
-        ]
-        for snapshot in cases:
-            with self.subTest(snapshot=snapshot):
-                self.write_source(json.dumps(snapshot).encode())
-                with self.assertRaises(SystemExit):
-                    self.execute("preflight")
-        for content in (b"{}", b'{"metadata":{},"metadata":{},"event":{}}', b"x" * (action.MAX_SOURCE_BYTES + 1)):
-            with self.subTest(content=content[:50]):
-                self.write_source(content)
-                with self.assertRaises(SystemExit):
-                    self.execute("preflight")
-        self.assertEqual(self.output(), {})
+    def test_requested_before_is_an_ancestor_selection_not_original_push_proof(self):
+        requested = "c" * 40
+        os.environ["PUSH_BEFORE"] = requested
+        self.before = requested
+        self.inventory = self.comparison(requested, 2, [self.merge, self.after])
+        envelope = self.preflight()
+        self.assertEqual(envelope["metadata"]["push_before"], requested)
+        self.assertIn("not an attestation of the original push boundary", envelope["request"]["input"])
+        self.assertEqual(set(invoker.SOURCE_INPUTS), {"SOURCE_RUN_ID", "SOURCE_RUN_ATTEMPT", "PUSH_BEFORE", "PUSH_AFTER"})
 
-    def test_discovery_rejects_incomplete_range_and_association_pagination(self):
-        self.write_source()
-        self.comparison["total_commits"] = 3
+    def test_unknown_source_mixed_inputs_and_empty_source_token_fail_before_network(self):
+        for changes in ({"SOURCE_REPOSITORY": "microsoft/IssueLens"}, {"SOURCE_RUN_ID": ""},
+                        {"SOURCE_RUN_ATTEMPT": "0"}, {"PUSH_BEFORE": ""}, {"PUSH_AFTER": "short"},
+                        {"PUSH_BEFORE": self.after}, {"DISPATCH_PR": "27"},
+                        {"SOURCE_GH_TOKEN": ""}, {"SOURCE_GH_TOKEN": "bad\ncredential"}):
+            with self.subTest(changes=changes), patch.dict(os.environ, changes), self.assertRaises(SystemExit):
+                self.preflight()
+        self.opener.open.assert_not_called()
+
+    def test_changed_source_id_canonical_name_or_private_visibility_is_rejected(self):
+        original = copy.deepcopy(self.source_project)
+        for changes in ({"id": original["id"] + 1}, {"full_name": "microsoft/renamed"},
+                        {"visibility": "private"}, {"visibility": "internal"}):
+            with self.subTest(changes=changes):
+                self.source_project = {**original, **changes}
+                with self.assertRaises(SystemExit):
+                    self.preflight()
+        self.assertFalse(any("/actions/runs/" in request.full_url for request in self.requests))
+
+    def test_forged_source_run_attempt_workflow_head_or_branch_cannot_invoke(self):
+        original = copy.deepcopy(self.source_run)
+        for changes in ({"id": 123457}, {"run_attempt": 1}, {"event": "pull_request"},
+                        {"path": ".github/workflows/untrusted.yml"}, {"head_sha": self.tip},
+                        {"head_branch": "main"}, {"head_repository": self.central}):
+            with self.subTest(changes=changes):
+                self.source_run = {**original, **changes}
+                with self.assertRaisesRegex(SystemExit, "Source run does not match"):
+                    self.preflight()
+        self.assertEqual(self.outputs(), {})
+
+    def test_wrong_coordinator_workflow_or_nondefault_ref_is_rejected(self):
+        for changes in ({"GITHUB_REF": "refs/heads/feature"}, {
+            "GITHUB_WORKFLOW_REF": COORDINATOR + "/.github/workflows/untrusted.yml@refs/heads/main"}):
+            with self.subTest(changes=changes), patch.dict(os.environ, changes), self.assertRaises(SystemExit):
+                self.preflight()
+        self.assertEqual(self.outputs(), {})
+
+    def test_divergent_head_or_current_source_tip_race_is_rejected(self):
+        self.ancestry["behind_by"] = 1
         with self.assertRaisesRegex(SystemExit, "complete fast-forward"):
-            self.execute("preflight")
-        self.comparison["total_commits"] = 2
+            self.preflight()
+        self.ancestry["behind_by"] = 0
+        self.graphql["data"]["repository"]["defaultBranchRef"]["target"]["oid"] = self.merge
+        with self.assertRaisesRegex(SystemExit, "changed during reconciliation"):
+            self.preflight()
+
+    def test_truncated_duplicate_divergent_or_missing_head_range_fails(self):
+        original = copy.deepcopy(self.inventory)
+        for changes in ({"commits": [{"sha": self.after}]},
+                        {"commits": [{"sha": self.after}, {"sha": self.after}]},
+                        {"commits": [{"sha": self.merge}, {"sha": self.tip}]},
+                        {"status": "diverged"}, {"total_commits": 1001}, {"total_commits": 0}):
+            with self.subTest(changes=changes):
+                self.inventory = {**original, **changes}
+                with self.assertRaises(SystemExit):
+                    self.preflight()
+        self.assertEqual(self.outputs(), {})
+
+    def test_complete_1000_commit_pagination_and_partial_final_page(self):
+        for count in (102, 1000):
+            with self.subTest(count=count):
+                shas = [f"{number:040x}" for number in range(1, count)] + [self.after]
+                pages = [self.comparison(self.before, count, shas[start:start + 100]) for start in range(0, count, 100)]
+                with patch.object(invoker, "github_read", side_effect=pages) as read:
+                    actual = invoker.read_reconciliation_inventory(self.source, self.before, self.after, float("inf"))
+                self.assertEqual(actual, shas)
+                self.assertEqual(read.call_count, len(pages))
+                self.assertTrue(all(call.kwargs["token"] == "test-source-token" for call in read.call_args_list))
+                self.assertTrue(read.call_args.args[0].endswith(f"page={len(pages)}"))
+
+    def test_missing_second_range_page_and_incomplete_pr_associations_fail(self):
+        shas = [f"{number:040x}" for number in range(1, 102)] + [self.after]
+        pages = [self.comparison(self.before, len(shas), shas[:100]),
+                 self.comparison(self.before, len(shas), shas[100:-1])]
+        with patch.object(invoker, "github_read", side_effect=pages), self.assertRaisesRegex(ValueError, "pagination"):
+            invoker.read_reconciliation_inventory(self.source, self.before, self.after, float("inf"))
         self.graphql["data"]["repository"]["c0"]["associatedPullRequests"]["pageInfo"]["hasNextPage"] = True
         with self.assertRaisesRegex(SystemExit, "associations are incomplete"):
-            self.execute("preflight")
-        self.assertEqual(self.output(), {})
+            self.preflight()
 
-    def test_rebased_merge_uses_pinned_rest_revalidation(self):
-        self.write_source()
-        for key in ("c0", "c1"):
-            self.graphql["data"]["repository"][key]["associatedPullRequests"]["nodes"][0]["mergeCommit"] = None
-        self.execute("preflight")
-        self.assertEqual(self.envelope()["metadata"]["pull_requests"][0]["merge_commit_sha"], self.merge)
-        self.assertEqual(sum(path.endswith("/pulls/27") for path, _, _ in self.api_reads), 1)
-
-    def test_no_merged_pr_is_an_explicit_skip_before_login(self):
-        self.write_source()
-        for key in ("c0", "c1"):
-            self.graphql["data"]["repository"][key]["associatedPullRequests"] = {
-                "totalCount": 0, "pageInfo": {"hasNextPage": False}, "nodes": [],
-            }
-        self.execute("preflight")
-        self.assertEqual(self.output(), {"eligible": "false", "status": "skipped", "skip-reason": "no_merged_pull_requests"})
-
-    def test_manual_external_pr_uses_source_default_branch_and_same_wiki(self):
-        os.environ.update({**{name: "" for name in action.SOURCE_INPUTS}, "DISPATCH_PR": "27"})
-        self.execute("validate-dispatch")
-        self.assertEqual(self.output(), {"automatic": "false", "source-repository": self.repository})
+    def test_rebase_merge_rest_validation_and_no_merged_pr_skip(self):
+        for name in ("c0", "c1"):
+            self.graphql["data"]["repository"][name]["associatedPullRequests"]["nodes"][0]["mergeCommit"] = None
+        self.assertEqual(self.preflight()["metadata"]["pull_requests"][0]["merge_commit_sha"], self.merge)
+        self.assertEqual(sum(request.full_url.endswith("/pulls/27") for request in self.requests), 1)
+        for name in ("c0", "c1"):
+            self.graphql["data"]["repository"][name]["associatedPullRequests"] = {
+                "totalCount": 0, "pageInfo": {"hasNextPage": False}, "nodes": []}
         Path(os.environ["GITHUB_OUTPUT"]).unlink()
-        self.execute("preflight")
-        metadata = self.envelope()["metadata"]
-        self.assertEqual(metadata["repository"], self.repository)
+        self.assertIsNone(self.preflight())
+        self.assertEqual(self.outputs(), {"eligible": "false", "status": "skipped", "skip-reason": "no_merged_pull_requests"})
+
+    def test_manual_pr_uses_same_shared_invoker_and_source_default_branch(self):
+        os.environ.update({**{name: "" for name in invoker.SOURCE_INPUTS}, "DISPATCH_PR": "27"})
+        metadata = self.preflight()["metadata"]
         self.assertEqual(metadata["base_ref"], "develop")
         self.assertEqual(metadata["pull_number"], 27)
-        self.assertEqual(metadata["required_wiki_repository"], action.COORDINATOR)
-        self.assertNotIn("workflow_sha", metadata)
-        self.assertFalse(any("/actions/" in path for path, _, _ in self.api_reads))
+        self.assertEqual(metadata["required_wiki_repository"], COORDINATOR)
+        self.assertFalse(any("/actions/runs/" in request.full_url for request in self.requests))
+        self.pull["merged"] = False
+        with self.assertRaisesRegex(SystemExit, "not merged"):
+            self.preflight()
 
-    def test_manual_unmerged_or_wrong_source_pr_is_rejected(self):
-        os.environ.update({**{name: "" for name in action.SOURCE_INPUTS}, "DISPATCH_PR": "27"})
-        original = copy.deepcopy(self.pull)
-        for changes in (
-            {"merged": False}, {"state": "open"}, {"merge_commit_sha": "short"},
-            {"base": {"ref": "main", "repo": self.project}},
-            {"base": {"ref": "develop", "repo": self.central}},
-        ):
-            with self.subTest(changes=changes):
-                self.pull = {**original, **changes}
-                with self.assertRaises(SystemExit):
-                    self.execute("preflight")
-        self.assertEqual(self.output(), {})
-
-    def result(self, status="no-change"):
-        return {
-            "source_repository": self.repository, "push_before": self.before, "push_after": self.after,
-            "status": status, "wiki_repository": action.COORDINATOR, "wiki_sha": "b" * 40,
-            "reason": "Verified source and wiki", "results": [
-                {"pull_number": 27, "merge_commit_sha": self.merge, "status": status, "reason": "Verified"},
-            ],
-        }
+    def result(self):
+        return {"source_repository": self.source, "push_before": self.before, "push_after": self.after,
+                "status": "no-change", "wiki_repository": COORDINATOR, "wiki_sha": "b" * 40,
+                "reason": "Verified source and wiki", "results": [
+                    {"pull_number": 27, "merge_commit_sha": self.merge, "status": "no-change", "reason": "Verified"}]}
 
     def submit(self, result, done=True):
-        os.environ["REQUEST_PATH"] = self.output()["request-path"]
-        stream = 'data: ' + json.dumps({"type": "assistant.message", "data": {"content": json.dumps(result)}}) + "\n\n"
+        os.environ["REQUEST_PATH"] = self.outputs()["request-path"]
+        stream = "data: " + json.dumps({"type": "assistant.message", "data": {"content": json.dumps(result)}}) + "\n\n"
         if done:
             stream += 'event: done\ndata: {"invocation_id":"test","session_id":"test"}\n\n'
-        self.opener.open.return_value = Response(stream.encode())
-        self.client.run("submit")
+        self.submit_response = Response(stream.encode())
+        invoker.run("submit")
 
-    def test_completed_stream_with_valid_receipt_is_required_for_success(self):
-        self.write_source()
-        self.execute("preflight")
+    def test_completed_stream_requires_valid_receipt_with_shared_wiki_and_sha(self):
+        self.preflight()
         self.submit(self.result())
-        self.assertEqual(self.output()["status"], "no-change")
-        self.assertEqual(self.output()["wiki-repository"], action.COORDINATOR)
-        self.opener.open.assert_called_once()
+        self.assertEqual(self.outputs()["status"], "no-change")
+        self.assertEqual(self.outputs()["wiki-repository"], COORDINATOR)
+        self.assertEqual(sum(request.full_url == os.environ["AGENT_URL"] for request in self.requests), 1)
+        self.assertEqual(self.opener.open.call_args.kwargs["timeout"], 300)
 
-    def test_stream_completion_alone_wrong_wiki_missing_pr_or_receipt_is_not_success(self):
-        self.write_source()
-        self.execute("preflight")
+    def test_wrong_wiki_source_missing_pr_or_success_shaped_status_cannot_succeed(self):
+        self.preflight()
         original = self.result()
-        for changes in (
-            {"wiki_repository": "microsoft/IssueLens"}, {"wiki_sha": None}, {"results": []},
-            {"source_repository": action.COORDINATOR}, {"push_after": self.merge}, {"status": "completed"},
-        ):
-            with self.subTest(changes=changes):
-                with self.assertRaises(SystemExit):
-                    self.submit({**original, **changes})
-                self.assertNotIn("status", self.output())
+        for changes in ({"wiki_repository": "microsoft/IssueLens"}, {"wiki_sha": None},
+                        {"source_repository": COORDINATOR}, {"results": []}, {"status": "completed"}):
+            with self.subTest(changes=changes), self.assertRaises(SystemExit):
+                self.submit({**original, **changes})
+            self.assertNotIn("status", self.outputs())
 
-    def test_incomplete_stream_fails_without_retry(self):
-        self.write_source()
-        self.execute("preflight")
-        with self.assertRaisesRegex(SystemExit, "completion event"):
+    def test_incomplete_stream_is_unknown_and_never_retried(self):
+        self.preflight()
+        with self.assertRaisesRegex(SystemExit, "completion event; outcome unknown"):
             self.submit(self.result(), done=False)
-        self.opener.open.assert_called_once()
-        self.assertNotIn("status", self.output())
+        self.assertEqual(sum(request.full_url == os.environ["AGENT_URL"] for request in self.requests), 1)
+        self.assertNotIn("status", self.outputs())
 
-    def test_failed_or_partial_batch_does_not_claim_whole_batch_success(self):
-        self.write_source()
-        self.execute("preflight")
-        with self.assertRaisesRegex(SystemExit, "batch incomplete"):
-            self.submit(self.result("failed"))
-        self.assertEqual(self.output()["status"], "failed")
-        self.opener.open.assert_called_once()
-
-    def test_partial_publication_is_reported_but_fails_the_coordinator(self):
-        self.write_source()
+    def test_partial_publication_keeps_receipt_but_fails_batch(self):
         connection = self.graphql["data"]["repository"]["c1"]["associatedPullRequests"]
-        connection["nodes"].append({**copy.deepcopy(connection["nodes"][0]),
-                                    "number": 28, "mergeCommit": {"oid": self.after}})
+        connection["nodes"].append({**copy.deepcopy(connection["nodes"][0]), "number": 28,
+                                    "mergeCommit": {"oid": self.after}})
         connection["totalCount"] = 2
-        self.execute("preflight")
+        self.preflight()
         result = self.result()
         result["status"] = "partial"
         result["results"].append({"pull_number": 28, "merge_commit_sha": self.after,
                                   "status": "needs-review", "reason": "Incomplete evidence"})
         with self.assertRaisesRegex(SystemExit, "batch incomplete"):
             self.submit(result)
-        self.assertEqual(self.output()["status"], "partial")
-        self.assertEqual(self.output()["wiki-repository"], action.COORDINATOR)
-        self.opener.open.assert_called_once()
+        self.assertEqual(self.outputs()["status"], "partial")
+        self.assertEqual(self.outputs()["wiki-repository"], COORDINATOR)
 
 
 class WiringTests(unittest.TestCase):
-    def test_only_verified_sources_are_allowlisted(self):
-        self.assertEqual(len(action.SOURCES), 8)
-        self.assertNotIn("microsoft/vscode-spring-initializr", action.SOURCES)
-        self.assertNotIn("microsoft/vscode-spring-boot-dashboard", action.SOURCES)
-        self.assertEqual(action.SOURCES["microsoft/build-server-for-gradle"][1], "develop")
+    def test_workflows_use_latest_real_input_schemas_and_only_shared_invocation(self):
+        queue = read_yaml(SHARED / "queue-team-memory" / "action.yml")
+        invoke = read_yaml(SHARED / "issuelens" / "action.yml")
+        dispatch, = source_job["steps"]
+        self.assertEqual(dispatch["uses"], "microsoft/IssueLens/.github/actions/queue-team-memory@" + PIN)
+        self.assertTrue(set(dispatch["with"]).issubset(queue["inputs"]))
+        selection, auth, invocation = central_job["steps"]
+        self.assertEqual(invocation["uses"], "microsoft/IssueLens/.github/actions/issuelens@" + PIN)
+        self.assertTrue(set(invocation["with"]).issubset(invoke["inputs"]))
+        self.assertEqual(invocation["with"]["source-repositories"], "${{ env.ISSUELENS_SOURCE_REPOSITORIES }}")
+        for name in ("source_repository", "source_run_id", "source_run_attempt", "push_before", "push_after"):
+            self.assertEqual(invocation["with"][name.replace("_", "-")], "${{ inputs." + name + " }}")
+        self.assertNotIn("continue-on-error", invocation)
+        self.assertNotIn("run", invocation)
+        preflight, login, submit = invoke["runs"]["steps"]
+        self.assertEqual(preflight["env"]["SOURCE_GH_TOKEN"], "${{ inputs.source-github-token }}")
+        self.assertTrue(all(step["if"] == "steps.preflight.outputs.eligible == 'true'" for step in (login, submit)))
+        self.assertEqual(len(queue["runs"]["steps"]), 1)
+        self.assertEqual(queue["runs"]["steps"][0]["run"], 'python3 -I "$GITHUB_ACTION_PATH/dispatch.py"')
 
-    def test_workflows_share_new_opt_in_and_only_coordinator_invokes(self):
-        source = (ROOT / ".github/workflows/team-memory-post-merge.yml").read_text()
-        central = (ROOT / ".github/workflows/team-memory-coordinator.yml").read_text()
-        shared = Path(os.environ["ISSUELENS_CLIENT_PATH"]).resolve().parent.parent / "queue-team-memory" / "action.yml"
-        composite = shared.read_text()
-        self.assertFalse((ACTION / "action.yml").exists())
-        for command in ("prepare_dispatch", "dispatch", "push_snapshot"):
-            self.assertFalse(hasattr(action, command), "Source dispatch belongs only to the shared action")
-        for workflow in (source, central):
-            self.assertIn("ISSUELENS_TEAM_MEMORY_COORDINATOR_ENABLED == 'true'", workflow)
-            self.assertNotIn("ISSUELENS_TEAM_MEMORY_ENABLED", workflow)
-            self.assertIn("permissions: {}", workflow)
-        self.assertNotIn("actions/checkout@", source)
-        self.assertNotIn("python", source)
-        self.assertIn("persist-credentials: false", central)
-        self.assertNotIn("concurrency:", source)
-        self.assertNotIn("workflow_dispatch:", source)
-        for text in (source, composite):
-            self.assertNotIn("azure/login", text)
-            self.assertNotIn("agent-url", text)
-            self.assertNotIn("id-token:", text)
-        self.assertIn("group: issuelens-team-memory-wiki-microsoft-vscode-java-pack", central)
-        self.assertIn("queue: max\n  cancel-in-progress: false", central)
-        self.assertIn("digest-mismatch: error", central)
-        self.assertNotIn("steps.source-token.outputs.token || github.token", central)
-        self.assertIn("repository: ${{ steps.source.outputs.source-repository }}", central)
-        self.assertLess(central.index("validate-dispatch"), central.index("actions/download-artifact@"))
-        self.assertLess(central.index("team_memory.py preflight"), central.index("azure/login@"))
-        self.assertIn('python3 -I "$ISSUELENS_CLIENT_PATH" submit', central)
-        self.assertIn("retention-days: 7", composite)
-        self.assertIn("GH_TOKEN: ${{ inputs.source-token }}", composite)
-        self.assertIn("DISPATCH_TOKEN: ${{ inputs.dispatch-token }}", composite)
-        for name, value in (("repository", action.COORDINATOR), ("workflow", "team-memory-coordinator.yml"), ("ref", "main")):
-            self.assertIn(f"coordinator-{name}: {value}", source)
+    def test_source_gates_and_one_central_queue_cover_manual_and_automatic_requests(self):
+        self.assertEqual(source_workflow["on"], {"push": {"branches": ["main"]}})
+        self.assertEqual(set(central_workflow["on"]), {"workflow_dispatch"})
+        self.assertEqual(central_workflow["concurrency"], {
+            "group": "issuelens-team-memory-wiki-microsoft-vscode-java-pack", "queue": "max", "cancel-in-progress": "false"})
+        self.assertNotIn("concurrency", source_workflow)
+        for workflow, job in ((source_workflow, source_job), (central_workflow, central_job)):
+            self.assertEqual(workflow["permissions"], {})
+            self.assertIn("ISSUELENS_TEAM_MEMORY_COORDINATOR_ENABLED == 'true'", job["if"])
+            self.assertIn("github.event.repository.default_branch", job["if"])
+        for flag in ("created", "deleted", "forced"):
+            self.assertIn(f"github.event.{flag} == false", source_job["if"])
+        self.assertIn("github.workflow_sha == github.sha", source_job["if"])
+        self.assertEqual(source_job["permissions"], {"contents": "read", "actions": "write"})
+        self.assertEqual(central_job["permissions"], {
+            "contents": "read", "actions": "read", "pull-requests": "read", "id-token": "write"})
+        self.assertEqual(central_job["timeout-minutes"], "30")
+        inputs = central_workflow["on"]["workflow_dispatch"]["inputs"]
+        self.assertEqual(set(inputs), {"source_repository", "source_run_id", "source_run_attempt",
+                                      "push_before", "push_after", "pull_request_number"})
+        self.assertIn("not an attested original push boundary", inputs["push_before"]["description"])
 
-    def test_client_pin_matches_coordinator_tests_and_documentation(self):
-        source = (ROOT / ".github/workflows/team-memory-post-merge.yml").read_text()
-        match = re.search(r"uses: microsoft/IssueLens/\.github/actions/queue-team-memory@([0-9a-f]{40})", source)
-        self.assertIsNotNone(match)
-        revision = match.group(1)
-        for relative in (".github/workflows/team-memory-coordinator.yml", ".github/workflows/team-memory-tests.yml"):
-            self.assertIn("ref: " + revision, (ROOT / relative).read_text())
-        self.assertIn(revision, (ACTION / "README.md").read_text())
+    def test_trusted_allowlist_selection_precedes_single_source_read_authentication(self):
+        self.assertEqual(ALLOWED, {
+            COORDINATOR: 104967329, "microsoft/vscode-java-debug": 102584737,
+            "microsoft/vscode-java-test": 110522074, "microsoft/vscode-java-dependency": 129053101,
+            "microsoft/vscode-maven": 116921700, "microsoft/vscode-gradle": 216314492,
+            "microsoft/java-debug": 102583752, "microsoft/build-server-for-gradle": 626812412})
+        selection, auth, invocation = central_job["steps"]
+        self.assertIn("'has($repository)'", selection["run"])
+        self.assertIn('exit 1', selection["run"])
+        self.assertNotIn("${{", selection["run"])
+        self.assertEqual(auth["if"], "steps.selection.outputs.external == 'true'")
+        self.assertEqual(auth["with"]["repositories"], "${{ steps.selection.outputs.source-name }}")
+        self.assertEqual(auth["with"]["owner"], "microsoft")
+        self.assertEqual({key: value for key, value in auth["with"].items() if key.startswith("permission-")},
+                         {"permission-actions": "read", "permission-contents": "read", "permission-pull-requests": "read"})
+        self.assertEqual(invocation["with"]["source-github-token"],
+                         "${{ steps.selection.outputs.external == 'false' && github.token || steps.source-token.outputs.token }}")
+        self.assertEqual(invocation["with"]["output-mode"], "activity")
+        self.assertEqual(invocation["with"]["summary-mode"], "status")
+
+    @unittest.skipIf(os.name == "nt", "Receiver selection runs on Ubuntu")
+    def test_actual_source_selection_script_restricts_scoped_app_authentication(self):
+        script = central_job["steps"][0]["run"]
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "output.txt"
+            for repository in (*ALLOWED, "", "microsoft/IssueLens", "microsoft/vscode-spring-initializr",
+                               "fork/vscode-java-pack", "microsoft/vscode-java-pack\ninjected=true"):
+                with self.subTest(source=repository):
+                    output.unlink(missing_ok=True)
+                    result = subprocess.run(
+                        ["bash", "-e", "-c", script], capture_output=True, text=True, check=False,
+                        env={**os.environ, "ISSUELENS_SOURCE_REPOSITORIES": json.dumps(ALLOWED),
+                             "SOURCE_REPOSITORY": repository, "GITHUB_OUTPUT": str(output)},
+                    )
+                    if repository in ALLOWED:
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        external = "false" if repository == COORDINATOR else "true"
+                        self.assertEqual(output.read_text().splitlines(), [
+                            f"source-name={repository.removeprefix('microsoft/')}", f"external={external}"])
+                    else:
+                        self.assertEqual(result.returncode, 1)
+                        self.assertIn("::error::Source repository is not allowlisted", result.stdout)
+                        self.assertFalse(output.exists())
+
+    def test_no_runtime_artifacts_local_invoker_or_client_checkout(self):
+        for name in ("team-memory-post-merge.yml", "team-memory-coordinator.yml"):
+            content = (ROOT / ".github" / "workflows" / name).read_text()
+            for forbidden in ("artifact", "actions/checkout", "issuelens_action.py", "team_memory.py",
+                              "ISSUELENS_CLIENT_PATH", "azure/login@"):
+                self.assertNotIn(forbidden, content)
+        self.assertFalse((Path(__file__).parents[1] / "team_memory.py").exists())
+        self.assertFalse((Path(__file__).parents[1] / "action.yml").exists())
+        tests = read_yaml(ROOT / ".github" / "workflows" / "team-memory-tests.yml")
+        self.assertEqual(tests["jobs"]["test"]["steps"][1]["with"]["ref"], PIN)
+        self.assertIn(PIN, (Path(__file__).parents[1] / "README.md").read_text())
 
 
 if __name__ == "__main__":

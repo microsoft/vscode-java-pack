@@ -1,16 +1,19 @@
 # Java team-memory coordinator
 
 Java Pack hosts the single queue for the `microsoft/vscode-java-pack` wiki.
-The [push caller](../../workflows/team-memory-post-merge.yml) only preserves
-source identities and dispatches the [coordinator](../../workflows/team-memory-coordinator.yml).
-Manual reconciliation now runs through the coordinator too, not the old push
-workflow. No source caller logs in to Azure or invokes the agent.
-The caller reuses `microsoft/IssueLens/.github/actions/queue-team-memory`;
-this directory contains only Java coordinator validation, setup guidance, and
-contract tests, not a second dispatch action.
-Its prerequisite is [microsoft/IssueLens#51](https://github.com/microsoft/IssueLens/pull/51),
-pinned at `521b1ff80a70140e286ced7500d0b150cf9e6d6c`. Review and merge that
-prerequisite first; these repository changes need no hosted runtime deployment.
+The [push caller](../../workflows/team-memory-post-merge.yml) invokes only the
+standalone IssueLens dispatch action with five scalar reconciliation inputs.
+The [coordinator](../../workflows/team-memory-coordinator.yml) invokes the shared
+IssueLens invocation action directly. Both actions are pinned to current upstream
+`a81d2d96167fc0e69ac631c2edc85f858e693289`, including the merged shared-action work
+in [microsoft/IssueLens#51](https://github.com/microsoft/IssueLens/pull/51).
+There is no unmerged prerequisite or hosted runtime deployment for action reuse.
+
+Manual PR reconciliation also runs through this central queue. There is no
+source preparation script, checkout, artifact upload/download, or local
+invoker/provenance adapter. This directory retains setup guidance and offline
+contract tests only. Shared actions own transport, source validation, discovery,
+Azure OIDC login, invocation, and final receipt checks.
 
 Both workflows require **`ISSUELENS_TEAM_MEMORY_COORDINATOR_ENABLED=true`**.
 This is a new, disabled-by-default repository variable: the existing
@@ -21,8 +24,11 @@ enablement. Issue-loop and direct-task consumers are unchanged.
 
 ## Source trust and scope
 
-The reviewed allowlist in `team_memory.py` binds names, numeric repository IDs,
-public visibility, and default branches. These sources currently configure
+The trusted `ISSUELENS_SOURCE_REPOSITORIES` JSON in the coordinator workflow maps
+canonical source names to immutable numeric repository IDs. It is never supplied
+by a dispatch input. The shared invocation action validates canonical identity,
+public-to-public cross-repository access, and each source's current default
+branch against its source run/PR. These sources currently configure
 `instructions.team_memory.wiki_repository: microsoft/vscode-java-pack`:
 
 | Source | Default branch | Reviewed policy snapshot |
@@ -36,8 +42,8 @@ public visibility, and default branches. These sources currently configure
 | `microsoft/java-debug` | `main` | [bcae605a](https://github.com/microsoft/java-debug/blob/bcae605a6240f11b447163a614e215721c11b107/.github/issuelens.yml) |
 | `microsoft/build-server-for-gradle` | `develop` | [ab37cca9](https://github.com/microsoft/build-server-for-gradle/blob/ab37cca97693c60e90d257ce9eb6e9575da7e6f1/.github/issuelens.yml) |
 
-The two Spring repositories are not included: they currently have no
-`.github/issuelens.yml` policy. An allowlist entry is not a source migration or
+The two Spring candidates remain excluded: their policies were absent/unverified.
+An allowlist entry is not a source migration or
 authorization to ignore policy. Only Java Pack's caller changes in this PR.
 Other repositories must adopt the shared IssueLens action in separate reviewed PRs.
 Renames, transfers, branch changes, or private sources require another review.
@@ -46,7 +52,7 @@ The hosted agent must resolve each source's policy and privacy constraints,
 verify that its validated destination is this wiki, and stop rather than
 override a conflicting policy. Requests explicitly require this destination;
 the pinned client's final receipt validator rejects any other wiki. Neither
-the shared dispatch action nor the coordinator's allowlist grants wiki write access.
+the standalone dispatch action nor the coordinator's allowlist grants wiki write access.
 
 ## Future external callers
 
@@ -57,28 +63,37 @@ needed for a remote reference:
 
 ```yaml
 - name: Queue Java team-memory update
-  uses: microsoft/IssueLens/.github/actions/queue-team-memory@521b1ff80a70140e286ced7500d0b150cf9e6d6c
+  uses: microsoft/IssueLens/.github/actions/queue-team-memory@a81d2d96167fc0e69ac631c2edc85f858e693289
   with:
     coordinator-repository: microsoft/vscode-java-pack
     coordinator-workflow: team-memory-coordinator.yml
     coordinator-ref: main
-    source-token: ${{ github.token }}
     dispatch-token: ${{ steps.dispatch-token.outputs.token }}
+    workflow-inputs: >-
+      {"source_repository":"${{ github.repository }}",
+       "source_run_id":"${{ github.run_id }}",
+       "source_run_attempt":"${{ github.run_attempt }}",
+       "push_before":"${{ github.event.before }}",
+       "push_after":"${{ github.sha }}"}
 ```
 
-The shared IssueLens action is pinned to the immutable prerequisite revision.
-Do not use a moving branch. All three coordinator inputs must be supplied
-together. `coordinator-ref: main` is the destination
-branch, independently of a source default branch such as `develop`.
+Do not use a moving action branch. `coordinator-ref: main` is the destination
+branch, independently of a source default branch such as `develop`. Source
+workflows must gate on the actual default branch, `github.workflow_sha ==
+github.sha`, and non-created/non-deleted/non-forced pushes, as Java Pack's caller
+does. The generic action does not infer or attest source fields; the caller owns
+the JSON input mapping.
+
 The caller must obtain
 `steps.dispatch-token.outputs.token` using a **dedicated dispatch GitHub App**,
 restricted to Java Pack with **Actions write and Contents read** (the latter
-validates the target branch). The read and dispatch tokens
-are separate inputs. An explicitly empty token fails; it never falls back.
+validates the target branch). The source-read token belongs only to the receiving
+invocation action, not the generic dispatch action. An explicitly empty
+dispatch token fails; it never falls back.
 Do not distribute the hosted IssueLens App's private key to source workflows.
 A source repository's `GITHUB_TOKEN` remains repository-scoped regardless of
-its `actions: write` permission. Java Pack's own caller can use its token for
-both inputs without new credentials.
+its `actions: write` permission. Java Pack's own caller uses its token for the
+target dispatch without new credentials.
 
 ## Coordinator prerequisites
 
@@ -91,8 +106,10 @@ both inputs without new credentials.
   Pull requests read**. Configure central secrets
   `ISSUELENS_SOURCE_READ_APP_CLIENT_ID` and
   `ISSUELENS_SOURCE_READ_APP_PRIVATE_KEY`. The workflow mints an ephemeral,
-  single-source token only after validating source selection and revokes it at
-  job end. Java Pack requests use its own `GITHUB_TOKEN` instead. Source-read
+  single-source token only after checking the trusted source-name map and revokes
+  it at job end. The invocation action independently validates source identity,
+  run/head, current branch ancestry, and the complete range before Azure login.
+  Java Pack requests use its own `GITHUB_TOKEN` instead. Source-read
   and dispatch installations may differ and must mint separate tokens.
 - The existing hosted IssueLens identity must independently have permission
   to read the source and publish to the Java Pack wiki, with its normal
@@ -100,14 +117,16 @@ both inputs without new credentials.
   its source-code/issue write permissions for this feature.
 
 The new App secrets are setup prerequisites, not assumed existing credentials.
-No live invocation is required to validate these repository changes.
+Verify the central default-branch `workflow_dispatch` Azure OIDC subject and
+endpoint access, not just the old source-push identity. No live invocation is
+required to validate these repository changes.
 
 ## Verification and outcomes
 
-Automatic dispatch requires explicit `source_repository`, `source_run_id`,
-`source_run_attempt`, and `source_artifact_id`. Manual dispatch supplies
-`source_repository` and one `pull_request_number`, with all three automatic
-identifiers empty. Mixed or incomplete requests fail before source access.
+Range reconciliation supplies `source_repository`, `source_run_id`,
+`source_run_attempt`, `push_before`, and `push_after`. Manual dispatch supplies
+`source_repository` and one `pull_request_number`, with all four range fields
+empty. Mixed or incomplete requests fail before invocation.
 All runs use the same fixed wiki concurrency group, `queue: max`, and
 `cancel-in-progress: false`, including validation, discovery, invocation, and
 final receipt verification. GitHub supports one active run and at most 100
@@ -115,27 +134,21 @@ pending runs in this queue; it is not an unlimited or guaranteed-delivery queue.
 See GitHub's [concurrency documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
 for the `queue: max` contract.
 
-The dispatcher accepts only a trusted, non-created/non-deleted/non-forced
-default-branch push from the exact source workflow. Its artifact contains
-repository/run/workflow identities, before/after SHAs, and commit IDs only:
-no commit messages, bodies, code, credentials, or agent output. It is capped
-at 64 KiB and 1,000 commits and retained for seven days.
-Before its single POST, the shared action revalidates the source and uses the
-dispatch token to validate the target repository, exact active workflow path,
-and independently selected target branch/full SHA.
+The standalone dispatcher validates only the target repository, active workflow,
+and target branch, then attempts one bounded POST. It transports caller-owned
+strings, not commit inventories, bodies, code, or credentials.
 
-Before downloading, the coordinator authenticates source run/attempt and
-artifact metadata, repository IDs, workflow, branch, actors, digest, expiry,
-and size. Pinned artifact download enforces the digest. Preflight repeats the
-metadata checks, validates the downloaded identity-only schema, and reuses
-IssueLens's complete bounded push/PR discovery and merge revalidation. The
-client and dispatch action are pinned to the same shared-dispatcher prerequisite
-revision, `521b1ff80a70140e286ced7500d0b150cf9e6d6c`, built on the merged
-[microsoft/IssueLens#50](https://github.com/microsoft/IssueLens/pull/50).
-Only the small Java provenance adapter is local; request, stream, discovery,
-and receipt machinery is not
-copied or monkey-patched. The pilot's IssueLens-only coordinator adapter is
-deliberately not called.
+**This authorizes reconciliation of an ancestor range; it does not prove the
+original push boundary.** The authenticated source run attests `push_after`/head,
+source repository ID, default branch, and exact
+`.github/workflows/team-memory-post-merge.yml` path. It cannot establish the
+original `push_before` or push flags. The shared invocation action validates
+`push_before` as an ancestor, `push_after` as an ancestor of the current source
+tip, and retrieves the complete paginated range centrally (up to 1,000 commits,
+100 PRs, and a three-minute discovery budget). It rejects truncated/duplicate
+inventories, incomplete PR associations, changed identities/tips, and divergent
+ranges. Requests explicitly mark `range_origin: authorized-reconciliation` and
+require paged PR/source evidence and current-wiki comparison.
 
 Requests preserve source and coordinator identities separately, require
 current-source/wiki comparison, and authorize wiki knowledge writes only.
@@ -145,21 +158,22 @@ partial, failed, needs-review, missing, or wrong-wiki receipts fail the job.
 No merged PRs is an explicit preflight skip before Azure login.
 
 There is one dispatch POST and one agent submission, without automatic retries.
-An uploaded artifact does not prove accepted dispatch. On ambiguous dispatch,
-timeout, or agent/write outcome, inspect coordinator runs and confirmed wiki
+An accepted dispatch does not prove coordinator execution or admission to the
+queue. On ambiguous dispatch, timeout, or agent/write outcome, inspect coordinator runs and confirmed wiki
 state before manually reconciling through this queue. It does not serialize
 chat/direct/external writers or prove a timed-out hosted invocation stopped.
 
 ## Offline checks
 
 With the pinned IssueLens action files available locally, set
-`ISSUELENS_CLIENT_PATH` to their `issuelens_action.py` and run:
+`ISSUELENS_ACTIONS_PATH` to their `.github/actions` directory and run:
 
 ```text
 python -m unittest discover -s .github/actions/queue-team-memory/tests
 ```
 
-The focused CI workflow loads the same immutable client and shared-action
-revision. These checks pass the shared dispatcher's actual snapshot through
-Java preflight and use fake API/stream responses; they make no dispatch, Azure,
-or wiki calls.
+The focused CI workflow fetches the same immutable shared actions for tests only.
+Checks use actual action schemas and generic dispatch payloads, source-ID/read
+authentication, `main`/`develop` handling, complete range/PR discovery, and final
+receipts with fake API/stream responses. They make no live dispatch, Azure, or
+wiki calls.
