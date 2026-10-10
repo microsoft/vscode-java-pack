@@ -1,0 +1,101 @@
+name: "Java 27 - Preview Configuration On and Off"
+description: |
+  Toggle the Maven preview setting through the editor. Require diagnostics
+  and a genuine preview-disabled compiler failure when off, then require
+  diagnostics to clear and compilation/execution to succeed when restored.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../test-fixtures/java27"
+  timeout: 180
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
+  workspaceSettings:
+    java.configuration.runtimes:
+      - name: "JavaSE-27"
+        path: "C:\\Program Files\\Java\\jdk-27"
+        default: true
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.import.maven.enabled: true
+    java.import.gradle.enabled: false
+
+steps:
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    skipLlmVerify: true
+
+  - id: "verify-preview-initially-enabled"
+    action: "open file PrimitivePatterns.java"
+    verifyEditorTab:
+      title: "PrimitivePatterns.java"
+    verifyProblems:
+      errors: 0
+    timeout: 90
+
+  - id: "open-preview-configuration"
+    action: "open file pom.xml"
+    verifyEditorTab:
+      title: "pom.xml"
+
+  - id: "find-enabled-preview"
+    action: "findText <maven.compiler.enablePreview>true</maven.compiler.enablePreview>"
+
+  - id: "disable-preview"
+    action: "typeInEditor <maven.compiler.enablePreview>false</maven.compiler.enablePreview>"
+
+  - id: "save-disabled-preview"
+    action: "saveFile"
+    verifyFile:
+      path: "~/pom.xml"
+      contains: "<maven.compiler.enablePreview>false</maven.compiler.enablePreview>"
+
+  - id: "verify-preview-disabled-diagnostics"
+    action: "open file PrimitivePatterns.java"
+    verifyProblems:
+      errors: 1
+      atLeast: true
+    timeout: 180
+
+  - id: "create-preview-terminal"
+    action: 'executeVSCodeCommand workbench.action.terminal.new {"cwd":"${workspaceFolder}"}'
+
+  - id: "verify-preview-disabled-build"
+    action: 'executeVSCodeCommand workbench.action.terminal.sendSequence {"text":"node verify.mjs maven preview-disabled\u000d"}'
+    verify: "A clean Maven compilation fails specifically because preview features are disabled."
+    verifyTerminal:
+      contains: "JDK27_PREVIEW_DISABLED_CONFIRMED"
+    timeout: 360
+
+  - id: "reopen-preview-configuration"
+    action: "open file pom.xml"
+    verifyEditorTab:
+      title: "pom.xml"
+
+  - id: "find-disabled-preview"
+    action: "findText <maven.compiler.enablePreview>false</maven.compiler.enablePreview>"
+
+  - id: "enable-preview"
+    action: "typeInEditor <maven.compiler.enablePreview>true</maven.compiler.enablePreview>"
+
+  - id: "save-enabled-preview"
+    action: "saveFile"
+    verifyFile:
+      path: "~/pom.xml"
+      contains: "<maven.compiler.enablePreview>true</maven.compiler.enablePreview>"
+
+  - id: "verify-preview-enabled-diagnostics"
+    action: "open file PrimitivePatterns.java"
+    verifyProblems:
+      errors: 0
+    timeout: 180
+
+  - id: "verify-preview-enabled-build"
+    action: 'executeVSCodeCommand workbench.action.terminal.sendSequence {"text":"node verify.mjs maven preview-enabled\u000d"}'
+    verify: "Restoring preview support clears diagnostics and permits Java 27 compilation and execution."
+    verifyTerminal:
+      contains: "JDK27_PREVIEW_ENABLED_PASSED"
+    timeout: 360

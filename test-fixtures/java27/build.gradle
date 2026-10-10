@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.example'
+version = '1.0.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(27)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 27
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['--enable-preview']
+}
