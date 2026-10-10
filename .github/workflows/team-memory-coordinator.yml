@@ -1,113 +1,33 @@
-name: Coordinate Java team memory (opt-in)
+name: Public source GITHUB_TOKEN diagnostic
+run-name: Public source GITHUB_TOKEN diagnostic
 
 on:
   workflow_dispatch:
-    inputs:
-      source_repository:
-        description: Allowlisted Java source repository (owner/name)
-        required: true
-        default: microsoft/vscode-java-pack
-        type: string
-      source_run_id:
-        description: Source push workflow run ID (automatic dispatch only)
-        required: false
-        type: string
-      source_run_attempt:
-        description: Source workflow attempt (required with source_run_id)
-        required: false
-        type: string
-      push_before:
-        description: Requested reconciliation ancestor SHA, not an attested original push boundary
-        required: false
-        type: string
-      push_after:
-        description: Source push run head SHA (required with source_run_id)
-        required: false
-        type: string
-      pull_request_number:
-        description: Merged source PR to reconcile manually (instead of source inputs)
-        required: false
-        type: string
 
 permissions: {}
 
-concurrency:
-  group: issuelens-team-memory-wiki-microsoft-vscode-java-pack
-  queue: max
-  cancel-in-progress: false
-
 jobs:
-  reconcile:
+  diagnostic:
     if: >-
-      vars.ISSUELENS_TEAM_MEMORY_COORDINATOR_ENABLED == 'true' &&
       github.repository == 'microsoft/vscode-java-pack' &&
-      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      github.ref == 'refs/heads/chagong-public-source-token-diagnostic' &&
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     permissions:
       contents: read
-      pull-requests: read
       actions: read
-      id-token: write
-    env:
-      ISSUELENS_SOURCE_REPOSITORIES: >-
-        {"microsoft/vscode-java-pack":104967329,
-         "microsoft/vscode-java-debug":102584737,
-         "microsoft/vscode-java-test":110522074,
-         "microsoft/vscode-java-dependency":129053101,
-         "microsoft/vscode-maven":116921700,
-         "microsoft/vscode-gradle":216314492,
-         "microsoft/java-debug":102583752,
-         "microsoft/build-server-for-gradle":626812412}
+      pull-requests: read
     steps:
-      - name: Select allowlisted source for read-only authentication
-        id: selection
-        shell: bash
+      - name: Check out immutable diagnostic commit without persisted credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: .github/scripts/source-token-diagnostic.py
+          sparse-checkout-cone-mode: false
+
+      - name: Test public source reads with this job's built-in token
         env:
-          SOURCE_REPOSITORY: ${{ inputs.source_repository }}
-        run: |
-          if ! jq -e --arg repository "$SOURCE_REPOSITORY" 'has($repository)' <<< "$ISSUELENS_SOURCE_REPOSITORIES" > /dev/null; then
-            echo "::error::Source repository is not allowlisted"
-            exit 1
-          fi
-          echo "source-name=${SOURCE_REPOSITORY#microsoft/}" >> "$GITHUB_OUTPUT"
-          if [[ "$SOURCE_REPOSITORY" == "microsoft/vscode-java-pack" ]]; then
-            echo "external=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "external=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Get read-only token for the selected external source
-        if: steps.selection.outputs.external == 'true'
-        id: source-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
-        with:
-          client-id: ${{ secrets.ISSUELENS_SOURCE_READ_APP_CLIENT_ID }}
-          private-key: ${{ secrets.ISSUELENS_SOURCE_READ_APP_PRIVATE_KEY }}
-          owner: microsoft
-          repositories: ${{ steps.selection.outputs.source-name }}
-          permission-actions: read
-          permission-contents: read
-          permission-pull-requests: read
-
-      - name: Reconcile team memory and validate final receipts
-        uses: microsoft/IssueLens/.github/actions/issuelens@a81d2d96167fc0e69ac631c2edc85f858e693289
-        with:
-          request-type: team-memory
-          github-token: ${{ github.token }}
-          source-repository: ${{ inputs.source_repository }}
-          source-repositories: ${{ env.ISSUELENS_SOURCE_REPOSITORIES }}
-          source-github-token: ${{ steps.selection.outputs.external == 'false' && github.token || steps.source-token.outputs.token }}
-          source-run-id: ${{ inputs.source_run_id }}
-          source-run-attempt: ${{ inputs.source_run_attempt }}
-          push-before: ${{ inputs.push_before }}
-          push-after: ${{ inputs.push_after }}
-          pull-request-number: ${{ inputs.pull_request_number }}
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          agent-url: ${{ secrets.ISSUELENS_AGENT_URL }}
-          agent-scope: ${{ secrets.ISSUELENS_AGENT_SCOPE }}
-          output-mode: activity
-          summary-mode: status
+          SOURCE_GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/source-token-diagnostic.py
