@@ -356,36 +356,3 @@ test("affected plans keep file logs inside the existing CI artifact directory", 
         assert.equal(path.resolve(path.dirname(filename), directory), path.join(root, "test-results", name, "logs"));
     }
 });
-
-test("PowerShell crash collection preserves only relevant reports from the current run", () => {
-    const workflow = fs.readFileSync(path.join(__dirname, "..", ".github", "workflows", "e2e-autotest.yml"), "utf8");
-    const step = workflow.match(/      - name: Collect macOS AutoTest crash reports\r?\n[\s\S]*?        run: \|\r?\n([\s\S]*?)(?=\r?\n      - name:)/)?.[1];
-    assert.ok(step, "The workflow must collect macOS native crash evidence");
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "java27-crash-logs-"));
-    try {
-        const home = path.join(root, "home");
-        const source = path.join(home, "Library", "Logs", "DiagnosticReports");
-        fs.mkdirSync(source, { recursive: true });
-        for (const name of ["node_recent.ips", "Code Helper (Renderer)_recent.crash", "java_recent.ips", "node_old.ips", "Safari_recent.ips"]) {
-            fs.writeFileSync(path.join(source, name), "{}");
-        }
-        const old = new Date(Date.now() - 60_000);
-        fs.utimesSync(path.join(source, "node_old.ips"), old, old);
-        const quote = value => `'${value.replace(/'/g, "''")}'`;
-        const script = `
-            $ErrorActionPreference = "Stop"
-            $env:HOME = ${quote(home)}
-            $env:AUTOTEST_OUTPUT_DIR = ${quote(path.join(root, "test-results", "java-webview-migration"))}
-            $env:AUTOTEST_RUN_STARTED = "${new Date(Date.now() - 5_000).toISOString()}"
-            Set-Location -LiteralPath ${quote(root)}
-            ${step}
-        `;
-        const result = spawnSync("pwsh", ["-NoProfile", "-NonInteractive", "-Command", script], { encoding: "utf8" });
-        assert.ifError(result.error);
-        assert.equal(result.status, 0, result.stderr);
-        assert.deepEqual(fs.readdirSync(path.join(root, "test-results", "java-webview-migration", "logs", "crashes")).sort(),
-            ["Code Helper (Renderer)_recent.crash", "java_recent.ips", "node_recent.ips"].sort());
-    } finally {
-        fs.rmSync(root, { recursive: true, force: true });
-    }
-});

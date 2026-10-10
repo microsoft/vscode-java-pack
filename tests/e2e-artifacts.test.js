@@ -8,9 +8,14 @@ const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 
-const workflow = fs.readFileSync(path.join(__dirname, "..", ".github", "workflows", "e2e-autotest.yml"), "utf8")
+const repository = path.join(__dirname, "..");
+const workflow = fs.readFileSync(path.join(repository, ".github", "workflows", "e2e-autotest.yml"), "utf8")
     .replace(/\r\n/g, "\n");
+const artifactConfig = fs.readFileSync(path.join(repository, ".github", "autotest-artifacts.yaml"), "utf8");
 const quote = value => `'${value.replace(/'/g, "''")}'`;
+const cliSetup = process.env.AUTOTEST_CLI_PATH
+    ? `function autotest { & ${quote(process.execPath)} ${quote(path.resolve(process.env.AUTOTEST_CLI_PATH))} @args }`
+    : "";
 
 function stepScript(name, plan) {
     const start = workflow.indexOf(`      - name: ${name}\n`);
@@ -29,18 +34,25 @@ function withCase(plan, action) {
     const temporary = path.join(root, "runner temp");
     fs.mkdirSync(workspace);
     fs.mkdirSync(temporary);
+    fs.mkdirSync(path.join(workspace, ".github"));
+    const config = path.join(workspace, ".github", "autotest-artifacts.yaml");
+    fs.writeFileSync(config, artifactConfig);
+    fs.mkdirSync(path.join(workspace, "test-plans"));
+    fs.writeFileSync(path.join(workspace, "test-plans", `${plan}.yaml`),
+        `name: ${plan}\nsetup:\n  extension: redhat.java\nsteps:\n  - id: ready\n    action: wait 0 seconds\n`);
     const env = {
         ...process.env,
         GITHUB_WORKSPACE: workspace,
         GITHUB_ENV: path.join(root, "github-env"),
         RUNNER_TEMP: temporary,
         AUTOTEST_PLAN: plan,
+        HOME: path.join(root, "home"),
     };
     for (const name of ["AUTOTEST_OUTPUT_DIR", "AUTOTEST_STAGING_DIR", "JAVA27_DIAGNOSTICS_DIR", "JAVA27_CI_GRADLE"]) {
         delete env[name];
     }
     const state = {
-        workspace, temporary, env,
+        workspace, temporary, env, config,
         output: path.join(workspace, "test-results", plan),
         staging: path.join(temporary, `autotest-${plan}`),
         runStep(name, setup = "") {
@@ -48,6 +60,7 @@ function withCase(plan, action) {
                 $ErrorActionPreference = "Stop"
                 $PSNativeCommandUseErrorActionPreference = $true
                 Set-Location -LiteralPath ${quote(workspace)}
+                ${cliSetup}
                 ${setup}
                 ${stepScript(name, plan)}
             `], { encoding: "utf8", env });
@@ -71,6 +84,18 @@ function assertSuccess(result) {
     assert.equal(result.status, 0, result.stderr || result.stdout);
 }
 
+function readManifest(s) {
+    return JSON.parse(fs.readFileSync(path.join(s.output, "artifacts", "manifest.json"), "utf8"));
+}
+
+function readArtifact(s, sourceId, sourcePath) {
+    const source = readManifest(s).sources.find(entry => entry.id === sourceId);
+    assert(source, `Missing source: ${sourceId}`);
+    const file = source.files.find(entry => entry.sourcePath === sourcePath);
+    assert(file, `Missing archived file: ${sourceId}/${sourcePath}`);
+    return fs.readFileSync(path.join(s.output, file.path), "utf8");
+}
+
 for (const plan of [
     "java-test-navigation",
     "java-maven-java27",
@@ -88,7 +113,8 @@ for (const plan of [
             assert(fs.statSync(path.join(s.output, "logs")).isDirectory());
             assert(fs.statSync(s.staging).isDirectory());
             if (plan.includes("java27")) {
-                assert.equal(s.env.JAVA27_DIAGNOSTICS_DIR, path.join(s.output, "diagnostics", "terminal"));
+                assert.equal(s.env.JAVA27_DIAGNOSTICS_DIR, path.join(s.staging, "terminal"));
+                assert(!s.env.JAVA27_DIAGNOSTICS_DIR.startsWith(s.output));
             } else {
                 assert.equal(s.env.JAVA27_DIAGNOSTICS_DIR, undefined);
             }
@@ -134,6 +160,7 @@ for (const [resultKind, exitCode] of [["valid", 0], ["valid", 7], ["absent", 138
             assertSuccess(s.runStep("Prepare case artifact directory"));
             s.readEnvironment();
             fs.writeFileSync(path.join(s.staging, "gradle-version.log"), "prepared before output cleanup");
+            assertSuccess(s.runStep("Record case toolchain diagnostics"));
             const nativeScript = `
                 const assert = require("node:assert/strict");
                 const fs = require("node:fs");
@@ -141,6 +168,8 @@ for (const [resultKind, exitCode] of [["valid", 0], ["valid", 7], ["absent", 138
                 const args = process.argv.slice(1);
                 const output = args[args.indexOf("--output") + 1];
                 assert.equal(args[args.indexOf("--log-output") + 1], path.join(output, "logs"));
+                assert.equal(args[args.indexOf("--artifacts-config") + 1],
+                    path.join(".github", "autotest-artifacts.yaml"));
                 assert(args.includes("--logs"));
                 assert.equal(args[args.indexOf("--analysis-mode") + 1], "case");
                 assert(!args.includes("--no-llm"));
@@ -166,20 +195,18 @@ for (const [resultKind, exitCode] of [["valid", 0], ["valid", 7], ["absent", 138
             assert(consoleLog.includes("complete stdout evidence"));
             assert(consoleLog.includes("complete stderr evidence"));
             assert(!result.stdout.includes("complete stdout evidence"));
+            const resultFile = path.join(s.output, "results.json");
+            const resultBefore = fs.existsSync(resultFile) ? fs.readFileSync(resultFile) : null;
             const collected = s.runStep("Collect case logs and diagnostics");
-            assert.ifError(collected.error);
-            if (resultKind === "malformed") {
-                assert.notEqual(collected.status, 0, "Corrupt results must surface explicitly");
-            } else {
-                assertSuccess(collected);
-                if (resultKind === "valid") {
-                    assert(collected.stdout.includes(`AutoTest: ${exitCode === 0 ? 9 : 8}/9 passed`));
-                }
-            }
-            assert.equal(fs.readFileSync(path.join(s.output, "logs", "console.log"), "utf8"), consoleLog);
-            assert.equal(fs.readFileSync(path.join(s.output, "diagnostics", "gradle-version.log"), "utf8"),
+            assertSuccess(collected);
+            assert(collected.stdout.includes("Artifacts:"));
+            assert.equal(readArtifact(s, "console", "console.log"), consoleLog);
+            assert.equal(readArtifact(s, "ci-diagnostics", "gradle-version.log"),
                 "prepared before output cleanup");
-            assert(fs.existsSync(path.join(s.output, "diagnostics", "ci-toolchain.json")));
+            assert.equal(JSON.parse(readArtifact(s, "ci-diagnostics", "ci-toolchain.json")).nodeVersionExitCode, 0);
+            assert.equal(fs.existsSync(resultFile), resultBefore !== null);
+            if (resultBefore) assert.deepEqual(fs.readFileSync(resultFile), resultBefore);
+            assert.equal(readManifest(s).status, "complete");
         });
     });
 }
@@ -188,6 +215,7 @@ test("every case preserves full IDE, lifecycle, hidden JDT and virtual-display l
     withCase("java-test-navigation", s => {
         assertSuccess(s.runStep("Prepare case artifact directory"));
         s.readEnvironment();
+        fs.writeFileSync(s.config, artifactConfig.replace("platforms: [linux]", `platforms: [${process.platform}]`));
         const userData = path.join(s.workspace, ".vscode-test", "user-data");
         const ideLogs = [
             path.join("20261010", "main.log"),
@@ -208,10 +236,15 @@ test("every case preserves full IDE, lifecycle, hidden JDT and virtual-display l
         fs.writeFileSync(path.join(s.temporary, "xvfb.log"), "display startup evidence");
         assertSuccess(s.runStep("Collect case logs and diagnostics"));
         for (const relative of ideLogs) {
-            assert.equal(fs.readFileSync(path.join(s.output, "logs", "ide", relative), "utf8"), `full log: ${relative}`);
+            assert.equal(readArtifact(s, "ide", `logs/${relative.replaceAll("\\", "/")}`), `full log: ${relative}`);
         }
-        assert.equal(fs.readFileSync(path.join(s.output, "logs", "jdtls", "workspace-id.log"), "utf8"), jdtContents);
-        assert.equal(fs.readFileSync(path.join(s.output, "logs", "xvfb.log"), "utf8"), "display startup evidence");
+        assert.equal(readArtifact(s, "jdtls", "User/workspaceStorage/workspace-id/redhat.java/jdt_ws/.metadata/.log"), jdtContents);
+        assert.equal(readArtifact(s, "display", "xvfb.log"), "display startup evidence");
+        assert.equal(readManifest(s).status, "complete");
+        assert(!fs.existsSync(path.join(s.output, "results.json")), "Crash recovery must not invent a result");
+        const filesBefore = readManifest(s).sources.flatMap(source => source.files);
+        assertSuccess(s.runStep("Collect case logs and diagnostics"));
+        assert.deepEqual(readManifest(s).sources.flatMap(source => source.files), filesBefore);
     });
 });
 
@@ -219,8 +252,9 @@ test("pre-launch setup failures retain available logs and explicitly report unav
     withCase("java-test-navigation", s => {
         assertSuccess(s.runStep("Prepare case artifact directory"));
         s.readEnvironment();
+        fs.writeFileSync(s.config, artifactConfig.replace("platforms: [linux]", `platforms: [${process.platform}]`));
         fs.writeFileSync(path.join(s.temporary, "xvfb.log"), "display failed to start");
-        const result = s.runStep("Collect case logs and diagnostics", `
+        const result = s.runStep("Record case toolchain diagnostics", `
             function Get-Command {
                 [CmdletBinding()]
                 param([string] $Name, [object] $CommandType)
@@ -229,18 +263,97 @@ test("pre-launch setup failures retain available logs and explicitly report unav
         assertSuccess(result);
         assert(result.stdout.includes("node unavailable"));
         assert(result.stdout.includes("java unavailable"));
-        assert(result.stdout.includes("VS Code logs unavailable"));
-        assert.equal(fs.readFileSync(path.join(s.output, "logs", "xvfb.log"), "utf8"), "display failed to start");
-        const identity = JSON.parse(fs.readFileSync(path.join(s.output, "diagnostics", "ci-toolchain.json")));
+        const collected = s.runStep("Collect case logs and diagnostics");
+        assertSuccess(collected);
+        assert.equal(readManifest(s).sources.find(source => source.id === "ide").status, "missing");
+        assert.equal(readArtifact(s, "display", "xvfb.log"), "display failed to start");
+        const identity = JSON.parse(readArtifact(s, "ci-diagnostics", "ci-toolchain.json"));
         assert.equal(identity.node, null);
         assert.equal(identity.java, null);
         assert(!fs.existsSync(path.join(s.output, "results.json")));
     });
 });
 
+test("Java 27 terminal logs and exit metadata survive output initialization and use the shared collector", () => {
+    withCase("java-maven-java27", s => {
+        assertSuccess(s.runStep("Prepare case artifact directory"));
+        s.readEnvironment();
+        fs.mkdirSync(s.env.JAVA27_DIAGNOSTICS_DIR);
+        const metadata = JSON.stringify({ command: "mvn", args: ["clean", "compile"], status: 7, signal: null });
+        fs.writeFileSync(path.join(s.env.JAVA27_DIAGNOSTICS_DIR, "maven-project-build.log"), "complete compiler diagnostics");
+        fs.writeFileSync(path.join(s.env.JAVA27_DIAGNOSTICS_DIR, "maven-project-build.log.json"), metadata);
+        fs.rmSync(s.output, { recursive: true, force: true });
+        assertSuccess(s.runStep("Collect case logs and diagnostics"));
+        assert.equal(readArtifact(s, "ci-diagnostics", "terminal/maven-project-build.log"), "complete compiler diagnostics");
+        assert.deepEqual(JSON.parse(readArtifact(s, "ci-diagnostics", "terminal/maven-project-build.log.json")), JSON.parse(metadata));
+        assert(!fs.existsSync(path.join(s.output, "results.json")));
+    });
+});
+
+for (const started of [false, true]) {
+    test(`native report collection filters process names and requires persisted run start (${started})`, () => {
+        withCase("java-webview-migration", s => {
+            assertSuccess(s.runStep("Prepare case artifact directory"));
+            s.readEnvironment();
+            fs.writeFileSync(s.config, artifactConfig.replace("platforms: [darwin]", `platforms: [${process.platform}]`));
+            const source = path.join(s.env.HOME, "Library", "Logs", "DiagnosticReports");
+            fs.mkdirSync(source, { recursive: true });
+            for (const name of ["node_recent.ips", "Code Helper (Renderer)_recent.crash", "java_recent.ips",
+                "node_old.ips", "Safari_recent.ips"]) {
+                fs.writeFileSync(path.join(source, name), "{}");
+            }
+            const old = new Date(Date.now() - 60_000);
+            fs.utimesSync(path.join(source, "node_old.ips"), old, old);
+            if (started) {
+                fs.mkdirSync(path.join(s.output, "artifacts"));
+                fs.writeFileSync(path.join(s.output, "artifacts", "manifest.json"), JSON.stringify({
+                    schemaVersion: 1, generatedAt: new Date().toISOString(),
+                    runStartedAt: new Date(Date.now() - 5_000).toISOString(), status: "complete", sources: [],
+                }));
+            }
+            assertSuccess(s.runStep("Collect case logs and diagnostics"));
+            const native = readManifest(s).sources.find(entry => entry.id === "native-reports");
+            assert.deepEqual(native.files.map(file => file.sourcePath).sort(), started
+                ? ["Code Helper (Renderer)_recent.crash", "java_recent.ips", "node_recent.ips"].sort() : []);
+            if (!started) assert.match(native.reason, /Run start is unavailable/);
+        });
+    });
+}
+
+test("optional sources do not conceal collection errors or overwrite a successful run verdict", () => {
+    withCase("java-test-navigation", s => {
+        assertSuccess(s.runStep("Prepare case artifact directory"));
+        s.readEnvironment();
+        const reportFile = path.join(s.output, "results.json");
+        const report = JSON.stringify({ summary: { total: 1, passed: 1, failed: 0, errors: 0 } });
+        fs.writeFileSync(reportFile, report);
+        const logs = path.join(s.workspace, ".vscode-test", "user-data", "logs");
+        fs.mkdirSync(logs, { recursive: true });
+        fs.writeFileSync(path.join(logs, "invalid.log"), Buffer.from([0xff, 0xfe]));
+        const result = s.runStep("Collect case logs and diagnostics");
+        assert.ifError(result.error);
+        assert.notEqual(result.status, 0);
+        assert.equal(readManifest(s).status, "failed");
+        assert.match(readManifest(s).sources.find(source => source.id === "ide").errors.join("\n"), /encoded data/);
+        assert.equal(fs.readFileSync(reportFile, "utf8"), report);
+    });
+});
+
 test("per-case collection and upload remain unconditional and preserve artifact and analysis contracts", () => {
+    assert.match(workflow, /name: Install resolved AutoTest CLI\n        if: always\(\)/);
+    assert(workflow.indexOf("name: Install resolved AutoTest CLI", workflow.indexOf("  e2e-test:"))
+        < workflow.indexOf("name: Setup Java 27"));
+    assert.match(workflow, /name: Record case toolchain diagnostics\n        if: always\(\)/);
     assert.match(workflow, /name: Collect case logs and diagnostics\n        if: always\(\)/);
-    assert.match(workflow, /name: Collect macOS AutoTest crash reports\n        if: \$\{\{ always\(\) && runner\.os == 'macOS' \}\}/);
+    const collect = stepScript("Collect case logs and diagnostics", "java27-api").trim();
+    assert(collect.startsWith('& autotest collect --output $env:AUTOTEST_OUTPUT_DIR --artifacts-config'));
+    assert(collect.includes('--plan "test-plans/java27-api.yaml"'));
+    assert.equal(collect.split("\n").length, 2, "CI must delegate collection rather than reimplement it");
+    assert(!workflow.includes("Collect macOS AutoTest crash reports"));
+    assert(!workflow.includes("AUTOTEST_RUN_STARTED"));
+    assert(artifactConfig.includes("platforms: [linux]"));
+    assert(artifactConfig.includes("platforms: [darwin]"));
+    assert(artifactConfig.includes("modifiedSince: run-start"));
     assert.match(workflow, /name: Upload results\n        if: always\(\)/);
     assert(workflow.includes("name: results-${{ matrix.plan }}-${{ matrix.os }}"));
     assert(workflow.includes("path: test-results/${{ matrix.plan }}/"));

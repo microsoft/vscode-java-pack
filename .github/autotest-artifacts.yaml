@@ -1,0 +1,49 @@
+artifacts:
+  enabled: true
+  sources:
+    - id: workspace-diagnostics
+      root: workspace
+      include: ['.autotest\**\*.log', '.autotest\**\*.json']
+      destination: diagnostics\workspace
+      optional: true
+      evidence: tail
+    - id: ide
+      # Keep this CI root available to collect after a native runner exit.
+      root: {env: GITHUB_WORKSPACE, path: '.vscode-test\user-data'}
+      include: ['logs\**\*']
+      destination: logs\ide
+      optional: true
+      evidence: tail
+    - id: jdtls
+      root: {env: GITHUB_WORKSPACE, path: '.vscode-test\user-data'}
+      include: ['User\workspaceStorage\*\redhat.java\jdt_ws\.metadata\.log']
+      destination: logs\jdtls
+      optional: true
+      evidence: tail
+    - id: ci-diagnostics
+      root: {env: AUTOTEST_STAGING_DIR}
+      include: ['*-version.log', 'ci-toolchain.json', 'terminal\**\*']
+      destination: diagnostics\ci
+      optional: true
+      evidence: tail
+    - id: console
+      root: {env: AUTOTEST_STAGING_DIR}
+      include: ['console.log']
+      destination: logs\console
+      phase: collect
+      optional: true
+    - id: display
+      root: {env: RUNNER_TEMP}
+      include: ['xvfb.log']
+      destination: logs\display
+      phase: collect
+      platforms: [linux]
+      optional: true
+    - id: native-reports
+      root: {env: HOME, path: 'Library\Logs\DiagnosticReports'}
+      include: ['{node,Electron,Code,java}[-_ .]*.{ips,crash}']
+      destination: logs\crashes
+      phase: collect
+      platforms: [darwin]
+      modifiedSince: run-start
+      optional: true

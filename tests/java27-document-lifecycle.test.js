@@ -280,9 +280,12 @@ test("the plan keeps its original diagnostic and runtime assertions after helper
 
 test("CI preserves helper logs and excludes the test extension from the pack VSIX", () => {
     const workflow = fs.readFileSync(path.join(root, ".github", "workflows", "e2e-autotest.yml"), "utf8");
+    const artifacts = fs.readFileSync(path.join(root, ".github", "autotest-artifacts.yaml"), "utf8");
     const ignores = fs.readFileSync(path.join(root, ".vscodeignore"), "utf8");
     const manifest = JSON.parse(fs.readFileSync(path.join(root, "test-fixtures", "java27-autotest-support", "package.json")));
-    assert(workflow.includes('Get-ChildItem -LiteralPath $source -File -Recurse -Force'));
+    assert(workflow.includes('"--artifacts-config"'));
+    assert(artifacts.includes("include: ['logs\\**\\*']"));
+    assert(artifacts.includes("destination: logs\\ide"));
     assert.match(ignores, /^test-fixtures\/\*\*$/m);
     assert.equal(manifest.private, true);
     assert.deepEqual(manifest.extensionDependencies, ["redhat.java"]);
