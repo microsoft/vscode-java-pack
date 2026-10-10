@@ -11,8 +11,8 @@ There is no unmerged prerequisite or hosted runtime deployment for action reuse.
 
 Manual PR reconciliation also runs through this central queue. There is no
 source preparation script, checkout, artifact upload/download, or local
-invoker/provenance adapter. This directory retains setup guidance and offline
-contract tests only. Shared actions own transport, source validation, discovery,
+invoker/provenance adapter. This directory retains setup guidance only.
+Shared actions own transport, source validation, discovery,
 Azure OIDC login, invocation, and final receipt checks.
 
 Both workflows require **`ISSUELENS_TEAM_MEMORY_COORDINATOR_ENABLED=true`**.
@@ -163,17 +163,8 @@ queue. On ambiguous dispatch, timeout, or agent/write outcome, inspect coordinat
 state before manually reconciling through this queue. It does not serialize
 chat/direct/external writers or prove a timed-out hosted invocation stopped.
 
-## Offline checks
+## Test ownership
 
-With the pinned IssueLens action files available locally, set
-`ISSUELENS_ACTIONS_PATH` to their `.github/actions` directory and run:
-
-```text
-python -m unittest discover -s .github/actions/queue-team-memory/tests
-```
-
-The focused CI workflow fetches the same immutable shared actions for tests only.
-Checks use actual action schemas and generic dispatch payloads, source-ID/read
-authentication, `main`/`develop` handling, complete range/PR discovery, and final
-receipts with fake API/stream responses. They make no live dispatch, Azure, or
-wiki calls.
+Team-memory tests are owned and run in [microsoft/IssueLens](https://github.com/microsoft/IssueLens).
+Java Pack consumes the pinned shared actions without duplicating their test
+suite or adding a local team-memory test workflow.
