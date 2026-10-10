@@ -70,8 +70,30 @@ existing CI results artifact, even when execution stops before `results.json`
 is written. Logging does not change the actions or verification criteria.
 Both plans enable verbose Java LSP tracing, and CI preserves the full
 Java/extension-host output alongside the bounded AutoTest log copies.
+The primitive-patterns plan also preserves its `Java 27 AutoTest` lifecycle log.
 The webview migration plan uses the same logging directory; macOS CI also
 collects run-specific Node, Electron, Code and Java native crash reports.
+
+The primitive-patterns plan loads the test-only extension in
+`../java27-autotest-support`; it is excluded from the pack VSIX. For its temporary
+unresolved type, the extension closes all target-file tabs, waits for the actual
+VS Code text-document close event, and awaits a Java `getProjectSettings`
+request before writing the source once. JDT handles `didClose` synchronously,
+so the subsequent request/response on the same standard-server connection
+provides the server-close barrier without a fixed sleep or a JVM agent.
+It then creates a new text-document lifecycle, checks its full text against
+disk, awaits another server round trip, and requires the target file's specific
+unresolved-type diagnostic with no additional incremental insertion.
+
+This case deliberately tests full-file reloading, not continuous editor edits:
+the previous disk-write plus `File: Revert File` could race JDT's clean-buffer
+disk reload and apply the same insertion twice. One additional output-channel
+check waits for the helper's successful completion; the existing file-content,
+one-error, deletion/save zero-error, and compiler/runtime assertions remain.
+Failure logs contain the lifecycle phase and target diagnostics rather than
+silently falling back to Revert. Other plans retain `insertLineInFile`.
+The request barrier confirms document processing, not a versioned diagnostics
+acknowledgement; Java diagnostics do not carry a document version.
 
 Release metadata lookup uses the workflow's read-only `GITHUB_TOKEN` to avoid
 shared-runner anonymous API limits. Asset downloads do not forward that token.

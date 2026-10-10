@@ -12,6 +12,8 @@ setup:
   extension: "redhat.java"
   extensions:
     - "vscjava.vscode-java-pack"
+  extensionPaths:
+    - "../test-fixtures/java27-autotest-support"
   vscodeVersion: "stable"
   workspace: "../test-fixtures/java27"
   timeout: 180
@@ -41,8 +43,16 @@ steps:
       errors: 0
     timeout: 90
 
+  - id: "insert-unresolved-type-after-close"
+    action: "executeVSCodeCommand java27.autotest.insertUnresolvedTypeAfterClose"
+    verifyOutputChannel:
+      channel: "Java 27 AutoTest"
+      contains: "REOPEN_INSERTION_CONFIRMED"
+      notContains: "REOPEN_FAILED"
+    timeout: 90
+
   - id: "prove-semantic-analysis"
-    action: "insertLineInFile src/main/java/example/PrimitivePatterns.java 4 MissingJava27Type sentinel;"
+    action: "open file PrimitivePatterns.java"
     verifyFile:
       path: "~/src/main/java/example/PrimitivePatterns.java"
       contains: "MissingJava27Type sentinel;"

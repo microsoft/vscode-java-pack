@@ -472,7 +472,8 @@ jobs:
           } else {
             $files = @(Get-ChildItem -LiteralPath $source -File -Recurse | Where-Object {
               $_.Name -eq "exthost.log" -or $_.Name -like "*Gradle*.log" -or
-              $_.Name -like "*Language Support for Java*.log"
+              $_.Name -like "*Language Support for Java*.log" -or
+              $_.Name -like "*Java 27 AutoTest*.log"
             })
             if ($files.Count -eq 0) { Write-Warning "No Gradle, Java or extension-host logs found" }
             foreach ($file in $files) {
