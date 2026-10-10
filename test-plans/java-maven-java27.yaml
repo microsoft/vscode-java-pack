@@ -1,0 +1,56 @@
+name: "Maven Java 27 - Project Import, Build and Run"
+description: |
+  Import a real release-27 Maven project while keeping the language server's
+  normal runtime. Verify source compliance, diagnostics, Java 27 bytecode,
+  and execution on JDK 27.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../test-fixtures/java27"
+  timeout: 180
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
+  workspaceSettings:
+    java.configuration.runtimes:
+      - name: "JavaSE-27"
+        path: "C:\\Program Files\\Java\\jdk-27"
+        default: true
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.import.generatesMetadataFilesAtProjectRoot: true
+    java.import.maven.enabled: true
+    java.import.gradle.enabled: false
+
+steps:
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    skipLlmVerify: true
+
+  - id: "open-project-smoke"
+    action: "open file ProjectSmoke.java"
+    verifyEditorTab:
+      title: "ProjectSmoke.java"
+    verifyProblems:
+      errors: 0
+    timeout: 90
+
+  - id: "verify-source-release"
+    action: "open file pom.xml"
+    verifyFile:
+      path: "~/.settings/org.eclipse.jdt.core.prefs"
+      contains: "org.eclipse.jdt.core.compiler.source=27"
+    verifyEditorTab:
+      title: "pom.xml"
+
+  - id: "create-build-terminal"
+    action: 'executeVSCodeCommand workbench.action.terminal.new {"cwd":"${workspaceFolder}"}'
+
+  - id: "build-and-run-java27"
+    action: 'executeVSCodeCommand workbench.action.terminal.sendSequence {"text":"node verify.mjs maven project\u000d"}'
+    verify: "A clean Maven build produces Java 27 bytecode and runs successfully on JDK 27."
+    verifyTerminal:
+      contains: "JDK27_PROJECT_PASSED"
+    timeout: 360

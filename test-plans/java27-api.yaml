@@ -1,0 +1,60 @@
+name: "Java 27 - Lazy Constant and Lazy Set APIs"
+description: |
+  Verify JEP 531 LazyConstant and Java 27's new Set.ofLazy API, including
+  deterministic completion and at-most-once initialization at runtime.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../test-fixtures/java27"
+  timeout: 180
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
+  workspaceSettings:
+    java.configuration.runtimes:
+      - name: "JavaSE-27"
+        path: "C:\\Program Files\\Java\\jdk-27"
+        default: true
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.import.maven.enabled: true
+    java.import.gradle.enabled: false
+
+steps:
+  - id: "ls-ready"
+    action: "waitForLanguageServer"
+    skipLlmVerify: true
+
+  - id: "open-java27-apis"
+    action: "open file Java27Apis.java"
+    verifyEditorTab:
+      title: "Java27Apis.java"
+    verifyProblems:
+      errors: 0
+    timeout: 90
+
+  - id: "find-lazy-set-call"
+    action: "findText Set.ofLazy"
+
+  - id: "position-before-set"
+    action: "pressKey ArrowLeft"
+
+  - id: "verify-java27-api-completion"
+    action: 'executeVSCodeCommand cursorMove {"to":"right","value":7}'
+    verify: "Completion for Set.ofL includes the Java 27 ofLazy API."
+    verifyCompletion:
+      contains:
+        - "ofLazy"
+    timeout: 60
+
+  - id: "create-api-terminal"
+    action: 'executeVSCodeCommand workbench.action.terminal.new {"cwd":"${workspaceFolder}"}'
+
+  - id: "build-and-run-apis"
+    action: 'executeVSCodeCommand workbench.action.terminal.sendSequence {"text":"node verify.mjs maven api\u000d"}'
+    verify: "LazyConstant initializes once, and lazy-set membership is evaluated once per candidate."
+    verifyTerminal:
+      contains: "JDK27_API_PASSED"
+    timeout: 360

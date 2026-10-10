@@ -170,6 +170,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare case artifact directory
+        shell: pwsh
+        env:
+          AUTOTEST_PLAN: ${{ matrix.plan }}
+        run: |
+          $plan = $env:AUTOTEST_PLAN
+          if ($plan -notmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') { throw "Invalid AutoTest plan name: $plan" }
+          $outputDirectory = Join-Path (Join-Path $env:GITHUB_WORKSPACE "test-results") $plan
+          # AutoTest clears --output at startup; keep pre-run logs outside it.
+          $stagingDirectory = Join-Path $env:RUNNER_TEMP "autotest-$plan"
+          New-Item -ItemType Directory -Path $outputDirectory, (Join-Path $outputDirectory "logs") -Force | Out-Null
+          New-Item -ItemType Directory -Path $stagingDirectory -Force | Out-Null
+          "AUTOTEST_OUTPUT_DIR=$outputDirectory" >> $env:GITHUB_ENV
+          "AUTOTEST_STAGING_DIR=$stagingDirectory" >> $env:GITHUB_ENV
+          if ($plan.Contains("java27")) {
+            $terminalDirectory = Join-Path $stagingDirectory "terminal"
+            "JAVA27_DIAGNOSTICS_DIR=$terminalDirectory" >> $env:GITHUB_ENV
+          }
+
       - name: Clone vscode-java (test projects)
         run: git clone --depth 1 https://github.com/redhat-developer/vscode-java.git ../vscode-java
 
@@ -180,6 +199,42 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
+
+      - name: Install resolved AutoTest CLI
+        if: always()
+        run: |
+          npm install -g "@vscjava/vscode-autotest@${{ needs.discover.outputs.autotest_version }}"
+          npm list -g @vscjava/vscode-autotest --depth=0
+
+      - name: Setup Java 27 (for java27 test plans)
+        if: contains(matrix.plan, 'java27')
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 27
+
+      - name: Configure JDK 27 path for runner OS
+        if: contains(matrix.plan, 'java27')
+        shell: pwsh
+        run: |
+          $planFile = "test-plans/${{ matrix.plan }}.yaml"
+          if ($IsWindows) {
+            $target = "C:\Program Files\Java\jdk-27"
+            New-Item -ItemType Junction -Path $target -Target $env:JAVA_HOME -Force | Out-Null
+          } else {
+            $target = "/opt/jdk-27"
+            sudo mkdir -p /opt
+            sudo ln -sfn $env:JAVA_HOME $target
+            (Get-Content $planFile -Raw) -replace 'C:\\\\Program Files\\\\Java\\\\jdk-27', $target | Set-Content $planFile
+          }
+          "JAVA27_HOME=$target" >> $env:GITHUB_ENV
+          Write-Host "Java 27 project toolchain: $target"
+
+      - name: Setup Gradle for Java 27
+        if: contains(matrix.plan, 'java27') && contains(matrix.plan, 'gradle')
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          gradle-version: '9.8.1'
 
       - name: Setup Java 25 (for java25 test plans)
         if: contains(matrix.plan, 'java25')
@@ -245,10 +300,22 @@ jobs:
           GRADLE_TEST_PLAN: ${{ matrix.plan }}
         run: ./.github/scripts/bind-gradle-toolchain.ps1 -PlanName $env:GRADLE_TEST_PLAN
 
-      - name: Install resolved AutoTest CLI
+      - name: Bind Gradle Java 27 toolchain
+        if: matrix.plan == 'java-gradle-java27'
+        shell: pwsh
         run: |
-          npm install -g "@vscjava/vscode-autotest@${{ needs.discover.outputs.autotest_version }}"
-          npm list -g @vscjava/vscode-autotest --depth=0
+          $ciGradle = (Get-Command gradle -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+          $versionLog = Join-Path $env:AUTOTEST_STAGING_DIR "gradle-version.log"
+          $PSNativeCommandUseErrorActionPreference = $false
+          $gradleVersion = & $ciGradle --version 2>&1 | Out-String
+          $versionExit = $LASTEXITCODE
+          "Command: $ciGradle --version`n$gradleVersion" | Set-Content -LiteralPath $versionLog
+          if ($versionExit -ne 0) { throw "CI Gradle version probe exited with $versionExit; see diagnostics/ci/gradle-version.log in this case's results artifact." }
+          if ($gradleVersion -notmatch '(?m)^Gradle 9\.8\.1\s*$') {
+            throw "CI did not select the provisioned Gradle 9.8.1: $ciGradle; see $versionLog"
+          }
+          "JAVA27_CI_GRADLE=$ciGradle" >> $env:GITHUB_ENV
+          Write-Host "Bound Gradle 9.8.1: $ciGradle"
 
       - name: Setup virtual display (Linux)
         if: runner.os == 'Linux'
@@ -307,6 +374,39 @@ jobs:
           Set-Content $planFile $content
           Write-Host "Patched $planFile to install vscode-java through vscode-java-pack before applying VSIX overrides."
 
+      - name: Record case toolchain diagnostics
+        if: always()
+        shell: pwsh
+        run: |
+          $identity = [ordered]@{
+            javaHome = $env:JAVA_HOME
+            projectJavaHome = $env:JAVA27_HOME
+            gradle = $env:JAVA27_CI_GRADLE
+            runnerOs = $env:RUNNER_OS
+            runnerArch = $env:RUNNER_ARCH
+            path = $env:PATH
+          }
+          $PSNativeCommandUseErrorActionPreference = $false
+          foreach ($probe in @(
+            @{ Name = "node"; Arguments = @("--version") },
+            @{ Name = "java"; Arguments = @("-XshowSettings:properties", "-version") }
+          )) {
+            $command = Get-Command $probe.Name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $command) {
+              Write-Warning "$($probe.Name) unavailable; its CI setup may have failed."
+              $identity[$probe.Name] = $null
+              continue
+            }
+            $identity[$probe.Name] = $command.Source
+            $arguments = $probe.Arguments
+            $version = & $command.Source @arguments 2>&1 | Out-String
+            $versionExit = $LASTEXITCODE
+            $identity["$($probe.Name)VersionExitCode"] = $versionExit
+            $version | Set-Content -LiteralPath (Join-Path $env:AUTOTEST_STAGING_DIR "$($probe.Name)-version.log")
+            if ($versionExit -ne 0) { Write-Warning "$($probe.Name) version probe failed; see its diagnostic log." }
+          }
+          $identity | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $env:AUTOTEST_STAGING_DIR "ci-toolchain.json")
+
       - name: Run ${{ matrix.plan }}
         shell: pwsh
         env:
@@ -317,6 +417,13 @@ jobs:
           $autotestArgs = @(
             "run",
             "test-plans/${{ matrix.plan }}.yaml",
+            "--output",
+            $env:AUTOTEST_OUTPUT_DIR,
+            "--logs",
+            "--log-output",
+            (Join-Path $env:AUTOTEST_OUTPUT_DIR "logs"),
+            "--artifacts-config",
+            (Join-Path "test-plans" "config" "artifacts.yaml"),
             "--analysis-mode",
             "case"
           )
@@ -340,7 +447,22 @@ jobs:
           }
 
           Write-Host "Running: autotest $($autotestArgs -join ' ')"
-          & autotest @autotestArgs
+          $consoleLog = Join-Path $env:AUTOTEST_STAGING_DIR "console.log"
+          $PSNativeCommandUseErrorActionPreference = $false
+          & autotest @autotestArgs *> $consoleLog
+          $testExit = $LASTEXITCODE
+          Write-Host "AutoTest exit code: $testExit. Logs and diagnostics are in this case's results artifact."
+          if ($testExit -ne 0) {
+            Write-Host "::error::AutoTest exited with code $testExit. See this case's results artifact for logs and diagnostics."
+          }
+          exit $testExit
+
+      - name: Collect case logs and diagnostics
+        if: always()
+        shell: pwsh
+        run: |
+          & autotest collect --output $env:AUTOTEST_OUTPUT_DIR --artifacts-config (Join-Path "test-plans" "config" "artifacts.yaml") --plan "test-plans/${{ matrix.plan }}.yaml"
+          exit $LASTEXITCODE
 
       - name: Collect Gradle IDE diagnostics
         if: ${{ always() && (matrix.plan == 'java-gradle' || matrix.plan == 'java-gradle-java25') }}
@@ -367,13 +489,19 @@ jobs:
             }
             Write-Host "Preserved $($files.Count) IDE diagnostic logs in $destination"
           }
+          $toolchainDirectory = "test-results/toolchains/$env:GRADLE_TEST_PLAN"
+          if (Test-Path -LiteralPath $toolchainDirectory -PathType Container) {
+            $caseDiagnostics = Join-Path $env:AUTOTEST_OUTPUT_DIR "diagnostics/toolchains"
+            New-Item -ItemType Directory -Path $caseDiagnostics -Force | Out-Null
+            Copy-Item -LiteralPath $toolchainDirectory -Destination $caseDiagnostics -Recurse -Force
+          }
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: results-${{ matrix.plan }}-${{ matrix.os }}
-          path: test-results/
+          path: test-results/${{ matrix.plan }}/
           retention-days: 30
 
   # ── Job 3: Aggregate analysis ───────────────────────────
@@ -408,9 +536,11 @@ jobs:
           for dir in all-results/results-*/; do
             artifact=$(basename "$dir")          # results-<plan>-<os>
             suffix="${artifact#results-}"        # <plan>-<os>
-            find "$dir" -name "results.json" -exec dirname {} \; | while read d; do
-              cp -r "$d" "test-results/$suffix"
-            done
+            if [ -f "$dir/results.json" ]; then
+              cp -r "$dir" "test-results/$suffix"
+            else
+              echo "::warning::No results.json in $artifact; setup/startup logs remain in that artifact."
+            fi
           done
           echo "Organized results:"
           ls test-results/

@@ -1,0 +1,25 @@
+{
+  "name": "java27-autotest-support",
+  "displayName": "Java 27 AutoTest Support",
+  "publisher": "vscjava",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "main": "./extension.cjs",
+  "activationEvents": [
+    "onCommand:java27.autotest.insertUnresolvedTypeAfterClose"
+  ],
+  "extensionDependencies": [
+    "redhat.java"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "java27.autotest.insertUnresolvedTypeAfterClose",
+        "title": "Java 27 AutoTest: Insert Unresolved Type After Document Close"
+      }
+    ]
+  }
+}
