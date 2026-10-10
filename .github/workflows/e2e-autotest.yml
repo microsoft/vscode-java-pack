@@ -472,7 +472,7 @@ jobs:
             "--log-output",
             (Join-Path $env:AUTOTEST_OUTPUT_DIR "logs"),
             "--artifacts-config",
-            (Join-Path ".github" "autotest-artifacts.yaml"),
+            (Join-Path "test-plans" "config" "artifacts.yaml"),
             "--analysis-mode",
             "case"
           )
@@ -510,7 +510,7 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          & autotest collect --output $env:AUTOTEST_OUTPUT_DIR --artifacts-config (Join-Path ".github" "autotest-artifacts.yaml") --plan "test-plans/${{ matrix.plan }}.yaml"
+          & autotest collect --output $env:AUTOTEST_OUTPUT_DIR --artifacts-config (Join-Path "test-plans" "config" "artifacts.yaml") --plan "test-plans/${{ matrix.plan }}.yaml"
           exit $LASTEXITCODE
 
       - name: Upload results

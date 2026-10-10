@@ -69,9 +69,11 @@ when isolating a toolchain failure.
 
 Every E2E case enables AutoTest file logging through the CI CLI flags and writes
 all final output under `test-results/<plan>/`. AutoTest's shared
-`.github/autotest-artifacts.yaml` configuration declares the files to archive;
+`test-plans/config/artifacts.yaml` configuration declares the files to archive;
 the workflow generates toolchain diagnostics but delegates file selection,
 copying and indexing to the published collector (available since 0.7.34).
+The configuration stays in a subdirectory so nonrecursive `test-plans/*.yaml`
+discovery includes only executable UI plans.
 The workflow resolves `@latest` once and uses that release in every job.
 Its existing `results-<plan>-<os>` artifact contains:
 
@@ -112,11 +114,6 @@ The Gradle import, primitive-pattern and webview migration plans use the same
 case-local runner-log layout for local runs. The first two retain verbose Java LSP
 tracing; the primitive-patterns helper's lifecycle log is included in
 `logs/ide/logs/`. macOS crash collection applies to every case, not only webviews.
-
-The workflow-contract tests use the installed AutoTest CLI. For an isolated
-published package, set `AUTOTEST_CLI_PATH` to its `dist/cli/index.js` before
-running `node --test tests/e2e-artifacts.test.js`; no global CLI replacement
-is required.
 
 The primitive-patterns plan loads the test-only extension in
 `../java27-autotest-support`; it is excluded from the pack VSIX. For its temporary
