@@ -77,3 +77,6 @@ The repository workflow `.github/workflows/e2e-autotest.yml` builds a branch VSI
 
 Use workflow dispatch when the user asks to validate in CI or across platforms. The `test_plan` input can target a single plan; leave it empty to run all plans.
 
+For manual runs with `vsix_urls`, `prepare-bits` resolves each release/run once, downloads the Windows x64, Linux x64, and macOS ARM64 VSIX files, and uploads platform artifacts. Matrix jobs reuse those bits alongside the branch-built `pack-vsix`; they do not query release APIs. Preparation or missing-platform failures block the matrix rather than silently testing Marketplace bits. Runs without supplied URLs skip preparation and keep the existing Marketplace behavior.
+
+Release API requests use `GITHUB_TOKEN`. Cross-repository Actions artifacts use `VSCODE_JAVA_ARTIFACT_TOKEN` when configured, otherwise `GITHUB_TOKEN`; the token needs `actions:read` access to the source repository. Direct VSIX URLs are downloaded once and distributed unchanged, without GitHub API credentials.
