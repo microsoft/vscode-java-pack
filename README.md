@@ -25,6 +25,18 @@ By installing Extension Pack for Java, the following extensions are installed:
 - [📦 Project Manager for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
     - Manage Java projects, referenced libraries, resource files, packages, classes, and class members
 
+## Java Runtime Requirements
+
+The JDK used to launch the Java language server is separate from the JDK used to compile and run your projects. The tooling minimum depends on the installed Language Support for Java extension: `redhat.java` 1.57.0 and newer requires JDK 25+, versions 1.39.0-1.56.x require JDK 21+, and earlier supported versions require JDK 17+. A compatible bundled runtime satisfies the tooling requirement; Java 27 project support does not require JDK 27 just to launch the language server.
+
+**Java: Configure Java Runtime** opens the project-settings JDK page. Its local-JDK picker changes the selected project's JDK, not the JDK used to launch the language server. Older project targets remain supported through `java.configuration.runtimes` and your Maven or Gradle build configuration.
+
+To set the language-server launch JDK explicitly, configure `java.jdt.ls.java.home`. Open the Java logs (`java.open.logs`) for startup diagnostics. Runtime selection and startup diagnostics belong to `redhat.java`; Java Pack does not probe tooling candidates, activate the language extension to obtain runtime information, or automatically open runtime configuration based on its own checks.
+
+Previously opened legacy runtime tabs can still be restored for compatibility; they are not opened by the current **Java: Configure Java Runtime** command. These tabs show the runtime reported by `redhat.java`, with **Refresh** and explicit JDK browsing/installation actions when no runtime is reported. Missing information is not treated as a startup failure, and upstream errors are shown alongside any available project configuration. The legacy tab's **Locate an Existing JDK** action saves an explicit tooling choice to `java.jdt.ls.java.home`, unlike the current project-settings picker.
+
+Project inventory failures do not hide the reported language-server runtime or successfully queried projects. The legacy tab displays the query errors and indicates when project information could not be fully loaded; projects with unavailable type information are not treated as ordinary unmanaged projects.
+
 ## Other Recommendations
 
 You can do more with VS Code. Here are some more recommendations that could help.

@@ -5,9 +5,10 @@ import "@vscode-elements/elements/dist/vscode-table/index.js";
 import "@vscode-elements/elements/dist/vscode-table-row/index.js";
 import "@vscode-elements/elements/dist/vscode-table-cell/index.js";
 import "@vscode-elements/elements/dist/vscode-table-body/index.js";
-const REQUIRED_JDK_VERSION = 17;
+import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
 
-export default function FaqPanel() {
+export default function FaqPanel({ requiredJdkVersion }: { requiredJdkVersion: number }) {
+  const toolingSettingsCommand = encodeCommandUriWithTelemetry("java.gettingStarted", "toolingSettings", "workbench.action.openSettings", ["java.jdt.ls.java.home"]);
   const runtimeSampleCode = (
     <code>
       <span>{"\"java.configuration.runtimes\": [{"}</span><br />
@@ -50,12 +51,15 @@ export default function FaqPanel() {
 
       <h2 className="font-weight-light">Why do I see the JDK errors?</h2>
       <p>
-        <strong><code>JDK {REQUIRED_JDK_VERSION}+</code> is required</strong> to run the Java language support (redhat.java) extension! You see this error because we failed to find one on your machine. The <a href="command:java.runtime">Configure Java Runtime</a> guide can help you understand how JDK path is searched and provides download links if you need to install one.
+        <strong><code>JDK {requiredJdkVersion}+</code> is required</strong> to run the installed Java language support (redhat.java) extension. A compatible bundled runtime can satisfy this requirement; otherwise, a compatible local JDK is needed. To set the language-server launch JDK explicitly, configure <a href={toolingSettingsCommand}><code>java.jdt.ls.java.home</code></a>. Runtime selection and startup diagnostics are provided by redhat.java; <a href="command:java.open.logs">open the Java logs</a> for details.
+      </p>
+      <p>
+        The <a href="command:java.runtime">Configure Java Runtime</a> page configures project JDKs, not the language-server launch JDK. Your projects can use older JDKs independently of the tooling requirement.
       </p>
 
       <h2 className="font-weight-light">Can I run my Java 8 project with JDK 1.8?</h2>
       <p>
-        Yes. The JDK {REQUIRED_JDK_VERSION} requirement is just for running the Java language support (redhat.java) extension itself. You can still configure a different runtime <a href="command:java.helper.openUrl?%22https%3A%2F%2Fcode.visualstudio.com%2Fdocs%2Fjava%2Fjava-project%23_jdk-for-projects%22">JDK for your project</a> via the user setting <a href="command:workbench.action.openSettings?%22java.configuration.runtimes%22">"java.configuration.runtimes"</a>. The extension will pick a matching JDK to compile/run your project according to the compiler version specified by the project build file.
+        Yes. The JDK {requiredJdkVersion} requirement is just for running the Java language support (redhat.java) extension itself. You can still configure a different runtime <a href="command:java.helper.openUrl?%22https%3A%2F%2Fcode.visualstudio.com%2Fdocs%2Fjava%2Fjava-project%23_jdk-for-projects%22">JDK for your project</a> via the user setting <a href="command:workbench.action.openSettings?%22java.configuration.runtimes%22">"java.configuration.runtimes"</a>. The extension will pick a matching JDK to compile/run your project according to the compiler version specified by the project build file.
       </p>
       <blockquote className="card-body">
         {runtimeSampleCode}

@@ -77,3 +77,6 @@ The repository workflow `.github/workflows/e2e-autotest.yml` builds a branch VSI
 
 Use workflow dispatch when the user asks to validate in CI or across platforms. The `test_plan` input can target a single plan; leave it empty to run all plans.
 
+For `java-gradle` and `java-gradle-java25`, CI validates the setup-selected Node 22 and Gradle versions, then rewrites the build terminal command with absolute Node, Gradle, JDK and diagnostic paths. This avoids tools being reselected by terminal shell initialization. The helper keeps its version, program-output and bytecode assertions, and writes toolchain identity, command output and uncaught failures under `test-results/toolchains/<plan>/` for artifact upload. Local two-argument helper invocations retain their existing PATH/JDK-environment behavior; GitHub Actions requires explicit paths.
+
+The same binding sets the IDE's `java.import.gradle.home` and exports `ORG_GRADLE_PROJECT_javaRelease` before VS Code starts. Local runs must set that project property as documented in the fixture README. These plans require BSP import, actual Gradle `build`/`run` tasks, and the exact configuration marker in Gradle for Java output; terminal success alone is insufficient. CI also preserves Gradle/Java output-channel and extension-host logs under `test-results/toolchains/<plan>/ide/`.

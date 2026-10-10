@@ -4,5 +4,6 @@
 import { createRoot } from 'react-dom/client';
 import BeginnerTips from "./BeginnerTips";
 
-const root = createRoot(document.getElementById('root')!);
-root.render(<BeginnerTips />);
+const container = document.getElementById('root')!;
+const root = createRoot(container);
+root.render(<BeginnerTips requiredJdkVersion={Number(container.dataset.requiredJdkVersion)} />);

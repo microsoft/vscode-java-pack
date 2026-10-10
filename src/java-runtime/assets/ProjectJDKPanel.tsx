@@ -13,15 +13,22 @@ import { useState } from "react";
 import { encodeCommandUriWithTelemetry, ProjectType } from "../../utils/webview";
 import { JavaRuntimeEntry, ProjectRuntimeEntry } from "../types";
 import { DefaultJDKSelector } from "./components/DefaultJDKSelector";
+import { JDKActions } from "./components/JDKActions";
 import { ProjectTypeHint } from "./components/ProjectTypeHint";
 import { onWillListRuntimes, openBuildScript } from "./vscode.api";
 
 interface Props {
   jdkEntries: JavaRuntimeEntry[];
   projectRuntimes: ProjectRuntimeEntry[];
+  javaDotHome?: string;
+  toolingJreVersion?: number;
+  requiredJdkVersion: number;
+  javaHomeError?: string;
+  javaHomeWarning?: string;
+  projectJdkError?: string;
 }
 
-export function ProjectJDKPanel({ jdkEntries, projectRuntimes }: Props) {
+export function ProjectJDKPanel({ jdkEntries, projectRuntimes, javaDotHome, toolingJreVersion, requiredJdkVersion, javaHomeError, javaHomeWarning, projectJdkError }: Props) {
   const [showHintFor, setShowHintFor] = useState<"Maven" | "Gradle" | "Others" | undefined>();
 
   const projectTypeHint = (projectType: ProjectType) => {
@@ -68,10 +75,21 @@ export function ProjectJDKPanel({ jdkEntries, projectRuntimes }: Props) {
     ));
 
   const downloadJDKCommand = encodeCommandUriWithTelemetry("java.runtime", "download", "java.installJdk");
+  const toolingSettingsCommand = encodeCommandUriWithTelemetry("java.runtime", "toolingSettings", "workbench.action.openSettings", ["java.jdt.ls.java.home"]);
 
   return (
     <div className="container">
       <h1>Configure Runtime for Projects</h1>
+      {javaDotHome ? (
+        <p>Language server runtime reported by redhat.java: <code>{javaDotHome}</code> (Java {toolingJreVersion}).</p>
+      ) : (
+        <p>Language server runtime information is not available yet. Use Refresh after redhat.java starts, or <a href="command:java.open.logs">open the Java logs</a> for details.</p>
+      )}
+      <p>JDK {requiredJdkVersion}+ is required for the language server only; your projects can use older JDKs. <a href={toolingSettingsCommand}>Open language-server runtime settings</a>.</p>
+      {javaHomeError && <p className="java-home-error">{javaHomeError} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
+      {javaHomeWarning && <p className="warning-box">{javaHomeWarning} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
+      {projectJdkError && <p className="java-home-error">{projectJdkError} <a href="command:java.open.logs">Open Java Logs</a>.</p>}
+      {!javaDotHome && <JDKActions />}
       {projectEntries.length > 0 && <p>Manage Java runtime for your projects. If you don't have a valid Java runtime, you can <a href={downloadJDKCommand}>download</a> one.</p>}
       {
         projectEntries.length > 0 ?
@@ -87,10 +105,14 @@ export function ProjectJDKPanel({ jdkEntries, projectRuntimes }: Props) {
           </vscode-table>
           :
           <div>
-            <p>No project detected yet. Please refresh later if Java extension is importing your projects.</p>
-            <vscode-button onClick={onWillListRuntimes}>Refresh<span slot="start" className="codicon codicon-refresh"></span></vscode-button>
+            {projectJdkError ?
+              <p>Project information could not be fully loaded. Please refresh to try again.</p>
+              :
+              <p>No project detected yet. Please refresh later if Java extension is importing your projects.</p>
+            }
           </div>
       }
+      <vscode-button onClick={onWillListRuntimes}>Refresh<span slot="start" className="codicon codicon-refresh"></span></vscode-button>
       <ProjectTypeHint projectType={showHintFor} />
     </div>
   );
