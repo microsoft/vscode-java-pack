@@ -21,7 +21,18 @@ export function getRequiredJdkVersion(): number {
     if (!javaExt || compareVersions(javaExt.packageJSON.version, "1.57.0") >= 0) {
         return 25;
     }
-    if (compareVersions(javaExt.packageJSON.version, "1.39.0") >= 0) {
+    const version = javaExt.packageJSON.version;
+    if (compareVersions(version, "1.36.0") >= 0 &&
+        vscode.workspace.getConfiguration().get<string>("java.jdt.ls.javac.enabled") === "on") {
+        if (compareVersions(version, "1.46.0") >= 0) {
+            return 25;
+        }
+        if (compareVersions(version, "1.41.0") >= 0) {
+            return 24;
+        }
+        return 23;
+    }
+    if (compareVersions(version, "1.39.0") >= 0) {
         return 21;
     }
     return 17;

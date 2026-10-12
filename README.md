@@ -27,7 +27,9 @@ By installing Extension Pack for Java, the following extensions are installed:
 
 ## Java Runtime Requirements
 
-The JDK used to launch the Java language server is separate from the JDK used to compile and run your projects. The tooling minimum depends on the installed Language Support for Java extension: `redhat.java` 1.57.0 and newer requires JDK 25+, versions 1.39.0-1.56.x require JDK 21+, and earlier supported versions require JDK 17+. A compatible bundled runtime satisfies the tooling requirement; Java 27 project support does not require JDK 27 just to launch the language server.
+The JDK used to launch the Java language server is separate from the JDK used to compile and run your projects. The tooling minimum depends on the installed Language Support for Java extension and compiler mode. `redhat.java` 1.57.0 and newer requires JDK 25+ regardless of compiler mode. With the normal compiler configuration, versions 1.39.0-1.56.x require JDK 21+, and earlier supported versions require JDK 17+. A compatible bundled runtime satisfies the tooling requirement; Java 27 project support does not require JDK 27 just to launch the language server.
+
+For older versions with `java.jdt.ls.javac.enabled=on`, the tooling minimum is JDK 23 for versions 1.36.0-1.40.x, JDK 24 for 1.41.0-1.45.x, and JDK 25 for 1.46.0-1.56.x. `off` and `auto` (where supported) keep the normal minimum; versions before 1.36.0 do not support this mode. Runtime guidance, the FAQ, and the legacy tooling-JDK picker share these requirements, which do not restrict project JDK choices.
 
 **Java: Configure Java Runtime** opens the project-settings JDK page. Its local-JDK picker changes the selected project's JDK, not the JDK used to launch the language server. Older project targets remain supported through `java.configuration.runtimes` and your Maven or Gradle build configuration.
 

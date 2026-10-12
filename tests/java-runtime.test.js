@@ -173,6 +173,34 @@ for (const [version, minimum] of [
     });
 }
 
+test("explicit javac mode follows upstream JDK requirement boundaries without runtime probing", () => {
+    for (const [version, minimum] of [
+        ["1.35.0", 17], ["1.36.0", 23], ["1.38.0", 23], ["1.39.0", 23], ["1.40.0", 23],
+        ["1.41.0", 24], ["1.45.0", 24], ["1.46.0", 25], ["1.56.0", 25], ["1.57.0", 25],
+    ]) {
+        const s = setup(version);
+        s.preferences["java.jdt.ls.javac.enabled"] = "on";
+        assert.equal(s.api.getRequiredJdkVersion(), minimum, `redhat.java ${version}`);
+        const info = s.api.getToolingRuntimeInfo();
+        assert.equal(info.requiredJdkVersion, minimum, `redhat.java ${version}`);
+        assert.equal(info.javaHomeError, undefined);
+        assert.deepEqual(s.calls, { discovery: 0, inspection: 0, activation: 0 });
+        assert.equal(s.writes.length, 0);
+    }
+});
+
+test("off and auto javac modes preserve the normal tooling minimum", () => {
+    for (const mode of ["off", "auto"]) {
+        for (const [version, minimum] of [
+            ["1.36.0", 17], ["1.39.0", 21], ["1.41.0", 21], ["1.46.0", 21], ["1.56.0", 21], ["1.57.0", 25],
+        ]) {
+            const s = setup(version);
+            s.preferences["java.jdt.ls.javac.enabled"] = mode;
+            assert.equal(s.api.getRequiredJdkVersion(), minimum, `redhat.java ${version}, javac=${mode}`);
+        }
+    }
+});
+
 test("an inactive extension provides no runtime result and is not probed or activated", () => {
     const s = setup();
     s.preferences["java.jdt.ls.java.home"] = "missing-jdk";
@@ -234,19 +262,22 @@ test("a reported upstream error is displayed without inventing its cause or open
     assert.equal(s.warnings.length, 0);
 });
 
-test("a known under-minimum setting is explained using only upstream-reported versions", () => {
-    const s = setup();
-    const configured = s.addJdk(21);
-    const actual = s.addJdk(25);
-    s.preferences["java.jdt.ls.java.home"] = configured.homedir;
-    s.report(actual, configured);
-    const info = s.api.getToolingRuntimeInfo();
-    assert.match(info.javaHomeWarning, /uses Java 21, below the required Java 25/);
-    assert.equal(info.javaDotHome, actual.homedir);
-    assert.equal(info.javaHomeError, undefined);
-    assert.equal(s.calls.inspection, 0);
-    assert.equal(s.writes.length, 0);
-});
+for (const [version, mode] of [["1.57.0", undefined], ["1.56.0", "on"]]) {
+    test(`a known under-minimum setting for ${version}, javac=${mode} uses only upstream-reported versions`, () => {
+        const s = setup(version);
+        const configured = s.addJdk(21);
+        const actual = s.addJdk(25);
+        s.preferences["java.jdt.ls.java.home"] = configured.homedir;
+        s.preferences["java.jdt.ls.javac.enabled"] = mode;
+        s.report(actual, configured);
+        const info = s.api.getToolingRuntimeInfo();
+        assert.match(info.javaHomeWarning, /uses Java 21, below the required Java 25/);
+        assert.equal(info.javaDotHome, actual.homedir);
+        assert.equal(info.javaHomeError, undefined);
+        assert.equal(s.calls.inspection, 0);
+        assert.equal(s.writes.length, 0);
+    });
+}
 
 test("an unexplained setting difference does not fabricate a version or fallback cause", () => {
     const s = setup();
@@ -447,6 +478,35 @@ for (const [version, jdk] of [[24, true], [25, false]]) {
     });
 }
 
+test("legacy javac tooling selection enforces its minimum without restricting older project JDKs", async () => {
+    for (const [version, minimum] of [["1.36.0", 23], ["1.41.0", 24], ["1.46.0", 25]]) {
+        const s = setup(version);
+        s.preferences["java.jdt.ls.javac.enabled"] = "on";
+        const project = s.addJdk(17);
+        const actual = s.addJdk(minimum);
+        const invalid = s.addJdk(minimum - 1);
+        s.report(actual, project);
+        s.discovered.push(project);
+        const projectConfiguration = JSON.stringify([{ name: "JavaSE-17", path: project.homedir, default: true }]);
+        s.preferences["java.configuration.runtimes"] = JSON.parse(projectConfiguration);
+        s.vscode.window.showOpenDialog = async () => [{ fsPath: invalid.homedir }];
+        await s.openView();
+        await s.send("onWillListRuntimes");
+        assert.equal(s.messages.at(-1).args.javaRuntimes[0].majorVersion, 17);
+        await s.send("onWillBrowseForJDK");
+        assert.equal(s.writes.length, 0, `redhat.java ${version}`);
+        assert.match(s.warnings.at(-1), new RegExp(`Java ${minimum} or more recent is required`));
+
+        s.vscode.window.showOpenDialog = async () => [{ fsPath: actual.homedir }];
+        await s.send("onWillBrowseForJDK");
+        assert.deepEqual(s.writes, [{ setting: "java.jdt.ls.java.home", value: actual.homedir }]);
+        assert.equal(s.messages.at(-1).args.javaDotHome, actual.homedir);
+        assert.equal(s.messages.at(-1).args.javaRuntimes[0].majorVersion, 17);
+        assert.equal(JSON.stringify(s.preferences["java.configuration.runtimes"]), projectConfiguration);
+        assert.equal(s.calls.activation, 0);
+    }
+});
+
 test("a project scan failure is displayed only as a project inventory problem", async () => {
     const s = setup();
     s.jdkUtils.findRuntimes = async () => { throw new Error("Project discovery failed"); };
@@ -537,19 +597,25 @@ test("component rendering leaves unknown metadata informational with manual setu
     assert.doesNotMatch(html, /redhat.java reports an error/);
 });
 
-test("FAQ component distinguishes project configuration from the language-server setting", () => {
-    const { createElement } = require("react");
-    const { renderToStaticMarkup } = require("react-dom/server");
-    const { default: FaqPanel } = setupComponents().load(path.join("src", "beginner-tips", "assets", "tabs", "FaqPanel.tsx"));
-    const html = renderToStaticMarkup(createElement(FaqPanel, { requiredJdkVersion: 25 }));
-    assert.match(html, /JDK 25\+/);
-    assert.match(html, /href="command:java.runtime">Configure Java Runtime<\/a> page configures project JDKs/);
-    assert.match(html, /href="command:java.open.logs"/);
-    const settingLinks = [...html.matchAll(/href="command:java.webview.runCommand\?([^"]+)"/g)]
-        .map(match => JSON.parse(decodeURIComponent(match[1])));
-    assert.deepEqual(settingLinks.find(link => link.command === "workbench.action.openSettings").args, ["java.jdt.ls.java.home"]);
-    assert.doesNotMatch(html, /guide shows the runtime reported/);
-});
+for (const [version, mode, minimum] of [
+    ["1.57.0", undefined, 25], ["1.41.0", "on", 24], ["1.56.0", "on", 25],
+]) {
+    test(`FAQ component for ${version}, javac=${mode} shares the minimum and distinguishes project configuration`, () => {
+        const s = setup(version);
+        s.preferences["java.jdt.ls.javac.enabled"] = mode;
+        const { createElement } = require("react");
+        const { renderToStaticMarkup } = require("react-dom/server");
+        const { default: FaqPanel } = setupComponents().load(path.join("src", "beginner-tips", "assets", "tabs", "FaqPanel.tsx"));
+        const html = renderToStaticMarkup(createElement(FaqPanel, { requiredJdkVersion: s.api.getRequiredJdkVersion() }));
+        assert.match(html, new RegExp(`JDK ${minimum}\\+`));
+        assert.match(html, /href="command:java.runtime">Configure Java Runtime<\/a> page configures project JDKs/);
+        assert.match(html, /href="command:java.open.logs"/);
+        const settingLinks = [...html.matchAll(/href="command:java.webview.runCommand\?([^"]+)"/g)]
+            .map(match => JSON.parse(decodeURIComponent(match[1])));
+        assert.deepEqual(settingLinks.find(link => link.command === "workbench.action.openSettings").args, ["java.jdt.ls.java.home"]);
+        assert.doesNotMatch(html, /guide shows the runtime reported/);
+    });
+}
 
 test("startup preserves welcome and release-note scheduling without runtime preflight or setup", async () => {
     const s = setup();
