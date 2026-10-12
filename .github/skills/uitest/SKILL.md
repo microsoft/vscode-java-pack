@@ -77,3 +77,6 @@ The repository workflow `.github/workflows/e2e-autotest.yml` builds a branch VSI
 
 Use workflow dispatch when the user asks to validate in CI or across platforms. The `test_plan` input can target a single plan; leave it empty to run all plans.
 
+For `java-gradle`, `java-gradle-java25`, and `java-gradle-java27`, CI uses one Gradle setup and the existing environment-binding mechanism. Java 21/25 helpers read `GRADLE_CI_GRADLE`, their `JAVA21_HOME`/`JAVA25_HOME`, and `AUTOTEST_STAGING_DIR`; the Java 27 helper retains its `JAVA27_CI_GRADLE` contract. CI does not rewrite terminal commands or override the IDE's Gradle home. Actual version, program-output and bytecode assertions remain unchanged. Local helper invocations retain their existing behavior.
+
+For Java 21/25, the same binding exports `ORG_GRADLE_PROJECT_javaRelease` before VS Code starts. Local runs must set that project property as documented in the fixture README. These plans require BSP import, actual Gradle `build`/`run` tasks, and the exact configuration marker in Gradle for Java output; terminal success alone is insufficient. All three Gradle plans reuse the shared artifact collector: terminal diagnostics are staged outside AutoTest's output and archived under `diagnostics/ci/terminal/`, while Gradle/Java output-channel and extension-host logs are archived under `logs/ide/logs/`.

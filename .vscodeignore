@@ -18,3 +18,4 @@ scripts
 test-fixtures/**
 test-plans/**
 test-results/**
+tests/**

@@ -13,7 +13,7 @@ import { JavaExtGuideViewSerializer } from "./ext-guide";
 import { initFormatterSettingsEditorProvider } from "./formatter-settings";
 import { initRemoteProfileProvider } from "./formatter-settings/RemoteProfileProvider";
 import { InstallJdkViewSerializer } from "./install-jdk";
-import { JavaRuntimeViewSerializer, validateJavaRuntime } from "./java-runtime";
+import { JavaRuntimeViewSerializer } from "./java-runtime";
 import { HelpViewType, showReleaseNotesOnStart } from "./misc";
 import { OverviewViewSerializer } from "./overview";
 import { CodeActionProvider } from "./providers/CodeActionProvider";
@@ -74,12 +74,6 @@ async function initializeExtension(_operationId: string, context: vscode.Extensi
   if (config.get("showReleaseNotes")) {
     scheduleAction("showReleaseNotes").then(() => {
       showReleaseNotesOnStart(context);
-    });
-  }
-
-  if (!await validateJavaRuntime()) {
-    scheduleAction("showJdkState", true, true).then(() => {
-      vscode.commands.executeCommand("java.runtime");
     });
   }
 }

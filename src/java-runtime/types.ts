@@ -21,7 +21,21 @@ export interface JdkData {
 export interface ProjectRuntimeEntry {
   name: string;
   rootPath: string;
-  runtimePath: string;
-  sourceLevel: string;
+  runtimePath?: string;
+  sourceLevel?: string;
   projectType: ProjectType;
+}
+
+export interface ToolingRuntimeInfo {
+  requiredJdkVersion: number;
+  javaDotHome?: string;
+  toolingJreVersion?: number;
+  javaHomeError?: string;
+  javaHomeWarning?: string;
+}
+
+export interface JavaRuntimeData extends ToolingRuntimeInfo {
+  javaRuntimes: JavaRuntimeEntry[];
+  projectRuntimes: ProjectRuntimeEntry[];
+  projectJdkError?: string;
 }

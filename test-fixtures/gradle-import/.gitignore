@@ -1,0 +1,7 @@
+.autotest/
+.classpath
+.gradle/
+.project
+.settings/
+bin/
+build/

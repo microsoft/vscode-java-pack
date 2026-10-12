@@ -3,44 +3,31 @@
 
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 
-import { useState } from "react";
-import { JavaRuntimeEntry } from "../types";
-import { onWillBrowseForJDK, onWillRunCommandFromWebview } from './vscode.api';
+import { JavaRuntimeData, ToolingRuntimeInfo } from "../types";
+import { JDKActions } from "./components/JDKActions";
+import { onWillListRuntimes } from './vscode.api';
 
-const REQUIRED_JDK_VERSION = 17;
+type Props = ToolingRuntimeInfo & Pick<JavaRuntimeData, "projectJdkError">;
 
-interface Props {
-  jdkEntries?: JavaRuntimeEntry[];
-  javaDotHome?: string;
-  javaHomeError?: any;
-}
-
-export function ToolingJDKPanel({ javaHomeError }: Props) {
-  const [isDirty, setIsDirty] = useState(false);
-
-  const onClickBrowseJDKButton = () => {
-    onWillBrowseForJDK();
-    setIsDirty(true);
-  };
-
-  const onClickInstallButton = () => {
-    onWillRunCommandFromWebview("java.runtime", "download", "java.installJdk");
-  };
-
+export function ToolingJDKPanel({ javaHomeError, javaHomeWarning, javaDotHome, toolingJreVersion, requiredJdkVersion, projectJdkError }: Props) {
   return (
     <div className="container">
       <h1>Configure Runtime for Language Server</h1>
-      <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK {REQUIRED_JDK_VERSION}+ to launch itself.</div>
+      <div className="warning-box"><i className="codicon codicon-warning"></i>Java Language Server requires a JDK {requiredJdkVersion}+ to launch itself. Your projects can use older JDKs.</div>
 
+      {javaDotHome ? (
+        <p>Language server runtime reported by redhat.java: <code>{javaDotHome}</code> (Java {toolingJreVersion}).</p>
+      ) : (
+        <p>Language server runtime information has not been reported by redhat.java.</p>
+      )}
       {javaHomeError && (<p className="java-home-error">{javaHomeError}</p>)}
+      {javaHomeWarning && (<p className="warning-box">{javaHomeWarning}</p>)}
+      {projectJdkError && (<p className="java-home-error">{projectJdkError}</p>)}
 
-      <div className="jdk-action">
-        <vscode-button secondary onClick={onClickBrowseJDKButton}><a href="#">Locate an <b>Existing JDK</b></a></vscode-button>
-        {isDirty && <vscode-button><a href="command:workbench.action.reloadWindow">Reload</a></vscode-button>}
-      </div>
-      <div className="jdk-action">
-        <vscode-button secondary onClick={onClickInstallButton}><a href="#">Install a <b>New JDK</b></a></vscode-button>
-      </div>
+      <p><a href="command:java.open.logs">Open Java Logs</a> for details. Runtime selection and startup diagnostics are provided by redhat.java.</p>
+
+      <JDKActions />
+      <vscode-button onClick={onWillListRuntimes}>Refresh<span slot="start" className="codicon codicon-refresh"></span></vscode-button>
     </div>
   );
 }

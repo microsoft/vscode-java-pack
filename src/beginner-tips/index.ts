@@ -5,6 +5,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
 import { getNonce, webviewCmdLinkHandler } from "../utils";
+import { getRequiredJdkVersion } from "../java-runtime/utils/upstreamApi";
 
 const WEBVIEW_ID = "java.gettingStarted";
 const WEBVIEW_TITLE = "Tips for Beginners";
@@ -122,7 +123,7 @@ class BeginnerTipsPage {
 			</head>
 			<body>
 				<noscript>You need to enable JavaScript to run this app.</noscript>
-				<div id="root"></div>
+				<div id="root" data-required-jdk-version="${getRequiredJdkVersion()}"></div>
 
 				<script nonce="${nonce}" src="${scriptUri}" type="module"></script>
 			</body>

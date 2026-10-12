@@ -338,6 +338,7 @@
     "compile": "webpack --config webpack.config.js",
     "watch": "webpack --config webpack.config.js --watch",
     "build": "webpack --config webpack.config.js --mode=\"production\"",
+    "test": "node --test",
     "update-tpn": "node scripts/update-third-party-notice.js"
   },
   "devDependencies": {

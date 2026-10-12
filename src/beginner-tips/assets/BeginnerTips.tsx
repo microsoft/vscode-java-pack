@@ -10,7 +10,7 @@ import DebuggingPanel from "./tabs/DebuggingPanel";
 import FaqPanel from "./tabs/FaqPanel";
 import QuickStartPanel from "./tabs/QuickStartPanel";
 
-export default function BeginnerTips() {
+export default function BeginnerTips({ requiredJdkVersion }: { requiredJdkVersion: number }) {
 
   return (
     <div className="container mt-5 mb-5">
@@ -33,7 +33,7 @@ export default function BeginnerTips() {
             <DebuggingPanel />
           </vscode-tab-panel>
           <vscode-tab-panel>
-            <FaqPanel />
+            <FaqPanel requiredJdkVersion={requiredJdkVersion} />
           </vscode-tab-panel>
         </vscode-tabs>
       </div>

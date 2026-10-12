@@ -63,6 +63,8 @@ At the same time, [📦 CheckStyle](https://marketplace.visualstudio.com/items?i
 
 ## Questions & Issues
 
+See the [Java runtime requirements and configuration](https://github.com/microsoft/vscode-java-pack/wiki/Java-Runtime-Requirements) guide for JDK setup details.
+
 Each extension mentioned above is a separate open-source project and has its own repository. To make things easier, simply [🙋 open an issue in this repository](https://github.com/Microsoft/vscode-java-pack/issues). The new issue will be triaged and redirected.
 
 ## Data/Telemetry

@@ -2,15 +2,13 @@
 // Licensed under the MIT license.
 
 import { findRuntimes, getRuntime, IJavaRuntime } from "jdk-utils";
-import * as _ from "lodash";
 import * as path from "path";
 import * as vscode from "vscode";
 import { getExtensionContext, getNonce } from "../utils";
 import { getProjectNameFromUri, getProjectType } from "../utils/jdt";
-import { ProjectType } from "../utils/webview";
-import { JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
+import { JavaRuntimeData, JavaRuntimeEntry, ProjectRuntimeEntry } from "./types";
 import { sourceLevelDisplayName } from "./utils/misc";
-import { REQUIRED_JDK_VERSION, resolveRequirements } from "./utils/upstreamApi";
+import { getRequiredJdkVersion, getToolingRuntimeInfo } from "./utils/upstreamApi";
 
 let javaRuntimeView: vscode.WebviewPanel | undefined;
 let javaHomes: IJavaRuntime[];
@@ -47,9 +45,7 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
   context.subscriptions.push(webviewPanel.webview.onDidReceiveMessage(async (e) => {
     switch (e.command) {
       case "onWillListRuntimes": {
-        findJavaRuntimeEntries().then(data => {
-          showJavaRuntimeEntries(data);
-        });
+        await refreshRuntimes();
         break;
       }
       case "updateJavaHome": {
@@ -70,9 +66,7 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
           });
         }
         await vscode.workspace.getConfiguration("java").update("configuration.runtimes", runtimes, vscode.ConfigurationTarget.Global);
-        findJavaRuntimeEntries().then(data => {
-          showJavaRuntimeEntries(data);
-        });
+        await refreshRuntimes();
         break;
       }
       case "setDefaultRuntime": {
@@ -100,9 +94,7 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
           }
         }
         await vscode.workspace.getConfiguration("java").update("configuration.runtimes", runtimes, vscode.ConfigurationTarget.Global);
-        findJavaRuntimeEntries().then(data => {
-          showJavaRuntimeEntries(data);
-        });
+        await refreshRuntimes();
         break;
       }
       case "openBuildScript": {
@@ -121,10 +113,15 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
         });
         if (javaHomeUri) {
           const javaHome = javaHomeUri[0].fsPath;
-          if (await getRuntime(javaHome)) {
-            await vscode.workspace.getConfiguration("java").update("jdt.ls.java.home", javaHome, vscode.ConfigurationTarget.Global);
+          const runtime = await getRuntime(javaHome, {checkJavac: true, withVersion: true});
+          const requiredJdkVersion = getRequiredJdkVersion();
+          if (!runtime?.hasJavac) {
+            await vscode.window.showWarningMessage(`${javaHome} is not a valid JDK home directory.`);
+          } else if (!runtime.version || runtime.version.major < requiredJdkVersion) {
+            await vscode.window.showWarningMessage(`Java ${requiredJdkVersion} or more recent is required to launch the Java Language Server. "${javaHome}" doesn't meet the requirement.`);
           } else {
-            await vscode.window.showWarningMessage(`${javaHome} is not a valid Java runtime home directory.`);
+            await vscode.workspace.getConfiguration("java").update("jdt.ls.java.home", javaHome, vscode.ConfigurationTarget.Global);
+            await refreshRuntimes();
           }
         }
         break;
@@ -139,24 +136,35 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
     }
   }));
 
-  function showJavaRuntimeEntries(args: any) {
-    webviewPanel.webview.postMessage({
-      command: "showJavaRuntimeEntries",
-      args: args,
+  let disposed = false;
+  async function refreshRuntimes() {
+    try {
+      const args = await findJavaRuntimeEntries();
+      if (!disposed) {
+        await webviewPanel.webview.postMessage({command: "showJavaRuntimeEntries", args});
+      }
+    } catch (error) {
+      console.warn(error);
+      if (!disposed) {
+        const message = error instanceof Error ? error.message : String(error);
+        await vscode.window.showErrorMessage(`Unable to refresh Configure Java Runtime: ${message}`);
+      }
+    }
+  }
+
+  let classpathListener: vscode.Disposable | undefined;
+  const javaExt = vscode.extensions.getExtension("redhat.java");
+  if (javaExt?.isActive && javaExt.exports?.onDidClasspathUpdate) {
+    const onDidClasspathUpdate: vscode.Event<vscode.Uri> = javaExt.exports.onDidClasspathUpdate;
+    classpathListener = onDidClasspathUpdate(() => {
+      void refreshRuntimes();
     });
   }
 
-  // refresh webview with latest source levels when classpath (project info) changes
-  const javaExt = vscode.extensions.getExtension("redhat.java");
-  if (javaExt?.isActive && javaExt?.exports?.onDidClasspathUpdate) {
-    const onDidClasspathUpdate: vscode.Event<vscode.Uri> = javaExt.exports.onDidClasspathUpdate;
-    const listener = onDidClasspathUpdate((_e: vscode.Uri) => {
-      findJavaRuntimeEntries().then(data => {
-        showJavaRuntimeEntries(data);
-      });
-    });
-    context.subscriptions.push(webviewPanel.onDidDispose(() => listener.dispose()));
-  }
+  context.subscriptions.push(webviewPanel.onDidDispose(() => {
+    disposed = true;
+    classpathListener?.dispose();
+  }));
 }
 
 function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string) {
@@ -197,138 +205,128 @@ export class JavaRuntimeViewSerializer implements vscode.WebviewPanelSerializer 
   }
 }
 
-export async function validateJavaRuntime() {
-  // TODO:
-  // option a) should check Java LS exported API for java_home
-  // * option b) use the same way to check java_home as vscode-java
+export async function findJavaRuntimeEntries(): Promise<JavaRuntimeData> {
+  const toolingRuntimeInfo = getToolingRuntimeInfo();
+  const errors: string[] = [];
   try {
-    const runtime = await resolveRequirements();
-    if (runtime.tooling_jre_version >= REQUIRED_JDK_VERSION && runtime.tooling_jre) {
-      return true;
+    if (!javaHomes) {
+      const runtimes: IJavaRuntime[] = await findRuntimes({ checkJavac: true, withVersion: true });
+      javaHomes = runtimes.filter(r => r.hasJavac);
     }
   } catch (error) {
+    recordInventoryError(errors, "Unable to list installed project JDKs", error);
   }
-
-  return false;
-}
-
-export async function findJavaRuntimeEntries(): Promise<{
-  javaRuntimes?: JavaRuntimeEntry[],
-  projectRuntimes?: ProjectRuntimeEntry[],
-  javaDotHome?: string;
-  javaHomeError?: string;
-}> {
-  if (!javaHomes) {
-    const runtimes: IJavaRuntime[] = await findRuntimes({ checkJavac: true, withVersion: true });
-    javaHomes = runtimes.filter(r => r.hasJavac);
-  }
-  const javaRuntimes: JavaRuntimeEntry[] = javaHomes.map(elem => ({
+  const javaRuntimes: JavaRuntimeEntry[] = (javaHomes ?? []).map(elem => ({
     name: elem.homedir,
     fspath: elem.homedir,
     majorVersion: elem.version?.major || 0,
     type: "from jdk-utils"
   })).sort((a, b) => b.majorVersion - a.majorVersion);
 
-  let javaDotHome;
-  let javaHomeError;
-  try {
-    const runtime = await resolveRequirements();
-    javaDotHome = runtime.tooling_jre;
-    const javaVersion = runtime.tooling_jre_version;
-    if (!javaVersion || javaVersion < REQUIRED_JDK_VERSION) {
-      javaHomeError = `Java ${REQUIRED_JDK_VERSION} or more recent is required by the Java language support (redhat.java) extension. Preferred JDK "${javaDotHome}" (version ${javaVersion}) doesn't meet the requirement. Please specify or install a recent JDK.`;
-    }
-  } catch (error) {
-    javaHomeError = (error as Error).message;
-  }
-
-  let projectRuntimes = await getProjectRuntimesFromPM();
-  if (_.isEmpty(projectRuntimes)) {
-    projectRuntimes = await getProjectRuntimesFromLS();
+  const pmResult = await getProjectRuntimesFromPM();
+  let projectRuntimes = pmResult.entries;
+  errors.push(...pmResult.errors);
+  if (projectRuntimes.length === 0) {
+    const lsResult = await getProjectRuntimesFromLS();
+    projectRuntimes = lsResult.entries;
+    errors.push(...lsResult.errors);
   }
 
   return {
     javaRuntimes,
     projectRuntimes,
-    javaDotHome,
-    javaHomeError
+    projectJdkError: errors.length > 0 ? errors.join("\n") : undefined,
+    ...toolingRuntimeInfo
   };
 }
 
-async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeEntry[]> {
-  const ret: ProjectRuntimeEntry[] = [];
-  const projectManagerExt = vscode.extensions.getExtension("vscjava.vscode-java-dependency");
-  if (vscode.workspace.workspaceFolders && projectManagerExt && projectManagerExt.isActive) {
-    let projects: any[] = [];
-    for (const wf of vscode.workspace.workspaceFolders) {
-      try {
-        projects = await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.list", wf.uri.toString()) || [];
-      } catch (error) {
-        console.error(error);
-      }
-
-      for (const project of projects) {
-        const runtimeSpec = await getRuntimeSpec(project.uri);
-        const projectType: ProjectType = getProjectType(vscode.Uri.parse(project.uri).fsPath, runtimeSpec.natureIds);
-        ret.push({
-          name: project.displayName || project.name,
-          rootPath: project.uri,
-          projectType,
-          ...runtimeSpec
-        });
-      }
-    }
-  }
-  return ret;
+interface ProjectRuntimeResult {
+  entries: ProjectRuntimeEntry[];
+  errors: string[];
 }
 
-async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeEntry[]> {
-  const ret: ProjectRuntimeEntry[] = [];
-  const javaExt = vscode.extensions.getExtension("redhat.java");
-  if (javaExt && javaExt.isActive) {
-    let projects: string[] = [];
-    try {
-      projects = await vscode.commands.executeCommand("java.execute.workspaceCommand", "java.project.getAll") || [];
-    } catch (error) {
-      // LS not ready
-    }
+function recordInventoryError(errors: string[], context: string, error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  const diagnostic = `${context}: ${message}`;
+  console.warn(diagnostic, error);
+  errors.push(diagnostic);
+}
 
-    for (const projectRoot of projects) {
-      const runtimeSpec = await getRuntimeSpec(projectRoot);
-      const projectType: ProjectType = await getProjectType(vscode.Uri.parse(projectRoot).fsPath, runtimeSpec.natureIds);
-      ret.push({
-        name: getProjectNameFromUri(projectRoot),
-        rootPath: projectRoot,
-        projectType: projectType,
-        ...runtimeSpec
-      });
+async function addProjectRuntime(result: ProjectRuntimeResult, rootPath: string, name?: string) {
+  try {
+    const runtimeSpec = await getRuntimeSpec(rootPath);
+    const projectType = getProjectType(vscode.Uri.parse(rootPath).fsPath, runtimeSpec.natureIds);
+    result.entries.push({
+      name: name || getProjectNameFromUri(rootPath),
+      rootPath,
+      projectType,
+      ...runtimeSpec
+    });
+  } catch (error) {
+    recordInventoryError(result.errors, `Unable to read runtime information for project "${name || rootPath}" (${rootPath})`, error);
+  }
+}
+
+async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeResult> {
+  const result: ProjectRuntimeResult = { entries: [], errors: [] };
+  const projectManagerExt = vscode.extensions.getExtension("vscjava.vscode-java-dependency");
+  if (vscode.workspace.workspaceFolders && projectManagerExt && projectManagerExt.isActive) {
+    for (const wf of vscode.workspace.workspaceFolders) {
+      const folderUri = wf.uri.toString();
+      try {
+        const projects = await vscode.commands.executeCommand<{ uri: string; displayName?: string; name: string }[]>(
+          "java.execute.workspaceCommand", "java.project.list", folderUri
+        ) || [];
+        for (const project of projects) {
+          await addProjectRuntime(result, project.uri, project.displayName || project.name);
+        }
+      } catch (error) {
+        recordInventoryError(result.errors, `Unable to list projects from Project Manager for workspace "${folderUri}"`, error);
+      }
     }
   }
-  return ret;
+  return result;
+}
+
+async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeResult> {
+  const result: ProjectRuntimeResult = { entries: [], errors: [] };
+  const javaExt = vscode.extensions.getExtension("redhat.java");
+  if (javaExt && javaExt.isActive) {
+    try {
+      const projects = await vscode.commands.executeCommand<string[]>(
+        "java.execute.workspaceCommand", "java.project.getAll"
+      ) || [];
+      for (const projectRoot of projects) {
+        await addProjectRuntime(result, projectRoot);
+      }
+    } catch (error) {
+      recordInventoryError(result.errors, "Unable to list projects from the Java language server", error);
+    }
+  }
+  return result;
 }
 
 async function getRuntimeSpec(projectRootUri: string) {
-  let natureIds;
-  let runtimePath;
-  let sourceLevel;
   const javaExt = vscode.extensions.getExtension("redhat.java");
-  if (javaExt && javaExt.isActive) {
-    const NATURE_IDS = "org.eclipse.jdt.ls.core.natureIds";
-    const SOURCE_LEVEL_KEY = "org.eclipse.jdt.core.compiler.source";
-    const VM_INSTALL_PATH = "org.eclipse.jdt.ls.core.vm.location";
-    try {
-      const settings: any = await javaExt.exports.getProjectSettings(projectRootUri, [NATURE_IDS, SOURCE_LEVEL_KEY, VM_INSTALL_PATH]);
-      natureIds = settings[NATURE_IDS];
-      runtimePath = settings[VM_INSTALL_PATH];
-      sourceLevel = settings[SOURCE_LEVEL_KEY];
-    } catch (error) {
-      console.warn(error);
-    }
+  if (!javaExt?.isActive || typeof javaExt.exports?.getProjectSettings !== "function") {
+    throw new Error("Project settings are not available from redhat.java.");
   }
+  const NATURE_IDS = "org.eclipse.jdt.ls.core.natureIds";
+  const SOURCE_LEVEL_KEY = "org.eclipse.jdt.core.compiler.source";
+  const VM_INSTALL_PATH = "org.eclipse.jdt.ls.core.vm.location";
+  const settings: Record<string, unknown> | undefined = await javaExt.exports.getProjectSettings(
+    projectRootUri, [NATURE_IDS, SOURCE_LEVEL_KEY, VM_INSTALL_PATH]
+  );
+  const natureIds = settings?.[NATURE_IDS];
+  if (!Array.isArray(natureIds) || !natureIds.every((natureId: unknown) => typeof natureId === "string")) {
+    throw new Error("Project type information is unavailable.");
+  }
+  const runtimePath = settings?.[VM_INSTALL_PATH];
+  const sourceLevel = settings?.[SOURCE_LEVEL_KEY];
 
   return {
     natureIds,
-    runtimePath,
-    sourceLevel
+    runtimePath: typeof runtimePath === "string" ? runtimePath : undefined,
+    sourceLevel: typeof sourceLevel === "string" ? sourceLevel : undefined
   };
 }

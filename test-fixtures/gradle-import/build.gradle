@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+def javaRelease = (findProperty('javaRelease') ?: '21').toInteger()
+def expectedGradle = [21: '8.5', 25: '9.8.1'][javaRelease]
+if (expectedGradle == null) {
+    throw new GradleException("Unsupported test Java release: ${javaRelease}")
+}
+if (gradle.gradleVersion != expectedGradle || JavaVersion.current().majorVersion != javaRelease.toString()) {
+    throw new GradleException("Expected Gradle ${expectedGradle}/Java ${javaRelease}, got Gradle ${gradle.gradleVersion}/Java ${JavaVersion.current()}")
+}
+logger.lifecycle("GRADLE_MODEL:${gradle.gradleVersion}:${javaRelease}:${JavaVersion.current().majorVersion}")
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaRelease)
+    }
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ["src/java${javaRelease}"]
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release.set(javaRelease)
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.commons:commons-lang3:3.18.0'
+}
+
+application {
+    mainClass = "example.GradleSmoke${javaRelease}"
+}
