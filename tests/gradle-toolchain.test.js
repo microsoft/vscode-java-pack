@@ -3,7 +3,9 @@
 
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
+const { execFileSync } = require("node:child_process");
 const test = require("node:test");
 const vm = require("node:vm");
 
@@ -164,3 +166,117 @@ for (const plan of ["java-gradle", "java-gradle-java25"]) {
         assert.ok(ids.indexOf("verify-gradle-model-remains-healthy") > ids.indexOf("verify-build-and-run"));
     });
 }
+
+function prepareBinding(t, release, actualGradleVersion = release === "21" ? "8.5" : "9.8.1") {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "gradle tools' "));
+    t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+    const plan = release === "21" ? "java-gradle" : `java-gradle-java${release}`;
+    const javaHome = path.join(root, `jdk-${release}`);
+    const gradleHome = path.join(root, "gradle");
+    const staging = path.join(root, "staging");
+    const envFile = path.join(root, "github-env");
+    const invocation = path.join(root, "invocation.json");
+    const nodeScript = path.join(root, "node.js");
+    const node = path.join(root, process.platform === "win32" ? "node.cmd" : "node");
+    const gradle = path.join(gradleHome, "bin", process.platform === "win32" ? "gradle.bat" : "gradle");
+    for (const directory of [javaHome, path.dirname(gradle), path.join(gradleHome, "lib"), staging, path.join(root, "test-plans")]) {
+        fs.mkdirSync(directory, { recursive: true });
+    }
+    fs.writeFileSync(envFile, "");
+    fs.writeFileSync(nodeScript, `
+        if (process.argv[2] === "--version") console.log("v22.23.2");
+        else require("node:fs").writeFileSync(process.env.TOOL_BINDING_INVOCATION, JSON.stringify({
+            args: process.argv.slice(2), gradle: process.env.JAVA27_CI_GRADLE
+        }));
+    `);
+    const shellQuote = value => "'" + value.replace(/'/g, "'\"'\"'") + "'";
+    fs.writeFileSync(node, process.platform === "win32"
+        ? `@echo off\r\n"${process.execPath}" "${nodeScript}" %*\r\n`
+        : `#!/bin/sh\nexec ${shellQuote(process.execPath)} ${shellQuote(nodeScript)} "$@"\n`,
+    { mode: 0o755 });
+    fs.writeFileSync(gradle, process.platform === "win32"
+        ? `@echo off\r\necho Gradle ${actualGradleVersion}\r\n`
+        : `#!/bin/sh\nprintf 'Gradle ${actualGradleVersion}\\n'\n`,
+    { mode: 0o755 });
+    const original = fs.readFileSync(path.join(__dirname, "..", "test-plans", `${plan}.yaml`), "utf8");
+    const planFile = path.join(root, "test-plans", `${plan}.yaml`);
+    fs.writeFileSync(planFile, original);
+    const env = {
+        ...process.env,
+        GITHUB_ACTIONS: "true",
+        GITHUB_ENV: envFile,
+        AUTOTEST_STAGING_DIR: staging,
+        [`JAVA${release}_HOME`]: javaHome,
+        TOOL_BINDING_NODE: node,
+        TOOL_BINDING_GRADLE: gradle,
+        TOOL_BINDING_INVOCATION: invocation,
+    };
+    const script = path.join(__dirname, "..", ".github", "scripts", "bind-gradle-toolchain.ps1");
+    const harness = `
+        $ErrorActionPreference = "Stop"
+        function global:node { $env:TOOL_BINDING_NODE; $global:LASTEXITCODE = 0 }
+        function global:Get-Command {
+            param($Name, $CommandType, $ErrorAction)
+            if ($Name -ne "gradle") { throw "Unexpected command lookup: $Name" }
+            [pscustomobject]@{ Source = $env:TOOL_BINDING_GRADLE }
+        }
+        & '${script.replace(/'/g, "''")}' -PlanName '${plan}'
+    `;
+    return {
+        root, planFile, original, javaHome, gradleHome, gradle, staging, envFile, invocation, env,
+        run: () => execFileSync("pwsh", ["-NoProfile", "-NonInteractive", "-OutputFormat", "Text", "-EncodedCommand",
+            Buffer.from(harness, "utf16le").toString("base64")], { cwd: root, env, encoding: "utf8", stdio: "pipe" }),
+    };
+}
+
+for (const release of ["21", "25", "27"]) {
+    test(`shared CI binding executes Java ${release} with selected tools and the existing diagnostic staging`, t => {
+        const s = prepareBinding(t, release);
+        s.run();
+        const content = fs.readFileSync(s.planFile, "utf8");
+        const prefix = "executeVSCodeCommand workbench.action.terminal.sendSequence ";
+        const actionLine = content.split(/\r?\n/).find(line => line.includes(`action: '${prefix}`));
+        const action = actionLine.trim().slice("action: '".length, -1).replace(/''/g, "'");
+        const command = JSON.parse(action.slice(prefix.length)).text.trimEnd();
+        const bindings = Object.fromEntries(fs.readFileSync(s.envFile, "utf8").trim().split(/\r?\n/).map(line => {
+            const separator = line.indexOf("=");
+            return [line.slice(0, separator), line.slice(separator + 1)];
+        }));
+        const env = { ...s.env, ...bindings };
+        if (process.platform === "win32") {
+            execFileSync("pwsh", ["-NoProfile", "-NonInteractive", "-Command", command], { cwd: s.root, env });
+        } else {
+            execFileSync("/bin/bash", ["--noprofile", "--norc", "-c", command], { cwd: s.root, env });
+        }
+        const invoked = JSON.parse(fs.readFileSync(s.invocation, "utf8"));
+        const diagnostics = path.join(s.staging, "terminal");
+        assert.equal(bindings.GRADLE_CI_JAVA_HOME, s.javaHome);
+        assert.equal(bindings.GRADLE_CI_GRADLE, s.gradle);
+        const homeLine = content.split(/\r?\n/).find(line => line.includes("java.import.gradle.home:"));
+        assert.equal(JSON.parse(homeLine.split("java.import.gradle.home:")[1]), s.gradleHome);
+        if (release === "27") {
+            assert.deepEqual(invoked.args, ["verify.mjs", "gradle", "project"]);
+            assert.equal(invoked.gradle, s.gradle);
+        } else {
+            assert.equal(bindings.ORG_GRADLE_PROJECT_javaRelease, release);
+            assert.deepEqual(invoked.args, ["verify.mjs", release, release === "21" ? "8.5" : "9.8.1",
+                s.gradle, s.javaHome, diagnostics]);
+        }
+        const unchangedLines = text => text.trimEnd().split(/\r?\n/).filter(line =>
+            !line.includes("java.import.gradle.home:") && !line.includes(`action: '${prefix}`));
+        assert.deepEqual(unchangedLines(content), unchangedLines(s.original));
+        assert.match(fs.readFileSync(path.join(s.staging, "gradle-version.log"), "utf8"),
+            new RegExp(`Gradle ${release === "21" ? "8\\.5" : "9\\.8\\.1"}`));
+    });
+}
+
+test("shared Java 27 binding rejects a wrong Gradle and preserves its version diagnostic before editing the plan", t => {
+    const s = prepareBinding(t, "27", "9.7.1");
+    assert.throws(s.run, error => {
+        assert.match(error.stderr, /Expected Gradle 9\.8\.1/);
+        return true;
+    });
+    assert.equal(fs.readFileSync(s.planFile, "utf8"), s.original);
+    assert.match(fs.readFileSync(path.join(s.staging, "gradle-version.log"), "utf8"), /Gradle 9\.7\.1/);
+    assert.equal(fs.readFileSync(s.envFile, "utf8"), "");
+});

@@ -45,8 +45,11 @@ For `java-gradle-java27`, CI also exports
 an absolute `JAVA27_CI_GRADLE` and uses that executable for the actual build
 instead of resolving Gradle from the terminal's PATH. Missing or relative CI
 paths fail explicitly, even when diagnostics are disabled; a failed CI build
-does not retry with PATH Gradle. Node, the existing JDK 27 configuration and
-terminal profiles are unchanged.
+does not retry with PATH Gradle. The Gradle plan shares the Node/Gradle binding
+script with the Java 21/25 import plans: Node 22 uses its provisioned absolute
+path, and `java.import.gradle.home` points to the bound Gradle installation.
+The existing JDK 27 configuration, helper arguments, and terminal profiles are
+unchanged. Maven plans retain their existing Node invocation.
 
 The helper persists its actual terminal Node/PATH/JDK identity, selected Gradle
 command, command exit metadata, and full compiler/runtime output outside
@@ -60,8 +63,8 @@ Java 27 bytecode and execution. The control never replaces the original failure
 or prints the plan's success marker. CI already uses that executable for the
 primary build and does not run a duplicate control after failure.
 
-Gradle preparation only resolves the provisioned executable, verifies version
-9.8.1 and binds it for the terminal helper. Version output is saved under
+The shared Gradle preparation verifies the selected Node and Gradle versions
+and binds their absolute paths for the terminal helper. Version output is saved under
 `diagnostics/ci/gradle-version.log`, not printed into the workflow log.
 For release comparisons, use `test_plan=java-gradle-java27`, `pre_release=false`, and an exact
 vscode-java release URL in `vsix_urls`; keep the failed run's release unchanged
