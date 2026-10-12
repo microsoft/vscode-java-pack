@@ -61,36 +61,6 @@ jobs:
          "microsoft/java-debug":102583752,
          "microsoft/build-server-for-gradle":626812412}
     steps:
-      - name: Select allowlisted source for read-only authentication
-        id: selection
-        shell: bash
-        env:
-          SOURCE_REPOSITORY: ${{ inputs.source_repository }}
-        run: |
-          if ! jq -e --arg repository "$SOURCE_REPOSITORY" 'has($repository)' <<< "$ISSUELENS_SOURCE_REPOSITORIES" > /dev/null; then
-            echo "::error::Source repository is not allowlisted"
-            exit 1
-          fi
-          echo "source-name=${SOURCE_REPOSITORY#microsoft/}" >> "$GITHUB_OUTPUT"
-          if [[ "$SOURCE_REPOSITORY" == "microsoft/vscode-java-pack" ]]; then
-            echo "external=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "external=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Get read-only token for the selected external source
-        if: steps.selection.outputs.external == 'true'
-        id: source-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
-        with:
-          client-id: ${{ secrets.ISSUELENS_SOURCE_READ_APP_CLIENT_ID }}
-          private-key: ${{ secrets.ISSUELENS_SOURCE_READ_APP_PRIVATE_KEY }}
-          owner: microsoft
-          repositories: ${{ steps.selection.outputs.source-name }}
-          permission-actions: read
-          permission-contents: read
-          permission-pull-requests: read
-
       - name: Reconcile team memory and validate final receipts
         uses: microsoft/IssueLens/.github/actions/issuelens@a81d2d96167fc0e69ac631c2edc85f858e693289
         with:
@@ -98,7 +68,7 @@ jobs:
           github-token: ${{ github.token }}
           source-repository: ${{ inputs.source_repository }}
           source-repositories: ${{ env.ISSUELENS_SOURCE_REPOSITORIES }}
-          source-github-token: ${{ steps.selection.outputs.external == 'false' && github.token || steps.source-token.outputs.token }}
+          source-github-token: ${{ github.token }}
           source-run-id: ${{ inputs.source_run_id }}
           source-run-attempt: ${{ inputs.source_run_attempt }}
           push-before: ${{ inputs.push_before }}
