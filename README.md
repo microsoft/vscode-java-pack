@@ -25,20 +25,6 @@ By installing Extension Pack for Java, the following extensions are installed:
 - [📦 Project Manager for Java](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-dependency)
     - Manage Java projects, referenced libraries, resource files, packages, classes, and class members
 
-## Java Runtime Requirements
-
-The JDK used to launch the Java language server is separate from the JDK used to compile and run your projects. The tooling minimum depends on the installed Language Support for Java extension and compiler mode. `redhat.java` 1.57.0 and newer requires JDK 25+ regardless of compiler mode. With the normal compiler configuration, versions 1.39.0-1.56.x require JDK 21+, and earlier supported versions require JDK 17+. A compatible bundled runtime satisfies the tooling requirement; Java 27 project support does not require JDK 27 just to launch the language server.
-
-For older versions with `java.jdt.ls.javac.enabled=on`, the tooling minimum is JDK 23 for versions 1.36.0-1.40.x, JDK 24 for 1.41.0-1.45.x, and JDK 25 for 1.46.0-1.56.x. `off` and `auto` (where supported) keep the normal minimum; versions before 1.36.0 do not support this mode. Runtime guidance, the FAQ, and the legacy tooling-JDK picker share these requirements, which do not restrict project JDK choices.
-
-**Java: Configure Java Runtime** opens the project-settings JDK page. Its local-JDK picker changes the selected project's JDK, not the JDK used to launch the language server. Older project targets remain supported through `java.configuration.runtimes` and your Maven or Gradle build configuration.
-
-To set the language-server launch JDK explicitly, configure `java.jdt.ls.java.home`. Open the Java logs (`java.open.logs`) for startup diagnostics. Runtime selection and startup diagnostics belong to `redhat.java`; Java Pack does not probe tooling candidates, activate the language extension to obtain runtime information, or automatically open runtime configuration based on its own checks.
-
-Previously opened legacy runtime tabs can still be restored for compatibility; they are not opened by the current **Java: Configure Java Runtime** command. These tabs show the runtime reported by `redhat.java`, with **Refresh** and explicit JDK browsing/installation actions when no runtime is reported. Missing information is not treated as a startup failure, and upstream errors are shown alongside any available project configuration. The legacy tab's **Locate an Existing JDK** action saves an explicit tooling choice to `java.jdt.ls.java.home`, unlike the current project-settings picker.
-
-Project inventory failures do not hide the reported language-server runtime or successfully queried projects. The legacy tab displays the query errors and indicates when project information could not be fully loaded; projects with unavailable type information are not treated as ordinary unmanaged projects.
-
 ## Other Recommendations
 
 You can do more with VS Code. Here are some more recommendations that could help.
@@ -76,6 +62,8 @@ The [📦 SonarLint](https://marketplace.visualstudio.com/items?itemName=SonarSo
 At the same time, [📦 CheckStyle](https://marketplace.visualstudio.com/items?itemName=shengchen.vscode-checkstyle) is also available.
 
 ## Questions & Issues
+
+See the [Java runtime requirements and configuration](https://github.com/microsoft/vscode-java-pack/wiki/Java-Runtime-Requirements) guide for JDK setup details.
 
 Each extension mentioned above is a separate open-source project and has its own repository. To make things easier, simply [🙋 open an issue in this repository](https://github.com/Microsoft/vscode-java-pack/issues). The new issue will be triaged and redirected.
 

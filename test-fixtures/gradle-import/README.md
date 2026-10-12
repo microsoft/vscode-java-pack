@@ -18,9 +18,11 @@ the expected configuration marker in Gradle for Java output, without task-model 
 The temporary invalid completion probe is explicitly reloaded into the editor,
 then removed and saved before building.
 
-CI shares one Gradle setup and binding script with `java-gradle-java27`, preserving
-`JAVA21_HOME`/`JAVA25_HOME` for these cases. It binds Node and Gradle by absolute
-path, sets `java.import.gradle.home` to the same installation, and exports
+CI shares the existing Gradle environment binding with `java-gradle-java27`,
+preserving `JAVA21_HOME`/`JAVA25_HOME` for these cases. The two-argument helper
+reads the provisioned absolute `GRADLE_CI_GRADLE` path from the environment.
+CI does not rewrite its terminal command or override the IDE's Gradle home.
+It also exports
 `ORG_GRADLE_PROJECT_javaRelease` before launching VS Code. The Java import arguments
 alone do not configure the Gradle extension's separate task-model requests.
 For local runs, set the applicable variable, put that Gradle version on `PATH`,
@@ -32,5 +34,3 @@ Generated IDE metadata and build logs are not fixture inputs.
 CI reuses the shared artifact collector: terminal diagnostics are staged outside
 AutoTest's output and archived under `diagnostics/ci/terminal/`; Gradle/Java
 output-channel and extension-host logs are archived under `logs/ide/logs/`.
-The binding regressions in `tests/gradle-toolchain.test.js` require PowerShell 7,
-which is available on the CI runners.

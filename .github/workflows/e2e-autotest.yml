@@ -232,12 +232,31 @@ jobs:
         with:
           gradle-version: ${{ matrix.plan == 'java-gradle' && '8.5' || '9.8.1' }}
 
-      - name: Bind CI toolchain for Gradle import tests
+      - name: Bind Gradle for import tests
         if: matrix.plan == 'java-gradle' || matrix.plan == 'java-gradle-java25' || matrix.plan == 'java-gradle-java27'
         shell: pwsh
         env:
           GRADLE_TEST_PLAN: ${{ matrix.plan }}
-        run: ./.github/scripts/bind-gradle-toolchain.ps1 -PlanName $env:GRADLE_TEST_PLAN
+        run: |
+          $ciGradle = (Get-Command gradle -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+          $release = if ($env:GRADLE_TEST_PLAN -eq "java-gradle") { "21" } elseif ($env:GRADLE_TEST_PLAN -eq "java-gradle-java25") { "25" } else { "27" }
+          if ($release -eq "27") {
+            $versionLog = Join-Path $env:AUTOTEST_STAGING_DIR "gradle-version.log"
+            $PSNativeCommandUseErrorActionPreference = $false
+            $gradleVersion = & $ciGradle --version 2>&1 | Out-String
+            $versionExit = $LASTEXITCODE
+            "Command: $ciGradle --version`n$gradleVersion" | Set-Content -LiteralPath $versionLog
+            if ($versionExit -ne 0) { throw "CI Gradle version probe exited with $versionExit; see diagnostics/ci/gradle-version.log in this case's results artifact." }
+            if ($gradleVersion -notmatch '(?m)^Gradle 9\.8\.1\s*$') {
+              throw "CI did not select the provisioned Gradle 9.8.1: $ciGradle; see $versionLog"
+            }
+            "JAVA27_CI_GRADLE=$ciGradle" >> $env:GITHUB_ENV
+          } else {
+            "ORG_GRADLE_PROJECT_javaRelease=$release" >> $env:GITHUB_ENV
+          }
+          "GRADLE_CI_GRADLE=$ciGradle" >> $env:GITHUB_ENV
+          "GRADLE_CI_JAVA_HOME=$([Environment]::GetEnvironmentVariable("JAVA${release}_HOME"))" >> $env:GITHUB_ENV
+          Write-Host "Bound CI Gradle: $ciGradle"
 
       - name: Setup virtual display (Linux)
         if: runner.os == 'Linux'
