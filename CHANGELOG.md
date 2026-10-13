@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.31.2
+
+- Fix tooling JDK requirements and guidance for Language Support for Java 1.57 while preserving support for older project JDKs in https://github.com/microsoft/vscode-java-pack/pull/1768
+- Fix runtime status and project inventory reporting, and stop automatically opening the Java Runtime view at startup in https://github.com/microsoft/vscode-java-pack/pull/1768
+- Restore TLS certificate validation for HTTPS requests in https://github.com/microsoft/vscode-java-pack/pull/1717
+
 ## 0.31.1
 
 - Add Content Security Policy to webviews in https://github.com/microsoft/vscode-java-pack/pull/1648
