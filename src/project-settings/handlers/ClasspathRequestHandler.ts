@@ -14,6 +14,8 @@ export class ClasspathRequestHandler implements vscode.Disposable {
     private webview: vscode.Webview;
     private currentProjectRoot: vscode.Uri | undefined;
     private disposables: vscode.Disposable[] = [];
+    private classpathRequestId = 0;
+    private vmInstallsRequestId = 0;
 
     constructor(webview: vscode.Webview) {
         this.webview = webview;
@@ -69,17 +71,15 @@ export class ClasspathRequestHandler implements vscode.Disposable {
     }
 
     private listVmInstalls = instrumentOperation("projectSettings.classpath.listVmInstalls", async (operationId: string) => {
-        let vmInstalls: VmInstall[] = await this.getVmInstallsFromLS();
-        vmInstalls = vmInstalls.sort((vmA: VmInstall, vmB: VmInstall) => {
-            return vmA.name.localeCompare(vmB.name);
+        const vmInstalls = await this.getVmInstallsFromLS();
+        if (vmInstalls === undefined) {
+            return;
+        }
+        this.webview.postMessage({
+            command: "classpath.onDidListVmInstalls",
+            vmInstalls,
         });
-
-        if (vmInstalls.length > 0) {
-            this.webview.postMessage({
-                command: "classpath.onDidListVmInstalls",
-                vmInstalls,
-            });
-        } else {
+        if (vmInstalls.length === 0) {
             sendInfo(operationId, {
                 vmNumber: vmInstalls.length,
             });
@@ -93,7 +93,16 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             return;
         }
 
+        const requestId = ++this.classpathRequestId;
         const classpath = await this.getProjectClasspathFromLS(uri);
+        if (requestId !== this.classpathRequestId || !this.currentProjectRoot || path.relative(uri.fsPath, this.currentProjectRoot.fsPath)) {
+            return;
+        }
+        // Resolving the project's VM can register a JDK after the initial inventory query.
+        const vmInstalls = await this.getVmInstallsFromLS();
+        if (requestId !== this.classpathRequestId || !this.currentProjectRoot || path.relative(uri.fsPath, this.currentProjectRoot.fsPath)) {
+            return;
+        }
         if (classpath) {
             this.webview.postMessage({
                 command: "classpath.onDidLoadProjectClasspath",
@@ -101,6 +110,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
                 sources: classpath.sourcePaths,
                 output: classpath.defaultOutputPath,
                 activeVmInstallPath: classpath.jdkPath,
+                vmInstalls,
                 libraries: classpath.libraries
             });
         }
@@ -310,10 +320,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
 
         if (result.success) {
             const activeVmInstallPath = result.message;
-            let vmInstalls: VmInstall[] = await this.getVmInstallsFromLS();
-            vmInstalls = vmInstalls.sort((vmA: VmInstall, vmB: VmInstall) => {
-                return vmA.name.localeCompare(vmB.name);
-            });
+            const vmInstalls = await this.getVmInstallsFromLS();
             this.webview.postMessage({
                 command: "classpath.onDidChangeJdk",
                 activeVmInstallPath,
@@ -345,10 +352,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
 
         if (result.success) {
             const activeVmInstallPath = result.message;
-            let vmInstalls: VmInstall[] = await this.getVmInstallsFromLS();
-            vmInstalls = vmInstalls.sort((vmA: VmInstall, vmB: VmInstall) => {
-                return vmA.name.localeCompare(vmB.name);
-            });
+            const vmInstalls = await this.getVmInstallsFromLS();
             this.webview.postMessage({
                 command: "classpath.onDidChangeJdk",
                 activeVmInstallPath,
@@ -436,13 +440,20 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         });
     });
 
-    private async getVmInstallsFromLS(): Promise<VmInstall[]> {
-        const ret: VmInstall[] = [];
+    private async getVmInstallsFromLS(): Promise<VmInstall[] | undefined> {
+        const requestId = ++this.vmInstallsRequestId;
         try {
-            ret.push(...await vscode.commands.executeCommand<VmInstall[]>("java.execute.workspaceCommand", "java.vm.getAllInstalls") || []);
+            const installs = await vscode.commands.executeCommand<VmInstall[]>("java.execute.workspaceCommand", "java.vm.getAllInstalls") || [];
+            if (requestId !== this.vmInstallsRequestId) {
+                return undefined;
+            }
+            return installs.sort((a, b) => a.name.localeCompare(b.name));
         } catch (error) {
+            const err = error instanceof Error ? error : new Error(String(error));
+            sendError(err);
+            void vscode.window.showErrorMessage(`Unable to load Java runtimes: ${err.message}`);
+            return undefined;
         }
-        return ret;
     }
 
     private async getProjectClasspathFromLS(uri: vscode.Uri): Promise<ClasspathComponent> {
