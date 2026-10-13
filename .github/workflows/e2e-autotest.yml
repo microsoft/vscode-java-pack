@@ -138,11 +138,11 @@ jobs:
             "JAVA27_DIAGNOSTICS_DIR=$terminalDirectory" >> $env:GITHUB_ENV
           }
 
-      - name: Clone vscode-java (test projects)
-        run: git clone --depth 1 https://github.com/redhat-developer/vscode-java.git ../vscode-java
-
-      - name: Clone eclipse.jdt.ls (Gradle test projects)
-        run: git clone --depth 1 https://github.com/eclipse-jdtls/eclipse.jdt.ls.git ../eclipse.jdt.ls
+      - name: Download required test project
+        shell: pwsh
+        env:
+          AUTOTEST_PLAN: ${{ matrix.plan }}
+        run: ./.github/scripts/prepare-autotest-fixtures.ps1 -Plan $env:AUTOTEST_PLAN
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0

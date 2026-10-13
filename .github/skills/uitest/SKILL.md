@@ -13,12 +13,13 @@ The repository uses `@vscjava/vscode-autotest`: YAML plans in `test-plans/*.yaml
 
 - Node.js >= 18 and JDK 21+ installed and on `PATH`.
 - Close any running VS Code instance before running a plan locally; a running instance can block AutoTest from launching its own VS Code.
-- When a plan references external sample projects, clone them as siblings of this repo first (CI does this automatically):
+- When a plan references a `vscode-java` sample project, download its fixture as a sibling of this repo first (CI uses the same helper):
 
 ```powershell
-git clone --depth 1 https://github.com/redhat-developer/vscode-java.git ../vscode-java
-git clone --depth 1 https://github.com/eclipse-jdtls/eclipse.jdt.ls.git ../eclipse.jdt.ls
+.\.github\scripts\prepare-autotest-fixtures.ps1 -Plan java-basic-editing
 ```
+
+The helper uses a shallow, blob-filtered fetch and sparse checkout of only the plan's test project, with up to three attempts for fetch/checkout failures. It refuses to overwrite an existing `vscode-java` sibling; existing local clones can be used as-is. Plans using local fixtures skip the download, and no current plan requires an `eclipse.jdt.ls` clone. When adding a plan that uses an upstream project, update the helper's plan-to-project mapping.
 
 ## Workflow
 
