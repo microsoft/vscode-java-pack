@@ -449,6 +449,9 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             }
             return installs.sort((a, b) => a.name.localeCompare(b.name));
         } catch (error) {
+            if (requestId !== this.vmInstallsRequestId) {
+                return undefined;
+            }
             const err = error instanceof Error ? error : new Error(String(error));
             sendError(err);
             void vscode.window.showErrorMessage(`Unable to load Java runtimes: ${err.message}`);

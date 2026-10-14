@@ -112,6 +112,30 @@ test("an older inventory response cannot overwrite a newer classpath snapshot", 
     assert.ok(s.messages[0].vmInstalls.some(install => install.path === jdk24.path));
 });
 
+test("an older inventory failure is ignored after a newer classpath snapshot succeeds", async () => {
+    const s = setupHandler();
+    const execute = s.vscode.commands.executeCommand;
+    let rejectOld;
+    let first = true;
+    s.vscode.commands.executeCommand = (...args) => {
+        if (args[1] === "java.vm.getAllInstalls" && first) {
+            first = false;
+            return new Promise((_, reject) => { rejectOld = reject; });
+        }
+        return execute(...args);
+    };
+    const older = s.send("classpath.onWillListVmInstalls");
+    s.setJdk(jdk24);
+    await s.send("classpath.onWillLoadProjectClasspath", { uri: projectUri });
+    rejectOld(new Error("Superseded inventory unavailable"));
+    await older;
+    assert.equal(s.messages.length, 1);
+    assert.equal(s.messages[0].activeVmInstallPath, jdk24.path);
+    assert.ok(s.messages[0].vmInstalls.some(install => install.path === jdk24.path));
+    assert.deepEqual(s.errors, []);
+    assert.deepEqual(s.notifications, []);
+});
+
 test("an empty inventory refresh clears previously listed JDKs", async () => {
     const s = setupHandler();
     s.vscode.commands.executeCommand = async () => [];
