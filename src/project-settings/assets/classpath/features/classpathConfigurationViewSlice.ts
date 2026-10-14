@@ -47,6 +47,9 @@ export const classpathConfigurationViewSlice = createSlice({
       },
       loadClasspath: (state, action) => {
         const activeProjectIndex = action.payload.activeProjectIndex;
+        if (action.payload.vmInstalls !== undefined) {
+          state.data.vmInstalls = action.payload.vmInstalls;
+        }
         state.data.output[activeProjectIndex] = action.payload.output;
         state.data.effective.output[activeProjectIndex] = action.payload.output;
 

@@ -5,6 +5,7 @@ import "@vscode-elements/elements/dist/vscode-divider/index.js";
 import "@vscode-elements/elements/dist/vscode-single-select/index.js";
 import "@vscode-elements/elements/dist/vscode-option/index.js";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
+import type { VscodeSingleSelect } from "@vscode-elements/elements/dist/vscode-single-select/index.js";
 
 import { useCallback, useEffect, useRef } from "react";
 import { ClasspathRequest, CommonRequest } from "../../../vscode/utils";
@@ -22,10 +23,11 @@ const JdkRuntime = (): JSX.Element => {
   }, [activeProjectIndex]);
 
   const vmInstalls: VmInstall[] = useSelector((state: any) => state.classpathConfig.data.vmInstalls);
-  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.data.activeVmInstallPath[activeProjectIndex]);
+  const activeVmInstallPath: string = useSelector((state: any) => state.classpathConfig.data.activeVmInstallPath[activeProjectIndex]) ?? "";
+  const hasActiveVmInstall = vmInstalls.some(install => install.path === activeVmInstallPath);
 
   const dispatch = useDispatch();
-  const selectRef = useRef<HTMLElement>(null);
+  const selectRef = useRef<VscodeSingleSelect>(null);
 
   const handleSelectJdk = useCallback((path: string) => {
     if (path === "add-new-jdk") {
@@ -44,21 +46,21 @@ const JdkRuntime = (): JSX.Element => {
   useEffect(() => {
     const el = selectRef.current;
     if (!el) return;
-    const handleChange = (e: Event) => {
-      const selectedValue = (e.target as any).value;
-      if (selectedValue) {
+    const handleChange = () => {
+      const selectedValue = el.value;
+      if (vmInstalls.some(install => install.path === selectedValue)) {
         handleSelectJdk(selectedValue);
       }
     };
     el.addEventListener("change", handleChange);
     return () => el.removeEventListener("change", handleChange);
-  }, [handleSelectJdk]);
+  }, [handleSelectJdk, vmInstalls]);
 
   // Sync the value property on the select element when activeVmInstallPath changes
   useEffect(() => {
     const el = selectRef.current;
-    if (el && activeVmInstallPath) {
-      (el as any).value = activeVmInstallPath;
+    if (el) {
+      el.value = activeVmInstallPath;
     }
   }, [activeVmInstallPath, vmInstalls]);
 
@@ -89,6 +91,11 @@ const JdkRuntime = (): JSX.Element => {
           id="jdk-dropdown"
           className="setting-section-dropdown"
         >
+          {!hasActiveVmInstall && (
+            <vscode-option value={activeVmInstallPath} selected disabled description={activeVmInstallPath}>
+              {activeVmInstallPath ? "Current project JDK (not listed)" : "Project JDK not available"}
+            </vscode-option>
+          )}
           {vmInstalls.map((vmInstall) => (
             <vscode-option
               key={vmInstall.path}
@@ -104,7 +111,14 @@ const JdkRuntime = (): JSX.Element => {
       <div className="jdk-runtime-path">
         {activeVmInstallPath}
       </div>
+      {!hasActiveVmInstall && activeVmInstallPath && (
+        <p>The current project JDK is not in the available runtime list. Refresh JDKs or locate its installation.</p>
+      )}
       <div className="jdk-runtime-actions">
+        <vscode-button secondary onClick={() => ClasspathRequest.onWillListVmInstalls()}>
+          <span className="codicon codicon-refresh mr-1"></span>
+          Refresh JDKs
+        </vscode-button>
         <vscode-button secondary onClick={() => ClasspathRequest.onWillAddNewJdk()}>
           <span className="codicon codicon-folder-opened mr-1"></span>
           Find a local JDK...
@@ -121,7 +135,7 @@ const JdkRuntime = (): JSX.Element => {
 interface OnDidChangeJdkEvent {
   data: {
     command: string;
-    vmInstalls: VmInstall[];
+    vmInstalls?: VmInstall[];
     activeVmInstallPath: string;
   };
 }
