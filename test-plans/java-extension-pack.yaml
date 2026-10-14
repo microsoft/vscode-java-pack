@@ -2,6 +2,7 @@
 #
 # Source: wiki Test-Plan.md "Java Extension Pack" scenario
 # Verify: Trigger Java: Configure Classpath command → configuration page appears;
+#         retain the selected project JDK when refreshing the runtime list;
 #         add a project-local JAR to a non-unmanaged project and apply it.
 #
 # Prerequisites:
@@ -14,7 +15,8 @@ name: "Java Extension Pack — Classpath Configuration"
 description: |
   Corresponds to the Java Extension Pack scenario in the wiki Test Plan:
   Trigger the Java: Configure Classpath command, verify the configuration page
-  appears, and cover the non-unmanaged-project Add Library flow.
+  appears, verify the current project JDK remains selected after refreshing
+  available runtimes, and cover the non-unmanaged-project Add Library flow.
 
 setup:
   extension: "redhat.java"
@@ -23,6 +25,9 @@ setup:
   vscodeVersion: "stable"
   workspace: "../../vscode-java/test/resources/projects/eclipse/simple-app"
   timeout: 90
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
 
 steps:
   # ── Wait for LS ready ────────────────────────────────────
@@ -58,6 +63,48 @@ steps:
       contains:
         - "Classpath"
         - "Libraries"
+
+  - id: "open-project-jdk-tab"
+    action: "clickInWebview text=JDK Runtime"
+    verify: "The project JDK tab shows runtime controls and an available current JDK"
+    verifyWebview:
+      contains:
+        - "Refresh JDKs"
+        - "Find a local JDK..."
+      notContains:
+        - "Current project JDK (not listed)"
+        - "Project JDK not available"
+    timeout: 30
+
+  - id: "open-selected-project-jdk"
+    action: "clickInWebview #jdk-dropdown:has(vscode-option[selected]:not([disabled]))"
+    verify: "The dropdown has a real selected runtime option, not an unavailable-current-JDK placeholder"
+    verifyWebview:
+      contains: "Refresh JDKs"
+      notContains: "Current project JDK (not listed)"
+
+  - id: "close-project-jdk-dropdown"
+    action: "clickInWebview #jdk-dropdown"
+
+  - id: "refresh-project-jdks"
+    action: "clickInWebview text=Refresh JDKs"
+    verify: "Refreshing runtimes keeps the current project JDK available without cleaning or restarting"
+    verifyWebview:
+      contains: "Refresh JDKs"
+      notContains:
+        - "Current project JDK (not listed)"
+        - "Project JDK not available"
+    timeout: 30
+
+  - id: "verify-selected-project-jdk-after-refresh"
+    action: "clickInWebview #jdk-dropdown:has(vscode-option[selected]:not([disabled]))"
+    verify: "A real current project JDK is still selected after the inventory refresh"
+    verifyWebview:
+      contains: "Refresh JDKs"
+      notContains: "Current project JDK (not listed)"
+
+  - id: "close-refreshed-project-jdk-dropdown"
+    action: "clickInWebview #jdk-dropdown"
 
   - id: "open-libraries-tab"
     action: "clickInWebview text=Libraries"
