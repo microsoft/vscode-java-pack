@@ -59,10 +59,17 @@ steps:
   - id: "run-ide-compiled-lombok"
     action: "executeVSCodeCommand workbench.action.debug.run"
     verify: "IDE-compiled Lombok constructors and inherited builders run successfully on JDK 25."
+    verifyTerminal:
+      contains: "LOMBOK_JAVA25_PASSED"
+    timeout: 120
+    skipLlmVerify: true
+
+  - id: "verify-execution-marker"
+    action: "waitForLanguageServer"
     verifyFile:
       path: "~/target/lombok-java25-passed.txt"
       contains: "LOMBOK_JAVA25_PASSED runtime=25 classMajor=69 required=required name=lombok prefix=hello count=25 suffix=world"
     verifyProblems:
       errors: 0
-    timeout: 180
+    timeout: 120
     skipLlmVerify: true
