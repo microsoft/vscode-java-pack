@@ -62,7 +62,7 @@ jobs:
          "microsoft/build-server-for-gradle":626812412}
     steps:
       - name: Reconcile team memory and validate final receipts
-        uses: microsoft/IssueLens/.github/actions/issuelens@a81d2d96167fc0e69ac631c2edc85f858e693289
+        uses: microsoft/IssueLens/.github/actions/issuelens@main
         with:
           request-type: team-memory
           github-token: ${{ github.token }}
