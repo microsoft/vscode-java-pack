@@ -1,0 +1,68 @@
+name: "Lombok Java 25 - Generated Constructors and SuperBuilder"
+description: |
+  Regression for redhat-developer/vscode-java#4521 on a release-25 Maven project.
+  Check Lombok @RequiredArgsConstructor and inherited @SuperBuilder with
+  initialized fields for early-construction diagnostics. Run through the Java
+  debugger's IDE build, not Maven/javac, and require a fresh marker written only
+  after generated constructors, getters and builders execute on JDK 25 with
+  Java 25 bytecode. The existing workflow accepts this plan via test_plan and
+  the test branch via workflow_dispatch's ref.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../test-fixtures/lombok-java25"
+  timeout: 180
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
+    java.jdt.ls.lombokSupport.enabled: true
+    java.debug.settings.forceBuildBeforeLaunch: true
+  workspaceSettings:
+    java.configuration.runtimes:
+      - name: "JavaSE-25"
+        path: "C:\\Program Files\\Java\\jdk-25"
+        default: true
+    java.configuration.updateBuildConfiguration: "automatic"
+    java.import.generatesMetadataFilesAtProjectRoot: true
+    java.import.maven.enabled: true
+    java.import.gradle.enabled: false
+
+steps:
+  - id: "import-java25-project"
+    action: "waitForLanguageServer"
+    verifyFile:
+      path: "~/.settings/org.eclipse.jdt.core.prefs"
+      contains: "org.eclipse.jdt.core.compiler.source=25"
+    timeout: 300
+    skipLlmVerify: true
+
+  - id: "verify-lombok-diagnostics"
+    action: "open file LombokSmoke.java"
+    verifyEditorTab:
+      title: "LombokSmoke.java"
+      active: true
+    verifyProblems:
+      errors: 0
+    timeout: 120
+    skipLlmVerify: true
+
+  - id: "clear-execution-marker"
+    action: "deleteFile target/lombok-java25-passed.txt"
+    verifyFile:
+      path: "~/target/lombok-java25-passed.txt"
+      exists: false
+    skipLlmVerify: true
+
+  - id: "run-ide-compiled-lombok"
+    action: "executeVSCodeCommand workbench.action.debug.run"
+    verify: "IDE-compiled Lombok constructors and inherited builders run successfully on JDK 25."
+    verifyFile:
+      path: "~/target/lombok-java25-passed.txt"
+      contains: "LOMBOK_JAVA25_PASSED runtime=25 classMajor=69 required=required name=lombok prefix=hello count=25 suffix=world"
+    verifyProblems:
+      errors: 0
+    timeout: 180
+    skipLlmVerify: true

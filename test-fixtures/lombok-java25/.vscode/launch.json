@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Lombok Java 25",
+            "request": "launch",
+            "mainClass": "com.example.LombokSmoke",
+            "projectName": "lombok-java25",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        }
+    ]
+}
