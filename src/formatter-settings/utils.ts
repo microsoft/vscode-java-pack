@@ -103,13 +103,13 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
                 const settingContent: string = new XMLSerializer().serializeToString(setting);
                 const id = setting.getAttribute("id");
                 if (!id) {
-                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no valid 'id' property.", vscode.DiagnosticSeverity.Error));
+                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), vscode.l10n.t("The setting has no valid 'id' property."), vscode.DiagnosticSeverity.Error));
                     continue;
                 }
                 const value = settings[j].getAttribute("value");
                 if (!value) {
                     // value maybe "" or null, "" is an valid value comes from deleting the values in the inpux box of the editor, and we will still push diagnostic here.
-                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), "The setting has no valid 'value' property.", vscode.DiagnosticSeverity.Error));
+                    diagnostics.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1), new vscode.Position(setting.lineNumber - 1, setting.columnNumber - 1 + settingContent.length)), vscode.l10n.t("The setting has no valid 'value' property."), vscode.DiagnosticSeverity.Error));
                     if (value === null) {
                         continue;
                     }
@@ -140,7 +140,7 @@ export function parseProfile(document: vscode.TextDocument): ProfileContent {
                 continue;
             }
             const elementRange = new vscode.Range(new vscode.Position(valueNode.lineNumber - 1, valueNode.columnNumber), new vscode.Position(valueNode.lineNumber - 1, valueNode.columnNumber + valueNode.nodeValue.length));
-            diagnostics.push(new vscode.Diagnostic(elementRange, `"${value}" is not supported in id: "${setting.id}".`, vscode.DiagnosticSeverity.Error));
+            diagnostics.push(new vscode.Diagnostic(elementRange, vscode.l10n.t('"{0}" is not supported in id: "{1}".', value, setting.id), vscode.DiagnosticSeverity.Error));
             profileSettings.delete(setting.id);
             setting.value = FormatterConverter.profile2WebViewConvert(setting.id, getDefaultValue(setting.id))!;
             continue;
@@ -162,10 +162,12 @@ export async function downloadFile(settingsUrl: string): Promise<string> {
     try {
         return (await axios.get(settingsUrl)).data;
     } catch (e) {
-        const answer = await vscode.window.showErrorMessage(`Failed to get the profile content from uri: ${settingsUrl}. Do you want to retry?`, "Retry", "Open Settings");
-        if (answer === "Retry") {
+        const retry = { title: vscode.l10n.t("Retry") };
+        const settings = { title: vscode.l10n.t("Open Settings") };
+        const answer = await vscode.window.showErrorMessage(vscode.l10n.t("Failed to get the profile content from uri: {0}. Do you want to retry?", settingsUrl), retry, settings);
+        if (answer === retry) {
             return downloadFile(settingsUrl);
-        } else if (answer === "Open Settings") {
+        } else if (answer === settings) {
             openFormatterSettings();
         }
         return "";

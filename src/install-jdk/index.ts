@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { escapeHtml, webviewLanguage, localizationBootstrap } from "../l10n/host";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { getNonce, openExternalLinkFromWebview, webviewCmdLinkHandler } from '../utils';
@@ -63,7 +64,7 @@ class InstallJdkPage {
 		if ((columnOrwebviewPanel as vscode.WebviewPanel).viewType) {
 			this._panel = columnOrwebviewPanel as vscode.WebviewPanel;
 		} else {
-			this._panel = vscode.window.createWebviewPanel(InstallJdkPage.viewType, "Install New JDK", columnOrwebviewPanel as vscode.ViewColumn, {
+			this._panel = vscode.window.createWebviewPanel(InstallJdkPage.viewType, vscode.l10n.t("Install New JDK"), columnOrwebviewPanel as vscode.ViewColumn, {
 				enableScripts: true,
 				localResourceRoots: [
 					vscode.Uri.file(path.join(this._extensionPath, 'out'))
@@ -73,6 +74,7 @@ class InstallJdkPage {
 			});
 		}
 
+		this._panel.title = vscode.l10n.t("Install New JDK");
 		this._panel.iconPath = {
 			light: vscode.Uri.file(path.join(extensionPath, "caption.light.svg")),
 			dark: vscode.Uri.file(path.join(extensionPath, "caption.dark.svg"))
@@ -146,16 +148,17 @@ class InstallJdkPage {
 		const cspSource = this._panel!.webview.cspSource;
 
 		return `<!DOCTYPE html>
-			<html lang="en">
+			<html lang="${webviewLanguage()}">
 			<head>
 				<meta charset="utf-8">
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource} https: data:;">
 				<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
 				<meta name="theme-color" content="#000000">
-				<title>React App</title>
+				<title>${escapeHtml(vscode.l10n.t("Install New JDK"))}</title>
 			</head>
 			<body>
-				<noscript>You need to enable JavaScript to run this app.</noscript>
+    ${localizationBootstrap(nonce)}
+				<noscript>${escapeHtml(vscode.l10n.t("You need to enable JavaScript to run this app."))}</noscript>
 				<div id="root"></div>
 
 				<script nonce="${nonce}" src="${scriptUri}" type="module"></script>

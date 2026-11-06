@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import { useSelector } from "react-redux";
 import { ProjectType } from "../../../../../utils/webview";
 import { ClasspathRequest } from "../../../vscode/utils";
@@ -39,14 +41,9 @@ const Hint = (): JSX.Element | null => {
 
   return (
     <div id="hint" className="setting-footer pb-2">
-        {(projectType[activeProjectIndex] === ProjectType.Gradle || projectType[activeProjectIndex] === ProjectType.Maven) &&
-          <div className="mt-1">
-            <span className="setting-section-warning">
-              '{projects[activeProjectIndex].name}' is imported by {projectType[activeProjectIndex]}, some changes made to the compiler settings might be lost after reloading.
-              To make permanent changes, please edit the <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a> file.
-            </span>
-          </div>
-        }
+        {(projectType[activeProjectIndex] === ProjectType.Gradle || projectType[activeProjectIndex] === ProjectType.Maven) && <div className="mt-1">
+            <span className="setting-section-warning">{richText(l10n.t("'{0}' is imported by {1}, some changes made to the compiler settings might be lost after reloading. To make permanent changes, please edit the {2} file."), [projects[activeProjectIndex].name, projectType[activeProjectIndex], <a href="" onClick={() => handleOpenBuildFile()}>{buildFile}</a>])}</span>
+          </div>}
     </div>
   );
 };

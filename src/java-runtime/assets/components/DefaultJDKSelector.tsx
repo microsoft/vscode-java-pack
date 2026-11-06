@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 
 import { useState } from "react";
@@ -26,16 +27,12 @@ export function DefaultJDKSelector({ jdkEntries, projectRuntime: p }: Props) {
 
   return (
     <div className="inline-flex">
-      {isEditing ?
-        <select className="jdkDropdown" id="jdkDropdown" defaultValue={p.runtimePath} onChange={onSelectionChange}>
+      {isEditing ? <select className="jdkDropdown" id="jdkDropdown" defaultValue={p.runtimePath} onChange={onSelectionChange}>
           {jdkEntries.map(jdk => (
             <option key={jdk.name} value={jdk.fspath}>{jdk.majorVersion} - {jdk.name}</option>
           ))}
-        </select>
-        :
-        <span>{p.sourceLevel}</span>
-      }
-      <vscode-button icon-only onClick={() => setIsEditing(true)} title="Edit"><span className="codicon codicon-edit"></span></vscode-button>
+        </select> : <span>{p.sourceLevel}</span>}
+      <vscode-button icon-only onClick={() => setIsEditing(true)} title={l10n.t("Edit")}><span className="codicon codicon-edit"></span></vscode-button>
     </div>
   );
 }

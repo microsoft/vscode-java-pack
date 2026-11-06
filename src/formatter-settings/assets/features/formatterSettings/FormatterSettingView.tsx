@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
+import { formatterExampleLabel } from "../../labels";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
@@ -11,20 +13,19 @@ import Setting from "./components/Setting";
 import { renderWhitespace } from "../../whitespace";
 import { onWillChangeExampleKind, onWillDownloadAndUse, onWillInitialize } from "../../utils";
 
-const categories = [
-  { key: Category.Indentation, label: "Indentation", example: ExampleKind.INDENTATION_EXAMPLE },
-  { key: Category.BlankLine, label: "Blank Lines", example: ExampleKind.BLANKLINE_EXAMPLE },
-  { key: Category.Comment, label: "Comment", example: ExampleKind.COMMENT_EXAMPLE },
-  { key: Category.InsertLine, label: "Insert Line", example: ExampleKind.INSERTLINE_EXAMPLE },
-  { key: Category.Whitespace, label: "Whitespace", example: ExampleKind.WHITESPACE_EXAMPLE },
-  { key: Category.Wrapping, label: "Wrapping", example: ExampleKind.WRAPPING_EXAMPLE },
-];
-
 const FormatterSettingsView = (): JSX.Element => {
+  const categories = [
+    { key: Category.Indentation, label: formatterExampleLabel(ExampleKind.INDENTATION_EXAMPLE), example: ExampleKind.INDENTATION_EXAMPLE },
+    { key: Category.BlankLine, label: l10n.t("Blank Lines"), example: ExampleKind.BLANKLINE_EXAMPLE },
+    { key: Category.Comment, label: formatterExampleLabel(ExampleKind.COMMENT_EXAMPLE), example: ExampleKind.COMMENT_EXAMPLE },
+    { key: Category.InsertLine, label: formatterExampleLabel(ExampleKind.INSERTLINE_EXAMPLE), example: ExampleKind.INSERTLINE_EXAMPLE },
+    { key: Category.Whitespace, label: formatterExampleLabel(ExampleKind.WHITESPACE_EXAMPLE), example: ExampleKind.WHITESPACE_EXAMPLE },
+    { key: Category.Wrapping, label: formatterExampleLabel(ExampleKind.WRAPPING_EXAMPLE), example: ExampleKind.WRAPPING_EXAMPLE },
+  ];
   const activeCategory: Category = useSelector((state: any) => state.formatterSettings.activeCategory);
   const contentText: string = useSelector((state: any) => state.formatterSettings.formattedContent);
   const readOnly: boolean = useSelector((state: any) => state.formatterSettings.readOnly);
-  const title: string = "Java Formatter Settings" + (readOnly ? " (Read Only)" : "");
+  const title = readOnly ? l10n.t("Java Formatter Settings (Read Only)") : l10n.t("Java Formatter Settings");
 
   const dispatch: Dispatch<any> = useDispatch();
   const onClickNaviBar = (cat: Category, exampleKind: ExampleKind) => {
@@ -73,7 +74,7 @@ const FormatterSettingsView = (): JSX.Element => {
     <div className="container root d-flex flex-column">
       <div className="row setting-header">
         <div className="col"><h2 className="mb-0">{title}</h2></div>
-        <div className="col flex-grow-0">{readOnly && (<div><a className="btn btn-primary float-right edit-button" role="button" title="Download and edit profile" onClick={() => onWillDownloadAndUse()}>Download and Edit</a></div>)}</div>
+        <div className="col flex-grow-0">{readOnly && (<div><a className="btn btn-primary float-right edit-button" role="button" title={l10n.t("Download and edit profile")} onClick={() => onWillDownloadAndUse()}>{l10n.t("Download and Edit")}</a></div>)}</div>
       </div>
       <div className="row flex-grow-1 d-flex flex-nowrap view-body">
         <div className="col flex-grow-0">{naviBar}</div>

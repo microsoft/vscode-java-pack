@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import { useSelector } from "react-redux";
 import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../../../../../utils/webview";
 import { ProjectSettingsException } from "../../../../types";
@@ -17,17 +19,17 @@ const Exception = (): JSX.Element | null => {
         command = "workbench.action.files.openFileFolder";
       }
       content = (
-        <span>There are no Java projects opened in the current workspace. Please try to <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reload", "workbench.action.webview.reloadWebviewAction")}>reload the page</a> or <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openProject", command)}>open a Java project</a>.</span>
+        <span>{richText(l10n.t("There are no Java projects opened in the current workspace. Please try to {0} or {1}."), [<a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reload", "workbench.action.webview.reloadWebviewAction")}>{l10n.t("reload the page")}</a>, <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openProject", command)}>{l10n.t("open a Java project")}</a>])}</span>
       );
       break;
     case ProjectSettingsException.JavaExtensionNotInstalled:
       content = (
-        <span>The required extension <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openJavaLanguageSupportMarketPlace", "extension.open", ["redhat.java"])}>Language Support for Java™ by Red Hat</a> is not installed or it's disabled. Please <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.installJavaLanguageSupport", "workbench.extensions.installExtension", ["redhat.java"])}>install</a> it in Visual Studio Code and <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reloadWebview", "workbench.action.webview.reloadWebviewAction")}>reload</a> the page after installation.</span>
+        <span>{richText(l10n.t("The required extension {0} is not installed or it's disabled. Please {1} it in Visual Studio Code and {2} the page after installation."), [<a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openJavaLanguageSupportMarketPlace", "extension.open", ["redhat.java"])}>{l10n.t("Language Support for Java™ by Red Hat")}</a>, <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.installJavaLanguageSupport", "workbench.extensions.installExtension", ["redhat.java"])}>{l10n.t("install")}</a>, <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reloadWebview", "workbench.action.webview.reloadWebviewAction")}>{l10n.t("reload")}</a>])}</span>
       );
       break;
     case ProjectSettingsException.StaleJavaExtension:
       content = (
-        <span>The version of required extension <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openJavaLanguageSupportMarketPlace", "extension.open", ["redhat.java"])}>Language Support for Java™ by Red Hat</a> is too stale. Please <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.installJavaLanguageSupport", "workbench.extensions.installExtension", ["redhat.java"])}>update</a> it and <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reloadWebview", "workbench.action.webview.reloadWebviewAction")}>reload</a> the page.</span>
+        <span>{richText(l10n.t("The version of required extension {0} is too stale. Please {1} it and {2} the page."), [<a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.openJavaLanguageSupportMarketPlace", "extension.open", ["redhat.java"])}>{l10n.t("Language Support for Java™ by Red Hat")}</a>, <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.installJavaLanguageSupport", "workbench.extensions.installExtension", ["redhat.java"])}>{l10n.t("update")}</a>, <a href={encodeCommandUriWithTelemetry(WEBVIEW_ID, "classpath.reloadWebview", "workbench.action.webview.reloadWebviewAction")}>{l10n.t("reload")}</a>])}</span>
       );
       break;
     default:

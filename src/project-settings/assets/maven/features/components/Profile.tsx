@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-textfield/index.js";
 
 
@@ -24,8 +25,8 @@ const Profile = (): JSX.Element => {
   return (
     <div className="setting-section">
       <div className="setting-section-subtitle">
-        <h4 className="mt-3 mb-1 mr-1">Active Maven Profiles</h4>
-        <span>(comma separated)</span>
+        <h4 className="mt-3 mb-1 mr-1">{l10n.t("Active Maven Profiles")}</h4>
+        <span>{l10n.t("(comma separated)")}</span>
       </div>
 
       <vscode-textfield className="setting-section-text"

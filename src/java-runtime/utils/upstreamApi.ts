@@ -43,12 +43,12 @@ export function getToolingRuntimeInfo(): ToolingRuntimeInfo {
     const info: ToolingRuntimeInfo = { requiredJdkVersion };
     const javaExt = vscode.extensions.getExtension<{ javaRequirement?: RequirementsData; status?: string }>("redhat.java");
     if (!javaExt) {
-        info.javaHomeWarning = "Language Support for Java (redhat.java) is unavailable. Check that it is installed and enabled.";
+        info.javaHomeWarning = vscode.l10n.t("Language Support for Java (redhat.java) is unavailable. Check that it is installed and enabled.");
         return info;
     }
     const api = javaExt.isActive ? javaExt.exports : undefined;
     if (api?.status === "Error") {
-        info.javaHomeError = "redhat.java reports an error. Open the Java logs for details.";
+        info.javaHomeError = vscode.l10n.t("redhat.java reports an error. Open the Java logs for details.");
     }
     const requirements = api?.javaRequirement;
     if (!requirements) {
@@ -57,7 +57,7 @@ export function getToolingRuntimeInfo(): ToolingRuntimeInfo {
     info.javaDotHome = requirements.tooling_jre;
     info.toolingJreVersion = requirements.tooling_jre_version;
     if (requirements.tooling_jre && requirements.tooling_jre_version < requiredJdkVersion) {
-        info.javaHomeWarning = `The runtime reported by redhat.java uses Java ${requirements.tooling_jre_version}, below the required Java ${requiredJdkVersion}. Open the Java logs for details.`;
+        info.javaHomeWarning = vscode.l10n.t("The runtime reported by redhat.java uses Java {0}, below the required Java {1}. Open the Java logs for details.", requirements.tooling_jre_version, requiredJdkVersion);
     }
 
     const configuredHome = vscode.workspace.getConfiguration().get<string>("java.jdt.ls.java.home");
@@ -66,8 +66,8 @@ export function getToolingRuntimeInfo(): ToolingRuntimeInfo {
         const configuredVersion = sameHome(expandHomeDir(configuredHome), requirements.java_home)
             ? requirements.java_version : undefined;
         const configurationWarning = configuredVersion && configuredVersion < requiredJdkVersion
-            ? `The configured 'java.jdt.ls.java.home' uses Java ${configuredVersion}, below the required Java ${requiredJdkVersion}. redhat.java reports a different language-server runtime.`
-            : "The configured 'java.jdt.ls.java.home' differs from the runtime reported by redhat.java. Open the Java logs for details.";
+            ? vscode.l10n.t("The configured 'java.jdt.ls.java.home' uses Java {0}, below the required Java {1}. redhat.java reports a different language-server runtime.", configuredVersion, requiredJdkVersion)
+            : vscode.l10n.t("The configured 'java.jdt.ls.java.home' differs from the runtime reported by redhat.java. Open the Java logs for details.");
         info.javaHomeWarning = [info.javaHomeWarning, configurationWarning].filter(Boolean).join(" ");
     }
     return info;

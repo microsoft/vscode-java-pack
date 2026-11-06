@@ -125,7 +125,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
     private async selectSourceFolderPath(currentProjectRoot: vscode.Uri): Promise<string | undefined> {
         const sourceFolder: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
-            openLabel: "Select Source Folder",
+            openLabel: vscode.l10n.t("Select Source Folder"),
             canSelectFiles: false,
             canSelectFolders: true,
             canSelectMany: false,
@@ -136,7 +136,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             let relativePath: string = path.relative(projectRootPath, sourceFolderPath);
             if (relativePath.startsWith("..")) {
                 const err: Error = new Error("The source path must be contained in the project root folder.");
-                vscode.window.showErrorMessage(err.message);
+                vscode.window.showErrorMessage(vscode.l10n.t("The source path must be contained in the project root folder."));
                 setUserError(err);
                 throw (err);
             }
@@ -155,7 +155,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         }
         const sourcePaths: string[] = vscode.workspace.getConfiguration("java", currentProjectRoot).get<string[]>("project.sourcePaths") || [];
         if (sourcePaths.includes(relativePath)) {
-            vscode.window.showInformationMessage(`The path ${relativePath} has already been a source path.`);
+            vscode.window.showInformationMessage(vscode.l10n.t("The path {0} has already been a source path.", relativePath));
             return;
         }
         sourcePaths.push(relativePath);
@@ -219,8 +219,9 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             }
         } catch (error) {
             const err: Error = new Error(`Failed to update classpaths: ${error}`);
-            vscode.window.showErrorMessage(err.message, "Open Log Files").then((choice) => {
-                if (choice === "Open Log Files") {
+            const openLogs = { title: vscode.l10n.t("Open Log Files") };
+            vscode.window.showErrorMessage(vscode.l10n.t("Failed to update classpaths: {0}", String(error)), openLogs).then((choice) => {
+                if (choice === openLogs) {
                     vscode.commands.executeCommand("java.open.logs");
                 }
             });
@@ -237,7 +238,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
     private selectOutputPath = instrumentOperation("projectSettings.classpath.selectOutputPath", async (_operationId: string, currentProjectRoot: vscode.Uri) => {
         const outputFolder: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
-            openLabel: "Select Output Folder",
+            openLabel: vscode.l10n.t("Select Output Folder"),
             canSelectFiles: false,
             canSelectFolders: true,
             canSelectMany: false,
@@ -248,13 +249,13 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             const outputRelativePath: string = path.relative(projectRootPath, outputFullPath);
             if (outputRelativePath.startsWith("..")) {
                 const err: Error = new Error("The customized output path must be contained in the project root folder.");
-                vscode.window.showErrorMessage(err.message);
+                vscode.window.showErrorMessage(vscode.l10n.t("The customized output path must be contained in the project root folder."));
                 setUserError(err);
                 throw (err);
             }
             if (!outputRelativePath) {
                 const err: Error = new Error("Cannot set the project root path as the output path.");
-                vscode.window.showErrorMessage(err.message);
+                vscode.window.showErrorMessage(vscode.l10n.t("Cannot set the project root path as the output path."));
                 setUserError(err);
                 throw (err);
             }
@@ -272,8 +273,10 @@ export class ClasspathRequestHandler implements vscode.Disposable {
 
         const outputFullPath = path.join(currentProjectRoot.fsPath, outputRelativePath);
         if ((await fse.readdir(outputFullPath)).length) {
-            const choice: string | undefined = await vscode.window.showInformationMessage(`The contents in ${outputFullPath} will be removed, are you sure to continue?`, "Yes", "No");
-            if (choice === "Yes") {
+            const yes = { title: vscode.l10n.t("Yes") };
+            const no = { title: vscode.l10n.t("No") };
+            const choice = await vscode.window.showInformationMessage(vscode.l10n.t("The contents in {0} will be removed, are you sure to continue?", outputFullPath), yes, no);
+            if (choice === yes) {
                 await fse.remove(outputFullPath);
                 await fse.ensureDir(outputFullPath);
             } else {
@@ -297,10 +300,10 @@ export class ClasspathRequestHandler implements vscode.Disposable {
         };
         const javaHome: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
-            openLabel: "Select JDK Home",
+            openLabel: vscode.l10n.t("Select JDK Home"),
             canSelectFiles: false,
             canSelectFolders: true,
-            title: "Select the installation path of the JDK"
+            title: vscode.l10n.t("Select the installation path of the JDK")
         });
         if (!javaHome) {
             return;
@@ -327,7 +330,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
                 vmInstalls,
             });
         } else {
-            vscode.window.showErrorMessage(result.message);
+            vscode.window.showErrorMessage(vscode.l10n.t("Unable to update the project JDK: {0}", result.message));
             const err: Error = new Error(result.message);
             setUserError(err);
             throw (err);
@@ -359,7 +362,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
                 vmInstalls,
             });
         } else {
-            vscode.window.showErrorMessage(result.message);
+            vscode.window.showErrorMessage(vscode.l10n.t("Unable to update the project JDK: {0}", result.message));
             const err: Error = new Error(result.message);
             setUserError(err);
             throw (err);
@@ -369,12 +372,12 @@ export class ClasspathRequestHandler implements vscode.Disposable {
     private selectLibraries = instrumentOperation("projectSettings.classpath.selectLibraries", async (_operationId: string, currentProjectRoot: vscode.Uri, projectType: unknown) => {
         const jarFiles: vscode.Uri[] | undefined = await vscode.window.showOpenDialog({
             defaultUri: vscode.workspace.workspaceFolders?.[0].uri,
-            openLabel: "Select Jar File",
+            openLabel: vscode.l10n.t("Select Jar File"),
             canSelectFiles: true,
             canSelectFolders: false,
             canSelectMany: true,
             filters: {
-                "Jar": ["jar"],
+                [vscode.l10n.t("Jar")]: ["jar"],
             },
         });
         if (jarFiles) {
@@ -431,7 +434,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
 
         if (!configurationPath) {
             const err: Error = new Error(`The configuration file: '${configurationPath}' does not exist.`);
-            vscode.window.showErrorMessage(err.message);
+            vscode.window.showErrorMessage(vscode.l10n.t("The configuration file: '{0}' does not exist.", configurationPath));
             throw (err);
         }
         vscode.commands.executeCommand("vscode.open", vscode.Uri.file(configurationPath));
@@ -454,7 +457,7 @@ export class ClasspathRequestHandler implements vscode.Disposable {
             }
             const err = error instanceof Error ? error : new Error(String(error));
             sendError(err);
-            void vscode.window.showErrorMessage(`Unable to load Java runtimes: ${err.message}`);
+            void vscode.window.showErrorMessage(vscode.l10n.t("Unable to load Java runtimes: {0}", err.message));
             return undefined;
         }
     }

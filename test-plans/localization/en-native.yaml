@@ -1,0 +1,86 @@
+name: "Java Pack - English Walkthrough, Native Actions and Restoration"
+description: |
+  Exercise the original walkthrough command route, native settings actions and
+  actual Help Center restoration separately from webview smoke coverage, staying
+  within AutoTest's 12 unique command-and-argument keybinding slots.
+
+setup:
+  extension: "redhat.java"
+  extensions:
+    - "vscjava.vscode-java-pack"
+  vscodeVersion: "stable"
+  workspace: "../../test-fixtures/super-implementation"
+  timeout: 120
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
+
+steps:
+  - id: "java-workspace-ready"
+    action: "waitForLanguageServer"
+    skipLlmVerify: true
+    timeout: 180
+
+  - id: "open-original-walkthrough"
+    action: 'executeVSCodeCommand workbench.action.openWalkthrough "vscjava.vscode-java-pack#javaWelcome"'
+    # VS Code owns this tab title; the pack's walkthrough heading is inside it.
+    verifyEditorTab:
+      title: "Welcome"
+    timeout: 30
+
+  - id: "enable-native-awt-development"
+    action: "executeVSCodeCommand java.toggleAwtDevelopment true"
+
+  # VS Code suppresses toast rendering with --enable-smoke-test-driver. Assert
+  # the command's persisted effect here; real message UI remains a manual gate.
+  - id: "verify-native-awt-setting"
+    action: "wait 2 seconds"
+    verifyFile:
+      path: "~/.vscode/settings.json"
+      matches: '"java\.completion\.filteredTypes"\s*:\s*\[(?![^\]]*java\.awt\.\*)[^\]]*\]'
+    timeout: 20
+
+  - id: "restore-native-awt-setting"
+    action: "executeVSCodeCommand java.toggleAwtDevelopment false"
+
+  - id: "verify-restored-native-awt-setting"
+    action: "wait 2 seconds"
+    verifyFile:
+      path: "~/.vscode/settings.json"
+      contains: '"java.awt.*"'
+    timeout: 20
+
+  - id: "invoke-walkthrough-jdk-action"
+    action: "executeVSCodeCommand java.installJdk.fromWalkthrough"
+    verifyEditorTab:
+      title: "Install New JDK"
+    verifyWebview:
+      contains:
+        - "Install New JDK"
+        - "Reload Window"
+    timeout: 30
+
+  - id: "open-help-center-before-reload"
+    action: "executeVSCodeCommand java.welcome"
+    verifyEditorTab:
+      title: "Java Help Center"
+    verifyWebview:
+      contains: "Get Started"
+    timeout: 30
+
+  - id: "focus-workbench-before-reload"
+    action: "click side tab Explorer"
+
+  - id: "reload-help-center"
+    action: "executeVSCodeCommand workbench.action.reloadWindow"
+    timeout: 60
+
+  - id: "verify-restored-help-center"
+    action: "wait 3 seconds"
+    verifyEditorTab:
+      title: "Java Help Center"
+    verifyWebview:
+      contains:
+        - "Java Help Center"
+        - "Get Started"
+    timeout: 45

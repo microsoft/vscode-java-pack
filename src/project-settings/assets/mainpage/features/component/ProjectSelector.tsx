@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-single-select/index.js";
 import "@vscode-elements/elements/dist/vscode-option/index.js";
 
@@ -79,7 +80,7 @@ const ProjectSelector = (): JSX.Element | null => {
   return (
     <div id="project-selector" className="setting-section">
       <div className="flex-center mt-2 mb-2">
-        <span className="setting-section-description ml-1 mr-1">Project:</span>
+        <span className="setting-section-description ml-1 mr-1">{l10n.t("Project:")}</span>
         <vscode-single-select ref={selectRef} className="setting-section-dropdown">
             {projectSelections}
         </vscode-single-select>

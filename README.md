@@ -71,6 +71,11 @@ Each extension mentioned above is a separate open-source project and has its own
 
 This extension collects telemetry data to help us improve the Java development experience in VS Code. It does not collect any personal information such as names, addresses, or file paths. For more details, see our [privacy statement](http://go.microsoft.com/fwlink/?LinkId=521839). You can disable telemetry collection at any time by changing the `telemetry.enableTelemetry` setting as described in our [FAQ](https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting).
 
+## Contributing translations
+
+See the [localization contributor guide](docs/localization.md) for supported
+resources, catalog checks and translation review requirements.
+
 ## License
 
 [MIT](https://github.com/Microsoft/vscode-java-pack/blob/master/LICENSE.txt)

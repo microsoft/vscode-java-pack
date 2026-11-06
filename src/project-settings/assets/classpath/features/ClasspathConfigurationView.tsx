@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-tabs/index.js";
 import "@vscode-elements/elements/dist/vscode-tab-header/index.js";
 import "@vscode-elements/elements/dist/vscode-tab-panel/index.js";
@@ -49,9 +50,9 @@ const ClasspathConfigurationView = (): JSX.Element => {
   return (
     <div className="root">
       <vscode-tabs selected-index={selectedIndex} className="setting-panels">
-        <vscode-tab-header slot="header" onClick={() => onClickTab("source")}>Sources</vscode-tab-header>
-        <vscode-tab-header slot="header" onClick={() => onClickTab("jdk")}>JDK Runtime</vscode-tab-header>
-        <vscode-tab-header slot="header" onClick={() => onClickTab("libraries")}>Libraries</vscode-tab-header>
+        <vscode-tab-header slot="header" onClick={() => onClickTab("source")}>{l10n.t("Sources")}</vscode-tab-header>
+        <vscode-tab-header slot="header" onClick={() => onClickTab("jdk")}>{l10n.t("JDK Runtime")}</vscode-tab-header>
+        <vscode-tab-header slot="header" onClick={() => onClickTab("libraries")}>{l10n.t("Libraries")}</vscode-tab-header>
         <vscode-tab-panel className="setting-panels-view">
           {[ProjectType.Gradle, ProjectType.Maven].includes(projectType) && (<Sources />)}
           {projectType !== ProjectType.Gradle && projectType !== ProjectType.Maven && (<UnmanagedFolderSources />)}

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-divider/index.js";
 import "@vscode-elements/elements/dist/vscode-single-select/index.js";
 import "@vscode-elements/elements/dist/vscode-option/index.js";
@@ -85,7 +87,7 @@ const JdkRuntime = (): JSX.Element => {
   return (
     <div className="setting-section">
       <div className="jdk-runtime-row">
-        <span className="setting-section-description">JDK:</span>
+        <span className="setting-section-description">{l10n.t("JDK:")}</span>
         <vscode-single-select
           ref={selectRef}
           id="jdk-dropdown"
@@ -93,7 +95,7 @@ const JdkRuntime = (): JSX.Element => {
         >
           {!hasActiveVmInstall && (
             <vscode-option value={activeVmInstallPath} selected disabled description={activeVmInstallPath}>
-              {activeVmInstallPath ? "Current project JDK (not listed)" : "Project JDK not available"}
+              {activeVmInstallPath ? l10n.t("Current project JDK (not listed)") : l10n.t("Project JDK not available")}
             </vscode-option>
           )}
           {vmInstalls.map((vmInstall) => (
@@ -112,21 +114,12 @@ const JdkRuntime = (): JSX.Element => {
         {activeVmInstallPath}
       </div>
       {!hasActiveVmInstall && activeVmInstallPath && (
-        <p>The current project JDK is not in the available runtime list. Refresh JDKs or locate its installation.</p>
+        <p>{l10n.t("The current project JDK is not in the available runtime list. Refresh JDKs or locate its installation.")}</p>
       )}
       <div className="jdk-runtime-actions">
-        <vscode-button secondary onClick={() => ClasspathRequest.onWillListVmInstalls()}>
-          <span className="codicon codicon-refresh mr-1"></span>
-          Refresh JDKs
-        </vscode-button>
-        <vscode-button secondary onClick={() => ClasspathRequest.onWillAddNewJdk()}>
-          <span className="codicon codicon-folder-opened mr-1"></span>
-          Find a local JDK...
-        </vscode-button>
-        <vscode-button secondary onClick={() => CommonRequest.onWillExecuteCommand("java.installJdk")}>
-          <span className="codicon codicon-desktop-download mr-1"></span>
-          Download a new JDK...
-        </vscode-button>
+        <vscode-button secondary onClick={() => ClasspathRequest.onWillListVmInstalls()}>{richText(l10n.t("{0}Refresh JDKs"), [<span className="codicon codicon-refresh mr-1"></span>])}</vscode-button>
+        <vscode-button secondary onClick={() => ClasspathRequest.onWillAddNewJdk()}>{richText(l10n.t("{0}Find a local JDK..."), [<span className="codicon codicon-folder-opened mr-1"></span>])}</vscode-button>
+        <vscode-button secondary onClick={() => CommonRequest.onWillExecuteCommand("java.installJdk")}>{richText(l10n.t("{0}Download a new JDK..."), [<span className="codicon codicon-desktop-download mr-1"></span>])}</vscode-button>
       </div>
     </div>
   );

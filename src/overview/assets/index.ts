@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import "../../l10n/browser";
+
 const $ = require("jquery");
 import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";

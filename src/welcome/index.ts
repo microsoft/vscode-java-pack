@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { escapeHtml, webviewLanguage, localizationBootstrap } from "../l10n/host";
 import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentSimpleOperation, sendInfo } from "vscode-extension-telemetry-wrapper";
@@ -40,7 +41,7 @@ export async function showWelcomeWebview(context: vscode.ExtensionContext, _oper
 
         welcomeView = vscode.window.createWebviewPanel(
             "java.welcome",
-            "Java Help Center",
+            vscode.l10n.t("Java Help Center"),
             column,
             {
                 enableScripts: true,
@@ -70,6 +71,7 @@ function onDidDisposeWebviewPanel() {
 }
 
 async function initializeWelcomeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
+    webviewPanel.title = vscode.l10n.t("Java Help Center");
     webviewPanel.iconPath = {
         light: vscode.Uri.file(path.join(context.extensionPath, "caption.light.svg")),
         dark: vscode.Uri.file(path.join(context.extensionPath, "caption.dark.svg"))
@@ -106,15 +108,16 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
     const nonce = getNonce();
     const cspSource = webviewPanel.webview.cspSource;
     return `<!DOCTYPE html>
-    <html lang="en">
+    <html lang="${webviewLanguage()}">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource} https: data:;">
         <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
         <meta name="theme-color" content="#000000">
-        <title>Java Help Center</title>
+        <title>${escapeHtml(vscode.l10n.t("Java Help Center"))}</title>
     </head>
     <body>
+    ${localizationBootstrap(nonce)}
         <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
         <div id="content"></div>
     </body>

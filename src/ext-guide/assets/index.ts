@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import "../../l10n/browser";
+import * as l10n from "@vscode/l10n";
+
 import "../../assets/vscode.scss";
 import "bootstrap/js/src/tab";
 const $ = require("jquery");
@@ -59,7 +62,7 @@ function updateSelection() {
     return;
   }
 
-  $btnSelected.text(`Install Selected (${$checked.length})`);
+  $btnSelected.text(l10n.t("Install Selected ({0})", $checked.length));
   bsShow($btnSelected);
 }
 

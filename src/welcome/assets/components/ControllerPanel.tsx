@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import { setWelcomeVisibility } from "../utils";
 
 interface ControllerPanelProps {
@@ -10,14 +12,11 @@ interface ControllerPanelProps {
 export default function ControllerPanel({ showWhenUsingJava }: ControllerPanelProps) {
     return (
         <div>
-            <label>
-                <input
+            <label>{richText(l10n.t("{0} Show Help Center when using Java"), [<input
                     type="checkbox"
                     defaultChecked={showWhenUsingJava}
                     onChange={toggleVisibility}
-                />
-                {" "}Show Help Center when using Java
-            </label>
+                />])}</label>
         </div>
     );
 }
