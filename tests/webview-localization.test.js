@@ -193,6 +193,7 @@ for (const [page, serializer, title] of [
         assert.equal(s.panel.title, title);
         assert.match(s.panel.webview.html, /<html lang="zh-cn">/);
         assert.ok(s.panel.webview.html.includes(`<title>${title}</title>`));
+        assert.match(s.panel.webview.html, /id="java-pack-l10n"/);
         assert.ok(s.panel.webview.html.indexOf('id="java-pack-l10n"') < s.panel.webview.html.indexOf('type="module"'));
         assert.match(s.panel.webview.html, /script-src 'nonce-stable-nonce'/);
     });
