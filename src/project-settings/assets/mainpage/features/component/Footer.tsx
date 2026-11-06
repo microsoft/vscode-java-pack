@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 
 import { Dispatch } from "@reduxjs/toolkit";
@@ -144,16 +145,12 @@ const Footer = (): JSX.Element => {
 
   return (
     <div id="footer" className="pt-1">
-        {loadingState && <vscode-button className="ml-1" disabled>Applying...</vscode-button>}
-        {!loadingState &&
-          <vscode-button
+        {loadingState && <vscode-button className="ml-1" disabled>{l10n.t("Applying...")}</vscode-button>}
+        {!loadingState && <vscode-button
             ref={applyBtnRef}
             className="ml-1"
             onClick={() => handleApply()}
-          >
-            Apply Settings
-          </vscode-button>
-        }
+          >{l10n.t("Apply Settings")}</vscode-button>}
     </div>
   );
 };

@@ -18,10 +18,10 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
             return [];
         }
 
-        const codeAction: vscode.CodeAction = new vscode.CodeAction("Configure classpath");
+        const codeAction: vscode.CodeAction = new vscode.CodeAction(vscode.l10n.t("Configure classpath"));
         codeAction.diagnostics = classPathDiagnostics;
         codeAction.command = {
-            title: "Configure classpath",
+            title: vscode.l10n.t("Configure classpath"),
             command: "java.classpathConfiguration"
         };
         codeAction.kind = vscode.CodeActionKind.QuickFix;

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 import "@vscode-elements/elements/dist/vscode-textfield/index.js";
 
@@ -47,12 +48,12 @@ const Output = (): JSX.Element | null => {
 
   return (
     <div className="setting-section mt-2">
-      <h4 className="mb-2 pl-1">Output Path</h4>
+      <h4 className="mb-2 pl-1">{l10n.t("Output Path")}</h4>
       <vscode-textfield className="inactive setting-section-text pl-1"
         readOnly
         value={output}
-        placeholder="Output Path">
-        <vscode-button slot="end" icon-only title="Browse..." aria-label="Browse..." onClick={() => handleClick()}>
+        placeholder={l10n.t("Output Path")}>
+        <vscode-button slot="end" icon-only title={l10n.t("Browse...")} aria-label={l10n.t("Browse...")} onClick={() => handleClick()}>
           <span className="codicon codicon-folder-opened"></span>
         </vscode-button>
       </vscode-textfield>

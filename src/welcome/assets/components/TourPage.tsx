@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { encodeCommandUriWithTelemetry, supportedByNavigator } from "../../../utils/webview";
 import { onWillFetchInitProps, reportSkipTour, WEBVIEW_ID } from "../utils";
@@ -20,19 +22,23 @@ export default function TourPage() {
 
         return [{
             title: "Open Project Folder",
-            description: <div><a href={openFolderCommand}>Open a folder</a> containing your Java project for full features.</div>,
+            label: l10n.t("Open Project Folder"),
+            description: <div>{richText(l10n.t("{0} containing your Java project for full features."), [<a href={openFolderCommand}>{l10n.t("Open a folder")}</a>])}</div>,
             imageUri: require("../resources/open-project.png")
         }, {
             title: "Project Explorer",
-            description: <div>Expand <a href={showProjectExplorerCommand}>Java Project Explorer</a> to view your project structure.</div>,
+            label: l10n.t("Project Explorer"),
+            description: <div>{richText(l10n.t("Expand {0} to view your project structure."), [<a href={showProjectExplorerCommand}>{l10n.t("Java Project Explorer")}</a>])}</div>,
             imageUri: require("../resources/project-manager.png")
         }, {
             title: "Running and Debugging",
-            description: <div>Open <a href={showRunAndDebugViewCommand}>Run and Debug View</a> to start your project.</div>,
+            label: l10n.t("Running and Debugging"),
+            description: <div>{richText(l10n.t("Open {0} to start your project."), [<a href={showRunAndDebugViewCommand}>{l10n.t("Run and Debug View")}</a>])}</div>,
             imageUri: require("../resources/debugger.png")
         }, {
             title: "Testing",
-            description: <div>Use <a href={showTestExplorerViewCommand}>Testing View</a> to run unit tests.</div>,
+            label: l10n.t("Testing"),
+            description: <div>{richText(l10n.t("Use {0} to run unit tests."), [<a href={showTestExplorerViewCommand}>{l10n.t("Testing View")}</a>])}</div>,
             imageUri: require("../resources/testing.png")
         }];
     }, []);
@@ -41,26 +47,26 @@ export default function TourPage() {
 
     const steps = useMemo(() => {
         const startingPage = <div key="start">
-            <img src={logoIcon} alt="logo" className="logo" />
-            <h2>Welcome to use Java Tools</h2>
-            <div>lightweight, performant, powerful.</div>
-            <div><button className="btn" onClick={nextStep}>Get Started</button></div>
-            <div><a href="#" onClick={() => skipTourFrom("Starting Page")}>skip</a></div>
+            <img src={logoIcon} alt={l10n.t("logo")} className="logo" />
+            <h2>{l10n.t("Welcome to use Java Tools")}</h2>
+            <div>{l10n.t("lightweight, performant, powerful.")}</div>
+            <div><button className="btn" onClick={nextStep}>{l10n.t("Get Started")}</button></div>
+            <div><a href="#" onClick={() => skipTourFrom("Starting Page")}>{l10n.t("skip")}</a></div>
         </div>;
 
         const pages = contentPages.map(elem => <div className="text-center" key={elem.title}>
-            <h2>{elem.title}</h2>
+            <h2>{elem.label}</h2>
             <div>{elem.description}</div>
-            <img src={elem.imageUri} alt={elem.title} className="screenshot" />
-            <button className="btn" onClick={nextStep}>Next Step</button>
-            <div><a href="#" onClick={() => skipTourFrom(elem.title)}>skip</a></div>
+            <img src={elem.imageUri} alt={elem.label} className="screenshot" />
+            <button className="btn" onClick={nextStep}>{l10n.t("Next Step")}</button>
+            <div><a href="#" onClick={() => skipTourFrom(elem.title)}>{l10n.t("skip")}</a></div>
         </div>);
 
         const endingPage = <div key="end">
-            <img src={doneIcon} alt="logo" className="logo" />
-            <h2>You're good to go!</h2>
-            <div>Next, start using Java!</div>
-            <div><button className="btn" onClick={nextStep}>What's next?</button></div>
+            <img src={doneIcon} alt={l10n.t("logo")} className="logo" />
+            <h2>{l10n.t("You're good to go!")}</h2>
+            <div>{l10n.t("Next, start using Java!")}</div>
+            <div><button className="btn" onClick={nextStep}>{l10n.t("What's next?")}</button></div>
         </div>;
 
         return [startingPage, ...pages, endingPage];
@@ -87,7 +93,7 @@ export default function TourPage() {
     }, [step, steps.length]);
 
     if (step >= steps.length) {
-        return <div>Loading...</div>;
+        return <div>{l10n.t("Loading...")}</div>;
     }
 
     return (

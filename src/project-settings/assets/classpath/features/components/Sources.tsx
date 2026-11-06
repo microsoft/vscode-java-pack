@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 import "@vscode-elements/elements/dist/vscode-textfield/index.js";
 import "@vscode-elements/elements/dist/vscode-divider/index.js";
@@ -154,36 +156,36 @@ const Sources = (): JSX.Element => {
     return (
       <div className="source-edit-row" key={id}>
         <div className="source-edit-field">
-          <label>Source Path:</label>
+          <label>{l10n.t("Source Path:")}</label>
           <div className="source-edit-input-group">
             <vscode-textfield
                 ref={sourceInputRef}
                 className="source-edit-input"
                 value={editingSourcePath ?? ""}
-                placeholder="Source Root Path">
+                placeholder={l10n.t("Source Root Path")}>
             </vscode-textfield>
-            <vscode-button icon-only title="Browse..." aria-label="Browse..." onClick={() => handleBrowse("source")}>
+            <vscode-button icon-only title={l10n.t("Browse...")} aria-label={l10n.t("Browse...")} onClick={() => handleBrowse("source")}>
               <span className="codicon codicon-folder-opened"></span>
             </vscode-button>
           </div>
         </div>
         <div className="source-edit-field">
-          <label>Output Path:</label>
+          <label>{l10n.t("Output Path:")}</label>
           <div className="source-edit-input-group">
             <vscode-textfield
                 ref={outputInputRef}
                 className="source-edit-input"
                 value={editingOutputPath ?? ""}
-                placeholder="Output Path">
+                placeholder={l10n.t("Output Path")}>
             </vscode-textfield>
-            <vscode-button icon-only title="Browse..." aria-label="Browse..." onClick={() => handleBrowse("output")}>
+            <vscode-button icon-only title={l10n.t("Browse...")} aria-label={l10n.t("Browse...")} onClick={() => handleBrowse("output")}>
               <span className="codicon codicon-folder-opened"></span>
             </vscode-button>
           </div>
         </div>
         <div className="source-edit-actions">
-          <vscode-button onClick={() => handleOK()}>OK</vscode-button>
-          <vscode-button secondary onClick={() => handleCancel()}>Cancel</vscode-button>
+          <vscode-button onClick={() => handleOK()}>{l10n.t("OK")}</vscode-button>
+          <vscode-button secondary onClick={() => handleCancel()}>{l10n.t("Cancel")}</vscode-button>
         </div>
       </div>
     );
@@ -205,10 +207,10 @@ const Sources = (): JSX.Element => {
         <div className="source-row-output">
           <span className="source-row-output-text">{source.output || defaultOutput}</span>
           <div className={`source-row-actions ${hoveredRow === rowId ? "" : "hidden"}`}>
-            <vscode-button class="ghost-button" icon-only onClick={() => handleEdit(source.path, source.output || defaultOutput, index)} title="Edit">
+            <vscode-button class="ghost-button" icon-only onClick={() => handleEdit(source.path, source.output || defaultOutput, index)} title={l10n.t("Edit")}>
               <span className="codicon codicon-edit"></span>
             </vscode-button>
-            <vscode-button class="ghost-button" icon-only onClick={() => handleRemove(source.path)} title="Remove">
+            <vscode-button class="ghost-button" icon-only onClick={() => handleRemove(source.path)} title={l10n.t("Remove")}>
               <span className="codicon codicon-close"></span>
             </vscode-button>
           </div>
@@ -220,19 +222,16 @@ const Sources = (): JSX.Element => {
   return (
     <div className="setting-section">
       <div id="list-actions" className="flex-center setting-list-actions">
-        <vscode-button class="ghost-button" onClick={() => handleAdd()}>
-          <span className="codicon codicon-add mr-1"></span>
-          Add Source Root...
-        </vscode-button>
+        <vscode-button class="ghost-button" onClick={() => handleAdd()}>{richText(l10n.t("{0}Add Source Root..."), [<span className="codicon codicon-add mr-1"></span>])}</vscode-button>
       </div>
       <vscode-divider></vscode-divider>
       <div className="setting-overflow-area">
         <div className="source-list-header">
-          <div className="source-list-header-cell">Path</div>
-          <div className="source-list-header-cell">Output</div>
+          <div className="source-list-header-cell">{l10n.t("Path")}</div>
+          <div className="source-list-header-cell">{l10n.t("Output")}</div>
         </div>
         {sources.length === 0 ? (
-          <div className="source-row"><em>No source paths are configured.</em></div>
+          <div className="source-row"><em>{l10n.t("No source paths are configured.")}</em></div>
         ) : (
           sources.map((source, index) => renderSourceRow(source, index))
         )}

@@ -10,7 +10,7 @@ import { gt, eq } from "semver";
 import { fetchInitProps } from "../welcome/index";
 
 export async function createMavenProjectCmdHandler(_context: vscode.ExtensionContext) {
-  if (!await validateAndRecommendExtension("vscjava.vscode-maven", "Maven extension is recommended to help create Java projects and work with custom goals.", true)) {
+  if (!await validateAndRecommendExtension("vscjava.vscode-maven", vscode.l10n.t("Maven extension is recommended to help create Java projects and work with custom goals."), true)) {
     return;
   }
 
@@ -20,7 +20,7 @@ export async function createMavenProjectCmdHandler(_context: vscode.ExtensionCon
 // TODO: add entry to create standalone Java file
 
 export async function createSpringBootProjectCmdHandler(_context: vscode.ExtensionContext) {
-  if (!await validateAndRecommendExtension("vscjava.vscode-spring-initializr", "Spring Initializr extension is recommended to help create Spring Boot projects and manage dependencies.", true)) {
+  if (!await validateAndRecommendExtension("vscjava.vscode-spring-initializr", vscode.l10n.t("Spring Initializr extension is recommended to help create Spring Boot projects and manage dependencies."), true)) {
     return;
   }
 
@@ -28,7 +28,7 @@ export async function createSpringBootProjectCmdHandler(_context: vscode.Extensi
 }
 
 export async function createQuarkusProjectCmdHandler(_context: vscode.ExtensionContext) {
-  if (!await validateAndRecommendExtension("redhat.vscode-quarkus", "Quarkus Tools for Visual Studio Code is recommended to help create Quarkus projects and for an all-in-one Quarkus application development experience.", true)) {
+  if (!await validateAndRecommendExtension("redhat.vscode-quarkus", vscode.l10n.t("Quarkus Tools for Visual Studio Code is recommended to help create Quarkus projects and for an all-in-one Quarkus application development experience."), true)) {
     return;
   }
 
@@ -36,7 +36,7 @@ export async function createQuarkusProjectCmdHandler(_context: vscode.ExtensionC
 }
 
 export async function createMicroProfileStarterProjectCmdHandler(_context: vscode.ExtensionContext) {
-  if (!await validateAndRecommendExtension("microProfile-community.mp-starter-vscode-ext", "MicroProfile Starter for Visual Studio Code is recommended to generate starter projects for Eclipse MicroProfile.", true)) {
+  if (!await validateAndRecommendExtension("microProfile-community.mp-starter-vscode-ext", vscode.l10n.t("MicroProfile Starter for Visual Studio Code is recommended to generate starter projects for Eclipse MicroProfile."), true)) {
     return;
   }
 
@@ -51,10 +51,10 @@ export async function showExtensionCmdHandler(_context: vscode.ExtensionContext,
 
 export async function installExtensionCmdHandler(_context: vscode.ExtensionContext, operationId: string, extensionName: string, displayName: string) {
   sendInfo(operationId, { extName: extensionName });
-  return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `Installing ${displayName||extensionName}...`}, _progress => {
+  return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: vscode.l10n.t("Installing {0}...", displayName || extensionName)}, _progress => {
     return vscode.commands.executeCommand("workbench.extensions.installExtension", extensionName);
   }).then(() => {
-    vscode.window.showInformationMessage(`Successfully installed ${displayName||extensionName}.`);
+    vscode.window.showInformationMessage(vscode.l10n.t("Successfully installed {0}.", displayName || extensionName));
   });
 }
 
@@ -120,10 +120,10 @@ export async function toggleAwtDevelopmentHandler(context: vscode.ExtensionConte
   try {
     await workspaceConfig.update("filteredTypes", filteredTypes, vscode.ConfigurationTarget.Workspace);
   } catch (e) {
-    vscode.window.showErrorMessage((e as Error).message);
+    vscode.window.showErrorMessage(vscode.l10n.t("Unable to update Java AWT development settings: {0}", (e as Error).message));
     return;
   }
 
   fetchInitProps(context);
-  vscode.window.showInformationMessage(`Java AWT development is ${enable ? "enabled" : "disabled"}.`);
+  vscode.window.showInformationMessage(enable ? vscode.l10n.t("Java AWT development is enabled.") : vscode.l10n.t("Java AWT development is disabled."));
 }

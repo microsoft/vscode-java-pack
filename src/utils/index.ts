@@ -28,7 +28,7 @@ export function isExtensionInstalled(extName: string) {
 }
 
 export async function recommendExtension(extName: string, message: string): Promise<void> {
-  const action = "Install";
+  const action = { title: vscode.l10n.t("Install") };
   const answer = await vscode.window.showInformationMessage(message, action);
   if (answer === action) {
     await vscode.commands.executeCommand("java.helper.installExtension", extName, extName);

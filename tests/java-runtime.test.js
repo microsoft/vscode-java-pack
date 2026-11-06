@@ -32,7 +32,7 @@ function setupComponents() {
     let html;
     const globals = {
         acquireVsCodeApi: () => ({ postMessage: message => messages.push(message) }),
-        document: { getElementById: () => ({}) },
+        document: { getElementById: id => id === "java-pack-l10n" ? null : ({}) },
         window: { addEventListener: (_, listener) => { receive = listener; } },
     };
     const mocks = {
@@ -88,6 +88,7 @@ function setup(version = "1.57.0") {
         onDidDispose: () => ({ dispose() {} }),
     };
     const vscode = {
+        l10n: require("./helpers/l10n").createL10n(),
         extensions: {
             getExtension: id => id === "redhat.java" ? extension :
                 id === "vscjava.vscode-java-dependency" ? projectManager : undefined,
@@ -111,7 +112,10 @@ function setup(version = "1.57.0") {
         },
         commands: { executeCommand: async () => [] },
     };
-    const mocks = { vscode, "jdk-utils": jdkUtils, "expand-home-dir": home => home };
+    const mocks = {
+        vscode, "jdk-utils": jdkUtils, "expand-home-dir": home => home,
+        "../l10n/host": { escapeHtml: text => text, webviewLanguage: () => "en", localizationBootstrap: () => "" },
+    };
     const api = loadSource(path.join("src", "java-runtime", "utils", "upstreamApi.ts"), mocks, warnings);
     const webviewUtils = loadSource(path.join("src", "utils", "webview.ts"), {}, warnings);
     const jdt = loadSource(path.join("src", "utils", "jdt.ts"), {

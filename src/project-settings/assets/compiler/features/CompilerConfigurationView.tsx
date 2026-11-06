@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-divider/index.js";
 import "@vscode-elements/elements/dist/vscode-single-select/index.js";
 import "@vscode-elements/elements/dist/vscode-option/index.js";
@@ -183,14 +185,14 @@ const CompilerConfigurationView = (): JSX.Element | null => {
     <div className="root">
       <div className="setting-section">
         <div>
-          <vscode-checkbox checked={useRelease} onClick={onClickUseRelease}>Use '--release' option for cross-compilation (Java 9 and later)</vscode-checkbox>
+          <vscode-checkbox checked={useRelease} onClick={onClickUseRelease}>{l10n.t("Use '--release' option for cross-compilation (Java 9 and later)")}</vscode-checkbox>
         </div>
         <div>
           <vscode-table >
             <vscode-table-body slot="body">
             <vscode-table-row className={useRelease ? "" : "invisible"}>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
-                <span>Bytecode version:</span>
+                <span>{l10n.t("Bytecode version:")}</span>
               </vscode-table-cell>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
                 <vscode-single-select ref={complianceRef}>
@@ -200,7 +202,7 @@ const CompilerConfigurationView = (): JSX.Element | null => {
             </vscode-table-row>
             <vscode-table-row className={useRelease ? "invisible" : ""}>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
-                <span>Source compatibility:</span>
+                <span>{l10n.t("Source compatibility:")}</span>
               </vscode-table-cell>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
                 <vscode-single-select ref={sourceRef}>
@@ -210,7 +212,7 @@ const CompilerConfigurationView = (): JSX.Element | null => {
             </vscode-table-row>
             <vscode-table-row className={useRelease ? "invisible" : ""}>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
-                <span>Target compatibility:</span>
+                <span>{l10n.t("Target compatibility:")}</span>
               </vscode-table-cell>
               <vscode-table-cell className="flex-center pl-0 pr-0" >
                 <vscode-single-select ref={targetRef}>
@@ -222,25 +224,21 @@ const CompilerConfigurationView = (): JSX.Element | null => {
           </vscode-table>
         </div>
         <div className={`mt-2 mb-2 ${showSourceTargetWarning ? "" : "invisible"}`}>
-          <span className="setting-section-warning">
-            Target compatibility must be equal or greater than source compatibility.
-          </span>
+          <span className="setting-section-warning">{l10n.t("Target compatibility must be equal or greater than source compatibility.")}</span>
         </div>
         <div className={`mt-2 mb-2 ${showJdkLevelWarning ? "" : "invisible"}`}>
-          <span className="setting-section-warning">
-            Please make sure to have a compatible JDK configured (currently {currentJdkComplianceLevel}). You can change the JDK under the <a href="" onClick={() => onClickChangeJdk()}>JDK Runtime</a> tab.
-          </span>
+          <span className="setting-section-warning">{richText(l10n.t("Please make sure to have a compatible JDK configured (currently {0}). You can change the JDK under the {1} tab."), [currentJdkComplianceLevel, <a href="" onClick={() => onClickChangeJdk()}>{l10n.t("JDK Runtime")}</a>])}</span>
         </div>
         <div className={showPreviewFlag ? "" : "invisible"}>
-          <vscode-checkbox checked={enablePreview} onClick={onClickEnablePreview}>Enable preview features</vscode-checkbox>
+          <vscode-checkbox checked={enablePreview} onClick={onClickEnablePreview}>{l10n.t("Enable preview features")}</vscode-checkbox>
         </div>
         <vscode-divider className="mt-3" />
-        <h4 className="mt-3 mb-3">Class File Generation</h4>
+        <h4 className="mt-3 mb-3">{l10n.t("Class File Generation")}</h4>
         <div>
-          <vscode-checkbox checked={generateDebugInfo} onClick={onClickGenerateDebugInfo}>Generate debugging information</vscode-checkbox>
+          <vscode-checkbox checked={generateDebugInfo} onClick={onClickGenerateDebugInfo}>{l10n.t("Generate debugging information")}</vscode-checkbox>
         </div>
         <div>
-          <vscode-checkbox checked={storeMethodParamNames} onClick={onClickStoreMethodParamNames}>Store information about method parameters</vscode-checkbox>
+          <vscode-checkbox checked={storeMethodParamNames} onClick={onClickStoreMethodParamNames}>{l10n.t("Store information about method parameters")}</vscode-checkbox>
         </div>
       </div>
       <Hint />

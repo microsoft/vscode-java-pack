@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { escapeHtml, webviewLanguage, localizationBootstrap } from "../l10n/host";
 import * as path from "path";
 import * as vscode from "vscode";
 import { instrumentOperation, sendError, sendInfo, setUserError } from "vscode-extension-telemetry-wrapper";
@@ -26,7 +27,7 @@ class ProjectSettingView {
         if (!projectSettingsPanel) {
             projectSettingsPanel = vscode.window.createWebviewPanel(
                 "java.projectSettings",
-                "Project Settings",
+                vscode.l10n.t("Project Settings"),
                 vscode.ViewColumn.Active,
                 {
                     retainContextWhenHidden: true
@@ -60,6 +61,7 @@ class ProjectSettingView {
             return;
         }
 
+        projectSettingsPanel.title = vscode.l10n.t("Project Settings");
         projectSettingsPanel.webview.options = {
             enableScripts: true,
             enableCommandUris: true,
@@ -197,15 +199,16 @@ class ProjectSettingView {
         const nonce = getNonce();
         const cspSource = webview.cspSource;
         return `<!DOCTYPE html>
-        <html lang="en">
+        <html lang="${webviewLanguage()}">
         <head>
             <meta charset="utf-8">
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource} https: data:;">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <title>Project Settings</title>
+            <title>${escapeHtml(vscode.l10n.t("Project Settings"))}</title>
         </head>
         <body>
+    ${localizationBootstrap(nonce)}
             <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
             <div id="content"></div>
         </body>

@@ -19,9 +19,7 @@ export default function OtherJDKsPanel() {
     return (
       <div>
         <ul className='jdk-distros'>
-          {
-            jdkList.map((jdk, idx) => <li key={idx}><a href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, jdk.name, jdk.url)} title={jdk.name}>{jdk.name}</a></li>)
-          }
+          {jdkList.map((jdk, idx) => <li key={idx}><a href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, jdk.name, jdk.url)} title={jdk.name}>{jdk.name}</a></li>)}
         </ul>
       </div>
     );

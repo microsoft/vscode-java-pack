@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { useState, useRef } from "react";
+import * as l10n from "@vscode/l10n";
 import { reportTabSwitch, WEBVIEW_ID } from "../utils";
 import { encodeCommandUriWithTelemetry } from "../../../utils/webview";
 
@@ -12,33 +13,36 @@ interface NavigationPanelProps {
 const groups = [
   {
     name: "General",
+    label: () => l10n.t("General"),
     iconClass: "codicon codicon-gear",
     actions: [
-      { name: "Configure Java Runtime", command: "java.runtime" },
-      { name: "Open Java Settings", command: "workbench.action.openSettings", args: ["java."] as string[] },
-      { name: "Install Extensions...", command: "java.extGuide" },
-      { name: "Configure Formatter Settings", command: "java.formatterSettings" }
+      { name: "Configure Java Runtime", label: () => l10n.t("Configure Java Runtime"), command: "java.runtime" },
+      { name: "Open Java Settings", label: () => l10n.t("Open Java Settings"), command: "workbench.action.openSettings", args: ["java."] as string[] },
+      { name: "Install Extensions...", label: () => l10n.t("Install Extensions..."), command: "java.extGuide" },
+      { name: "Configure Formatter Settings", label: () => l10n.t("Configure Formatter Settings"), command: "java.formatterSettings" }
     ]
   },
   {
     name: "Spring",
+    label: () => l10n.t("Spring"),
     iconClass: "codicon codicon-globe",
     actions: [
-      { name: "Spring Boot with VS Code", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-spring-boot"] },
-      { name: "Spring PetClinic Sample Application", command: "java.helper.openUrl", args: ["https://github.com/spring-projects/spring-petclinic"] },
-      { name: "Install Spring Boot Extension Pack ...", command: "java.helper.installExtension", args: ["vmware.vscode-boot-dev-pack", "Spring Boot Extension Pack"] }
+      { name: "Spring Boot with VS Code", label: () => l10n.t("Spring Boot with VS Code"), command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-spring-boot"] },
+      { name: "Spring PetClinic Sample Application", label: () => l10n.t("Spring PetClinic Sample Application"), command: "java.helper.openUrl", args: ["https://github.com/spring-projects/spring-petclinic"] },
+      { name: "Install Spring Boot Extension Pack ...", label: () => l10n.t("Install Spring Boot Extension Pack ..."), command: "java.helper.installExtension", args: ["vmware.vscode-boot-dev-pack", "Spring Boot Extension Pack"] }
     ]
   },
   {
     name: "Student",
+    label: () => l10n.t("Student"),
     iconClass: "codicon codicon-mortar-board",
     actions: [
-      { name: "Coding and Debugging Tips", command: "java.gettingStarted" },
-      { name: "Tutorial: Running and Debugging", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-debugging"] },
-      { name: "Tutorial: Testing", command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] },
-      { name: "Configure Sources, Dependencies, Output Folder...", command: "java.classpathConfiguration" },
-      { name: "Quick Start: Jupyter Notebook for Java", command: "java.helper.openUrl", args: ["https://github.com/microsoft/vscode-java-pack/wiki/Quick-Start:-Jupyter-Notebook-for-Java"] },
-      { name: "Enable AWT Development", command: "java.toggleAwtDevelopment", args: [true] as any[] },
+      { name: "Coding and Debugging Tips", label: () => l10n.t("Coding and Debugging Tips"), command: "java.gettingStarted" },
+      { name: "Tutorial: Running and Debugging", label: () => l10n.t("Tutorial: Running and Debugging"), command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-debugging"] },
+      { name: "Tutorial: Testing", label: () => l10n.t("Tutorial: Testing"), command: "java.helper.openUrl", args: ["https://code.visualstudio.com/docs/java/java-testing"] },
+      { name: "Configure Sources, Dependencies, Output Folder...", label: () => l10n.t("Configure Sources, Dependencies, Output Folder..."), command: "java.classpathConfiguration" },
+      { name: "Quick Start: Jupyter Notebook for Java", label: () => l10n.t("Quick Start: Jupyter Notebook for Java"), command: "java.helper.openUrl", args: ["https://github.com/microsoft/vscode-java-pack/wiki/Quick-Start:-Jupyter-Notebook-for-Java"] },
+      { name: "Enable AWT Development", label: () => l10n.t("Enable AWT Development"), command: "java.toggleAwtDevelopment", args: [true] as any[] },
     ]
   },
 ];
@@ -56,6 +60,7 @@ export default function NavigationPanel({ isAwtDisabled }: NavigationPanelProps)
         return {
           ...action,
           name: `${isAwtDisabled ? "Enable" : "Disable"} AWT Development`,
+          label: () => isAwtDisabled ? l10n.t("Enable AWT Development") : l10n.t("Disable AWT Development"),
           args: [isAwtDisabled],
         };
       }),
@@ -80,7 +85,7 @@ export default function NavigationPanel({ isAwtDisabled }: NavigationPanelProps)
               aria-selected={activeTab === group.name}
             >
               <div className="navigation-title">
-                <i className={group.iconClass}></i> {group.name}
+                <i className={group.iconClass}></i> {group.label()}
               </div>
             </button>
           </li>
@@ -94,7 +99,7 @@ export default function NavigationPanel({ isAwtDisabled }: NavigationPanelProps)
                 <a
                   href={encodeCommandUriWithTelemetry(WEBVIEW_ID, action.name, action.command, action.args)}
                   key={action.name}
-                ><i className="codicon codicon-rocket"></i> {action.name}</a>
+                ><i className="codicon codicon-rocket"></i> {action.label()}</a>
               ))}
             </div>
           </div>

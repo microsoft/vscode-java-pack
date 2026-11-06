@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 import "@vscode-elements/elements/dist/vscode-progress-ring/index.js";
 import "@vscode-elements/elements/dist/vscode-radio-group/index.js";
@@ -66,15 +67,13 @@ const AdoptiumJDKPanel = () => {
     defaultChecked={obj.version === releases.most_recent_lts}
     checked={obj.version === currentVersion}
     onClick={() => handleVersionChange(obj.version)}
-  >{obj.version}{obj.isLts && " (LTS)"}</vscode-radio>);
+  >{obj.version}{obj.isLts && l10n.t(" (LTS)")}</vscode-radio>);
 
   const downloadPanel = asset ?
     <div>
       <vscode-button onClick={() => downloadJDK(asset)}>
         <div className='btn-download'>
-          <div> 
-            Download
-          </div>
+          <div>{l10n.t("Download")}</div>
           <div className='asset-info'>
             <div>
               <span>
@@ -100,12 +99,12 @@ const AdoptiumJDKPanel = () => {
   return (
     <div>
       <vscode-radio-group orientation="vertical" readOnly={asset===undefined}>
-        <label slot="label">Version</label>
+        <label slot="label">{l10n.t("Version")}</label>
         {versionElements}
       </vscode-radio-group>
       <vscode-radio-group orientation="vertical" readOnly={asset===undefined}>
-        <label slot="label">JVM</label>
-        <vscode-radio defaultChecked checked>hotspot</vscode-radio>
+        <label slot="label">{l10n.t("JVM")}</label>
+        <vscode-radio defaultChecked checked>{l10n.t("hotspot")}</vscode-radio>
       </vscode-radio-group>
       {downloadPanel}
     </div>

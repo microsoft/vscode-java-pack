@@ -1,7 +1,7 @@
 {
   "name": "vscode-java-pack",
-  "displayName": "Extension Pack for Java",
-  "description": "Popular extensions for Java development that provides Java IntelliSense, debugging, testing, Maven/Gradle support, project management and more",
+  "displayName": "%extension.displayName%",
+  "description": "%extension.description%",
   "license": "MIT",
   "version": "0.31.2",
   "publisher": "vscjava",
@@ -35,6 +35,7 @@
     "url": "https://github.com/Microsoft/vscode-java-pack"
   },
   "main": "./out/extension",
+  "l10n": "./l10n",
   "capabilities": {
     "virtualWorkspaces": false
   },
@@ -73,11 +74,11 @@
   "contributes": {
     "javaShortcuts": [
       {
-        "title": "$(project) Open Project Settings",
+        "title": "%shortcuts.projectSettings%",
         "command": "java.projectSettings"
       },
       {
-        "title": "$(info) Open Help Center",
+        "title": "%shortcuts.helpCenter%",
         "command": "java.welcome"
       }
     ],
@@ -89,7 +90,7 @@
         "steps": [
           {
             "id": "java.runtime",
-            "title": "Get your runtime ready",
+            "title": "%walkthrough.java.runtime.title%",
             "description": "%walkthrough.java.runtime%",
             "media": {
               "markdown": "walkthrough/runtime.md"
@@ -97,68 +98,68 @@
           },
           {
             "id": "java.showProjectExplorer",
-            "title": "Explore your projects",
+            "title": "%walkthrough.java.projects.title%",
             "description": "%walkthrough.java.projects%",
             "media": {
               "svg": "walkthrough/projects.svg",
-              "altText": "Project Explorer"
+              "altText": "%walkthrough.java.projects.altText%"
             },
             "when": "java:projectManagerActivated && workspaceFolderCount > 0"
           },
           {
             "id": "java.showProjectExplorer.inactive",
-            "title": "Explore your project",
+            "title": "%walkthrough.java.projects.inactive.title%",
             "description": "%walkthrough.java.projects.inactive%",
             "media": {
               "svg": "walkthrough/projects.svg",
-              "altText": "Project Explorer"
+              "altText": "%walkthrough.java.projects.altText%"
             },
             "when": "!java:projectManagerActivated || workspaceFolderCount == 0"
           },
           {
             "id": "java.codeActions",
-            "title": "View code actions and source actions",
+            "title": "%walkthrough.java.codeActions.title%",
             "description": "%walkthrough.java.codeActions%",
             "media": {
               "svg": "walkthrough/codeAction.svg",
-              "altText": "Code actions and source actions"
+              "altText": "%walkthrough.java.codeActions.altText%"
             }
           },
           {
             "id": "java.debugAndTest",
-            "title": "Launch, debug and test",
+            "title": "%walkthrough.java.debugAndTest.title%",
             "description": "%walkthrough.java.debugAndTest%",
             "media": {
               "svg": "walkthrough/debugAndTest.svg",
-              "altText": "Launch, debug and test"
+              "altText": "%walkthrough.java.debugAndTest.altText%"
             }
           },
           {
             "id": "java.extensions",
-            "title": "Extensions for additional tools and frameworks",
+            "title": "%walkthrough.java.extensions.title%",
             "description": "%walkthrough.java.extensions%",
             "media": {
               "svg": "walkthrough/extensions.svg",
-              "altText": "Extensions"
+              "altText": "%walkthrough.java.extensions.altText%"
             }
           },
           {
             "id": "java.more",
-            "title": "Explore more Java resources",
+            "title": "%walkthrough.java.more.title%",
             "description": "%walkthrough.java.more%",
             "media": {
               "svg": "walkthrough/helpCenter.svg",
-              "altText": "Explore more Java resources"
+              "altText": "%walkthrough.java.more.altText%"
             },
             "when": "!isMac"
           },
           {
             "id": "java.moreForMac",
-            "title": "Explore more Java resources",
+            "title": "%walkthrough.java.more.title%",
             "description": "%walkthrough.java.more%",
             "media": {
               "svg": "walkthrough/helpCenterMac.svg",
-              "altText": "Explore more Java resources"
+              "altText": "%walkthrough.java.more.altText%"
             },
             "when": "isMac"
           }
@@ -169,72 +170,72 @@
       {
         "command": "java.installJdk",
         "category": "Java",
-        "title": "Install New JDK"
+        "title": "%commands.installJdk.title%"
       },
       {
         "command": "java.installJdk.fromWalkthrough",
         "category": "Java",
-        "title": "Install New JDK"
+        "title": "%commands.installJdk.title%"
       },
       {
         "command": "java.welcome",
         "category": "Java",
-        "title": "Help Center"
+        "title": "%commands.welcome.title%"
       },
       {
         "command": "java.welcome.fromWalkthrough",
         "category": "Java",
-        "title": "Help Center"
+        "title": "%commands.welcome.title%"
       },
       {
         "command": "java.classpathConfiguration",
         "category": "Java",
-        "title": "Configure Classpath"
+        "title": "%commands.classpathConfiguration.title%"
       },
       {
         "command": "java.projectSettings",
         "category": "Java",
-        "title": "Open Project Settings"
+        "title": "%commands.projectSettings.title%"
       },
       {
         "command": "java.overview",
         "category": "Java",
-        "title": "Overview"
+        "title": "%commands.overview.title%"
       },
       {
         "command": "java.showReleaseNotes",
         "category": "Java",
-        "title": "Show Release Notes"
+        "title": "%commands.showReleaseNotes.title%"
       },
       {
         "command": "java.runtime",
-        "title": "Configure Java Runtime",
+        "title": "%commands.runtime.title%",
         "category": "Java"
       },
       {
         "command": "java.gettingStarted",
         "category": "Java",
-        "title": "Tips for Beginners"
+        "title": "%commands.gettingStarted.title%"
       },
       {
         "command": "java.extGuide",
         "category": "Java",
-        "title": "Extensions Guide"
+        "title": "%commands.extGuide.title%"
       },
       {
         "command": "java.formatterSettings",
         "category": "Java",
-        "title": "Open Java Formatter Settings with Preview"
+        "title": "%commands.formatterSettings.title%"
       },
       {
         "command": "java.formatterSettings.showTextEditor",
         "category": "Java",
-        "title": "Open Text Editor",
+        "title": "%commands.formatterSettings.showTextEditor.title%",
         "icon": "$(go-to-file)"
       }
     ],
     "configuration": {
-      "title": "Extension Pack for Java",
+      "title": "%extension.displayName%",
       "properties": {
         "java.help.firstView": {
           "type": [
@@ -248,26 +249,26 @@
             "none"
           ],
           "enumDescriptions": [
-            "Automatically pick the first experience view",
-            "Present the Java Overview page",
-            "Present the Java Beginner Tips page",
-            "Present the Java Help Center page",
-            "Do not show any view"
+            "%configuration.firstView.auto%",
+            "%configuration.firstView.overview%",
+            "%configuration.firstView.gettingStarted%",
+            "%configuration.firstView.welcome%",
+            "%configuration.firstView.none%"
           ],
           "default": "auto",
-          "description": "Sets the default view which is presented during the first use.",
+          "description": "%configuration.firstView.description%",
           "scope": "window"
         },
         "java.help.showReleaseNotes": {
           "type": "boolean",
           "default": true,
-          "description": "Show release notes of Extension Pack for Java on startup.",
+          "description": "%configuration.showReleaseNotes.description%",
           "scope": "window"
         },
         "java.help.collectErrorLog": {
           "type": "boolean",
           "default": false,
-          "description": "Whether to send back detailed information from error logs for diagnostic purpose.",
+          "description": "%configuration.collectErrorLog.description%",
           "scope": "window"
         }
       }
@@ -317,7 +318,7 @@
     "customEditors": [
       {
         "viewType": "java.formatterSettingsEditor",
-        "displayName": "Java Formatter Settings Editor",
+        "displayName": "%customEditors.formatterSettings.displayName%",
         "selector": [
           {
             "filenamePattern": "*.xml"
@@ -339,6 +340,8 @@
     "watch": "webpack --config webpack.config.js --watch",
     "build": "webpack --config webpack.config.js --mode=\"production\"",
     "test": "node --test",
+    "l10n:export": "vscode-l10n-dev export -o l10n src",
+    "l10n:check": "node scripts/check-localization.js --check-extraction",
     "update-tpn": "node scripts/update-third-party-notice.js"
   },
   "devDependencies": {
@@ -354,6 +357,7 @@
     "@types/vscode": "^1.74.0",
     "@types/winreg": "^1.2.31",
     "@types/xmldom": "^0.1.31",
+    "@vscode/l10n-dev": "^0.0.35",
     "autoprefixer": "^10.5.4",
     "bytes": "^3.1.2",
     "css-loader": "^7.1.5",
@@ -382,6 +386,7 @@
     "@reduxjs/toolkit": "^2.12.0",
     "@vscode-elements/elements": "^2.5.0",
     "@vscode/codicons": "^0.0.45",
+    "@vscode/l10n": "^0.0.18",
     "@xmldom/xmldom": "^0.8.15",
     "axios": "^1.20.0",
     "bootstrap": "^5.3.8",

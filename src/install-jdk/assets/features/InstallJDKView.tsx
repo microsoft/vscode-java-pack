@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 import "@vscode-elements/elements/dist/vscode-tabs/index.js";
 import "@vscode-elements/elements/dist/vscode-tab-header/index.js";
@@ -18,12 +19,12 @@ export default function InstallJDKView() {
     return (
         <div className="install-jdk-view">
             <header className="header">
-                <h1 className="title">Install New JDK</h1>
+                <h1 className="title">{l10n.t("Install New JDK")}</h1>
             </header>
             <p className="intro">{/*reserved for introduction*/}</p>
             <vscode-tabs selected-index={0} >
-                <vscode-tab-header slot="header" id="tab-1">Adoptium's Temurin</vscode-tab-header>
-                <vscode-tab-header slot="header" id="tab-2">Others</vscode-tab-header>
+                <vscode-tab-header slot="header" id="tab-1">{l10n.t("Adoptium's Temurin")}</vscode-tab-header>
+                <vscode-tab-header slot="header" id="tab-2">{l10n.t("Others")}</vscode-tab-header>
                 <vscode-tab-panel id="view-1">
                     <AdoptiumJDKPanel />
                 </vscode-tab-panel>
@@ -32,10 +33,10 @@ export default function InstallJDKView() {
                 </vscode-tab-panel>
             </vscode-tabs>
             <div className="footer">
-                <p>After you finish JDK installation, please reload Visual Studio Code to make it effective.</p>
+                <p>{l10n.t("After you finish JDK installation, please reload Visual Studio Code to make it effective.")}</p>
                 <div>
-                    <vscode-button secondary onClick={onWillReloadWindow}>Reload Window</vscode-button>
-                    <a className='troubleshoot-link' href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, "Having trouble?", helpLink)}>Having trouble?</a>
+                    <vscode-button secondary onClick={onWillReloadWindow}>{l10n.t("Reload Window")}</vscode-button>
+                    <a className='troubleshoot-link' href={encodeExternalLinkWithTelemetry(WEBVIEW_ID, "Having trouble?", helpLink)}>{l10n.t("Having trouble?")}</a>
                 </div>
 
             </div>

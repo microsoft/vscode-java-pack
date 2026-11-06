@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
+import { formatterCandidateLabel, formatterSettingLabel } from "../../../labels";
 import "@vscode-elements/elements/dist/vscode-single-select/index.js";
 import "@vscode-elements/elements/dist/vscode-option/index.js";
 
@@ -48,11 +50,11 @@ const Setting = (): JSX.Element => {
               <label className="setting-section-description">
                 <input type="checkbox" id={`${setting.id}`} checked={setting.value === "true"} onChange={handleChangeCheckbox} disabled={readOnly} />
                 <i className="codicon codicon-check"></i>
-                <span className="setting-section-description-checkbox">{setting.name}.</span>
+                <span className="setting-section-description-checkbox">{formatterSettingLabel(setting)}.</span>
               </label>
               <br />
               <span className="warning">
-                {willBeOverriden ? "When enabled, the indentation settings will be overriden based on the file contents." : ""}
+                {willBeOverriden ? l10n.t("When enabled, the indentation settings will be overriden based on the file contents.") : ""}
               </span>
             </div>
           </div>
@@ -63,16 +65,17 @@ const Setting = (): JSX.Element => {
         }
         return (
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
-            <span className="setting-section-description">{setting.name}.</span>
+            <span className="setting-section-description">{formatterSettingLabel(setting)}.</span>
             <vscode-single-select
               className="mt-1"
               value={setting.value}
+              aria-label={formatterSettingLabel(setting)}
               disabled={readOnly}
               onChange={(e: any) => handleSelect(setting, e.target.value)}
             >
               {setting.candidates.map(candidate => (
                 <vscode-option key={`${setting.id}.${candidate}`} value={candidate} selected={candidate === setting.value}>
-                  {candidate}
+                  {formatterCandidateLabel(candidate)}
                 </vscode-option>
               ))}
             </vscode-single-select>
@@ -81,7 +84,7 @@ const Setting = (): JSX.Element => {
       case ValueKind.Number:
         return (
           <div className="setting-section" key={`${setting.id}`} onClick={() => handleClick(setting.exampleKind)}>
-            <label className="setting-section-description my-0">{setting.name}.</label>
+            <label className="setting-section-description my-0" htmlFor={setting.id}>{formatterSettingLabel(setting)}.</label>
             <input className="form-control pl-1 mt-1" type="number" id={setting.id} value={setting.value} onChange={handleChangeInput} disabled={readOnly} />
           </div>
         );

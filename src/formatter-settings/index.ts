@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { escapeHtml, webviewLanguage, localizationBootstrap } from "../l10n/host";
 import { compareVersions } from "compare-versions";
 import * as fse from "fs-extra";
 import * as path from "path";
@@ -133,9 +134,10 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                 case "onWillDownloadAndUse": {
                     const settingsUrl = vscode.workspace.getConfiguration("java").get<string>(JavaConstants.SETTINGS_URL_KEY);
                     if (!settingsUrl || !isRemote(settingsUrl)) {
-                        vscode.window.showErrorMessage("The active formatter profile does not exist or is not remote, please check it in the Settings and try again.",
-                            "Open Settings").then((result) => {
-                                if (result === "Open Settings") {
+                        const openSettings = { title: vscode.l10n.t("Open Settings") };
+                        vscode.window.showErrorMessage(vscode.l10n.t("The active formatter profile does not exist or is not remote, please check it in the Settings and try again."),
+                            openSettings).then((result) => {
+                                if (result === openSettings) {
                                     openFormatterSettings();
                                 }
                             });
@@ -160,17 +162,18 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         const nonce = getNonce();
         const cspSource = this.webviewPanel!.webview.cspSource;
         return `<!DOCTYPE html>
-          <html lang="en">
+          <html lang="${webviewLanguage()}">
           <head>
             <meta charset="utf-8">
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource} https: data:;">
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
-            <title>Java Formatter Settings</title>
+            <title>${escapeHtml(vscode.l10n.t("Java Formatter Settings"))}</title>
           </head>
           <body>
+    ${localizationBootstrap(nonce)}
             <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
-            <noscript>You need to enable JavaScript to run this app.</noscript>
+            <noscript>${escapeHtml(vscode.l10n.t("You need to enable JavaScript to run this app."))}</noscript>
             <div id="formatterPanel"></div>
           </body>
           </html>`;
@@ -182,7 +185,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         }
         const javaExt = vscode.extensions.getExtension("redhat.java");
         if (!javaExt) {
-            vscode.window.showErrorMessage("The extension 'redhat.java' is not installed. Please install it and run this command again.");
+            vscode.window.showErrorMessage(vscode.l10n.t("The extension 'redhat.java' is not installed. Please install it and run this command again."));
             const err: Error = new Error("The extension 'redhat.java' is not installed.");
             setUserError(err);
             sendError(err);
@@ -190,7 +193,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         }
         const javaExtVersion: string = javaExt.packageJSON.version;
         if (compareVersions(javaExtVersion, JavaConstants.MINIMUM_JAVA_EXTENSION_VERSION) < 0) {
-            vscode.window.showErrorMessage(`The extension version of 'redhat.java' is too stale. Please install at least ${JavaConstants.MINIMUM_JAVA_EXTENSION_VERSION} and run this command again.`);
+            vscode.window.showErrorMessage(vscode.l10n.t("The extension version of 'redhat.java' is too stale. Please install at least {0} and run this command again.", JavaConstants.MINIMUM_JAVA_EXTENSION_VERSION));
             const err: Error = new Error(`The extension version of 'redhat.java' (${javaExtVersion}) is too stale.`);
             setUserError(err);
             sendError(err);
@@ -216,8 +219,9 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
     private async parseProfileAndUpdate(document: vscode.TextDocument): Promise<boolean> {
         const content: ProfileContent = parseProfile(document);
         if (!content.isValid) {
-            vscode.window.showErrorMessage("The current profile is invalid, please check it in the Settings and try again.", "Open Settings").then((anwser) => {
-                if (anwser === "Open Settings") {
+            const openSettings = { title: vscode.l10n.t("Open Settings") };
+            vscode.window.showErrorMessage(vscode.l10n.t("The current profile is invalid, please check it in the Settings and try again."), openSettings).then((answer) => {
+                if (answer === openSettings) {
                     openFormatterSettings();
                 }
             });
@@ -243,9 +247,11 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
 
     private onChangeProfileSettings(): void {
         if (this.webviewPanel?.visible) {
-            vscode.window.showInformationMessage(`Formatter Profile settings have been changed, do you want to reload this editor?`,
-                "Yes", "No").then(async (result) => {
-                    if (result === "Yes") {
+            const yes = { title: vscode.l10n.t("Yes") };
+            const no = { title: vscode.l10n.t("No") };
+            vscode.window.showInformationMessage(vscode.l10n.t("Formatter Profile settings have been changed, do you want to reload this editor?"),
+                yes, no).then(async (result) => {
+                    if (result === yes) {
                         vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
                     }
                 });
@@ -331,17 +337,21 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
         this.readOnly = false;
         if (!this.settingsUrl) {
             sendInfo(operationId, { formatterProfileKind: "undefined" });
-            await vscode.window.showInformationMessage("No active Formatter Profile found, do you want to create a default one?",
-                "Yes", "No").then((result) => {
-                    if (result === "Yes") {
+            const yes = { title: vscode.l10n.t("Yes") };
+            const no = { title: vscode.l10n.t("No") };
+            await vscode.window.showInformationMessage(vscode.l10n.t("No active Formatter Profile found, do you want to create a default one?"),
+                yes, no).then((result) => {
+                    if (result === yes) {
                         addDefaultProfile(this.context);
                     }
                 });
         } else if (isRemote(this.settingsUrl)) {
             sendInfo(operationId, { formatterProfileKind: "remote" });
-            this.checkedProfileSettings = await vscode.window.showInformationMessage("The active formatter profile is remote, do you want to open it in read-only mode or download and use it locally?",
-                "Open in read-only mode", "Download and use it locally").then(async (result) => {
-                    if (result === "Open in read-only mode") {
+            const readOnly = { title: vscode.l10n.t("Open in read-only mode") };
+            const download = { title: vscode.l10n.t("Download and use it locally") };
+            this.checkedProfileSettings = await vscode.window.showInformationMessage(vscode.l10n.t("The active formatter profile is remote, do you want to open it in read-only mode or download and use it locally?"),
+                readOnly, download).then(async (result) => {
+                    if (result === readOnly) {
                         const content = await downloadFile(this.settingsUrl!);
                         if (!content) {
                             return false;
@@ -349,7 +359,7 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
                         remoteProfileProvider.setContent(this.settingsUrl!, content);
                         this.readOnly = true;
                         return true;
-                    } else if (result === "Download and use it locally") {
+                    } else if (result === download) {
                         this.downloadAndUse(this.settingsUrl!);
                         return false;
                     } else {
@@ -362,11 +372,13 @@ export class JavaFormatterSettingsEditorProvider implements vscode.CustomTextEdi
             }
             if (!(await fse.pathExists(this.profilePath))) {
                 sendInfo(operationId, { formatterProfileKind: "notExist" });
-                await vscode.window.showInformationMessage("The active formatter profile does not exist, please check it in the Settings and try again.",
-                    "Open Settings", "Generate a default profile").then((result) => {
-                        if (result === "Open Settings") {
+                const openSettings = { title: vscode.l10n.t("Open Settings") };
+                const generate = { title: vscode.l10n.t("Generate a default profile") };
+                await vscode.window.showInformationMessage(vscode.l10n.t("The active formatter profile does not exist, please check it in the Settings and try again."),
+                    openSettings, generate).then((result) => {
+                        if (result === openSettings) {
                             openFormatterSettings();
-                        } else if (result === "Generate a default profile") {
+                        } else if (result === generate) {
                             addDefaultProfile(this.context);
                         }
                     });

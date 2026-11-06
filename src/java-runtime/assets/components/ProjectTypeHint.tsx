@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
+import { richText } from "../../../l10n/richText";
+
 interface Props {
   projectType: "Maven" | "Gradle" | "Others" | undefined;
 }
@@ -11,7 +14,7 @@ export function ProjectTypeHint({ projectType }: Props) {
       case "Maven":
         return (
           <div>
-            <p>For projects managed by build tools, Java version is specified in build scripts. E.g. to use Java 8, add below lines in <code>pom.xml</code>:</p>
+            <p>{richText(l10n.t("For projects managed by build tools, Java version is specified in build scripts. E.g. to use Java 8, add below lines in {0}:"), [<code>pom.xml</code>])}</p>
             <div>
               <code>
                 <span>&lt;properties&gt;</span><br />
@@ -25,7 +28,7 @@ export function ProjectTypeHint({ projectType }: Props) {
       case "Gradle":
         return (
           <div>
-            <p>For projects managed by build tools, Java version is specified in build scripts. E.g. to use Java 8, add below lines in <code>build.gradle</code>:</p>
+            <p>{richText(l10n.t("For projects managed by build tools, Java version is specified in build scripts. E.g. to use Java 8, add below lines in {0}:"), [<code>build.gradle</code>])}</p>
             <div>
               <code>
                 <span>sourceCompatibility = 1.8</span><br />
@@ -37,7 +40,7 @@ export function ProjectTypeHint({ projectType }: Props) {
       case "Others":
         return (
           <div>
-            <p>For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used.</p>
+            <p>{l10n.t("For folders containing .java files, but not managed by build tools like Maven/Gradle, a default JDK is used.")}</p>
           </div>
         );
       default:
