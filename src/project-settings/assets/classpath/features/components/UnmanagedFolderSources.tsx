@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 import "@vscode-elements/elements/dist/vscode-divider/index.js";
 
@@ -68,7 +70,7 @@ const UnmanagedFolderSources = (): JSX.Element => {
   if (sources.length === 0) {
     sourceSections = (
       <div className={`source-row ${projectType !== ProjectType.UnmanagedFolder ? "inactive" : ""}`}>
-        <span><em>No source paths are configured.</em></span>
+        <span><em>{l10n.t("No source paths are configured.")}</em></span>
       </div>
     );
   } else {
@@ -79,7 +81,7 @@ const UnmanagedFolderSources = (): JSX.Element => {
            <span>{source.path}</span>
         </div>
         <div className={`source-row-actions ${hoveredRow === `sources-${index}` && projectType === ProjectType.UnmanagedFolder ? "" : "hidden"}`}>
-          <vscode-button class="ghost-button" icon-only onClick={() => handleRemove(source.path)} title="Remove">
+          <vscode-button class="ghost-button" icon-only onClick={() => handleRemove(source.path)} title={l10n.t("Remove")}>
               <span className="codicon codicon-close"></span>
           </vscode-button>
         </div>
@@ -89,12 +91,9 @@ const UnmanagedFolderSources = (): JSX.Element => {
 
   return (
     <div className="setting-section">
-      <h4 className="mt-1 mb-1 pl-1">Source Paths</h4>
+      <h4 className="mt-1 mb-1 pl-1">{l10n.t("Source Paths")}</h4>
       <div id="list-actions" className="flex-center setting-list-actions">
-        <vscode-button class="ghost-button" onClick={() => handleAdd()}>
-          <span className="codicon codicon-add mr-1"></span>
-          Add Source Root...
-        </vscode-button>
+        <vscode-button class="ghost-button" onClick={() => handleAdd()}>{richText(l10n.t("{0}Add Source Root..."), [<span className="codicon codicon-add mr-1"></span>])}</vscode-button>
       </div>
       <vscode-divider className="mb-0"/>
       <div className="setting-overflow-area">

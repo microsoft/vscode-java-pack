@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import "../../l10n/browser";
+
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { GetStartedPage } from "./components/GetStartedPage";

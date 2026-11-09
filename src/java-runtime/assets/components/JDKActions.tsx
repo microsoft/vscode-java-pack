@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 
 import { useState } from "react";
@@ -21,11 +23,11 @@ export function JDKActions() {
   return (
     <>
       <div className="jdk-action">
-        <vscode-button secondary onClick={onClickBrowseJDKButton}><a href="#">Locate an <b>Existing JDK</b></a></vscode-button>
-        {isDirty && <vscode-button><a href="command:workbench.action.reloadWindow">Reload</a></vscode-button>}
+        <vscode-button secondary onClick={onClickBrowseJDKButton}><a href="#">{richText(l10n.t("Locate an {0}"), [<b>{l10n.t("Existing JDK")}</b>])}</a></vscode-button>
+        {isDirty && <vscode-button><a href="command:workbench.action.reloadWindow">{l10n.t("Reload")}</a></vscode-button>}
       </div>
       <div className="jdk-action">
-        <vscode-button secondary onClick={onClickInstallButton}><a href="#">Install a <b>New JDK</b></a></vscode-button>
+        <vscode-button secondary onClick={onClickInstallButton}><a href="#">{richText(l10n.t("Install a {0}"), [<b>{l10n.t("New JDK")}</b>])}</a></vscode-button>
       </div>
     </>
   );

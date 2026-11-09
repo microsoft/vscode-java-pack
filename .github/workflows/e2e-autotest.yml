@@ -75,7 +75,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Resolve AutoTest version for this run
+      - name: Resolve latest AutoTest version for this run
         id: autotest
         shell: bash
         run: |
@@ -515,6 +515,15 @@ jobs:
           $isPR = "${{ github.event_name }}" -eq "pull_request"
           if (-not $isPR -and "${{ inputs.pre_release }}" -ne "false") {
             $autotestArgs += "--pre-release"
+          }
+
+          # macOS's default temp path makes the isolated profile's VS Code IPC
+          # socket exceed 103 characters. Keep the profile unique but its root short.
+          if ($env:RUNNER_OS -eq "macOS" -and "${{ matrix.plan }}" -in @("localization-en", "localization-zh-cn")) {
+            if (-not $env:RUNNER_TEMP -or -not (Test-Path -LiteralPath $env:RUNNER_TEMP -PathType Container)) {
+              throw "The localization run requires an existing RUNNER_TEMP directory."
+            }
+            $env:TMPDIR = $env:RUNNER_TEMP
           }
 
           Write-Host "Running: autotest $($autotestArgs -join ' ')"

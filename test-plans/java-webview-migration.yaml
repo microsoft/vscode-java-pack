@@ -22,7 +22,6 @@
 #   8. Overview                   — command "Java: Overview"                  (java.overview)
 #
 # Prerequisites:
-#   - vscode-java repo cloned as ../../vscode-java (provides the Maven sample project)
 #   - JDK installed (Project Settings / Configure Runtime need a working LS)
 #
 # Usage: npx autotest run test-plans/java-webview-migration.yaml
@@ -31,9 +30,10 @@ name: "Java Pack Webview Migration — UI Smoke (PR #1616)"
 description: |
   Open each webview migrated to React 19 + @vscode-elements/elements in PR #1616
   and verify the headings, tab labels, and action buttons rendered in the PR's
-  screenshots are present in the actual webview text. A Maven sample project is
-  used so the Maven tab in Project Settings and the project list in Configure
-  Java Runtime become visible.
+  screenshots are present in the actual webview text. Also guards English source
+  fallback after localization. Native actions and restoration are covered by
+  localization-en.yaml in a separate run (AutoTest has 12 command slots).
+  Uses an existing lightweight Maven fixture; no sample repository is required.
 
 logging:
   enabled: true
@@ -44,8 +44,11 @@ setup:
   extensions:
     - "vscjava.vscode-java-pack"
   vscodeVersion: "stable"
-  workspace: "../../vscode-java/test/resources/projects/maven/salut"
+  workspace: "../test-fixtures/super-implementation"
   timeout: 120
+  settings:
+    java.help.showReleaseNotes: false
+    java.help.firstView: "none"
   # Pre-configure the formatter profile path so the Formatter Settings webview
   # bypasses the "No active Formatter Profile found" notification (which the
   # smoke-test driver suppresses, leaving the webview stuck). The profile XML
@@ -58,7 +61,7 @@ steps:
   #    Java Runtime, Configure Classpath) have project data to render. ──────
   - id: "ls-ready"
     action: "waitForLanguageServer"
-    verify: "Maven salut workspace has loaded; the Java extension and the pack webview commands are ready"
+    verify: "The Java workspace has loaded and the pack webview commands are ready"
     # waitForLanguageServer is authoritative — skip LLM screenshot re-check
     # (status bar may still show "Java: Searching... 0%" for background
     # indexing right after the LS reports ready).
@@ -72,7 +75,9 @@ steps:
   #    Extensions...".
   # ══════════════════════════════════════════════════════════════════════
   - id: "open-help-center"
-    action: "run command Java: Help Center"
+    action: "executeVSCodeCommand java.welcome"
+    verifyEditorTab:
+      title: "Java Help Center"
     verify: "Java Help Center webview opens"
     waitBefore: 1
 
@@ -91,8 +96,13 @@ steps:
         - "Install Extensions"
     timeout: 30
 
+  # Focus the workbench before dispatching a closing keybinding: destroying the
+  # focused webview during Playwright's keypress can leave the driver waiting.
+  - id: "focus-workbench-after-help-center"
+    action: "click side tab Explorer"
+
   - id: "close-help-center"
-    action: "run command View: Close All Editors"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 2. Tips for Beginners (java.gettingStarted)
@@ -100,7 +110,9 @@ steps:
   #    Code Editing / Debugging / FAQ.
   # ══════════════════════════════════════════════════════════════════════
   - id: "open-beginner-tips"
-    action: "run command Java: Tips for Beginners"
+    action: "executeVSCodeCommand java.gettingStarted"
+    verifyEditorTab:
+      title: "Tips for Beginners"
     verify: "Tips for Beginners webview opens"
     waitBefore: 1
 
@@ -116,8 +128,11 @@ steps:
         - "FAQ"
     timeout: 30
 
+  - id: "focus-workbench-after-beginner-tips"
+    action: "click side tab Explorer"
+
   - id: "close-beginner-tips"
-    action: "run command View: Close All Editors"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 3. Install New JDK (java.installJdk)
@@ -125,7 +140,9 @@ steps:
   #    "Others", "Reload Window" button.
   # ══════════════════════════════════════════════════════════════════════
   - id: "open-install-jdk"
-    action: "run command Java: Install New JDK"
+    action: "executeVSCodeCommand java.installJdk"
+    verifyEditorTab:
+      title: "Install New JDK"
     verify: "Install JDK webview opens"
     waitBefore: 1
 
@@ -140,8 +157,11 @@ steps:
         - "Reload Window"
     timeout: 30
 
+  - id: "focus-workbench-after-install-jdk"
+    action: "click side tab Explorer"
+
   - id: "close-install-jdk"
-    action: "run command View: Close All Editors"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 4. Configure Java Runtime (java.runtime)
@@ -153,7 +173,9 @@ steps:
   #    Classpath / JDK Runtime nav after the React 19 upgrade.
   # ══════════════════════════════════════════════════════════════════════
   - id: "open-java-runtime"
-    action: "run command Java: Configure Java Runtime"
+    action: "executeVSCodeCommand java.runtime"
+    verifyEditorTab:
+      title: "Project Settings"
     # No `verify:` — transitional step. The next `verify-java-runtime`
     # step waits 3s and asserts the rendered Classpath / JDK Runtime nav.
     # On slower CI the screenshot taken at command-return can capture a
@@ -188,8 +210,11 @@ steps:
       If the dropdown was already expanded before waiting, unchanged screenshots
       are expected and should pass, provided a runtime entry is still visible.
 
+  - id: "focus-workbench-after-java-runtime"
+    action: "click side tab Explorer"
+
   - id: "close-java-runtime"
-    action: "run command View: Close All Editors"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 5. Project Settings (java.projectSettings)
@@ -197,7 +222,9 @@ steps:
   #    the Classpath section's three tabs Sources / JDK Runtime / Libraries.
   # ══════════════════════════════════════════════════════════════════════
   - id: "open-project-settings"
-    action: "run command Java: Open Project Settings"
+    action: "executeVSCodeCommand java.projectSettings"
+    verifyEditorTab:
+      title: "Project Settings"
     verify: "Project Settings webview opens"
     waitBefore: 1
 
@@ -215,8 +242,11 @@ steps:
         - "Libraries"
     timeout: 30
 
+  - id: "focus-workbench-after-project-settings"
+    action: "click side tab Explorer"
+
   - id: "close-project-settings"
-    action: "run command View: Close All Editors"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 6. Configure Classpath (java.classpathConfiguration)
@@ -225,7 +255,9 @@ steps:
   #    Help Center screenshot.
   # ══════════════════════════════════════════════════════════════════════
   - id: "open-classpath-config"
-    action: "run command Java: Configure Classpath"
+    action: "executeVSCodeCommand java.classpathConfiguration"
+    verifyEditorTab:
+      title: "Project Settings"
     # No `verify:` — transitional step. The next `verify-classpath-config`
     # step waits 3s and asserts Sources / JDK Runtime / Libraries.
     # Screenshot at command-return can be pre-render on slower CI.
@@ -241,8 +273,46 @@ steps:
         - "Libraries"
     timeout: 30
 
+  - id: "focus-workbench-after-classpath-config"
+    action: "click side tab Explorer"
+
   - id: "close-classpath-config"
-    action: "run command View: Close All Editors"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
+
+  - id: "open-overview"
+    action: "executeVSCodeCommand java.overview"
+    verifyEditorTab:
+      title: "Java Overview"
+    verifyWebview:
+      contains:
+        - "Java Overview"
+        - "Start"
+        - "Extensions"
+    timeout: 30
+
+  - id: "focus-workbench-after-overview"
+    action: "click side tab Explorer"
+
+  - id: "close-overview"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
+
+  - id: "open-extensions-guide"
+    action: "executeVSCodeCommand java.extGuide"
+    verifyEditorTab:
+      title: "Java Extensions Guide"
+    verifyWebview:
+      contains:
+        - "Basics"
+        - "Frameworks"
+        - "Install Selected"
+        - "Install All"
+    timeout: 30
+
+  - id: "focus-workbench-after-extensions-guide"
+    action: "click side tab Explorer"
+
+  - id: "close-extensions-guide"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
 
   # ══════════════════════════════════════════════════════════════════════
   # 7. Formatter Settings (java.formatterSettings)
@@ -273,10 +343,10 @@ steps:
     skipLlmVerify: true
 
   - id: "close-profile-file-before-formatter"
-    action: "run command View: Close All Editors"
+    action: "executeVSCodeCommand workbench.action.closeAllEditors"
 
   - id: "open-formatter-settings"
-    action: "run command Java: Open Java Formatter Settings with Preview"
+    action: "executeVSCodeCommand java.formatterSettings"
     # No `verify:` — transitional step. The next `verify-formatter-settings`
     # step waits 5s and asserts all six category labels via verifyWebview.
     # On slower CI the screenshot can capture the formatter XML file still
@@ -300,28 +370,5 @@ steps:
         - "Wrapping"
     timeout: 45
 
-  - id: "close-formatter-settings"
-    action: "run command View: Close All Editors"
-
-  # ══════════════════════════════════════════════════════════════════════
-  # 8. Overview (java.overview)
-  #    Not migrated in this PR (still on jQuery/Bootstrap), but the PR's
-  #    "Testing" section verified Overview continues to render. Smoke-check
-  #    that the page still loads to catch any side-effect regression from
-  #    the React 19 upgrade.
-  # ══════════════════════════════════════════════════════════════════════
-  - id: "open-overview"
-    action: "run command Java: Overview"
-    verify: "Overview webview opens"
-    waitBefore: 1
-
-  - id: "verify-overview"
-    action: "wait 3 seconds"
-    verify: "Overview page still renders after the migration"
-    verifyWebview:
-      contains:
-        - "Overview"
-    timeout: 30
-
-  - id: "close-overview"
-    action: "run command View: Close All Editors"
+  # Keep the custom formatter last: AutoTest's synthetic command chords can be
+  # swallowed by its embedded editor. Runner cleanup closes the owned window.

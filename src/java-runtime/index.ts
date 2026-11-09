@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { escapeHtml, webviewLanguage, localizationBootstrap } from "../l10n/host";
 import { findRuntimes, getRuntime, IJavaRuntime } from "jdk-utils";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -19,7 +20,7 @@ export async function javaRuntimeCmdHandler(context: vscode.ExtensionContext, _o
     return;
   }
 
-  javaRuntimeView = vscode.window.createWebviewPanel("java.runtime", "Configure Java Runtime", {
+  javaRuntimeView = vscode.window.createWebviewPanel("java.runtime", vscode.l10n.t("Configure Java Runtime"), {
     viewColumn: vscode.ViewColumn.One,
   }, {
     enableScripts: true,
@@ -35,6 +36,7 @@ function onDidDisposeWebviewPanel() {
 }
 
 async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webviewPanel: vscode.WebviewPanel, onDisposeCallback: () => void) {
+  webviewPanel.title = vscode.l10n.t("Configure Java Runtime");
   webviewPanel.iconPath = {
     light: vscode.Uri.file(path.join(context.extensionPath, "caption.light.svg")),
     dark: vscode.Uri.file(path.join(context.extensionPath, "caption.dark.svg"))
@@ -109,16 +111,16 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
           canSelectFiles: false,
           canSelectMany: false,
           canSelectFolders: true,
-          title: "Specify Java runtime to launch Language Server"
+          title: vscode.l10n.t("Specify Java runtime to launch Language Server")
         });
         if (javaHomeUri) {
           const javaHome = javaHomeUri[0].fsPath;
           const runtime = await getRuntime(javaHome, {checkJavac: true, withVersion: true});
           const requiredJdkVersion = getRequiredJdkVersion();
           if (!runtime?.hasJavac) {
-            await vscode.window.showWarningMessage(`${javaHome} is not a valid JDK home directory.`);
+            await vscode.window.showWarningMessage(vscode.l10n.t("{0} is not a valid JDK home directory.", javaHome));
           } else if (!runtime.version || runtime.version.major < requiredJdkVersion) {
-            await vscode.window.showWarningMessage(`Java ${requiredJdkVersion} or more recent is required to launch the Java Language Server. "${javaHome}" doesn't meet the requirement.`);
+            await vscode.window.showWarningMessage(vscode.l10n.t('Java {0} or more recent is required to launch the Java Language Server. "{1}" doesn\'t meet the requirement.', requiredJdkVersion, javaHome));
           } else {
             await vscode.workspace.getConfiguration("java").update("jdt.ls.java.home", javaHome, vscode.ConfigurationTarget.Global);
             await refreshRuntimes();
@@ -147,7 +149,7 @@ async function initializeJavaRuntimeView(context: vscode.ExtensionContext, webvi
       console.warn(error);
       if (!disposed) {
         const message = error instanceof Error ? error.message : String(error);
-        await vscode.window.showErrorMessage(`Unable to refresh Configure Java Runtime: ${message}`);
+        await vscode.window.showErrorMessage(vscode.l10n.t("Unable to refresh Configure Java Runtime: {0}", message));
       }
     }
   }
@@ -176,15 +178,16 @@ function getHtmlForWebview(webviewPanel: vscode.WebviewPanel, scriptPath: string
   const cspSource = webviewPanel.webview.cspSource;
 
   return `<!DOCTYPE html>
-  <html lang="en">
+  <html lang="${webviewLanguage()}">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource} https: data:;">
     <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
     <meta name="theme-color" content="#000000">
-    <title>Configure Java Runtime</title>
+    <title>${escapeHtml(vscode.l10n.t("Configure Java Runtime"))}</title>
   </head>
   <body>
+    ${localizationBootstrap(nonce)}
     <script nonce="${nonce}" src="${scriptUri}" type="module"></script>
     <div id="content"></div>
   </body>
@@ -214,7 +217,7 @@ export async function findJavaRuntimeEntries(): Promise<JavaRuntimeData> {
       javaHomes = runtimes.filter(r => r.hasJavac);
     }
   } catch (error) {
-    recordInventoryError(errors, "Unable to list installed project JDKs", error);
+    recordInventoryError(errors, vscode.l10n.t("Unable to list installed project JDKs"), error);
   }
   const javaRuntimes: JavaRuntimeEntry[] = (javaHomes ?? []).map(elem => ({
     name: elem.homedir,
@@ -245,11 +248,16 @@ interface ProjectRuntimeResult {
   errors: string[];
 }
 
+class RuntimeInventoryError extends Error {
+  constructor(message: string, readonly localizedMessage: string) {
+    super(message);
+  }
+}
+
 function recordInventoryError(errors: string[], context: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  const diagnostic = `${context}: ${message}`;
-  console.warn(diagnostic, error);
-  errors.push(diagnostic);
+  console.warn(`${context}: ${message}`, error);
+  errors.push(`${context}: ${error instanceof RuntimeInventoryError ? error.localizedMessage : message}`);
 }
 
 async function addProjectRuntime(result: ProjectRuntimeResult, rootPath: string, name?: string) {
@@ -263,7 +271,7 @@ async function addProjectRuntime(result: ProjectRuntimeResult, rootPath: string,
       ...runtimeSpec
     });
   } catch (error) {
-    recordInventoryError(result.errors, `Unable to read runtime information for project "${name || rootPath}" (${rootPath})`, error);
+    recordInventoryError(result.errors, vscode.l10n.t('Unable to read runtime information for project "{0}" ({1})', name || rootPath, rootPath), error);
   }
 }
 
@@ -281,7 +289,7 @@ async function getProjectRuntimesFromPM(): Promise<ProjectRuntimeResult> {
           await addProjectRuntime(result, project.uri, project.displayName || project.name);
         }
       } catch (error) {
-        recordInventoryError(result.errors, `Unable to list projects from Project Manager for workspace "${folderUri}"`, error);
+        recordInventoryError(result.errors, vscode.l10n.t('Unable to list projects from Project Manager for workspace "{0}"', folderUri), error);
       }
     }
   }
@@ -300,7 +308,7 @@ async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeResult> {
         await addProjectRuntime(result, projectRoot);
       }
     } catch (error) {
-      recordInventoryError(result.errors, "Unable to list projects from the Java language server", error);
+      recordInventoryError(result.errors, vscode.l10n.t("Unable to list projects from the Java language server"), error);
     }
   }
   return result;
@@ -309,7 +317,8 @@ async function getProjectRuntimesFromLS(): Promise<ProjectRuntimeResult> {
 async function getRuntimeSpec(projectRootUri: string) {
   const javaExt = vscode.extensions.getExtension("redhat.java");
   if (!javaExt?.isActive || typeof javaExt.exports?.getProjectSettings !== "function") {
-    throw new Error("Project settings are not available from redhat.java.");
+    throw new RuntimeInventoryError("Project settings are not available from redhat.java.",
+      vscode.l10n.t("Project settings are not available from redhat.java."));
   }
   const NATURE_IDS = "org.eclipse.jdt.ls.core.natureIds";
   const SOURCE_LEVEL_KEY = "org.eclipse.jdt.core.compiler.source";
@@ -319,7 +328,8 @@ async function getRuntimeSpec(projectRootUri: string) {
   );
   const natureIds = settings?.[NATURE_IDS];
   if (!Array.isArray(natureIds) || !natureIds.every((natureId: unknown) => typeof natureId === "string")) {
-    throw new Error("Project type information is unavailable.");
+    throw new RuntimeInventoryError("Project type information is unavailable.",
+      vscode.l10n.t("Project type information is unavailable."));
   }
   const runtimePath = settings?.[VM_INSTALL_PATH];
   const sourceLevel = settings?.[SOURCE_LEVEL_KEY];

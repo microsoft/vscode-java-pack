@@ -37,6 +37,7 @@ function setupHandler() {
     let installs = [jdk21];
     const uri = value => ({ fsPath: fileURLToPath(value), toString: () => value });
     const vscode = {
+        l10n: require("./helpers/l10n").createL10n(),
         Uri: { parse: uri },
         workspace: { onDidChangeConfiguration: () => ({ dispose() {} }) },
         window: { showErrorMessage: async message => { notifications.push(message); } },
@@ -229,6 +230,7 @@ function renderJdk(installs, activePath) {
         "react-redux": { useSelector: selector => selector(state), useDispatch: () => () => {} },
         "../../../vscode/utils": { ClasspathRequest: {}, CommonRequest: {} },
         "../classpathConfigurationViewSlice": {},
+        "../../../../../l10n/richText": loadSource(path.join("src", "l10n", "richText.tsx")),
     });
     return renderToStaticMarkup(createElement(JdkRuntime));
 }

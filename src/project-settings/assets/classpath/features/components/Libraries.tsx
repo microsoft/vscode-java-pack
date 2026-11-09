@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import "@vscode-elements/elements/dist/vscode-button/index.js";
 import "@vscode-elements/elements/dist/vscode-divider/index.js";
 
@@ -104,7 +106,7 @@ const Libraries = (): JSX.Element => {
   if (libraries.length === 0) {
     librariesSections = (
       <div className="source-row">
-        <span><em>No libraries are configured.</em></span>
+        <span><em>{l10n.t("No libraries are configured.")}</em></span>
       </div>
     );
   } else {
@@ -115,7 +117,7 @@ const Libraries = (): JSX.Element => {
           <span>{resolveLibPath(library)}</span>
         </div>
         <div className={`source-row-actions ${hoveredRow === `library-${index}` ? "" : "hidden"}`}>
-          <vscode-button class="ghost-button" icon-only onClick={() => handleRemove(index)} title="Remove">
+          <vscode-button class="ghost-button" icon-only onClick={() => handleRemove(index)} title={l10n.t("Remove")}>
             <span className="codicon codicon-close"></span>
           </vscode-button>
         </div>
@@ -127,10 +129,7 @@ const Libraries = (): JSX.Element => {
     <div className="setting-section">
       <div>
         <div id="list-actions" className="flex-center setting-list-actions">
-          <vscode-button ref={addLibraryBtnRef} class="ghost-button" onClick={() => handleAdd()}>
-            <span className="codicon codicon-add mr-1"></span>
-            Add Library...
-          </vscode-button>
+          <vscode-button ref={addLibraryBtnRef} class="ghost-button" onClick={() => handleAdd()}>{richText(l10n.t("{0}Add Library..."), [<span className="codicon codicon-add mr-1"></span>])}</vscode-button>
         </div>
         <vscode-divider className="mb-0"/>
         <div className="setting-overflow-area">

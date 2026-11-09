@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { richText } from "../../../../../l10n/richText";
+import * as l10n from "@vscode/l10n";
 import { useSelector, useDispatch } from "react-redux";
 import { Dispatch } from "@reduxjs/toolkit";
 import { updateActiveSection } from "../commonSlice";
@@ -28,22 +30,12 @@ const SideBar = (): JSX.Element => {
     <div className="app-sidebar">
       <div className="app-sidebar-content">
         <div className="mt-2">
-          <div className={`section-link ${activeSection === SectionId.Classpath ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Classpath)}>
-            Classpath
-          </div>
-          <div className={`section-link ${activeSection === SectionId.Compiler ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Compiler)}>
-            Compiler
-          </div>
-          {
-            projectType === ProjectType.Maven && (
-              <div className={`section-link ${activeSection === SectionId.Maven ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Maven)}>
-                Maven
-              </div>
-            )
-          }
-          <div className="section-link mb-1" onClick={() => onClickNavBarItem(SectionId.Formatter)}>
-            Formatter <span className="codicon codicon-link-external"></span>
-          </div>
+          <div className={`section-link ${activeSection === SectionId.Classpath ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Classpath)}>{l10n.t("Classpath")}</div>
+          <div className={`section-link ${activeSection === SectionId.Compiler ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Compiler)}>{l10n.t("Compiler")}</div>
+          {projectType === ProjectType.Maven && (
+              <div className={`section-link ${activeSection === SectionId.Maven ? "section-link-active" : ""} mb-1`} onClick={() => onClickNavBarItem(SectionId.Maven)}>{l10n.t("Maven")}</div>
+            )}
+          <div className="section-link mb-1" onClick={() => onClickNavBarItem(SectionId.Formatter)}>{richText(l10n.t("Formatter {0}"), [<span className="codicon codicon-link-external"></span>])}</div>
         </div>
       </div>
       <div className="app-sidebar-resizer" />

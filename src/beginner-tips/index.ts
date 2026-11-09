@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import { escapeHtml, webviewLanguage, localizationBootstrap } from "../l10n/host";
 import * as path from "path";
 import * as vscode from "vscode";
 import { sendInfo } from "vscode-extension-telemetry-wrapper";
@@ -8,7 +9,6 @@ import { getNonce, webviewCmdLinkHandler } from "../utils";
 import { getRequiredJdkVersion } from "../java-runtime/utils/upstreamApi";
 
 const WEBVIEW_ID = "java.gettingStarted";
-const WEBVIEW_TITLE = "Tips for Beginners";
 
 export async function javaGettingStartedCmdHandler(context: vscode.ExtensionContext, _operationId: string) {
   BeginnerTipsPage.createOrShow(context.extensionPath);
@@ -45,7 +45,7 @@ class BeginnerTipsPage {
 		if ((columnOrwebviewPanel as vscode.WebviewPanel).viewType) {
 			this._panel = columnOrwebviewPanel as vscode.WebviewPanel;
 		} else {
-			this._panel = vscode.window.createWebviewPanel(BeginnerTipsPage.viewType, WEBVIEW_TITLE, columnOrwebviewPanel as vscode.ViewColumn, {
+			this._panel = vscode.window.createWebviewPanel(BeginnerTipsPage.viewType, vscode.l10n.t("Tips for Beginners"), columnOrwebviewPanel as vscode.ViewColumn, {
 				enableScripts: true,
 				localResourceRoots: [
 					vscode.Uri.file(path.join(this._extensionPath, 'out'))
@@ -55,6 +55,7 @@ class BeginnerTipsPage {
 			});
 		}
 
+    this._panel.title = vscode.l10n.t("Tips for Beginners");
     this._panel.iconPath = {
       light: vscode.Uri.file(path.join(this._extensionPath, "caption.light.svg")),
       dark: vscode.Uri.file(path.join(this._extensionPath, "caption.dark.svg"))
@@ -113,16 +114,17 @@ class BeginnerTipsPage {
 		const cspSource = this._panel!.webview.cspSource;
 
 		return `<!DOCTYPE html>
-			<html lang="en">
+			<html lang="${webviewLanguage()}">
 			<head>
 				<meta charset="utf-8">
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} https: data:; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; font-src ${cspSource} https: data:;">
 				<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
 				<meta name="theme-color" content="#000000">
-				<title>${WEBVIEW_TITLE}</title>
+				<title>${escapeHtml(vscode.l10n.t("Tips for Beginners"))}</title>
 			</head>
 			<body>
-				<noscript>You need to enable JavaScript to run this app.</noscript>
+    ${localizationBootstrap(nonce)}
+				<noscript>${escapeHtml(vscode.l10n.t("You need to enable JavaScript to run this app."))}</noscript>
 				<div id="root" data-required-jdk-version="${getRequiredJdkVersion()}"></div>
 
 				<script nonce="${nonce}" src="${scriptUri}" type="module"></script>

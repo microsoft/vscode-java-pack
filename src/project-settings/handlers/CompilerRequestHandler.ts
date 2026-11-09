@@ -126,7 +126,7 @@ export class CompilerRequestHandler implements vscode.Disposable {
         const packageJson = vscode.extensions.getExtension("redhat.java")?.packageJSON;
         if (!packageJson) {
             const errorString = "The required extension 'redhat.java' is not installed.";
-            vscode.window.showErrorMessage(errorString);
+            vscode.window.showErrorMessage(vscode.l10n.t("The required extension 'redhat.java' is not installed."));
             const err: Error = new Error(errorString);
             setUserError(err);
             sendError(err);

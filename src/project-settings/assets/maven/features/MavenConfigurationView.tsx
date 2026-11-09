@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
+import * as l10n from "@vscode/l10n";
 import { useSelector } from "react-redux";
 import { ProjectType } from "../../../../utils/webview";
 import Profile from "./components/Profile";
@@ -13,7 +14,7 @@ const MavenConfigurationView = (): JSX.Element | null => {
   }
 
   if (projectTypes[activeProjectIndex] !== ProjectType.Maven) {
-    return <span>Not a Maven project</span>;
+    return <span>{l10n.t("Not a Maven project")}</span>;
   } else  {
     return <Profile />;
   }
