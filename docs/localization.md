@@ -78,9 +78,12 @@ Use AutoTest YAML, stable command IDs/selectors and deterministic text verifiers
 `test-plans/java-webview-migration.yaml` covers the current English command routes;
 `test-plans/localization-en.yaml` and `test-plans/localization-zh-cn.yaml` select
 `setup.locale: en` / `zh-cn` explicitly. Both top-level plans are discovered by
-the existing CI matrix on Windows, Linux and macOS. CI resolves AutoTest 0.7.36
-once for the entire run; runner failures retain their nonzero exit codes and
-fail the matrix job rather than becoming manual-only or soft-failed checks.
+the existing CI matrix on Windows, Linux and macOS. CI resolves npm's
+`@vscjava/vscode-autotest@latest` once per workflow run, validates and publishes
+the returned version, then installs that exact version in every test and
+aggregate job. Jobs do not independently resolve latest. Runner failures retain
+their nonzero exit codes and fail the matrix job rather than becoming manual-only
+or soft-failed checks.
 
 AutoTest 0.7.36 supports `setup.locale` / `--locale` and checks the actual
 `vscode.env.language` before any scenario step. The Chinese plan installs
@@ -98,7 +101,9 @@ VS Code's 103-character Unix IPC socket limit and abort before the first window.
 Profiles still use unique per-run directories; no normal IDE profile, runner
 installation, launch flags, locale assertions or failure exits are changed.
 
-Run both scenarios against the current packaged extension:
+Run both scenarios against the packaged extension. These reproducible commands
+pin the actually qualified runner, AutoTest 0.7.36; CI uses latest as described
+above:
 
 ```powershell
 npx -y @vscjava/vscode-autotest@0.7.36 run test-plans\localization-en.yaml --vsix vscode-java-pack-localized.vsix --no-llm --analysis-mode evidence-only --output test-results\localization-en --logs

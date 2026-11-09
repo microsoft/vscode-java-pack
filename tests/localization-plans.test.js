@@ -88,9 +88,21 @@ test("shared localization setup fixes raw settings and bypasses the suppressed f
     assert.equal(config.workspaceSettings["[java]"]["editor.detectIndentation"], true);
 });
 
-test("CI discovers both locale plans and propagates runner failures", () => {
+test("CI resolves latest once for all jobs, discovers locale plans and propagates failures", () => {
     const workflow = fs.readFileSync(path.join(root, ".github", "workflows", "e2e-autotest.yml"), "utf8").replace(/\r\n/g, "\n");
-    assert.match(workflow, /npm view @vscjava\/vscode-autotest@0\.7\.36 version/);
+    const resolutions = [...workflow.matchAll(/npm view @vscjava\/vscode-autotest@(\S+) version/g)];
+    assert.deepEqual(resolutions.map(match => match[1]), ["latest"]);
+    const discovery = workflow.split("\n  discover:")[1].split("\n  e2e-test:")[0];
+    assert.match(discovery, /version=\$\(npm view @vscjava\/vscode-autotest@latest version\)/);
+    assert.match(discovery, /if \[\[ ! "\$version" =~ .+ \]\]; then\n\s+echo "::error::Invalid AutoTest version returned by npm: \$version"\n\s+exit 1/);
+    assert.ok(discovery.includes('echo "version=$version" >> "$GITHUB_OUTPUT"'));
+    assert.ok(discovery.includes("autotest_version: ${{ steps.autotest.outputs.version }}"));
+    for (const job of ["e2e-test", "analyze"]) {
+        const consumer = workflow.split(`\n  ${job}:`)[1].split(/\n  [a-z-]+:/)[0];
+        assert.match(consumer, /needs: \[discover, /);
+        assert.ok(consumer.includes('npm install -g "@vscjava/vscode-autotest@${{ needs.discover.outputs.autotest_version }}"'));
+        assert.doesNotMatch(consumer, /npm view|vscode-autotest@latest/);
+    }
     assert.match(workflow, /ls test-plans\/\*\.yaml/);
     assert.match(workflow, /plan: \$\{\{ fromJson\(needs\.discover\.outputs\.matrix\) \}\}/);
     const run = workflow.split("      - name: Run ${{ matrix.plan }}")[1].split("      - name: Collect case logs")[0];

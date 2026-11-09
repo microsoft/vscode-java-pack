@@ -75,11 +75,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Resolve locale-capable AutoTest version for this run
+      - name: Resolve latest AutoTest version for this run
         id: autotest
         shell: bash
         run: |
-          version=$(npm view @vscjava/vscode-autotest@0.7.36 version)
+          version=$(npm view @vscjava/vscode-autotest@latest version)
           if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::Invalid AutoTest version returned by npm: $version"
             exit 1
