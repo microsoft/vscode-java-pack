@@ -91,6 +91,13 @@ directories and a copied fixture workspace without changing the normal IDE.
 The shared JSON supplies the stable VS Code version and raw user/workspace
 settings. Plans keep localized UI labels separate from command IDs and settings.
 
+For the two macOS locale CI cases, the workflow sets `TMPDIR` to the existing
+job-owned `RUNNER_TEMP` before starting AutoTest. The canonical default macOS
+temp directory otherwise makes the runner's isolated profile path exceed
+VS Code's 103-character Unix IPC socket limit and abort before the first window.
+Profiles still use unique per-run directories; no normal IDE profile, runner
+installation, launch flags, locale assertions or failure exits are changed.
+
 Run both scenarios against the current packaged extension:
 
 ```powershell

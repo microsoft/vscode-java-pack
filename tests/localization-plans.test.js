@@ -100,3 +100,23 @@ test("CI discovers both locale plans and propagates runner failures", () => {
     assert.doesNotMatch(workflow, /continue-on-error:/);
     assert.doesNotMatch(run, /localization.*(skip|exit 0)/i);
 });
+
+test("macOS locale CI uses a short job-owned temp root without losing isolation", () => {
+    const workflow = fs.readFileSync(path.join(root, ".github", "workflows", "e2e-autotest.yml"), "utf8").replace(/\r\n/g, "\n");
+    const run = workflow.split("      - name: Run ${{ matrix.plan }}")[1].split("      - name: Collect case logs")[0];
+    const condition = 'if ($env:RUNNER_OS -eq "macOS" -and "${{ matrix.plan }}" -in @("localization-en", "localization-zh-cn"))';
+    const start = run.indexOf(condition);
+    const end = run.indexOf('Write-Host "Running:', start);
+    assert.ok(start >= 0 && end > start);
+    const setup = run.slice(start, end);
+    assert.match(setup, /Test-Path -LiteralPath \$env:RUNNER_TEMP -PathType Container/);
+    assert.match(setup, /throw "The localization run requires an existing RUNNER_TEMP directory\."/);
+    assert.match(setup, /\$env:TMPDIR = \$env:RUNNER_TEMP/);
+    assert.ok(end < run.indexOf("& autotest @autotestArgs"));
+
+    // VS Code uses the profile plus a truncated version/type for its main socket.
+    const socket = temp => path.posix.join(temp, "autotest-environment-XXXXXX", "user-data", "1.14-main.sock");
+    const defaultTemp = `/private/var/folders/aa/${"a".repeat(30)}/T`;
+    assert.ok(Buffer.byteLength(socket(defaultTemp)) > 103);
+    assert.ok(Buffer.byteLength(socket("/Users/runner/work/_temp")) < 103);
+});
