@@ -32,7 +32,7 @@ description: |
   and verify the headings, tab labels, and action buttons rendered in the PR's
   screenshots are present in the actual webview text. Also guards English source
   fallback after localization. Native actions and restoration are covered by
-  localization/en-native.yaml in a separate run (AutoTest has 12 command slots).
+  localization-en.yaml in a separate run (AutoTest has 12 command slots).
   Uses an existing lightweight Maven fixture; no sample repository is required.
 
 logging:

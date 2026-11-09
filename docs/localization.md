@@ -76,36 +76,66 @@ Translations must not supply arbitrary HTML or command URLs.
 
 Use AutoTest YAML, stable command IDs/selectors and deterministic text verifiers.
 `test-plans/java-webview-migration.yaml` covers the current English command routes;
-`test-plans/localization/en-native.yaml` checks native settings actions and restoration;
-`test-plans/localization/zh-cn.yaml` contains the Chinese acceptance scenario.
-The latter is kept outside the top-level CI discovery glob because ordinary
-AutoTest launches do not currently select a display language.
+`test-plans/localization-en.yaml` and `test-plans/localization-zh-cn.yaml` select
+`setup.locale: en` / `zh-cn` explicitly. Both top-level plans are discovered by
+the existing CI matrix on Windows, Linux and macOS. CI resolves AutoTest 0.7.36
+once for the entire run; runner failures retain their nonzero exit codes and
+fail the matrix job rather than becoming manual-only or soft-failed checks.
 
-Before running a translated scenario, verify the runner actually launches VS
-Code in that locale and installs the matching language pack. AutoTest 0.7.35
-can install `MS-CEINTL.vscode-language-pack-zh-hans` using `setup.extensions`,
-but its YAML parser has no locale/launch-argument field, and its launch path
-does not consume the advertised driver `launchArgs` or CLI `--attach` option.
-Do not invent YAML fields or treat installing a language pack as selecting it.
-Chinese installed-package acceptance therefore requires a runner with working
-locale launch support or a manual localized VS Code session. Assert Chinese
-text before calling the scenario a pass. English UI checks do not prove this.
+AutoTest 0.7.36 supports `setup.locale` / `--locale` and checks the actual
+`vscode.env.language` before any scenario step. The Chinese plan installs
+`MS-CEINTL.vscode-language-pack-zh-hans`; installing a language pack alone is
+not locale selection. Both plans reference `config/localization.json` using
+`setup.vscodeConfig`, which opts into owned, per-run user-data and extension
+directories and a copied fixture workspace without changing the normal IDE.
+The shared JSON supplies the stable VS Code version and raw user/workspace
+settings. Plans keep localized UI labels separate from command IDs and settings.
+
+Run both scenarios against the current packaged extension:
+
+```powershell
+npx -y @vscjava/vscode-autotest@0.7.36 run test-plans\localization-en.yaml --vsix vscode-java-pack-localized.vsix --no-llm --analysis-mode evidence-only --output test-results\localization-en --logs
+npx -y @vscjava/vscode-autotest@0.7.36 run test-plans\localization-zh-cn.yaml --vsix vscode-java-pack-localized.vsix --no-llm --analysis-mode evidence-only --output test-results\localization-zh-cn --logs
+```
+
+Inspect `results.json`'s `vscodeLocale.requested` and `vscodeLocale.actual`,
+step results, logs and screenshots. YAML validation and English results alone
+do not prove Chinese installed-package behavior. Each locale plan asserts
+positive and wrong-language text on all seven currently routable pages,
+preserves product names/Java examples, verifies raw AWT and formatter setting
+effects, and performs a real Help Center reload with restored title/content.
+
+Installed-package qualification on Windows with VS Code 1.145.2 and AutoTest
+0.7.36 passed all 31 steps in each locale, with no failures, errors or skips.
+Both reports confirmed the requested native language (`en` and `zh-cn`).
+The successful runs include the original Welcome tab, all seven public pages,
+positive/wrong-language content checks, the translated Project Settings
+Command Palette caption, AWT/formatter setting effects and Help Center
+reload/restoration. These Windows results do not establish Linux/macOS
+qualification or the separate release gates below.
+
+The runner has 12 command-and-argument keybinding slots; evidence capture
+requires one. The plans reserve it by using the localized Project Settings
+palette caption for that route, and dismiss transient context menus before
+returning focus to the workbench. These steps do not suppress test failures.
 
 VS Code also suppresses notification toasts when launched with
 `--enable-smoke-test-driver`, which AutoTest uses. The English native scenario
 therefore checks the AWT commands' persisted settings instead of claiming toast
-coverage. The Chinese scenario retains its message assertions for a compatible
-launch; selecting Chinese alone does not remove this separate limitation.
+coverage. The Chinese plan does the same; selecting Chinese does not remove
+this separate limitation. Formatter plans preconfigure a profile and verify
+checkbox setting effects, not suppressed native Yes/No prompts.
 Check the English and Chinese native messages and formatter actions in a normal
 installed VS Code session before release. Node tests cover translated action
 identity, cancellation and reordered message placeholders, not actual toast UI.
 
 The legacy Runtime serializer and all eight current-language HTML bootstraps
 also have executable Node regression coverage. The English native scenario
-exercises a real Help Center window reload and restored content/title. Legacy
-Runtime restoration, Chinese restoration and actual unsupported-locale fallback
-still need installed-app checks; synthetic missing-key/bundle tests do not
-replace them.
+exercises a real Help Center window reload and restored content/title, as does
+the Chinese scenario. Genuine installed legacy Runtime restoration, installed
+VS Code 1.74 behavior and actual unsupported-locale fallback remain separate
+release gates; synthetic missing-key/bundle and minimum-API tests do not replace
+them. Independent human Chinese review remains required below.
 
 ### Development-only pseudolocalization
 

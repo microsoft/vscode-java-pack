@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "vscodeVersion": "stable",
+  "settings": {
+    "java.help.showReleaseNotes": false,
+    "java.help.firstView": "none"
+  },
+  "workspaceSettings": {
+    "java.format.settings.url": ".vscode/java-formatter.xml",
+    "[java]": {
+      "editor.detectIndentation": true
+    }
+  }
+}

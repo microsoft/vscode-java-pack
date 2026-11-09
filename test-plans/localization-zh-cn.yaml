@@ -1,28 +1,22 @@
-# Requires an actual zh-cn VS Code launch, not merely an installed language pack.
-# AutoTest 0.7.35 does not forward locale arguments; see docs/localization.md.
-# Notification assertions also need a launch without --enable-smoke-test-driver.
-# Kept outside the top-level CI discovery glob until locale launch is supported.
 name: "Java Pack - Simplified Chinese Localization"
 description: |
   Acceptance checks for the original walkthrough, current public webview routes,
-  native messages and reload/restoration in a real zh-cn VS Code session.
+  native AWT and formatter setting effects, and reload/restoration in zh-cn.
+  AutoTest checks vscode.env.language before steps; installing a language pack
+  alone does not qualify the locale. Smoke-driver toasts remain a manual gate.
   The legacy Java Runtime page has no current command route; its serializer,
   bootstrap and display labels are covered by the Node localization tests.
-  Do not count this scenario as run when VS Code launches in English.
+  Reserve one of AutoTest's 12 command-and-argument slots for evidence capture.
 
 setup:
+  vscodeConfig: "config/localization.json"
+  locale: "zh-cn"
   extension: "redhat.java"
   extensions:
     - "vscjava.vscode-java-pack"
     - "MS-CEINTL.vscode-language-pack-zh-hans"
-  vscodeVersion: "stable"
-  workspace: "../../test-fixtures/super-implementation"
+  workspace: "../test-fixtures/super-implementation"
   timeout: 120
-  settings:
-    java.help.showReleaseNotes: false
-    java.help.firstView: "none"
-  workspaceSettings:
-    java.format.settings.url: ".vscode/java-formatter.xml"
 
 steps:
   - id: "java-workspace-ready"
@@ -40,48 +34,67 @@ steps:
   - id: "enable-native-awt-development"
     action: "executeVSCodeCommand java.toggleAwtDevelopment true"
 
-  - id: "verify-translated-native-action"
+  # VS Code suppresses toasts with --enable-smoke-test-driver. Persisted effects
+  # prove action execution without falsely claiming native message UI coverage.
+  - id: "verify-native-awt-setting"
     action: "wait 2 seconds"
-    verifyNotification: "已启用 Java AWT 开发。"
+    verifyFile:
+      path: "~/.vscode/settings.json"
+      matches: '"java\.completion\.filteredTypes"\s*:\s*\[(?![^\]]*java\.awt\.\*)[^\]]*\]'
     timeout: 20
 
   - id: "restore-native-action-setting"
     action: "executeVSCodeCommand java.toggleAwtDevelopment false"
 
-  - id: "verify-restored-native-action-message"
+  - id: "verify-restored-native-awt-setting"
     action: "wait 2 seconds"
-    verifyNotification: "已禁用 Java AWT 开发。"
+    verifyFile:
+      path: "~/.vscode/settings.json"
+      contains: '"java.awt.*"'
     timeout: 20
 
   - id: "open-walkthrough-jdk-action"
     action: "executeVSCodeCommand java.installJdk.fromWalkthrough"
     verifyEditorTab:
       title: "安装新 JDK"
+      active: true
     verifyWebview:
       contains:
         - "安装新 JDK"
         - "重新加载窗口"
         - "其他"
-      notContains: "Reload Window"
+      notContains:
+        - "Install New JDK"
+        - "Reload Window"
     timeout: 30
+
+  - id: "focus-workbench-after-install-jdk"
+    action: "click side tab 资源管理器"
 
   - id: "verify-help-center"
     action: "executeVSCodeCommand java.welcome"
     verifyEditorTab:
       title: "Java 帮助中心"
+      active: true
     verifyWebview:
       contains:
         - "Java 帮助中心"
         - "开始使用"
         - "配置 Java 运行时"
         - "文档"
-      notContains: "Get Started"
+      notContains:
+        - "Java Help Center"
+        - "Get Started"
     timeout: 30
+
+  - id: "focus-workbench-after-help-center"
+    action: "click side tab 资源管理器"
 
   - id: "verify-beginner-tips"
     action: "executeVSCodeCommand java.gettingStarted"
     verifyEditorTab:
       title: "新手提示"
+      active: true
     verifyWebview:
       contains:
         - "新手提示"
@@ -90,12 +103,19 @@ steps:
         - "常见问题"
         - "设置工作区"
         - "System.out.println"
+      notContains:
+        - "Tips for Beginners"
+        - "Code Editing"
     timeout: 30
+
+  - id: "focus-workbench-after-beginner-tips"
+    action: "click side tab 资源管理器"
 
   - id: "verify-extensions-guide"
     action: "executeVSCodeCommand java.extGuide"
     verifyEditorTab:
       title: "Java 扩展指南"
+      active: true
     verifyWebview:
       contains:
         - "基础"
@@ -103,36 +123,62 @@ steps:
         - "安装所选扩展"
         - "安装全部扩展"
         - "Language Support for Java by Red Hat"
+      notContains:
+        - "Install Selected"
+        - "Install All"
     timeout: 30
+
+  - id: "focus-workbench-after-extensions-guide"
+    action: "click side tab 资源管理器"
 
   - id: "verify-overview"
     action: "executeVSCodeCommand java.overview"
     verifyEditorTab:
       title: "Java 概述"
+      active: true
     verifyWebview:
       contains:
         - "Java 概述"
         - "开始"
         - "扩展"
         - "配置"
+      notContains:
+        - "Java Overview"
+        - "Configuration"
     timeout: 30
+
+  - id: "focus-workbench-after-overview"
+    action: "click side tab 资源管理器"
 
   - id: "verify-runtime-command-route"
     action: "executeVSCodeCommand java.runtime"
     verifyEditorTab:
       title: "项目设置"
+      active: true
     verifyWebview:
       contains:
         - "类路径"
         - "JDK 运行时"
         - "刷新 JDK"
         - "查找本地 JDK"
+      notContains:
+        - "Classpath"
+        - "JDK Runtime"
     timeout: 30
 
+  - id: "dismiss-transient-menu-after-runtime"
+    action: "pressKey Escape"
+
+  - id: "focus-workbench-after-runtime"
+    action: "click side tab 资源管理器"
+
+  # Exercise the translated manifest caption without consuming the command
+  # slot reserved for AutoTest's evidence probe.
   - id: "verify-project-settings"
-    action: "executeVSCodeCommand java.projectSettings"
+    action: "run command Java: 打开项目设置"
     verifyEditorTab:
       title: "项目设置"
+      active: true
     verifyWebview:
       contains:
         - "类路径"
@@ -140,31 +186,16 @@ steps:
         - "格式化程序"
         - "源代码"
         - "库"
+      notContains:
+        - "Project Settings"
+        - "Sources"
     timeout: 30
 
-  - id: "focus-help-center-before-reload"
-    action: "executeVSCodeCommand java.welcome"
-    verifyWebview:
-      contains: "Java 帮助中心"
-    timeout: 30
+  - id: "dismiss-transient-menu-after-project-settings"
+    action: "pressKey Escape"
 
-  - id: "focus-workbench-before-reload"
+  - id: "focus-workbench-after-project-settings"
     action: "click side tab 资源管理器"
-
-  - id: "reload-window"
-    action: "executeVSCodeCommand workbench.action.reloadWindow"
-    timeout: 60
-
-  - id: "verify-restored-translated-title-and-content"
-    action: "wait 3 seconds"
-    verifyEditorTab:
-      title: "Java 帮助中心"
-    verifyWebview:
-      contains:
-        - "Java 帮助中心"
-        - "开始使用"
-      notContains: "Get Started"
-    timeout: 45
 
   - id: "create-formatter-profile"
     action: |
@@ -183,6 +214,7 @@ steps:
     action: "executeVSCodeCommand java.formatterSettings"
     verifyEditorTab:
       title: "java-formatter.xml"
+      active: true
     verifyWebview:
       contains:
         - "Java 格式化程序设置"
@@ -190,6 +222,56 @@ steps:
         - "空行"
         - "注释"
         - "换行"
-        - "缩进策略"
-        - "制表符"
+        - "从文件内容检测缩进"
+      notContains:
+        - "Java Formatter Settings"
+        - "Detect indentation from file content"
+    timeout: 45
+
+  - id: "disable-formatter-detect-indentation"
+    action: 'clickInWebview input[id="editor.detectIndentation"]'
+    verifyFile:
+      path: "~/.vscode/settings.json"
+      matches: '"\[java\]"\s*:\s*\{[^}]*"editor\.detectIndentation"\s*:\s*false'
+    timeout: 20
+
+  - id: "restore-formatter-detect-indentation"
+    action: 'clickInWebview input[id="editor.detectIndentation"]'
+    verifyFile:
+      path: "~/.vscode/settings.json"
+      matches: '"\[java\]"\s*:\s*\{[^}]*"editor\.detectIndentation"\s*:\s*true'
+    timeout: 20
+
+  - id: "focus-workbench-after-formatter"
+    action: "click side tab 资源管理器"
+
+  - id: "focus-help-center-before-reload"
+    action: "executeVSCodeCommand java.welcome"
+    verifyEditorTab:
+      title: "Java 帮助中心"
+      active: true
+    verifyWebview:
+      contains: "Java 帮助中心"
+      notContains: "Java Help Center"
+    timeout: 30
+
+  - id: "focus-workbench-before-reload"
+    action: "click side tab 资源管理器"
+
+  - id: "reload-window"
+    action: "executeVSCodeCommand workbench.action.reloadWindow"
+    timeout: 60
+
+  - id: "verify-restored-translated-title-and-content"
+    action: "wait 3 seconds"
+    verifyEditorTab:
+      title: "Java 帮助中心"
+      active: true
+    verifyWebview:
+      contains:
+        - "Java 帮助中心"
+        - "开始使用"
+      notContains:
+        - "Java Help Center"
+        - "Get Started"
     timeout: 45
