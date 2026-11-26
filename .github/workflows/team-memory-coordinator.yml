@@ -51,16 +51,6 @@ jobs:
       pull-requests: read
       actions: read
       id-token: write
-    env:
-      ISSUELENS_SOURCE_REPOSITORIES: >-
-        {"microsoft/vscode-java-pack":104967329,
-         "microsoft/vscode-java-debug":102584737,
-         "microsoft/vscode-java-test":110522074,
-         "microsoft/vscode-java-dependency":129053101,
-         "microsoft/vscode-maven":116921700,
-         "microsoft/vscode-gradle":216314492,
-         "microsoft/java-debug":102583752,
-         "microsoft/build-server-for-gradle":626812412}
     steps:
       - name: Reconcile team memory and validate final receipts
         uses: microsoft/IssueLens/.github/actions/issuelens@61a9e9a5ff2f9514a3bdd351a0721235cd0a2813
@@ -68,7 +58,7 @@ jobs:
           request-type: team-memory
           github-token: ${{ github.token }}
           source-repository: ${{ inputs.source_repository }}
-          source-repositories: ${{ env.ISSUELENS_SOURCE_REPOSITORIES }}
+          source-repositories: ${{ vars.ISSUELENS_SOURCE_REPOSITORIES || '{}' }}
           source-github-token: ${{ github.token }}
           source-run-id: ${{ inputs.source_run_id }}
           source-run-attempt: ${{ inputs.source_run_attempt }}
