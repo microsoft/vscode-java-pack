@@ -5,8 +5,26 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
+const { createRequire } = require("node:module");
 const test = require("node:test");
 const { checkCatalog, checkManifest, checkRuntime, checkExtraction, invariantTokens, manifestText } = require("../scripts/check-localization");
+
+test("localization globbing preserves recursive matching without globparts amplification", () => {
+    const localizationRequire = createRequire(require.resolve("@vscode/l10n-dev/package.json"));
+    const glob = localizationRequire("glob");
+    const globRequire = createRequire(localizationRequire.resolve("glob"));
+    const { Minimatch } = globRequire("minimatch");
+    const matches = glob.sync("src/**/*.{ts,tsx}", {
+        cwd: path.join(__dirname, ".."),
+        posix: true,
+    });
+    assert.ok(matches.includes("src/extension.ts"));
+    assert.ok(matches.includes("src/project-settings/assets/index.tsx"));
+    assert.ok(matches.every((file) => /\.(ts|tsx)$/.test(file)));
+
+    const matcher = new Minimatch("**/../".repeat(8) + "*.ts", { optimizationLevel: 2 });
+    assert.equal(matcher.globParts.length, 1);
+});
 
 test("every manifest UI field resolves and all discovered locale catalogs are complete", () => {
     const { source } = checkManifest();
