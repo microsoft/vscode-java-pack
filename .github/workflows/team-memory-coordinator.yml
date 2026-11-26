@@ -57,7 +57,7 @@ jobs:
         {"microsoft/vscode-java-pack":104967329}
     steps:
       - name: Reconcile team memory and validate final receipts
-        uses: microsoft/IssueLens/.github/actions/issuelens@b88dadd40754d640cbb82f4d9a5e9d36e8386981
+        uses: microsoft/IssueLens/.github/actions/issuelens@0309138f6af11e26b0c6edf4155b53a22bdb2b11
         with:
           request-type: team-memory
           github-token: ${{ github.token }}
