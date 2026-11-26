@@ -25,7 +25,7 @@ jobs:
       actions: write
     steps:
       - name: Queue team-memory update
-        uses: microsoft/IssueLens/.github/actions/queue-team-memory@b88dadd40754d640cbb82f4d9a5e9d36e8386981
+        uses: microsoft/IssueLens/.github/actions/queue-team-memory@61a9e9a5ff2f9514a3bdd351a0721235cd0a2813
         with:
           coordinator-repository: microsoft/vscode-java-pack
           coordinator-workflow: team-memory-coordinator.yml
